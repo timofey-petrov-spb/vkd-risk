@@ -1,0 +1,27 @@
+{
+  "captured_utc": "2026-09-17T21:46:30.334439+00:00",
+  "os": "Windows 11 10.0.26100.6584",
+  "host_architecture": "ARM64 (Parallels)",
+  "target_architecture": "x64",
+  "visual_studio_build_tools": "18.10.1",
+  "visual_studio_installation": "18.10.12210.168",
+  "msvc_compiler": "19.51.36257",
+  "msvc_toolset": "14.51.36231",
+  "windows_sdk": "10.0.26100.0",
+  "qt": "6.11.0",
+  "qt_kit": "msvc2022_64",
+  "cmake": "3.30.5",
+  "ninja": "1.12.1",
+  "git": "2.49.0.windows.1",
+  "opencascade": "7.9.2",
+  "inno_setup": "7.1.0",
+  "checks": {
+    "mono_build": "passed",
+    "dll_build": "passed",
+    "mono_offscreen_startup": "passed",
+    "dll_offscreen_startup": "passed",
+    "sdk_probe": "passed",
+    "ctest_test_count": 0,
+    "opencascade_project_integration": "not implemented in repository"
+  }
+}
