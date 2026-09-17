@@ -1,0 +1,42 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+    "configurePresets": [
+        {
+            "name": "mono",
+            "displayName": "Монолит (разработка)",
+            "description": "Модули вшиты статикой. Режим разработки: быстрее и модуль не может молча выпасть.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-mono",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_PREFIX_PATH": "$env{QT_DIR}",
+                "VKD_MONOLITH": "ON",
+                "VKD_BUILD_TESTS": "ON"
+            },
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+        },
+        {
+            "name": "dll",
+            "displayName": "Модули DLL (показ и поставка)",
+            "description": "Модули грузятся из modules/. Режим показа архитектуры и поставки.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-dll",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_PREFIX_PATH": "$env{QT_DIR}",
+                "VKD_MONOLITH": "OFF",
+                "VKD_BUILD_TESTS": "ON"
+            },
+            "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+        }
+    ],
+    "buildPresets": [
+        { "name": "mono", "configurePreset": "mono" },
+        { "name": "dll",  "configurePreset": "dll"  }
+    ],
+    "testPresets": [
+        { "name": "mono", "configurePreset": "mono", "output": { "outputOnFailure": true } },
+        { "name": "dll",  "configurePreset": "dll",  "output": { "outputOnFailure": true } }
+    ]
+}

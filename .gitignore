@@ -1,0 +1,14 @@
+build*/
+out/
+dist*/
+.vs/
+.vscode/
+*.user
+CMakeUserPresets.json
+__pycache__/
+*.pyc
+installer/output/
+*.obj
+*.pdb
+*.ilk
+*.exp
