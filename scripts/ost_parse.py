@@ -83,7 +83,7 @@ def main():
         for geom, rows in blocks:
             if not rows:
                 continue
-            fn = '%s_%s.csv' % (name.replace('.', '_'),
+            fn = '%s_%s.csv' % (name.replace('.', '_').replace('К','K'),
                                 'hemisphere' if geom == 'полусфера' else 'plane')
             with io.open(os.path.join(OUT, fn), 'w', encoding='utf-8') as f:
                 f.write('d_g_cm2,' + ','.join(a.replace(',', ' ') for a in alt) + '\n')
