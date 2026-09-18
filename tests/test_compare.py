@@ -56,15 +56,25 @@ def test_clean_windows_prefer_less_saa(belts):
     assert 'spaceweather' in r.per_mechanism_comparison
 
 
-def test_critical_condition_flags_all_windows(belts):
-    A, th = two_windows(belts, goes(150.0))
+def test_priority_condition_S3_flags_all_windows(belts):
+    """S ≥ 3 (≥1000 pfu): приоритетное предупреждение; все окна требуют проверки, не «недостаточно»."""
+    A, th = two_windows(belts, goes(1500.0))
     r = recommend(A, th)
-    assert r.verdict == 'all_need_check' and any('критическое' in x for x in r.reasons)
+    assert r.verdict == 'all_need_check' and any('приоритетное' in x for x in r.reasons)
 
 
-def test_limiting_condition_marks_windows(belts):
+def test_warning_S1_S2_marks_windows_as_prototype_policy(belts):
     A, th = two_windows(belts, goes(20.0))
+    reasons = [x for a in A for m in a.mechanisms for x in m.needs_check_reasons]
+    assert reasons and all('политика прототипа' in x for x in reasons)
     assert all(m.needs_check for a in A for m in a.mechanisms if m.mechanism_id == 'spaceweather')
+
+
+def test_no_abort_or_continue_commands_in_reasons(belts):
+    """Из индексов NOAA не следует ни «прервать», ни «продолжать» ВКД (разбор Codex п. 6)."""
+    A, th = two_windows(belts, goes(1500.0))
+    text = ' '.join(x for a in A for m in a.mechanisms for x in m.needs_check_reasons)
+    assert 'прерыва' not in text and 'продолжа' not in text
 
 
 def test_equivalent_within_tolerance(belts):

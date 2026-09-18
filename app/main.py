@@ -34,6 +34,12 @@ try:                                   # A3: производственная о
 except ImportError:
     from experiments.stub_orbit import trajectory
     ORBIT_SRC = 'experiments.stub_orbit — временно, дипольная L, помечена в статусе точек'
+try:                                   # A4: слой источников, когда появится
+    from vkd.sources import goes_latest, kp_latest, tle_latest   # type: ignore
+    SRC_LAYER = 'vkd.sources'
+except ImportError:
+    from experiments.stub_sources import goes_latest, kp_latest, tle_latest
+    SRC_LAYER = 'experiments.stub_sources — временно: живой запрос, кеш, снимок'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALGO_VERSION = '0.2.0-b2'
@@ -86,44 +92,53 @@ with st.sidebar:
 now = datetime.now(timezone.utc)
 horizon_min = search_min + duration_min
 
+# ================================================================= данные: живые с кешем и статусами
+# Кеш Streamlit на 5 минут защищает от повторных запросов при каждом движении
+# ползунка. Это НЕ автоматическое обновление (разбор Codex п. 14): обновление —
+# явной кнопкой ниже либо перезапуском; давность показывается всегда.
+@st.cache_data(ttl=300, show_spinner=False)
+def _fetch_all(dis_goes: bool, dis_kp: bool):
+    return goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False)
+
+with st.sidebar:
+    if st.button('Обновить данные сейчас'):
+        _fetch_all.clear()
+with st.spinner('Источники: GOES, Kp, TLE — до 12 с на каждый при живом запросе…'):
+    (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = _fetch_all(disabled['goes'], disabled['kp'])
+    if mode != 'Текущая обстановка':
+        goes, goes_raw = None, {}        # живое наблюдение не относится к исторической дате (A2 подключит архив)
+        kp, kp_raw = None, {}
+
 # ================================================================= расчёт: один снимок на рендер
 with st.spinner('Траектория и поле, %d мин по 1 мин…' % horizon_min):
-    meta, traj = trajectory(t0, horizon_min, th.saa_B_threshold_nT)
-    if mode != 'Текущая обстановка':
-        meta = meta.__class__(**{**meta.__dict__, 'is_reconstruction': True})
+    meta, traj = trajectory(t0, horizon_min, th.saa_B_threshold_nT, tle_path=f_tle.raw_path)
+    if mode != 'Текущая обстановка' or not f_tle.ok:
+        meta = meta.__class__(**{**meta.__dict__, 'is_reconstruction': mode != 'Текущая обстановка'})
 
-
-def _latest_goes():
-    p = os.path.join(ROOT, 'data', 'spaceweather', 'goes_protons_3day.json')
-    d = json.load(io.open(p, encoding='utf-8'))
-    p10 = [x for x in d if x.get('energy') == '>=10 MeV' and x.get('flux') is not None]
-    if not p10:
-        return None, None
-    last = max(p10, key=lambda x: x['time_tag'])
-    t = datetime.fromisoformat(last['time_tag'].replace('Z', '+00:00'))
-    rid = 'goes_protons_3day.json#' + last['time_tag']
-    return EnvironmentSample(t, 'goes_p_ge10MeV', float(last['flux']), 'pfu', 'noaa_swpc_goes', Kind.OBSERVATION,
-                             None, None, None, now, 'preliminary', rid), {rid: last}
-
-goes, goes_raw = (None, {}) if disabled['goes'] else _latest_goes()
-kp = None                                                        # до A4: GFZ JSON-API
 belts = BeltTable('min')
 windows = [Window(s, duration_min) for s in starts]
 assessments = [assess_window(w, traj, belts, goes, kp, [], th, now) for w in windows]
 rec = recommend(assessments, th)
-samples = {goes.raw_record_id: goes} if goes else {}
+samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {})}
 cards = cards_for_window(assessments[0], samples)
-tle_text = io.open(os.path.join(ROOT, 'data', 'spaceweather', 'iss.tle'), encoding='utf-8').read()
-raw_records = {**(goes_raw or {}), 'iss.tle': {'text': tle_text, 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None}}
+raw_records = {**(goes_raw or {}), **(kp_raw or {}),
+               'iss.tle': {'text': tle_text, 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None, 'fetch': f_tle.status_ru}}
+
+
+def _src(f, role, sample=None):
+    return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
+            'fetched_utc': f.fetched_utc.isoformat() if f.fetched_utc else None,
+            'data_utc': sample.t_utc.isoformat() if sample else None,
+            'age_min': round((now - sample.t_utc).total_seconds() / 60) if sample else f.age_min}
+
 sources = {
-    'celestrak_gp': {'role': 'орбита', 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None,
-                     'fetched_utc': meta.fetched_utc.isoformat(), 'age_h': round((now - meta.epoch_utc).total_seconds() / 3600, 1) if meta.epoch_utc else None,
-                     'status': 'снимок'},
-    'noaa_swpc_goes': {'role': 'протоны ≥10 МэВ', 'status': 'ОТКЛЮЧЁН' if disabled['goes'] else ('снимок, последнее %s' % goes.t_utc.isoformat() if goes else 'нет данных'),
-                       'age_min': round((now - goes.t_utc).total_seconds() / 60) if goes else None},
-    'gfz_kp': {'role': 'Kp', 'status': 'не подключён (A4)'},
-    'ost1044_belts': {'role': 'захваченные протоны', 'status': belts.source},
-    'ecss_grun': {'role': 'метеороиды', 'status': 'спецификация A5 ожидается — линия не подключена'},
+    'celestrak_gp': {**_src(f_tle, 'орбита'), 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None,
+                     'age_h': round((now - meta.epoch_utc).total_seconds() / 3600, 1) if meta.epoch_utc else None},
+    'noaa_swpc_goes': _src(f_goes, 'протоны ≥10 МэВ', goes),
+    'gfz_kp': _src(f_kp, 'Kp', kp),
+    'ost1044_belts': {'role': 'захваченные протоны', 'status': belts.source, 'live_ok': None, 'from_cache': None},
+    'ecss_grun': {'role': 'метеороиды', 'status': 'спецификация A5 ожидается — линия не подключена', 'live_ok': None, 'from_cache': None},
+    '_layer': {'role': 'слой источников', 'status': SRC_LAYER},
 }
 S = {
     'algorithm_version': ALGO_VERSION, 'computed_utc': now.isoformat(), 'mode': mode, 'level': level,
@@ -142,6 +157,9 @@ S = {
     'cards': [{**{k: (v.value if hasattr(v, 'value') else v) for k, v in c.__dict__.items()}} for c in cards],
     'sources': sources,
     'coverage_declared': list(assessments[0].coverage_declared), 'coverage_missing': list(assessments[0].coverage_missing),
+    'policy_note': 'Исключение окон с S1–S2, Kp ≥ 7 или сообщением о сближении из автоматического выбора — '
+                   'консервативная политика прототипа, не эксплуатационная норма; из индексов NOAA не следует '
+                   'ни прерывание, ни продолжение ВКД.',
 }
 
 # ================================================================= траектория
@@ -190,6 +208,8 @@ _ms = lambda t: int(t.timestamp() * 1000)     # add_vline на оси дат п�
 fig.add_vline(x=_ms(t0 + timedelta(hours=24)), line_dash='dash', line_color='gray', annotation_text='горизонт 24 ч')
 if goes:
     fig.add_vline(x=_ms(goes.t_utc), line_dash='dot', line_color='green', annotation_text='GOES %.2g pfu, %s' % (goes.value, s_level(goes.value)))
+if kp:
+    fig.add_vline(x=_ms(kp.t_utc), line_dash='dot', line_color='orange', annotation_text='Kp %.1f (%s)' % (kp.value, kp.quality), annotation_position='bottom right')
 fig.update_layout(height=360, margin=dict(l=10, r=10, t=30, b=10), legend=dict(orientation='h'))
 st.plotly_chart(fig, use_container_width=True)
 st.caption('Красное — пролёты аномалии (наш расчёт). Синее — окна-кандидаты. Серая линия — горизонт 24 ч; '

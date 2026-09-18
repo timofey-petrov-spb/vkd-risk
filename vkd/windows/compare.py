@@ -26,10 +26,22 @@ from vkd.types import (Conjunction, Coverage, EnvironmentSample, FactorValue, Ki
 
 @dataclass(frozen=True)
 class Thresholds:
-    """Пороги условий. Источник каждого — в KRITERII_PLAN.md раздел 5."""
-    goes_p10_limiting_pfu: float = 10.0     # NOAA шкала S: S1 с 10 pfu по >=10 МэВ
-    goes_p10_critical_pfu: float = 100.0    # NOAA шкала S: S2 со 100 pfu
-    kp_limiting: float = 7.0                # NOAA шкала G: G3 при Kp 7 — граница класса, наш выбор
+    """Пороги условий. Семантика по разбору Codex 19.09 (journal/friend.md, пп. 6–8):
+
+    * S ≥ 3 (≥1000 pfu по ≥10 МэВ) — NOAA рекомендует избегать радиационной
+      опасности при ВКД: ПРИОРИТЕТНОЕ предупреждение, окно требует срочной
+      проверки специалистом. Ни «прервать», ни «продолжать» из индекса не следует.
+    * S1–S2 (≥10 pfu) — предупреждение о протонном событии; исключение таких
+      окон из автоматического выбора — консервативная политика ПРОТОТИПА,
+      не эксплуатационная норма.
+    * Kp ≥ 7 (G3) — триггер дополнительной проверки условий модели, орбиты
+      и связи; сам по себе не запрет ВКД. Наша консервативная политика.
+    * сближение с TCA в окне — качественное сообщение, требует ручной оценки;
+      порог промаха как вероятность попадания не вводится.
+    Источник шкал: NOAA SWPC, Space Weather Scales."""
+    goes_p10_warning_pfu: float = 10.0      # S1: предупреждение о протонном событии
+    goes_p10_priority_pfu: float = 1000.0   # S3: приоритетное предупреждение (NOAA: EVA hazard avoidance)
+    kp_check: float = 7.0                   # G3: триггер дополнительной проверки, наш выбор
     goes_max_age_min: float = 60.0          # свежесть наблюдения для будущих участков
     equiv_tol_min: float = 5.0              # инженерная настройка, см. п. 5 правила
     e_min_MeV: float = 30.0                 # канал захваченных протонов для интеграла
@@ -116,14 +128,14 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     # --- условия: критическое / ограничивающее -------------------------------
     crit, limit = [], []
     if goes_val is not None:
-        if goes_val >= th.goes_p10_critical_pfu:
-            crit.append('GOES ≥10 МэВ = %.3g pfu ≥ S2 (%.0f pfu): критическое' % (goes_val, th.goes_p10_critical_pfu))
-        elif goes_val >= th.goes_p10_limiting_pfu:
-            limit.append('GOES ≥10 МэВ = %.3g pfu ≥ S1 (%.0f pfu): ограничивающее' % (goes_val, th.goes_p10_limiting_pfu))
-    if kp is not None and kp.value is not None and kp.value >= th.kp_limiting:
-        limit.append('Kp = %.1f ≥ %.0f: ограничивающее' % (kp.value, th.kp_limiting))
+        if goes_val >= th.goes_p10_priority_pfu:
+            crit.append('GOES ≥10 МэВ = %.3g pfu, S3 и выше: приоритетное — срочная проверка специалистом' % goes_val)
+        elif goes_val >= th.goes_p10_warning_pfu:
+            limit.append('GOES ≥10 МэВ = %.3g pfu, S1–S2: предупреждение о протонном событии — исключено из автовыбора (политика прототипа)' % goes_val)
+    if kp is not None and kp.value is not None and kp.value >= th.kp_check:
+        limit.append('Kp = %.1f ≥ %.0f (G3): триггер дополнительной проверки — политика прототипа' % (kp.value, th.kp_check))
     if in_win:
-        limit.append('сближение с TCA в окне: ограничивающее, ручная проверка')
+        limit.append('сообщение о сближении с TCA в окне: требует ручной оценки')
     m1 = MechanismAssessment(m1.mechanism_id, m1.mandatory, m1.factors, m1.coverage,
                              needs_check=bool(crit or limit), needs_check_reasons=tuple(crit + limit))
 
