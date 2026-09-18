@@ -12,12 +12,20 @@ meta, points, provenance = trajectory_with_provenance(
 )
 ```
 
-Три позиционных аргумента совместимы с B1 из `origin/main` на `652768d`.
-Возвращаются существующие `TrajectoryMeta`, `TrajectoryPoint` версии 2.
+Три позиционных аргумента и добавленный `tle_path=None` совместимы с B1
+из `origin/main` на `386ed17`. `tle_path` использует переданный снимок в live;
+в истории применяется OEM, а не текущий TLE. Переданные TLE проверяются по
+контрольным суммам, ID станции и возрасту; SHA включён в provenance.
+Возвращаются существующие `TrajectoryMeta`, `TrajectoryPoint` версии 2.1.
+`meta.frame` — исходная система TEME/EME2000; выходная — WGS84, отдельно в provenance.
 `trajectory_with_provenance` — дополнительный отчёт данных для сборки
 общего Manifest владельцем B1, не новый общий тип Recommendation.
 `provenance.records` содержит `raw_record_id`, `source_id`, путь к оригиналу,
 SHA-256 и метаданные. Коэффициенты поля тоже входят в этот реестр.
+Для повтора передать `oem_raw_record_id` выбранного OEM и
+`expected_record_hashes={rid: record['sha256'] for rid, record in provenance['records'].items()}`.
+При изменении исходников или набора входов расчёт откажет с явной ошибкой.
+Выгрузку этих полей и восстановление файлов выполняет потребитель Б.
 
 ## Режимы и происхождение
 

@@ -58,21 +58,25 @@ def _checked_model(root: Path, filename: str) -> tuple[Path, dict]:
     return path, item
 
 
-def trajectory(start_utc: datetime, minutes: int, saa_B_threshold_nT: float, **kwargs):
+def trajectory(start_utc: datetime, minutes: int, saa_B_threshold_nT: float, tle_path=None, **kwargs):
     """B1 entry point: return (TrajectoryMeta, list[TrajectoryPoint]).
 
     The grid includes both endpoints: minutes=1920 yields 1921 one-minute
     points, covering the complete 24h search + 8h final window. History defaults
     to explicitly labelled OEM reconstruction, never propagation of today's TLE.
     """
-    meta, points, _ = trajectory_with_provenance(start_utc, minutes, saa_B_threshold_nT, **kwargs)
+    meta, points, _ = trajectory_with_provenance(start_utc, minutes, saa_B_threshold_nT,
+                                               tle_path=tle_path, **kwargs)
     return meta, points
 
 
 def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshold_nT: float, *,
                                mode: str = 'auto', cutoff_utc: datetime | None = None,
                                repo_root: str | Path = ROOT, step_seconds: int = 60,
-                               max_tle_age_days: float = MAX_TLE_AGE_DAYS):
+                               max_tle_age_days: float = MAX_TLE_AGE_DAYS,
+                               tle_path: str | Path | None = None,
+                               oem_raw_record_id: str | None = None,
+                               expected_record_hashes: dict[str, str] | None = None):
     """Same solution plus per-source records for the shared export Manifest.
 
     Optional finer grids serve convergence checks. No implicit network requests,
@@ -105,11 +109,14 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
     provenance = {'algorithm_version': 'orbit-a3-v1', 'mode': mode, 'step_seconds': step_seconds,
                   'cutoff_utc': iso_utc(cutoff) if mode == 'history_forecast' else None,
                   'records': {}, 'segments': [], 'limitations': [],
+                  'output_frame': 'ITRS / WGS84 geodetic latitude, longitude, altitude',
                   'earth_orientation': 'Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy'}
     if mode in ('history_review', 'history_forecast'):
         registry = SourceRegistry(root)
         candidates = []
         for record in registry.records('nasa_jsc_oem'):
+            if oem_raw_record_id is not None and record['raw_record_id'] != oem_raw_record_id:
+                continue
             if utc(record['valid_from_utc']) > start or utc(record['valid_to_utc']) < end:
                 continue
             created = utc(record['created_utc'])
@@ -149,11 +156,26 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
         available = utc(record['available_utc']) if record['available_utc'] else None
         fetched = utc(record['fetched_utc'])
         reconstruction = mode == 'history_review'
-        source, method, frame = 'nasa_jsc_oem', 'oem_interp', 'EME2000 -> ITRS / WGS84'
+        source, method, frame = 'nasa_jsc_oem', 'oem_interp', 'EME2000'
         provenance['records'][record['raw_record_id']] = record
         provenance['limitations'].append('OEM timestamps of creation/modification do not prove historical public availability.')
+        if tle_path is not None:
+            provenance['limitations'].append('B1 tle_path applies to live mode only; historical orbit uses the identified OEM, not current TLE.')
     else:
-        path, record = _checked_model(root, 'iss.tle')
+        if tle_path is None:
+            path, record = _checked_model(root, 'iss.tle')
+        else:
+            path = Path(tle_path)
+            raw = path.read_bytes()
+            fetched = datetime.now(timezone.utc)
+            sidecar = Path(str(path) + '.meta.json')
+            if sidecar.exists():
+                fetched = utc(json.loads(sidecar.read_text())['fetched_utc'])
+            record = {'source_id': 'celestrak_gp', 'raw_path': str(path),
+                      'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw),
+                      'fetched_utc': iso_utc(fetched), 'available_utc': None,
+                      'evidence': 'Caller-supplied TLE bytes; checksum/identity/epoch verified. Historical publication is not established.'}
+            record['release_id'] = record['sha256']
         satellite = satellite_from_tle(path.read_bytes())
         epoch = satellite.epoch.utc_datetime()
         if max(abs((start - epoch).total_seconds()), abs((end - epoch).total_seconds())) > max_tle_age_days * 86400:
@@ -164,7 +186,7 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
         available = utc(record['available_utc']) if record.get('available_utc') else None
         fetched = utc(record['fetched_utc'])
         created, reconstruction = None, available is None or available > cutoff
-        source, method, frame = 'celestrak_gp', 'sgp4', 'TEME -> ITRS / WGS84'
+        source, method, frame = 'celestrak_gp', 'sgp4', 'TEME'
         raw_id = 'celestrak_gp:25544:' + record['sha256'][:12]
         provenance['records'][raw_id] = dict(record, raw_record_id=raw_id, epoch_utc=iso_utc(epoch))
         provenance['max_tle_age_days'] = max_tle_age_days
@@ -179,6 +201,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
     field = magnetic_coordinates(ecef_km, lon, lat, alt, times, coeff_path)
     provenance['field_model'] = coeff_record
     provenance['records'][coeff_record['raw_record_id']] = coeff_record
+    if expected_record_hashes is not None:
+        actual = {rid: record['sha256'] for rid, record in provenance['records'].items()}
+        if actual != expected_record_hashes:
+            raise OrbitDataError('Replay orbital input records/hashes differ from the saved calculation')
     provenance['limitations'].extend([
         'IGRF is the internal main field; no storm-time external field is modelled.',
         'L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.',

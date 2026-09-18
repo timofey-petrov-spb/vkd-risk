@@ -1,0 +1,112 @@
+{
+  "layers": {
+    "orbit": "vkd.orbit",
+    "history": "experiments.stub_history — временно: архив DONKI, уведомления с messageIssueTime",
+    "sources": "experiments.stub_sources — временно: живой запрос, кеш, снимок"
+  },
+  "runs": [
+    {
+      "mode": "history_review",
+      "start": "2024-05-03T12:00:00+00:00",
+      "points": 1801,
+      "orbit": "oem_interp",
+      "reconstruction": true,
+      "verdict": "preferred",
+      "mandatory_coverage": [
+        {
+          "spaceweather": "partial",
+          "mmod_stat": "full"
+        },
+        {
+          "spaceweather": "partial",
+          "mmod_stat": "full"
+        }
+      ],
+      "raw_has_oem": false,
+      "export_members": 21
+    },
+    {
+      "mode": "history_forecast",
+      "start": "2024-05-20T12:00:00+00:00",
+      "points": 1801,
+      "orbit": "oem_interp",
+      "reconstruction": true,
+      "verdict": "equivalent",
+      "mandatory_coverage": [
+        {
+          "spaceweather": "partial",
+          "mmod_stat": "full"
+        },
+        {
+          "spaceweather": "partial",
+          "mmod_stat": "full"
+        }
+      ],
+      "raw_has_oem": false,
+      "export_members": 11
+    },
+    {
+      "mode": "history_review",
+      "start": "2024-06-30T12:00:00+00:00",
+      "points": 1921,
+      "orbit": "oem_interp",
+      "reconstruction": true,
+      "verdict": "insufficient",
+      "mandatory_coverage": [
+        {
+          "spaceweather": "partial",
+          "mmod_stat": "full"
+        },
+        {
+          "spaceweather": "none",
+          "mmod_stat": "full"
+        }
+      ],
+      "raw_has_oem": false,
+      "export_members": 16
+    },
+    {
+      "mode": "live",
+      "start": "2026-09-19T00:00:00+00:00",
+      "points": 1801,
+      "orbit": "sgp4",
+      "reconstruction": true,
+      "verdict": "insufficient",
+      "mandatory_coverage": [
+        {
+          "spaceweather": "none",
+          "mmod_stat": "full"
+        },
+        {
+          "spaceweather": "none",
+          "mmod_stat": "full"
+        }
+      ],
+      "raw_has_oem": false,
+      "export_members": 9
+    }
+  ],
+  "colleague_commit": "386ed17",
+  "source_commit": "d095c7a",
+  "scope": "Four offline pipeline runs and initial Streamlit AppTest render; not complete scientific acceptance or cloud deployment.",
+  "streamlit_initial_render_exceptions": [],
+  "python": "3.14.3",
+  "packages": {
+    "numpy": "2.5.1",
+    "pandas": "2.3.3",
+    "scipy": "1.18.0",
+    "sgp4": "2.27",
+    "skyfield": "1.55",
+    "ppigrf": "2.1.0",
+    "requests": "2.34.2",
+    "plotly": "5.24.1",
+    "streamlit": "1.64.0",
+    "python-dotenv": "1.2.3",
+    "pytest": "9.1.1"
+  },
+  "pytest": {
+    "passed": 80,
+    "subtests_passed": 559,
+    "seconds": 11.45
+  }
+}
