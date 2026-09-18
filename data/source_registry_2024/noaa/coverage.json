@@ -1,0 +1,1570 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-09-18T20:43:41Z",
+  "scope": {
+    "start_utc": "2024-05-01T00:00:00Z",
+    "end_utc_exclusive": "2024-07-01T00:00:00Z",
+    "extra_release": "20240430daypre",
+    "extra_release_reason": "Supports May 1 00:00 cutoff before the first May release."
+  },
+  "semantics": {
+    "intervals": "half-open [valid_from_utc, valid_to_utc), UTC",
+    "issued_gaps": "absent expected catalog filenames, distinct from prediction validity gaps",
+    "validity_union": "union of tabulated forecast date intervals irrespective of publication time",
+    "issued_and_valid_union": "validity clipped below by each release publication; still not proof of independent contemporaneous availability",
+    "controls": "latest eligible release per source with Issued <= cutoff; no future releases combined into the cutoff result",
+    "probability": "Daily probabilities retain 24h resolution. Interval coverage does not establish timed events or six-hour probabilities.",
+    "not_claimed": "No end-to-end replay, no GOES measurement archive, no Kp replacement by daypre Mid/High k."
+  },
+  "sources": [
+    {
+      "source_id": "noaa_ngdc_3day_forecast",
+      "release_count": 57,
+      "first_publication_utc": "2024-05-01T00:30:00Z",
+      "last_publication_utc": "2024-06-30T12:30:00Z",
+      "issued_gaps": {
+        "meaning": "Expected filename slots absent from the retrieved official May/June catalog; not proof that the product was never issued elsewhere. File-name slots are not authoritative publication timestamps.",
+        "expected_release_count_may_june": 122,
+        "present_release_count_may_june": 57,
+        "missing_release_count": 65,
+        "missing_release_files": [
+          "202405150030three_day_forecast.txt",
+          "202405151230three_day_forecast.txt",
+          "202405160030three_day_forecast.txt",
+          "202405161230three_day_forecast.txt",
+          "202405170030three_day_forecast.txt",
+          "202405171230three_day_forecast.txt",
+          "202405180030three_day_forecast.txt",
+          "202405181230three_day_forecast.txt",
+          "202405190030three_day_forecast.txt",
+          "202405191230three_day_forecast.txt",
+          "202405200030three_day_forecast.txt",
+          "202405201230three_day_forecast.txt",
+          "202405210030three_day_forecast.txt",
+          "202405211230three_day_forecast.txt",
+          "202405220030three_day_forecast.txt",
+          "202405221230three_day_forecast.txt",
+          "202405230030three_day_forecast.txt",
+          "202405231230three_day_forecast.txt",
+          "202405240030three_day_forecast.txt",
+          "202405241230three_day_forecast.txt",
+          "202405250030three_day_forecast.txt",
+          "202405251230three_day_forecast.txt",
+          "202405260030three_day_forecast.txt",
+          "202405261230three_day_forecast.txt",
+          "202405270030three_day_forecast.txt",
+          "202405271230three_day_forecast.txt",
+          "202405280030three_day_forecast.txt",
+          "202405281230three_day_forecast.txt",
+          "202405290030three_day_forecast.txt",
+          "202405291230three_day_forecast.txt",
+          "202405300030three_day_forecast.txt",
+          "202405301230three_day_forecast.txt",
+          "202405310030three_day_forecast.txt",
+          "202405311230three_day_forecast.txt",
+          "202406010030three_day_forecast.txt",
+          "202406011230three_day_forecast.txt",
+          "202406020030three_day_forecast.txt",
+          "202406021230three_day_forecast.txt",
+          "202406030030three_day_forecast.txt",
+          "202406031230three_day_forecast.txt",
+          "202406040030three_day_forecast.txt",
+          "202406041230three_day_forecast.txt",
+          "202406050030three_day_forecast.txt",
+          "202406051230three_day_forecast.txt",
+          "202406060030three_day_forecast.txt",
+          "202406061230three_day_forecast.txt",
+          "202406070030three_day_forecast.txt",
+          "202406071230three_day_forecast.txt",
+          "202406080030three_day_forecast.txt",
+          "202406081230three_day_forecast.txt",
+          "202406090030three_day_forecast.txt",
+          "202406091230three_day_forecast.txt",
+          "202406100030three_day_forecast.txt",
+          "202406101230three_day_forecast.txt",
+          "202406110030three_day_forecast.txt",
+          "202406111230three_day_forecast.txt",
+          "202406120030three_day_forecast.txt",
+          "202406121230three_day_forecast.txt",
+          "202406130030three_day_forecast.txt",
+          "202406131230three_day_forecast.txt",
+          "202406140030three_day_forecast.txt",
+          "202406141230three_day_forecast.txt",
+          "202406150030three_day_forecast.txt",
+          "202406151230three_day_forecast.txt",
+          "202406160030three_day_forecast.txt"
+        ],
+        "catalog_evidence_raw_paths": [
+          "data/source_registry_2024/noaa/raw/indexes/3day_forecast_2024_05.html",
+          "data/source_registry_2024/noaa/raw/indexes/3day_forecast_2024_06.html"
+        ]
+      },
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "release_count": 57,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T00:00:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:30:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T12:50:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 57,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T00:00:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:30:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T12:50:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 57,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T00:00:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:30:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T12:50:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 57,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T00:00:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:30:00Z",
+              "valid_to_utc": "2024-05-17T00:00:00Z"
+            },
+            {
+              "valid_from_utc": "2024-06-16T12:50:00Z",
+              "valid_to_utc": "2024-07-03T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "noaa_ngdc_daypre",
+      "release_count": 60,
+      "first_publication_utc": "2024-04-30T22:35:00Z",
+      "last_publication_utc": "2024-06-30T22:00:00Z",
+      "issued_gaps": {
+        "meaning": "Expected filename slots absent from the retrieved official May/June catalog; not proof that the product was never issued elsewhere. File-name slots are not authoritative publication timestamps.",
+        "expected_release_count_may_june": 61,
+        "present_release_count_may_june": 59,
+        "missing_release_count": 2,
+        "missing_release_files": [
+          "20240601daypre.txt",
+          "20240618daypre.txt"
+        ],
+        "catalog_evidence_raw_paths": [
+          "data/source_registry_2024/noaa/raw/indexes/daypre_2024_05.html",
+          "data/source_registry_2024/noaa/raw/indexes/daypre_2024_06.html"
+        ]
+      },
+      "channels": [
+        {
+          "channel_id": "f107",
+          "unit": "sfu",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "high_active_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "high_latitude_k",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "high_major_severe_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "high_minor_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "mid_active_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "mid_latitude_k",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "mid_major_severe_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "mid_minor_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "whole_disk_m_flare_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "whole_disk_proton_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "channel_id": "whole_disk_x_flare_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "release_count": 60,
+          "validity_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ],
+          "issued_and_valid_union": [
+            {
+              "valid_from_utc": "2024-05-01T00:00:00Z",
+              "valid_to_utc": "2024-07-04T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "control_cutoffs": [
+    {
+      "cutoff_utc": "2024-05-01T00:00:00Z",
+      "interval_from_utc": "2024-05-01T00:00:00Z",
+      "interval_to_utc": "2024-05-02T08:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": null,
+          "latest_eligible_raw_record_id": null,
+          "published_utc": null,
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": null,
+              "reason": "No eligible release in this collected dataset; older April 3day_forecast releases were outside collection scope."
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": null,
+              "reason": "No eligible release in this collected dataset; older April 3day_forecast releases were outside collection scope."
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": null,
+              "reason": "No eligible release in this collected dataset; older April 3day_forecast releases were outside collection scope."
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": null,
+              "reason": "No eligible release in this collected dataset; older April 3day_forecast releases were outside collection scope."
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240430daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240430daypre:94b1ef5bda88",
+          "published_utc": "2024-04-30T22:35:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-01T00:00:00Z",
+              "covered_to_utc": "2024-05-02T08:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cutoff_utc": "2024-05-03T12:00:00Z",
+      "interval_from_utc": "2024-05-03T12:00:00Z",
+      "interval_to_utc": "2024-05-04T20:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": "202405030030three_day_forecast",
+          "latest_eligible_raw_record_id": "noaa_ngdc_3day_forecast:202405030030three_day_forecast:5f86b5abaebf",
+          "published_utc": "2024-05-03T00:30:00Z",
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240502daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240502daypre:cadaeb8c2ebc",
+          "published_utc": "2024-05-02T22:00:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-03T12:00:00Z",
+              "covered_to_utc": "2024-05-04T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cutoff_utc": "2024-05-20T12:00:00Z",
+      "interval_from_utc": "2024-05-20T12:00:00Z",
+      "interval_to_utc": "2024-05-21T20:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": "202405141230three_day_forecast",
+          "latest_eligible_raw_record_id": "noaa_ngdc_3day_forecast:202405141230three_day_forecast:17ebdc80b728",
+          "published_utc": "2024-05-14T12:30:00Z",
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "3h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240519daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240519daypre:b909ac8a5379",
+          "published_utc": "2024-05-19T22:00:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-05-20T12:00:00Z",
+              "covered_to_utc": "2024-05-21T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cutoff_utc": "2024-06-01T12:00:00Z",
+      "interval_from_utc": "2024-06-01T12:00:00Z",
+      "interval_to_utc": "2024-06-02T20:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": "202405141230three_day_forecast",
+          "latest_eligible_raw_record_id": "noaa_ngdc_3day_forecast:202405141230three_day_forecast:17ebdc80b728",
+          "published_utc": "2024-05-14T12:30:00Z",
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "3h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "none",
+              "covered_hours": 0.0,
+              "coverage_fraction": 0.0,
+              "covered_from_utc": null,
+              "covered_to_utc": null,
+              "temporal_resolution": "24h",
+              "reason": "Latest eligible release has no forecast validity overlapping the requested interval."
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240531daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240531daypre:4d99b5ae869b",
+          "published_utc": "2024-05-31T22:00:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-01T12:00:00Z",
+              "covered_to_utc": "2024-06-02T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cutoff_utc": "2024-06-25T12:00:00Z",
+      "interval_from_utc": "2024-06-25T12:00:00Z",
+      "interval_to_utc": "2024-06-26T20:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": "202406250030three_day_forecast",
+          "latest_eligible_raw_record_id": "noaa_ngdc_3day_forecast:202406250030three_day_forecast:5f273aeb9734",
+          "published_utc": "2024-06-25T00:30:00Z",
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240624daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240624daypre:cf6aaffdd39c",
+          "published_utc": "2024-06-24T22:00:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-25T12:00:00Z",
+              "covered_to_utc": "2024-06-26T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cutoff_utc": "2024-06-30T12:00:00Z",
+      "interval_from_utc": "2024-06-30T12:00:00Z",
+      "interval_to_utc": "2024-07-01T20:00:00Z",
+      "requested_hours": 32,
+      "sources": [
+        {
+          "source_id": "noaa_ngdc_3day_forecast",
+          "latest_eligible_release_id": "202406300030three_day_forecast",
+          "latest_eligible_raw_record_id": "noaa_ngdc_3day_forecast:202406300030three_day_forecast:c0ca7233acfb",
+          "published_utc": "2024-06-30T00:30:00Z",
+          "channels": [
+            {
+              "channel_id": "noaa_kp",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "r1_r2_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "r3_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "s1_or_greater_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        },
+        {
+          "source_id": "noaa_ngdc_daypre",
+          "latest_eligible_release_id": "20240629daypre",
+          "latest_eligible_raw_record_id": "noaa_ngdc_daypre:20240629daypre:8405f8e63814",
+          "published_utc": "2024-06-29T22:00:00Z",
+          "channels": [
+            {
+              "channel_id": "f107",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "high_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_active_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_latitude_k",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "3h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_major_severe_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "mid_minor_storm_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_m_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_proton_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            },
+            {
+              "channel_id": "whole_disk_x_flare_probability",
+              "coverage_of_32h": "full",
+              "covered_hours": 32.0,
+              "coverage_fraction": 1.0,
+              "covered_from_utc": "2024-06-30T12:00:00Z",
+              "covered_to_utc": "2024-07-01T20:00:00Z",
+              "temporal_resolution": "24h",
+              "reason": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "publication_anomalies": [
+    {
+      "raw_record_id": "noaa_ngdc_3day_forecast:202405140030three_day_forecast:c5ac2015c332",
+      "filename_implied_utc": "2024-05-14T00:30:00Z",
+      "actual_issued_utc": "2024-05-14T12:25:00Z",
+      "raw_path": "data/source_registry_2024/noaa/raw/3day_forecast/202405140030three_day_forecast.txt",
+      "rule": "Internal Issued wins. This record is ineligible before actual_issued_utc even if its filename suggests an earlier time."
+    },
+    {
+      "raw_record_id": "noaa_ngdc_3day_forecast:202406161230three_day_forecast:1c2f0c63160d",
+      "filename_implied_utc": "2024-06-16T12:30:00Z",
+      "actual_issued_utc": "2024-06-16T12:50:00Z",
+      "raw_path": "data/source_registry_2024/noaa/raw/3day_forecast/202406161230three_day_forecast.txt",
+      "rule": "Internal Issued wins. This record is ineligible before actual_issued_utc even if its filename suggests an earlier time."
+    }
+  ]
+}

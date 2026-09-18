@@ -1,0 +1,3 @@
+*.TLE -text
+*.out -text
+*.json text eol=lf

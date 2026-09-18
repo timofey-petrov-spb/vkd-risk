@@ -1,0 +1,2292 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-09-18T20:39:32Z",
+  "listing_evidence": [
+    {
+      "url": "https://nasa-public-data.s3.amazonaws.com/?prefix=iss-coords%2F2024-04-29%2F&max-keys=1000",
+      "raw_path": "data/source_registry_2024/nasa_oem/listings/2024-04-29.xml",
+      "sha256": "f04cc605a0188c47a4c0cad0c922023ff69bf96aa7bc04b05532771a01c8f37f",
+      "bytes": 7311,
+      "fetched_utc": "2026-09-18T20:39:22Z"
+    },
+    {
+      "url": "https://nasa-public-data.s3.amazonaws.com/?prefix=iss-coords%2F2024-05&max-keys=1000",
+      "raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml",
+      "sha256": "ed9481b350c5fd30dd53b1ad86caf58c88b04362d59ed0781720b9fb2c6e0f32",
+      "bytes": 91832,
+      "fetched_utc": "2026-09-18T20:39:23Z"
+    },
+    {
+      "url": "https://nasa-public-data.s3.amazonaws.com/?prefix=iss-coords%2F2024-06&max-keys=1000",
+      "raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml",
+      "sha256": "52724d1e88702409fdfd9abbce22d112ec674f99cb5294a7d46dc7704f84d193",
+      "bytes": 84738,
+      "fetched_utc": "2026-09-18T20:39:23Z"
+    }
+  ],
+  "records": [
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-04-29",
+      "raw_record_id": "nasa_jsc_oem:2024-04-29:ed86a5d4d878",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-04-29/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-04-29_ISS.OEM_J2K_EPH.txt",
+      "sha256": "ed86a5d4d878796c523ddd87028f92af712b4f9435154bbcabcabfe5352e3da2",
+      "bytes": 718959,
+      "fetched_utc": "2026-09-18T20:39:25Z",
+      "created_utc": "2024-04-29T19:22:46.797Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:ed86a5d4d878796c523ddd87028f92af712b4f9435154bbcabcabfe5352e3da2",
+      "valid_from_utc": "2024-04-29T12:00:00.000Z",
+      "valid_to_utc": "2024-05-14T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 30 Apr 2024 03:53:34 GMT",
+      "etag": "\"6ce6054a9d6ee2f0d4cf26730ff06fe7\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-04-29/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-04-30T03:53:34.000Z",
+        "ETag": "\"6ce6054a9d6ee2f0d4cf26730ff06fe7\"",
+        "Size": "718959",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-04-29.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-04-29T19:22:46.797",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-04-29T12:00:00.000",
+            "USEABLE_START_TIME": "2024-04-29T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-14T12:00:00.000",
+            "STOP_TIME": "2024-05-14T12:00:00.000"
+          },
+          "valid_from_utc": "2024-04-29T12:00:00.000Z",
+          "valid_to_utc": "2024-05-14T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5405,
+            "data_start_utc": "2024-04-29T12:00:00.000Z",
+            "data_end_utc": "2024-05-14T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 31.0,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-02",
+      "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-02/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-02_ISS.OEM_J2K_EPH.txt",
+      "sha256": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+      "bytes": 718831,
+      "fetched_utc": "2026-09-18T20:39:25Z",
+      "created_utc": "2024-05-02T13:10:49.055Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+      "valid_from_utc": "2024-05-01T12:00:00.000Z",
+      "valid_to_utc": "2024-05-16T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Fri, 03 May 2024 03:05:37 GMT",
+      "etag": "\"6dcd5edf4cffc3b592c9922972adedd3\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-02/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-03T03:05:37.000Z",
+        "ETag": "\"6dcd5edf4cffc3b592c9922972adedd3\"",
+        "Size": "718831",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-02T13:10:49.055",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-01T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-01T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-16T12:00:00.000",
+            "STOP_TIME": "2024-05-16T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-01T12:00:00.000Z",
+          "valid_to_utc": "2024-05-16T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5404,
+            "data_start_utc": "2024-05-01T12:00:00.000Z",
+            "data_end_utc": "2024-05-16T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 11.0,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-05",
+      "raw_record_id": "nasa_jsc_oem:2024-05-05:750ef2553023",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-05/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-05_ISS.OEM_J2K_EPH.txt",
+      "sha256": "750ef25530238b84804039e6b87586f8fe3d2fbf017815deafcae31530b280d9",
+      "bytes": 718344,
+      "fetched_utc": "2026-09-18T20:39:25Z",
+      "created_utc": "2024-05-05T00:02:28.950Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:750ef25530238b84804039e6b87586f8fe3d2fbf017815deafcae31530b280d9",
+      "valid_from_utc": "2024-05-03T12:00:00.000Z",
+      "valid_to_utc": "2024-05-18T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Sun, 05 May 2024 17:47:05 GMT",
+      "etag": "\"d0a6308a976aa02eebb31bc98df2504e\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-05/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-05T17:47:05.000Z",
+        "ETag": "\"d0a6308a976aa02eebb31bc98df2504e\"",
+        "Size": "718344",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-05T00:02:28.950",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-03T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-03T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-18T12:00:00.000",
+            "STOP_TIME": "2024-05-18T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-03T12:00:00.000Z",
+          "valid_to_utc": "2024-05-18T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5403,
+            "data_start_utc": "2024-05-03T12:00:00.000Z",
+            "data_end_utc": "2024-05-18T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 48.0,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-07",
+      "raw_record_id": "nasa_jsc_oem:2024-05-07:376bee9b3245",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-07/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-07_ISS.OEM_J2K_EPH.txt",
+      "sha256": "376bee9b32456a317b0d32d159f81b6837c72552077f4e526c160d22baa5cb25",
+      "bytes": 718675,
+      "fetched_utc": "2026-09-18T20:39:25Z",
+      "created_utc": "2024-05-06T20:14:22.371Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:376bee9b32456a317b0d32d159f81b6837c72552077f4e526c160d22baa5cb25",
+      "valid_from_utc": "2024-05-06T12:00:00.000Z",
+      "valid_to_utc": "2024-05-21T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 07 May 2024 15:19:53 GMT",
+      "etag": "\"3c162152c296ebe21f376b10849b80e7\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-07/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-07T15:19:53.000Z",
+        "ETag": "\"3c162152c296ebe21f376b10849b80e7\"",
+        "Size": "718675",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-06T20:14:22.371",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-06T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-06T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-21T12:00:00.000",
+            "STOP_TIME": "2024-05-21T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-06T12:00:00.000Z",
+          "valid_to_utc": "2024-05-21T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5404,
+            "data_start_utc": "2024-05-06T12:00:00.000Z",
+            "data_end_utc": "2024-05-21T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 48.0,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-08",
+      "raw_record_id": "nasa_jsc_oem:2024-05-08:a164f5909b9f",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-08_ISS.OEM_J2K_EPH.txt",
+      "sha256": "a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce",
+      "bytes": 718328,
+      "fetched_utc": "2026-09-18T20:39:26Z",
+      "created_utc": "2024-05-08T16:49:32.385Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce",
+      "valid_from_utc": "2024-05-08T12:00:00.000Z",
+      "valid_to_utc": "2024-05-23T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Wed, 08 May 2024 20:28:59 GMT",
+      "etag": "\"652c06fbaf723fe7855562af0f76200d\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-08T20:28:59.000Z",
+        "ETag": "\"652c06fbaf723fe7855562af0f76200d\"",
+        "Size": "718328",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-08T16:49:32.385",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-08T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-08T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-23T12:00:00.000",
+            "STOP_TIME": "2024-05-23T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-08T12:00:00.000Z",
+          "valid_to_utc": "2024-05-23T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5403,
+            "data_start_utc": "2024-05-08T12:00:00.000Z",
+            "data_end_utc": "2024-05-23T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 60.0,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-12",
+      "raw_record_id": "nasa_jsc_oem:2024-05-12:ce3ea506d8a2",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-12/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-12_ISS.OEM_J2K_EPH.txt",
+      "sha256": "ce3ea506d8a2731fc55bd791f354679bb084b21582128fd4803fe2bad0465082",
+      "bytes": 872949,
+      "fetched_utc": "2026-09-18T20:39:26Z",
+      "created_utc": "2024-05-10T18:51:53.202Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:ce3ea506d8a2731fc55bd791f354679bb084b21582128fd4803fe2bad0465082",
+      "valid_from_utc": "2024-05-10T12:00:00.000Z",
+      "valid_to_utc": "2024-05-25T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Mon, 13 May 2024 03:06:46 GMT",
+      "etag": "\"f27a98420ac59ac94d0925c123f03c79\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-12/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-13T03:06:46.000Z",
+        "ETag": "\"f27a98420ac59ac94d0925c123f03c79\"",
+        "Size": "872949",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-10T18:51:53.202",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-10T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-10T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-25T12:00:00.000",
+            "STOP_TIME": "2024-05-25T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-10T12:00:00.000Z",
+          "valid_to_utc": "2024-05-25T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6565,
+            "data_start_utc": "2024-05-10T12:00:00.000Z",
+            "data_end_utc": "2024-05-25T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.578,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-13",
+      "raw_record_id": "nasa_jsc_oem:2024-05-13:16a920292e2f",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-13/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-13_ISS.OEM_J2K_EPH.txt",
+      "sha256": "16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc",
+      "bytes": 873112,
+      "fetched_utc": "2026-09-18T20:39:26Z",
+      "created_utc": "2024-05-13T16:29:20.109Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc",
+      "valid_from_utc": "2024-05-13T12:00:00.000Z",
+      "valid_to_utc": "2024-05-28T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 14 May 2024 04:16:49 GMT",
+      "etag": "\"e4d7482996bb3b85b7bd39b32ed1a1ac\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-13/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-14T04:16:49.000Z",
+        "ETag": "\"e4d7482996bb3b85b7bd39b32ed1a1ac\"",
+        "Size": "873112",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-13T16:29:20.109",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-13T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-13T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-28T12:00:00.000",
+            "STOP_TIME": "2024-05-28T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-13T12:00:00.000Z",
+          "valid_to_utc": "2024-05-28T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6565,
+            "data_start_utc": "2024-05-13T12:00:00.000Z",
+            "data_end_utc": "2024-05-28T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.578,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-14",
+      "raw_record_id": "nasa_jsc_oem:2024-05-14:16a920292e2f",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-14/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-14_ISS.OEM_J2K_EPH.txt",
+      "sha256": "16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc",
+      "bytes": 873112,
+      "fetched_utc": "2026-09-18T20:39:26Z",
+      "created_utc": "2024-05-13T16:29:20.109Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc",
+      "valid_from_utc": "2024-05-13T12:00:00.000Z",
+      "valid_to_utc": "2024-05-28T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 14 May 2024 19:27:08 GMT",
+      "etag": "\"e4d7482996bb3b85b7bd39b32ed1a1ac\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-14/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-14T19:27:08.000Z",
+        "ETag": "\"e4d7482996bb3b85b7bd39b32ed1a1ac\"",
+        "Size": "873112",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-13T16:29:20.109",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-13T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-13T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-28T12:00:00.000",
+            "STOP_TIME": "2024-05-28T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-13T12:00:00.000Z",
+          "valid_to_utc": "2024-05-28T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6565,
+            "data_start_utc": "2024-05-13T12:00:00.000Z",
+            "data_end_utc": "2024-05-28T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.578,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-15",
+      "raw_record_id": "nasa_jsc_oem:2024-05-15:b6005d4b1e86",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-15/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-15_ISS.OEM_J2K_EPH.txt",
+      "sha256": "b6005d4b1e8655bc51166aa8a5a7c064b89fa0a317f6eed70f6d39d78be9d4b1",
+      "bytes": 873694,
+      "fetched_utc": "2026-09-18T20:39:27Z",
+      "created_utc": "2024-05-15T16:14:55.078Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:b6005d4b1e8655bc51166aa8a5a7c064b89fa0a317f6eed70f6d39d78be9d4b1",
+      "valid_from_utc": "2024-05-15T12:00:00.000Z",
+      "valid_to_utc": "2024-05-30T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Wed, 15 May 2024 19:35:29 GMT",
+      "etag": "\"c152aed6cbdcd1e8e5bc156b99c9ade7\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-15/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-15T19:35:29.000Z",
+        "ETag": "\"c152aed6cbdcd1e8e5bc156b99c9ade7\"",
+        "Size": "873694",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-15T16:14:55.078",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-15T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-15T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-05-30T12:00:00.000",
+            "STOP_TIME": "2024-05-30T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-15T12:00:00.000Z",
+          "valid_to_utc": "2024-05-30T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6568,
+            "data_start_utc": "2024-05-15T12:00:00.000Z",
+            "data_end_utc": "2024-05-30T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.578,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-17",
+      "raw_record_id": "nasa_jsc_oem:2024-05-17:c27c3b8acb46",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-17/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-17_ISS.OEM_J2K_EPH.txt",
+      "sha256": "c27c3b8acb4618ffb66c98515285b6e11b95914cdc71073319f2c57cb10c1970",
+      "bytes": 871192,
+      "fetched_utc": "2026-09-18T20:39:27Z",
+      "created_utc": "2024-05-17T16:55:23.425Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:c27c3b8acb4618ffb66c98515285b6e11b95914cdc71073319f2c57cb10c1970",
+      "valid_from_utc": "2024-05-17T12:00:00.000Z",
+      "valid_to_utc": "2024-06-01T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Fri, 17 May 2024 20:05:08 GMT",
+      "etag": "\"b594185f568e424585d23fb2f2776011\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-17/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-17T20:05:08.000Z",
+        "ETag": "\"b594185f568e424585d23fb2f2776011\"",
+        "Size": "871192",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-17T16:55:23.425",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-17T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-17T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-01T12:00:00.000",
+            "STOP_TIME": "2024-06-01T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-17T12:00:00.000Z",
+          "valid_to_utc": "2024-06-01T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6546,
+            "data_start_utc": "2024-05-17T12:00:00.000Z",
+            "data_end_utc": "2024-06-01T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.543,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-20",
+      "raw_record_id": "nasa_jsc_oem:2024-05-20:90c71861e3df",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-20/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-20_ISS.OEM_J2K_EPH.txt",
+      "sha256": "90c71861e3df0aa1398d920681d7ccc38e0d44c0885ea2816c3d5b5811db37a3",
+      "bytes": 869857,
+      "fetched_utc": "2026-09-18T20:39:27Z",
+      "created_utc": "2024-05-20T19:33:05.495Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:90c71861e3df0aa1398d920681d7ccc38e0d44c0885ea2816c3d5b5811db37a3",
+      "valid_from_utc": "2024-05-20T12:00:00.000Z",
+      "valid_to_utc": "2024-06-04T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Mon, 20 May 2024 22:31:53 GMT",
+      "etag": "\"3babe74e2c1903439b8a4fae4d214254\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-20/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-20T22:31:53.000Z",
+        "ETag": "\"3babe74e2c1903439b8a4fae4d214254\"",
+        "Size": "869857",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-20T19:33:05.495",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-20T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-20T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-04T12:00:00.000",
+            "STOP_TIME": "2024-06-04T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-20T12:00:00.000Z",
+          "valid_to_utc": "2024-06-04T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6536,
+            "data_start_utc": "2024-05-20T12:00:00.000Z",
+            "data_end_utc": "2024-06-04T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.887,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-23",
+      "raw_record_id": "nasa_jsc_oem:2024-05-23:8ee1b70e8aeb",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-23/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-23_ISS.OEM_J2K_EPH.txt",
+      "sha256": "8ee1b70e8aebe5f58938885d278cafad28da46f753abe8851c832af612d0597b",
+      "bytes": 869394,
+      "fetched_utc": "2026-09-18T20:39:27Z",
+      "created_utc": "2024-05-22T22:02:49.614Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:8ee1b70e8aebe5f58938885d278cafad28da46f753abe8851c832af612d0597b",
+      "valid_from_utc": "2024-05-22T12:00:00.000Z",
+      "valid_to_utc": "2024-06-06T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Thu, 23 May 2024 15:34:36 GMT",
+      "etag": "\"f4bd5a870dd5de60d2ccb2c2e9d97677\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-23/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-23T15:34:36.000Z",
+        "ETag": "\"f4bd5a870dd5de60d2ccb2c2e9d97677\"",
+        "Size": "869394",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-22T22:02:49.614",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-22T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-22T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-06T12:00:00.000",
+            "STOP_TIME": "2024-06-06T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-22T12:00:00.000Z",
+          "valid_to_utc": "2024-06-06T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6536,
+            "data_start_utc": "2024-05-22T12:00:00.000Z",
+            "data_end_utc": "2024-06-06T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.887,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-28",
+      "raw_record_id": "nasa_jsc_oem:2024-05-28:488c29c3dd7b",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-28/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-28_ISS.OEM_J2K_EPH.txt",
+      "sha256": "488c29c3dd7b51024e5514b858a2b85308a61df0f965c8a09b82a15dc3a940a2",
+      "bytes": 796456,
+      "fetched_utc": "2026-09-18T20:39:28Z",
+      "created_utc": "2024-05-28T15:09:43.444Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:488c29c3dd7b51024e5514b858a2b85308a61df0f965c8a09b82a15dc3a940a2",
+      "valid_from_utc": "2024-05-27T12:00:00.000Z",
+      "valid_to_utc": "2024-06-11T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 28 May 2024 21:09:48 GMT",
+      "etag": "\"3cd9e3a2b43922d47bb5ecea8ec66df8\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-28/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-28T21:09:48.000Z",
+        "ETag": "\"3cd9e3a2b43922d47bb5ecea8ec66df8\"",
+        "Size": "796456",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-28T15:09:43.444",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-27T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-27T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-11T12:00:00.000",
+            "STOP_TIME": "2024-06-11T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-27T12:00:00.000Z",
+          "valid_to_utc": "2024-06-11T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5985,
+            "data_start_utc": "2024-05-27T12:00:00.000Z",
+            "data_end_utc": "2024-06-11T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.327,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-05-29",
+      "raw_record_id": "nasa_jsc_oem:2024-05-29:180276a4f6af",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-29/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-29_ISS.OEM_J2K_EPH.txt",
+      "sha256": "180276a4f6afba9785a69206418dd271abaf384688158eb071c07487bc5de7d9",
+      "bytes": 796378,
+      "fetched_utc": "2026-09-18T20:39:28Z",
+      "created_utc": "2024-05-29T18:28:56.742Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:180276a4f6afba9785a69206418dd271abaf384688158eb071c07487bc5de7d9",
+      "valid_from_utc": "2024-05-29T12:00:00.000Z",
+      "valid_to_utc": "2024-06-13T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Thu, 30 May 2024 03:35:08 GMT",
+      "etag": "\"e66d6785f71dd6510daafc28e2ee13e8\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-05-29/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-05-30T03:35:08.000Z",
+        "ETag": "\"e66d6785f71dd6510daafc28e2ee13e8\"",
+        "Size": "796378",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-05-29T18:28:56.742",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-29T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-29T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-13T12:00:00.000",
+            "STOP_TIME": "2024-06-13T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-29T12:00:00.000Z",
+          "valid_to_utc": "2024-06-13T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5986,
+            "data_start_utc": "2024-05-29T12:00:00.000Z",
+            "data_end_utc": "2024-06-13T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.718,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-01",
+      "raw_record_id": "nasa_jsc_oem:2024-06-01:76a85580c503",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-01/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-01_ISS.OEM_J2K_EPH.txt",
+      "sha256": "76a85580c503a5bf9ea6118fac6d01150512b7ed2929a7945415de804a731c00",
+      "bytes": 856839,
+      "fetched_utc": "2026-09-18T20:39:28Z",
+      "created_utc": "2024-06-01T08:56:32.257Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:76a85580c503a5bf9ea6118fac6d01150512b7ed2929a7945415de804a731c00",
+      "valid_from_utc": "2024-05-31T12:00:00.000Z",
+      "valid_to_utc": "2024-06-15T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Sat, 01 Jun 2024 17:17:30 GMT",
+      "etag": "\"1bfd44bef2532a6e2508bd15b09ec39d\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-01/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-01T17:17:30.000Z",
+        "ETag": "\"1bfd44bef2532a6e2508bd15b09ec39d\"",
+        "Size": "856839",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-01T08:56:32.257",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-05-31T12:00:00.000",
+            "USEABLE_START_TIME": "2024-05-31T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-15T12:00:00.000",
+            "STOP_TIME": "2024-06-15T12:00:00.000"
+          },
+          "valid_from_utc": "2024-05-31T12:00:00.000Z",
+          "valid_to_utc": "2024-06-15T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6436,
+            "data_start_utc": "2024-05-31T12:00:00.000Z",
+            "data_end_utc": "2024-06-15T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.422,
+            "step_seconds_max": 240.001
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-05",
+      "raw_record_id": "nasa_jsc_oem:2024-06-05:86d9b4020383",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-05/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-05_ISS.OEM_J2K_EPH.txt",
+      "sha256": "86d9b4020383c996f91088d89eadb1cdacba6baeb51666008a95b0caa5d39405",
+      "bytes": 857713,
+      "fetched_utc": "2026-09-18T20:39:28Z",
+      "created_utc": "2024-06-05T16:07:04.352Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:86d9b4020383c996f91088d89eadb1cdacba6baeb51666008a95b0caa5d39405",
+      "valid_from_utc": "2024-06-05T10:00:00.000Z",
+      "valid_to_utc": "2024-06-20T10:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Wed, 05 Jun 2024 23:24:14 GMT",
+      "etag": "\"fe09c6b7fac37be3a4c3e9069ba6daff\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-05/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-05T23:24:14.000Z",
+        "ETag": "\"fe09c6b7fac37be3a4c3e9069ba6daff\"",
+        "Size": "857713",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-05T16:07:04.352",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-05T10:00:00.000",
+            "USEABLE_START_TIME": "2024-06-05T10:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-20T10:00:00.000",
+            "STOP_TIME": "2024-06-20T10:00:00.000"
+          },
+          "valid_from_utc": "2024-06-05T10:00:00.000Z",
+          "valid_to_utc": "2024-06-20T10:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6435,
+            "data_start_utc": "2024-06-05T10:00:00.000Z",
+            "data_end_utc": "2024-06-20T10:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.164,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-07",
+      "raw_record_id": "nasa_jsc_oem:2024-06-07:83a1a0ff6ad3",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-07/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-07_ISS.OEM_J2K_EPH.txt",
+      "sha256": "83a1a0ff6ad3bad708bcc54e7ba00767d563f28375c23a540a4f3c75ca41a5dd",
+      "bytes": 857065,
+      "fetched_utc": "2026-09-18T20:39:29Z",
+      "created_utc": "2024-06-07T17:49:09.860Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:83a1a0ff6ad3bad708bcc54e7ba00767d563f28375c23a540a4f3c75ca41a5dd",
+      "valid_from_utc": "2024-06-07T12:00:00.000Z",
+      "valid_to_utc": "2024-06-22T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Fri, 07 Jun 2024 21:34:49 GMT",
+      "etag": "\"bb8b53c942d3b395e980729bf4c6a171\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-07/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-07T21:34:49.000Z",
+        "ETag": "\"bb8b53c942d3b395e980729bf4c6a171\"",
+        "Size": "857065",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-07T17:49:09.860",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-07T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-07T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-22T12:00:00.000",
+            "STOP_TIME": "2024-06-22T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-07T12:00:00.000Z",
+          "valid_to_utc": "2024-06-22T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6433,
+            "data_start_utc": "2024-06-07T12:00:00.000Z",
+            "data_end_utc": "2024-06-22T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.044,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-11",
+      "raw_record_id": "nasa_jsc_oem:2024-06-11:6375f371b39a",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-11/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-11_ISS.OEM_J2K_EPH.txt",
+      "sha256": "6375f371b39aa40f0ae45e90d538ffef897fedef9edcb825b7e4ce6fc034121b",
+      "bytes": 807897,
+      "fetched_utc": "2026-09-18T20:39:29Z",
+      "created_utc": "2024-06-10T16:54:32.704Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:6375f371b39aa40f0ae45e90d538ffef897fedef9edcb825b7e4ce6fc034121b",
+      "valid_from_utc": "2024-06-10T12:00:00.000Z",
+      "valid_to_utc": "2024-06-25T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 11 Jun 2024 20:11:11 GMT",
+      "etag": "\"bf1157c0779a36a42e5d9a36356f625c\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-11/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-11T20:11:11.000Z",
+        "ETag": "\"bf1157c0779a36a42e5d9a36356f625c\"",
+        "Size": "807897",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-10T16:54:32.704",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-10T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-10T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-25T12:00:00.000",
+            "STOP_TIME": "2024-06-25T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-10T12:00:00.000Z",
+          "valid_to_utc": "2024-06-25T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6072,
+            "data_start_utc": "2024-06-10T12:00:00.000Z",
+            "data_end_utc": "2024-06-25T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.049,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-13",
+      "raw_record_id": "nasa_jsc_oem:2024-06-13:336b1b83386f",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-13/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-13_ISS.OEM_J2K_EPH.txt",
+      "sha256": "336b1b83386f4f5f8cb59a037d053aea81d91da35f6f8b080a8d7fda5aeb8635",
+      "bytes": 808800,
+      "fetched_utc": "2026-09-18T20:39:29Z",
+      "created_utc": "2024-06-13T16:49:08.501Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:336b1b83386f4f5f8cb59a037d053aea81d91da35f6f8b080a8d7fda5aeb8635",
+      "valid_from_utc": "2024-06-12T12:00:00.000Z",
+      "valid_to_utc": "2024-06-27T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Thu, 13 Jun 2024 20:18:53 GMT",
+      "etag": "\"e48a8e2d50bfae6af39aef3d76f0c3a5\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-13/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-13T20:18:53.000Z",
+        "ETag": "\"e48a8e2d50bfae6af39aef3d76f0c3a5\"",
+        "Size": "808800",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-13T16:49:08.501",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-12T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-12T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-27T12:00:00.000",
+            "STOP_TIME": "2024-06-27T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-12T12:00:00.000Z",
+          "valid_to_utc": "2024-06-27T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6093,
+            "data_start_utc": "2024-06-12T12:00:00.000Z",
+            "data_end_utc": "2024-06-27T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.811,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-14",
+      "raw_record_id": "nasa_jsc_oem:2024-06-14:7c46abd8eb55",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-14/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-14_ISS.OEM_J2K_EPH.txt",
+      "sha256": "7c46abd8eb55e430bd9c97f35d2399303f1b68bf058f7771e4bd443101b9571e",
+      "bytes": 808773,
+      "fetched_utc": "2026-09-18T20:39:30Z",
+      "created_utc": "2024-06-14T19:20:58.186Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:7c46abd8eb55e430bd9c97f35d2399303f1b68bf058f7771e4bd443101b9571e",
+      "valid_from_utc": "2024-06-14T12:00:00.000Z",
+      "valid_to_utc": "2024-06-29T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Sat, 15 Jun 2024 01:32:10 GMT",
+      "etag": "\"9f37e3ef1ec90d640fb0661c42cb431e\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-14/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-15T01:32:10.000Z",
+        "ETag": "\"9f37e3ef1ec90d640fb0661c42cb431e\"",
+        "Size": "808773",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-14T19:20:58.186",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-14T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-14T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-06-29T12:00:00.000",
+            "STOP_TIME": "2024-06-29T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-14T12:00:00.000Z",
+          "valid_to_utc": "2024-06-29T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 6093,
+            "data_start_utc": "2024-06-14T12:00:00.000Z",
+            "data_end_utc": "2024-06-29T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.811,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-18",
+      "raw_record_id": "nasa_jsc_oem:2024-06-18:8e9b95f56a10",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-18/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-18_ISS.OEM_J2K_EPH.txt",
+      "sha256": "8e9b95f56a1097028e5b084ec9956acc9fb8080413fc3c6b5c6ccdb8248617c6",
+      "bytes": 748200,
+      "fetched_utc": "2026-09-18T20:39:30Z",
+      "created_utc": "2024-06-18T03:23:22.072Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:8e9b95f56a1097028e5b084ec9956acc9fb8080413fc3c6b5c6ccdb8248617c6",
+      "valid_from_utc": "2024-06-17T12:00:00.000Z",
+      "valid_to_utc": "2024-07-02T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 18 Jun 2024 20:01:19 GMT",
+      "etag": "\"40c9c949aec10a16eceddd2cb1377c5a\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-18/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-18T20:01:19.000Z",
+        "ETag": "\"40c9c949aec10a16eceddd2cb1377c5a\"",
+        "Size": "748200",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-18T03:23:22.072",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-17T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-17T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-02T12:00:00.000",
+            "STOP_TIME": "2024-07-02T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-17T12:00:00.000Z",
+          "valid_to_utc": "2024-07-02T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5629,
+            "data_start_utc": "2024-06-17T12:00:00.000Z",
+            "data_end_utc": "2024-07-02T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.446,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-19",
+      "raw_record_id": "nasa_jsc_oem:2024-06-19:0917888a9028",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-19/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-19_ISS.OEM_J2K_EPH.txt",
+      "sha256": "0917888a90280e4a51c50241f4314d80f05301b1a9d3990adafb640c9e6f4e63",
+      "bytes": 762435,
+      "fetched_utc": "2026-09-18T20:39:31Z",
+      "created_utc": "2024-06-19T15:42:06.391Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:0917888a90280e4a51c50241f4314d80f05301b1a9d3990adafb640c9e6f4e63",
+      "valid_from_utc": "2024-06-19T12:00:00.000Z",
+      "valid_to_utc": "2024-07-04T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Wed, 19 Jun 2024 20:03:24 GMT",
+      "etag": "\"8064f060874e6d08e1984630eb3fb7f9\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-19/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-19T20:03:24.000Z",
+        "ETag": "\"8064f060874e6d08e1984630eb3fb7f9\"",
+        "Size": "762435",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-19T15:42:06.391",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-19T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-19T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-04T12:00:00.000",
+            "STOP_TIME": "2024-07-04T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-19T12:00:00.000Z",
+          "valid_to_utc": "2024-07-04T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5736,
+            "data_start_utc": "2024-06-19T12:00:00.000Z",
+            "data_end_utc": "2024-07-04T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.5,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-21",
+      "raw_record_id": "nasa_jsc_oem:2024-06-21:48f4a9448767",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-21/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-21_ISS.OEM_J2K_EPH.txt",
+      "sha256": "48f4a944876775647a3c4c1ea821770916314ebde68a043679ac64860d264e07",
+      "bytes": 754036,
+      "fetched_utc": "2026-09-18T20:39:31Z",
+      "created_utc": "2024-06-21T16:25:24.810Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:48f4a944876775647a3c4c1ea821770916314ebde68a043679ac64860d264e07",
+      "valid_from_utc": "2024-06-21T12:00:00.000Z",
+      "valid_to_utc": "2024-07-06T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Fri, 21 Jun 2024 19:44:00 GMT",
+      "etag": "\"0548ab57726ca27c817ccff6ea2a40ec\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-21/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-21T19:44:00.000Z",
+        "ETag": "\"0548ab57726ca27c817ccff6ea2a40ec\"",
+        "Size": "754036",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-21T16:25:24.810",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-21T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-21T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-06T12:00:00.000",
+            "STOP_TIME": "2024-07-06T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-21T12:00:00.000Z",
+          "valid_to_utc": "2024-07-06T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5673,
+            "data_start_utc": "2024-06-21T12:00:00.000Z",
+            "data_end_utc": "2024-07-06T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.027,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-24",
+      "raw_record_id": "nasa_jsc_oem:2024-06-24:e0785fd963f7",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-24/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-24_ISS.OEM_J2K_EPH.txt",
+      "sha256": "e0785fd963f7ddd8d0de7555af4ff57b22034c9d063e2bba20826d789af68ff2",
+      "bytes": 754804,
+      "fetched_utc": "2026-09-18T20:39:31Z",
+      "created_utc": "2024-06-24T20:20:05.041Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:e0785fd963f7ddd8d0de7555af4ff57b22034c9d063e2bba20826d789af68ff2",
+      "valid_from_utc": "2024-06-24T12:00:00.000Z",
+      "valid_to_utc": "2024-07-09T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Tue, 25 Jun 2024 03:29:12 GMT",
+      "etag": "\"4c2d9a3ce3a126c597f5efd7cedacd5e\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-24/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-25T03:29:12.000Z",
+        "ETag": "\"4c2d9a3ce3a126c597f5efd7cedacd5e\"",
+        "Size": "754804",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-24T20:20:05.041",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-24T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-24T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-09T12:00:00.000",
+            "STOP_TIME": "2024-07-09T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-24T12:00:00.000Z",
+          "valid_to_utc": "2024-07-09T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5680,
+            "data_start_utc": "2024-06-24T12:00:00.000Z",
+            "data_end_utc": "2024-07-09T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.494,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-27",
+      "raw_record_id": "nasa_jsc_oem:2024-06-27:6f869f44dc00",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-27/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-27_ISS.OEM_J2K_EPH.txt",
+      "sha256": "6f869f44dc005448148a0a493f05ad8ad23d59522bd50effabb6a7a74db1b3da",
+      "bytes": 754812,
+      "fetched_utc": "2026-09-18T20:39:31Z",
+      "created_utc": "2024-06-26T18:05:51.021Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:6f869f44dc005448148a0a493f05ad8ad23d59522bd50effabb6a7a74db1b3da",
+      "valid_from_utc": "2024-06-26T12:00:00.000Z",
+      "valid_to_utc": "2024-07-11T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Thu, 27 Jun 2024 13:12:21 GMT",
+      "etag": "\"965df6bdcd945da14b6f57e194b6635c\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-27/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-27T13:12:21.000Z",
+        "ETag": "\"965df6bdcd945da14b6f57e194b6635c\"",
+        "Size": "754812",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-26T18:05:51.021",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-26T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-26T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-11T12:00:00.000",
+            "STOP_TIME": "2024-07-11T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-26T12:00:00.000Z",
+          "valid_to_utc": "2024-07-11T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5680,
+            "data_start_utc": "2024-06-26T12:00:00.000Z",
+            "data_end_utc": "2024-07-11T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 1.494,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    },
+    {
+      "source_id": "nasa_jsc_oem",
+      "release_id": "2024-06-28",
+      "raw_record_id": "nasa_jsc_oem:2024-06-28:a532fbf65e18",
+      "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-06-28/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+      "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-06-28_ISS.OEM_J2K_EPH.txt",
+      "sha256": "a532fbf65e1837b43397420c79b1a821d404e8e710864503b1d9158f65c4aa78",
+      "bytes": 754361,
+      "fetched_utc": "2026-09-18T20:39:32Z",
+      "created_utc": "2024-06-28T16:14:36.949Z",
+      "published_utc": null,
+      "available_utc": null,
+      "version": "sha256:a532fbf65e1837b43397420c79b1a821d404e8e710864503b1d9158f65c4aa78",
+      "valid_from_utc": "2024-06-28T12:00:00.000Z",
+      "valid_to_utc": "2024-07-13T12:00:00.000Z",
+      "coverage_end_inclusive": true,
+      "frame": "EME2000",
+      "time_system": "UTC",
+      "originator": "NASA/JSC/FOD/TOPO",
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "http_last_modified": "Sat, 29 Jun 2024 04:51:51 GMT",
+      "etag": "\"727aea0d5513117b8bbf8fd44be88d8e\"",
+      "s3_metadata": {
+        "Key": "iss-coords/2024-06-28/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "LastModified": "2024-06-29T04:51:51.000Z",
+        "ETag": "\"727aea0d5513117b8bbf8fd44be88d8e\"",
+        "Size": "754361",
+        "Owner": null,
+        "StorageClass": "STANDARD",
+        "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-06.xml"
+      },
+      "oem_headers": {
+        "CCSDS_OEM_VERS": "2.0",
+        "CREATION_DATE": "2024-06-28T16:14:36.949",
+        "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+      },
+      "segments": [
+        {
+          "metadata": {
+            "OBJECT_NAME": "ISS",
+            "OBJECT_ID": "1998-067-A",
+            "CENTER_NAME": "Earth",
+            "REF_FRAME": "EME2000",
+            "TIME_SYSTEM": "UTC",
+            "START_TIME": "2024-06-28T12:00:00.000",
+            "USEABLE_START_TIME": "2024-06-28T12:00:00.000",
+            "USEABLE_STOP_TIME": "2024-07-13T12:00:00.000",
+            "STOP_TIME": "2024-07-13T12:00:00.000"
+          },
+          "valid_from_utc": "2024-06-28T12:00:00.000Z",
+          "valid_to_utc": "2024-07-13T12:00:00.000Z",
+          "coverage_end_inclusive": true,
+          "data_checks": {
+            "point_count": 5671,
+            "data_start_utc": "2024-06-28T12:00:00.000Z",
+            "data_end_utc": "2024-07-13T12:00:00.000Z",
+            "strictly_increasing_timestamps": true,
+            "all_values_finite": true,
+            "data_within_declared_start_stop": true,
+            "data_brackets_usable_interval": true,
+            "step_seconds_min": 0.005,
+            "step_seconds_max": 240.0
+          }
+        }
+      ],
+      "strict_replay_eligibility": "historical_reconstruction_only",
+      "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+    }
+  ],
+  "retrieval_failures": []
+}

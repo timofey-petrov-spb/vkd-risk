@@ -1,0 +1,55 @@
+:Product: 05020030three_day_forecast.txt
+:Issued: 2024 May 02 0030 UTC
+# Prepared by the U.S. Dept. of Commerce, NOAA, Space Weather Prediction Center
+#
+A. NOAA Geomagnetic Activity Observation and Forecast
+
+The greatest observed 3 hr Kp over the past 24 hours was 4 (below NOAA
+Scale levels).
+The greatest expected 3 hr Kp for May 02-May 04 2024 is 4.33 (below NOAA
+Scale levels).
+
+NOAA Kp index breakdown May 02-May 04 2024
+
+             May 02       May 03       May 04
+00-03UT       2.33         3.67         3.33     
+03-06UT       3.33         3.33         2.33     
+06-09UT       2.67         3.00         3.00     
+09-12UT       2.33         3.33         2.67     
+12-15UT       3.00         3.00         2.67     
+15-18UT       3.33         3.33         4.00     
+18-21UT       4.00         3.33         4.33     
+21-00UT       4.33         3.67         4.33     
+
+Rationale: No G1 (Minor) or greater geomagnetic storms are expected.  No
+significant transient or recurrent solar wind features are forecast.
+
+B. NOAA Solar Radiation Activity Observation and Forecast
+
+Solar radiation, as observed by NOAA GOES-18 over the past 24 hours, was
+below S-scale storm level thresholds.
+
+Solar Radiation Storm Forecast for May 02-May 04 2024
+
+              May 02  May 03  May 04
+S1 or greater   10%      5%      5%
+
+Rationale: A slight chance for an S1 (Minor) solar radiation storm will
+exist on 02 May given the relatively recent activity from AR 3654 and
+its current location.
+
+C. NOAA Radio Blackout Activity and Forecast
+
+Radio blackouts reaching the R1 levels were observed over the past 24
+hours. The largest was at May 01 2024 1444 UTC.
+
+Radio Blackout Forecast for May 02-May 04 2024
+
+              May 02        May 03        May 04
+R1-R2           55%           40%           30%
+R3 or greater   10%            5%            5%
+
+Rationale: R1-2 (Minor-Moderate) radio blackouts due to M-class flare
+activity remain likely on 02 May given the flare histories of ARs 3654
+and 3663. Probabilities decrease to a just a chance 03-04 May as AR 3654
+rotates off the visible disk.

@@ -1,0 +1,54 @@
+:Product: 05121230three_day_forecast.txt
+:Issued: 2024 May 12 1230 UTC
+# Prepared by the U.S. Dept. of Commerce, NOAA, Space Weather Prediction Center
+#
+A. NOAA Geomagnetic Activity Observation and Forecast
+
+The greatest observed 3 hr Kp over the past 24 hours was 9 (NOAA Scale
+G5).
+The greatest expected 3 hr Kp for May 12-May 14 2024 is 7.67 (NOAA Scale
+G4).
+
+NOAA Kp index breakdown May 12-May 14 2024
+
+             May 12       May 13       May 14
+00-03UT       6.67 (G3)    5.00 (G1)    4.67 (G1)
+03-06UT       7.00 (G3)    6.67 (G3)    4.33     
+06-09UT       3.67         5.00 (G1)    3.00     
+09-12UT       3.67         5.67 (G2)    3.00     
+12-15UT       5.00 (G1)    4.67 (G1)    2.67     
+15-18UT       6.00 (G2)    3.67         2.00     
+18-21UT       7.67 (G4)    3.00         2.00     
+21-00UT       6.67 (G3)    3.00         3.00     
+
+Rationale: G4 (Extreme) storm levels are expected on 12 May due to CME
+impacts. G3 (Strong) geomagnetic storming is likely to continue into the
+early hours of 13 May. Isolated G1 (Minor) geomagnetic storming is
+likely on 14 May as conditions from the the previous days wane.
+
+B. NOAA Solar Radiation Activity Observation and Forecast
+
+Solar radiation, as observed by NOAA GOES-18 over the past 24 hours, was
+above S-scale storm level thresholds.
+
+Solar Radiation Storm Forecast for May 12-May 14 2024
+
+              May 12  May 13  May 14
+S1 or greater   99%     60%     60%
+
+Rationale: S1 (Minor) solar radiation storms are expected through 14 May
+due to activity originating from AR 3634.
+
+C. NOAA Radio Blackout Activity and Forecast
+
+Radio blackouts reaching the R2 levels were observed over the past 24
+hours. The largest was at May 11 2024 1525 UTC.
+
+Radio Blackout Forecast for May 12-May 14 2024
+
+              May 12        May 13        May 14
+R1-R2           95%           95%           95%
+R3 or greater   75%           75%           75%
+
+Rationale: R3 (Strong) or greater radio blackouts are expected all
+three days.
