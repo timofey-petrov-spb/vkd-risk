@@ -1,7 +1,7 @@
 {
  "schema_version": "2.1",
- "algorithm_version": "0.4.0-i1",
- "computed_utc": "2026-09-18T22:22:00+00:00",
+ "algorithm_version": "0.4.1-i1",
+ "computed_utc": "2026-09-18T22:39:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -93,12 +93,28 @@
     "L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.",
     "Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.",
     "SAA flag is the configured |B| threshold proxy, not an official region boundary.",
-    "Строгий отбор OEM по доказанной публикации не прошёл; взят OEM, созданный (CREATION_DATE) и изменённый в S3 не позднее отсечки. Это объявленная реконструкция: публичная доступность этой версии в тот момент не доказана (реестр A1). Решение Б, зафиксировано в журнале."
+    "Строгий отбор OEM по доказанной публикации не прошёл; взят OEM, созданный (CREATION_DATE) и изменённый в S3 не позднее отсечки. Это объявленная реконструкция: публичная доступность этой версии в тот момент не доказана (реестр A1). Решение Б, зафиксировано в журнале.",
+    "Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; 41 из 1801 точек с B/B0 < 1 помечены."
    ],
    "earth_orientation": "Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy",
    "max_tle_age_days": null,
    "strict_attempt_error": "No OEM covering the full interval with required historical availability; reconstruction is a separate mode",
    "errors": null
+  },
+  "belt_coordinates": {
+   "method": "eccentric_dipole",
+   "coefficients": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\orbit\\IGRF13.shc",
+   "epoch_utc": "2024-06-26T03:00:00+00:00",
+   "offset_km": [
+    -396.6499145548627,
+    390.4469503919495,
+    232.94634829364153
+   ],
+   "B_eq_nT": 29761.10464479886,
+   "n": 1801,
+   "n_inconsistent_BB0": 41,
+   "n_outside_model": 0,
+   "note": "L и B0 от смещённого центра диполя (Fraser-Smith 1987), B — полный IGRF точки (A3); приближение до трассировки силовых линий; B/B0 < 1 помечается, не обрезается"
   },
   "tle_text": null,
   "tle_fetch_status": null
@@ -129,17 +145,17 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 0.0,
+       "value": 3167669.297784089,
        "unit": "част./см²",
        "kind": "own_calculation",
-       "presence": "not_detected",
+       "presence": "detected",
        "coverage": "partial",
        "records": [
         "trajectory",
         "ost1044_A"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-       "limits": "доля точек с моделью 79 %; статусы: beyond_mirror, no_model_L, ok"
+       "limits": "доля точек с моделью 86 %; статусы: beyond_mirror, no_model_L, ok"
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
@@ -261,17 +277,17 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 0.0,
+       "value": 2300634.5229295525,
        "unit": "част./см²",
        "kind": "own_calculation",
-       "presence": "not_detected",
+       "presence": "detected",
        "coverage": "partial",
        "records": [
         "trajectory",
         "ost1044_A"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-       "limits": "доля точек с моделью 75 %; статусы: beyond_mirror, no_model_L"
+       "limits": "доля точек с моделью 77 %; статусы: beyond_mirror, no_model_L, ok"
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
@@ -405,10 +421,10 @@
    "kind": "own_calculation",
    "impact_ru": "Интеграл потока захваченных протонов вдоль пути за окно. Показатель относительного сравнения окон между собой; в дозу не переводится без модели защиты и ткани.",
    "period_ru": "окно 2024-06-25 12:00 — 18:00 UTC, 360 мин",
-   "data_ru": "0 част./см²",
+   "data_ru": "3.168e+06 част./см²",
    "source_ru": "trajectory; ost1044_A",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-   "limits_ru": "покрытие частичное; наличие воздействия: not_detected; доля точек с моделью 79 %; статусы: beyond_mirror, no_model_L, ok; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "limits_ru": "покрытие частичное; наличие воздействия: detected; доля точек с моделью 86 %; статусы: beyond_mirror, no_model_L, ok; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "trajectory",
     "ost1044_A"
@@ -514,7 +530,7 @@
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T22:22:51.420344+00:00",
+   "fetched_utc": "2026-09-18T22:39:54.677377+00:00",
    "data_utc": null,
    "age_min": 0.0
   },
@@ -523,7 +539,7 @@
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T22:22:51.670710+00:00",
+   "fetched_utc": "2026-09-18T22:39:54.930982+00:00",
    "data_utc": null,
    "age_min": 0.0
   },
@@ -730,44 +746,23 @@
    "donki_msg#20240630-AL-002: опубликовано 2024-06-30 14:35Z, после отсечки",
    "donki_msg#20240630-AL-002: опубликовано 2024-06-30 14:35Z, после отсечки",
    "donki_msg#20240630-AL-001: опубликовано 2024-06-30 13:34Z, после отсечки",
-   "donki_msg#20240630-AL-002: опубликовано 2024-06-30 14:35Z, после отсечки"
+   "donki_msg#20240630-AL-002: опубликовано 2024-06-30 14:35Z, после отсечки",
+   "donki_enlil#2024-06-25T05:00:00-CME-001#2024-06-25T2034Z: опубликовано 2024-06-25 20:34Z, после отсечки",
+   "donki_enlil#2024-06-25T13:25:00-CME-001#2024-06-25T2231Z: опубликовано 2024-06-25 22:31Z, после отсечки",
+   "donki_enlil#2024-06-25T23:48:00-CME-001#2024-06-26T1538Z: опубликовано 2024-06-26 15:38Z, после отсечки",
+   "donki_enlil#2024-06-28T00:36:00-CME-001#2024-06-28T1736Z: опубликовано 2024-06-28 17:36Z, после отсечки",
+   "donki_enlil#2024-06-29T03:36:00-CME-001#2024-06-29T1813Z: опубликовано 2024-06-29 18:13Z, после отсечки",
+   "donki_enlil#2024-06-29T03:36:00-CME-001#2024-06-29T1832Z: опубликовано 2024-06-29 18:32Z, после отсечки",
+   "donki_enlil#2024-06-29T03:36:00-CME-001#2024-06-30T1347Z: опубликовано 2024-06-30 13:47Z, после отсечки",
+   "donki_enlil#2024-06-29T04:00:00-CME-001#2024-06-29T1712Z: опубликовано 2024-06-29 17:12Z, после отсечки",
+   "donki_enlil#2024-06-29T04:00:00-CME-001#2024-06-29T1813Z: опубликовано 2024-06-29 18:13Z, после отсечки",
+   "donki_enlil#2024-06-29T04:00:00-CME-001#2024-06-29T1832Z: опубликовано 2024-06-29 18:32Z, после отсечки",
+   "donki_enlil#2024-06-29T04:00:00-CME-001#2024-06-30T1347Z: опубликовано 2024-06-30 13:47Z, после отсечки",
+   "donki_enlil#2024-06-29T16:12:00-CME-001#2024-06-30T1303Z: опубликовано 2024-06-30 13:03Z, после отсечки",
+   "donki_enlil#2024-06-29T16:12:00-CME-001#2024-06-30T1347Z: опубликовано 2024-06-30 13:47Z, после отсечки",
+   "donki_enlil#2024-06-30T03:48:00-CME-001#2024-06-30T1746Z: опубликовано 2024-06-30 17:46Z, после отсечки"
   ],
   "events_used": [
-   {
-    "id": "donki_msg#20240623-AL-001",
-    "kind": "FLR",
-    "published_utc": "2024-06-23T13:03:44+00:00",
-    "start_utc": "2024-06-23T12:51:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240623-AL-002",
-    "kind": "FLR",
-    "published_utc": "2024-06-23T13:14:22+00:00",
-    "start_utc": "2024-06-23T12:51:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240623-AL-003",
-    "kind": "CME",
-    "published_utc": "2024-06-23T17:02:06+00:00",
-    "start_utc": "2024-06-23T07:00:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240623-AL-003",
-    "kind": "CME",
-    "published_utc": "2024-06-23T17:02:06+00:00",
-    "start_utc": "2024-06-23T07:48:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240623-AL-003",
-    "kind": "CME",
-    "published_utc": "2024-06-23T17:02:06+00:00",
-    "start_utc": "2024-06-23T09:36:00+00:00",
-    "simulated": false
-   },
    {
     "id": "donki_msg#20240624-AL-001",
     "kind": "CME",
