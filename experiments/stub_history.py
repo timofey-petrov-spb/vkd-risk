@@ -45,8 +45,9 @@ def gst_kp_samples() -> tuple[list[EnvironmentSample], dict]:
         for k in g.get('allKpIndex', []):
             t = _t(k['observedTime'])
             rid = 'donki_gst#%s#%s' % (g['gstID'], k['observedTime'])
+            # observedTime в DONKI — КОНЕЦ трёхчасового интервала Kp (сверено с GFZ за 10.05.2024)
             out.append(EnvironmentSample(t, 'kp', float(k['kpIndex']), '', 'nasa_donki_gst', Kind.OBSERVATION,
-                                         None, t, t + timedelta(hours=3), datetime.now(timezone.utc), 'final', rid,
+                                         None, t - timedelta(hours=3), t, datetime.now(timezone.utc), 'preliminary', rid,
                                          version=str(g.get('versionId'))))
             raw[rid] = {'gstID': g['gstID'], 'kp': k, 'card_submissionTime': g.get('submissionTime'), 'versionId': g.get('versionId')}
     return out, raw

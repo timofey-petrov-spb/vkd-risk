@@ -100,19 +100,23 @@ def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample])
                 severity='info',
             ))
         for reason in m.needs_check_reasons:
-            sev = 'critical' if 'критическое' in reason else 'limiting'
+            sev = 'critical' if 'приоритетное' in reason else 'limiting'
+            sim = 'МОДЕЛИРУЕМОЕ' in reason
             cards.append(Card(
-                title='Условие: ' + reason.split(':')[0],
-                kind=Kind.OBSERVATION if 'GOES' in reason or 'Kp' in reason else Kind.EXTERNAL_FORECAST,
-                impact_ru=('Критическое условие: окно отменяется, идущая ВКД прерывается.' if sev == 'critical'
-                           else 'Ограничивающее условие: окно не планируется; идущая ВКД не прерывается, '
-                                'требуется ручная проверка аналитиком.'),
+                title=('Сценарий: ' if sim else 'Условие: ') + reason.split(':')[0],
+                kind=Kind.OWN_CALCULATION if sim else (Kind.OBSERVATION if ('GOES' in reason or 'Kp' in reason) else Kind.EXTERNAL_FORECAST),
+                impact_ru=('Приоритетное предупреждение (S ≥ 3): NOAA рекомендует избегать радиационной опасности '
+                           'при ВКД; окно требует срочной проверки специалистом. Команды прервать или продолжать ВКД '
+                           'из индекса не следуют.' if sev == 'critical'
+                           else 'Предупреждение: окно исключено из автоматического выбора и требует ручной проверки '
+                                'аналитиком. Это консервативная политика прототипа, не эксплуатационная норма.'),
                 period_ru=period,
                 data_ru=reason,
-                source_ru='пороги: NOAA шкалы S и G; выбор границы класса — решение команды, '
-                          'обоснование в docs/KRITERII_PLAN.md раздел 5',
-                rule_ru='CONTRACT.md раздел 4, пункт 2: условия дополнительной проверки',
-                limits_ru='порог — настройка с источником; при иной шкале организации порог меняется в конфигурации',
+                source_ru='пороги: NOAA Space Weather Scales (S1 10, S2 100, S3 1000 pfu по ≥10 МэВ; G3 = Kp 7); '
+                          'граница класса — решение команды, обоснование в docs/KRITERII_PLAN.md разделы 5 и 7',
+                rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки',
+                limits_ru='порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; '
+                          'при иной шкале организации порог меняется в конфигурации',
                 record_ids=(),
                 severity=sev,
             ))

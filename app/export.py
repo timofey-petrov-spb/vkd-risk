@@ -19,6 +19,16 @@ def _j(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=1, default=str)
 
 
+def _git_sha() -> str | None:
+    """SHA коммита для воспроизведения (Т8); None вне репозитория."""
+    try:
+        import subprocess
+        root = __import__('os').path.dirname(__import__('os').path.dirname(__import__('os').path.abspath(__file__)))
+        return subprocess.check_output(['git', '-C', root, 'rev-parse', 'HEAD'], stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+    except Exception:            # noqa: BLE001
+        return None
+
+
 def report_md(S: dict) -> str:
     r = S['recommendation']
     L = ['# ВКД-Риск: расчёт %s' % S['computed_utc'],
@@ -69,9 +79,14 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('cards.json', _j(S['cards']))
         z.writestr('sources.json', _j(S['sources']))
         z.writestr('manifest.json', _j({
-            'algorithm_version': S['algorithm_version'], 'computed_utc': S['computed_utc'],
-            'cutoff_utc': S['request'].get('cutoff_utc'), 'source_versions': S['sources'],
-            'raw_record_ids': sorted(raw_records), 'thresholds': S['request']['thresholds'],
+            'schema_version': S.get('schema_version'), 'algorithm_version': S['algorithm_version'],
+            'computed_utc': S['computed_utc'], 'mode': S.get('mode_id', S['mode']),
+            'cutoff_utc': S['request'].get('cutoff_utc'), 'is_simulated': S.get('is_simulated', False),
+            'source_versions': S['sources'], 'raw_record_ids': sorted(raw_records),
+            'effective_config': S['request']['thresholds'],
+            'excluded_by_cutoff': S.get('history', {}).get('excluded_by_cutoff', []),
+            'events_used': S.get('history', {}).get('events_used', []),
+            'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))
         for rid, rec in raw_records.items():
             z.writestr('raw/%s.json' % rid.replace('/', '_').replace('#', '_').replace(':', '-'), _j(rec))
