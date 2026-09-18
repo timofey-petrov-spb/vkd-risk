@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Типы стыка между двумя половинами проекта. CONTRACT.md, раздел 6.
+"""Типы стыка между двумя половинами проекта. CONTRACT.md v3, раздел 6.
 
-ЗАМОРОЖЕНО. Изменение — только по согласованию вдвоём с записью в журналах.
+ВЕРСИЯ 2 — по разбору Codex (journal/friend.md, 19.09). Не заморожена:
+замораживается после записи Codex «согласовано» в журнале.
 
-Единицы входят в имена полей (CONTRACT.md, раздел 1). Все моменты — UTC,
-timezone-aware datetime. Пропуск данных выражается None, а не нулём:
-«пропуск данных ≠ нулевой риск» (CONTRACT.md, правило 7).
+Принципы: единицы в именах; все времена — timezone-aware UTC; отсутствие
+величины — None, не ноль; наличие воздействия и полнота данных — два разных
+поля; каждая величина знает, из каких записей она получена.
 """
 from __future__ import annotations
 
@@ -16,129 +17,187 @@ from typing import Optional
 
 
 class Kind(str, Enum):
-    """Происхождение величины. Показывается пользователю всегда (О4)."""
-    OBSERVATION = "observation"            # наблюдение источника
-    EXTERNAL_FORECAST = "external_forecast"  # чужой прогноз, применённый нами
-    OWN_CALCULATION = "own_calculation"    # наш расчёт
+    OBSERVATION = "observation"
+    EXTERNAL_FORECAST = "external_forecast"
+    OWN_CALCULATION = "own_calculation"
 
 
-class DataStatus(str, Enum):
-    """Три состояния, не два (CONTRACT.md, правило 7)."""
-    PRESENT = "present"          # воздействие выявлено
-    ABSENT = "absent"            # воздействие не выявлено, данные полные
-    INSUFFICIENT = "insufficient"  # данных недостаточно для оценки
+class Presence(str, Enum):
+    """Наличие воздействия — отдельно от полноты данных."""
+    DETECTED = "detected"
+    NOT_DETECTED = "not_detected"
+    UNKNOWN = "unknown"
+
+
+class Coverage(str, Enum):
+    """Полнота данных по окну — отдельно от наличия воздействия."""
+    FULL = "full"
+    PARTIAL = "partial"
+    NONE = "none"
+
+
+class MagMethod(str, Enum):
+    DIPOLE = "dipole"            # центрированный диполь: исследовательское приближение
+    IGRF_TRACE = "igrf_trace"    # трассировка силовой линии по IGRF
+    NONE = "none"
 
 
 # ---------------------------------------------------------------------------
-# Место первое: Codex -> Claude
+# Запрос и манифест
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
-class TrajectoryPoint:
-    """Положение станции и магнитные координаты в момент t_utc.
+class Request:
+    mode: str                          # "live" | "history_review" | "history_forecast"
+    eva_start_utc: datetime
+    duration_min: int                  # 60…480
+    search_period_min: int             # 0…1440
+    cutoff_utc: Optional[datetime]     # обязателен для history_forecast
+    disabled_sources: tuple[str, ...] = ()
+    settings: dict = field(default_factory=dict)   # пороги, каналы, модель MMOD
 
-    Источник орбиты и эпоха элементов идут отдельно, в TrajectoryMeta:
-    постановка требует показывать источник, эпоху и давность (Т2).
-    """
+
+@dataclass(frozen=True)
+class Manifest:
+    """Единый снимок расчёта: экран, объяснения и выгрузка ссылаются на него."""
+    request: Request
+    algorithm_version: str
+    source_versions: dict              # source_id -> версия/эпоха/etag
+    fetched_utc: dict                  # source_id -> когда получено
+    raw_record_ids: tuple[str, ...]    # все сырые записи, вошедшие в расчёт
+    coverage_map: dict                 # source_id -> периоды покрытия и пропуски
+
+
+# ---------------------------------------------------------------------------
+# Codex -> Claude
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class TrajectoryMeta:
+    source_id: str                     # "celestrak_gp" | "nasa_oem" | ...
+    method: str                        # "sgp4" | "oem_interp"
+    frame: str                         # "TEME" | "J2000" | "ITRF"
+    epoch_utc: Optional[datetime]      # эпоха элементов (SGP4); None для OEM
+    coverage_from_utc: datetime
+    coverage_to_utc: datetime
+    created_utc: Optional[datetime]    # CREATION_DATE — создание, не публикация
+    available_utc: Optional[datetime]  # подтверждённая доступность; None = не доказана
+    fetched_utc: datetime
+    is_reconstruction: bool            # True, если available_utc не доказана к отсечке
+    field_model: str                   # "IGRF-13" | "IGRF-14" — для строгого режима 2024 помечать
+
+
+@dataclass(frozen=True)
+class TrajectoryPoint:
     t_utc: datetime
     lat_deg: float
     lon_deg: float
     alt_km: float
-    L: float                 # параметр Мак-Илвейна, безразмерный
-    B_over_B0: float         # отношение поля к экваториальному на той же L
-    cutoff_GV: float         # вертикальная жёсткость обрезания, ГВ
-    in_saa: bool             # внутри Южно-Атлантической аномалии по порогу поля
-
-
-@dataclass(frozen=True)
-class TrajectoryMeta:
-    source_id: str           # например "celestrak_gp"
-    tle_epoch_utc: datetime  # эпоха элементов — не время публикации
-    fetched_utc: datetime    # когда получили
-    is_reconstruction: bool  # True, если орбита периода не подтверждена на момент прогноза
-    propagator: str = "sgp4"
+    B_nT: Optional[float]
+    L: Optional[float]
+    B_over_B0: Optional[float]
+    cutoff_GV: Optional[float]
+    mag_method: MagMethod
+    mag_status: str                    # "ok" | "outside_model" | "approximation"
+    in_saa: Optional[bool]             # None, если B_nT отсутствует
 
 
 @dataclass(frozen=True)
 class EnvironmentSample:
-    """Одно значение одного источника с тремя временами, ведущимися раздельно.
-
-    Постановка: «время прихода события, срок действия предупреждения и момент
-    его публикации учитываются раздельно». Отсюда три поля времени.
-    """
-    t_utc: datetime                    # к какому моменту относится значение
-    value: Optional[float]             # None = пропуск, не ноль
+    """Одно значение одного канала с раздельными временами и ссылкой на запись."""
+    t_utc: datetime                    # к какому моменту относится
+    channel_id: str                    # например "goes_p_ge10MeV", "kp", "s_scale"
+    value: Optional[float]
     unit: str
     source_id: str
-    published_utc: Optional[datetime]  # None = время публикации неизвестно ⇒ непригоден для строгого replay
+    kind: Kind
+    published_utc: Optional[datetime]  # None ⇒ непригоден для строгого replay
     valid_from_utc: Optional[datetime]
     valid_to_utc: Optional[datetime]
-    kind: Kind
-    version: Optional[str] = None      # версия записи источника, если есть (DONKI versionId)
+    fetched_utc: datetime
+    quality: str                       # "final" | "preliminary" | "model" | "unknown"
+    raw_record_id: str                 # ссылка на сырую запись в кеше
+    version: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class EventInterval:
+    """Событие с возможно неизвестными границами."""
+    event_id: str
+    kind_of_event: str                 # "SEP" | "GST" | "CME_arrival" | ...
+    start_utc: Optional[datetime]
+    end_utc: Optional[datetime]
+    start_uncertain: bool
+    end_uncertain: bool
+    source_id: str
+    published_utc: Optional[datetime]
+    raw_record_id: str
+    note: str = ""
 
 
 @dataclass(frozen=True)
 class Conjunction:
-    """Сближение станции с отслеживаемым объектом (SOCRATES).
-
-    Это предупреждение о станции. Вероятность попадания фрагмента в космонавта
-    отсюда НЕ следует (CONTRACT.md, раздел 9).
-    """
+    """Внешний ПРОГНОЗ сближения станции (SOCRATES), не наблюдение."""
     tca_utc: datetime
     other_object: str
     miss_distance_km: float
     relative_speed_km_s: float
-    max_probability: Optional[float]   # как выдаёт источник, без пересчёта
+    max_probability: Optional[float]
+    dse_days: Optional[float]          # эпоха элементов → TCA; не возраст данных
+    run_utc: Optional[datetime]        # момент прогона SOCRATES
     source_id: str
     published_utc: Optional[datetime]
+    raw_record_id: str
+    table_truncated: bool              # MAX=25 ⇒ «других нет» утверждать нельзя
 
 
 # ---------------------------------------------------------------------------
-# Место второе: Claude -> интерфейс
+# Claude -> интерфейс
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Window:
     start_utc: datetime
-    duration_min: int        # 60…480 по постановке
+    duration_min: int
 
 
 @dataclass(frozen=True)
 class FactorValue:
-    """Одна величина из CONTRACT.md, раздел 3, с происхождением и статусом."""
     name: str
     value: Optional[float]
     unit: str
     kind: Kind
-    status: DataStatus
-    source_ids: tuple[str, ...] = ()
-    note: str = ""           # ограничение или обоснование уверенности
+    presence: Presence
+    coverage: Coverage
+    record_ids: tuple[str, ...]        # какие записи и версии вошли
+    rule_applied: str                  # какое правило/модель применено
+    limits_note: str = ""              # границы применимости, обоснование уверенности
+
+
+@dataclass(frozen=True)
+class MechanismAssessment:
+    mechanism_id: str                  # "spaceweather" | "mmod_stat" | "conjunctions"
+    mandatory: bool
+    factors: tuple[FactorValue, ...]
+    coverage: Coverage
+    needs_check: bool                  # условие дополнительной проверки сработало
+    needs_check_reasons: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class WindowAssessment:
     window: Window
-    mechanism_1: tuple[FactorValue, ...]   # космическая погода
-    mechanism_2: tuple[FactorValue, ...]   # микрометеороиды и мусор
-    minutes_in_saa: Optional[float]
-    minutes_high_latitude: Optional[float]
-    status_1: DataStatus
-    status_2: DataStatus
+    mechanisms: tuple[MechanismAssessment, ...]
+    coverage_declared: tuple[str, ...]     # какие линии учтены — заявление об охвате
+    coverage_missing: tuple[str, ...]      # какие не учтены и почему
 
 
 @dataclass(frozen=True)
 class Recommendation:
-    """Рекомендация ИЛИ явный отказ. Правило из CONTRACT.md, раздел 4."""
-    preferred: Optional[Window]        # None = оснований недостаточно или равнозначны
-    verdict: str                       # "preferred" | "equivalent" | "insufficient" | "all_need_check"
-    rule_applied: str                  # какой пункт правила сработал, текстом
-    reasons: tuple[str, ...]           # какие факторы и интервалы повлияли
-    missing: tuple[str, ...] = ()      # чего не хватает, если insufficient
-
-
-@dataclass(frozen=True)
-class CutoffPolicy:
-    """Исторический режим (CONTRACT.md, раздел 10)."""
-    cutoff_utc: Optional[datetime]     # None = разбор по всему архиву; иначе строгий прогноз из прошлого
-    source_versions: dict = field(default_factory=dict)
-    algorithm_version: str = "0.1.0"
+    preferred: Optional[Window]
+    verdict: str                       # "preferred" | "trade_off" | "equivalent" | "insufficient" | "all_need_check"
+    rule_applied: str
+    per_mechanism_comparison: dict     # mechanism_id -> какое окно лучше и почему
+    reasons: tuple[str, ...]
+    missing: tuple[str, ...] = ()
+    tolerance_basis: str = ""          # из чего взят допуск равнозначности

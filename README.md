@@ -63,18 +63,18 @@ git push gitverse main
 в личном кабинете хакатона. Подключение по SSH, ключ добавляется
 в профиле GitVerse: Настройки, вкладка «Ключи SSH/GPG».
 
-## Сборка
+## Запуск
+
+Веб-сервис на Python. С 18.09 проект перестроен под официальную постановку
+кейса: настольное приложение, C++, Qt и CMake отменены.
 
 ```
-scripts\setup_env.bat
-cmake --preset mono   &&  cmake --build --preset mono
-cmake --preset dll    &&  cmake --build --preset dll
+pip install -e .
+streamlit run app/main.py
 ```
 
-Обе конфигурации обязаны собираться всегда.
-
-Требуется: Visual Studio 2022 или 18, Qt 6.5+, CMake 3.25+ (формат пресетов v6), Ninja.
-OpenCASCADE — опционально, флагом `VKD_WITH_OCCT`.
+Целевая версия Python и полный lock зависимостей фиксируются в первый день
+(CONTRACT.md, правило 6).
 
 ## Данные
 
