@@ -101,12 +101,20 @@
   },
   "limitations": [
     "No numerical GOES history or A4 live sources.",
-    "Legacy B1 automatically uses audited DONKI; NOAA needs B to pass Request.",
+    "NOAA connected by B at 2d20793; DONKI audit/coverage must be preserved in export.",
     "Provider-dated release evidence, not independent historical payload capture."
   ],
   "streamlit_mode_render_exceptions": {
     "Текущая обстановка": [],
     "Исторический разбор": [],
     "Прогноз из прошлого": []
+  },
+  "integration_base": "2d20793",
+  "tests_after_merge": {
+    "passed": 110,
+    "failed": 1,
+    "subtests_passed": 670,
+    "seconds": 49.23,
+    "failure": "tests/test_replay.py::test_history_forecast_is_deterministic_with_pinned_tle: historical run fetches current sources; changing network/cache statuses enter sources metadata. Integration owner B."
   }
 }
