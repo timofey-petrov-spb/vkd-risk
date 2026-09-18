@@ -24,6 +24,9 @@ from vkd.types import (Conjunction, Coverage, EnvironmentSample, EventInterval, 
                        Window, WindowAssessment)
 
 
+MECH_RU = {'spaceweather': 'космопогода на траектории', 'mmod_stat': 'статистика метеороидов', 'conjunctions': 'сближения'}
+
+
 @dataclass(frozen=True)
 class Thresholds:
     """Пороги условий. Семантика по разбору Codex 19.09 (journal/friend.md, пп. 6–8):
@@ -255,9 +258,9 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
     for a in assessments:
         for m in a.mechanisms:
             if m.mandatory and m.coverage == Coverage.NONE:
-                missing.append('%s: покрытие отсутствует' % m.mechanism_id)
+                missing.append('%s: покрытие отсутствует' % MECH_RU.get(m.mechanism_id, m.mechanism_id))
             elif m.mandatory and m.coverage == Coverage.PARTIAL:
-                partial.append('%s: покрытие частичное' % m.mechanism_id)
+                partial.append('%s: покрытие частичное' % MECH_RU.get(m.mechanism_id, m.mechanism_id))
     missing, partial = sorted(set(missing)), sorted(set(partial))
     # 2. условия
     flagged = {id(a): [r for m in a.mechanisms for r in m.needs_check_reasons] for a in assessments}

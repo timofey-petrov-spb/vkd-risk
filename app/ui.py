@@ -16,7 +16,7 @@ CSS = """
         --ok:#1e8449; --ok-bg:#eafaf1; --warn:#b9770e; --warn-bg:#fef5e7; --crit:#c0392b; --crit-bg:#fdedec;
         --none:#566573; --none-bg:#f2f3f4; --calc:#1f4e79; --calc-bg:#eaf2fb; --obs:#1e8449; --fc:#b9770e; }
 html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink); }
-.block-container { padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1400px; }
+.block-container { padding-top: 3.2rem; padding-bottom: 2rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 .vk-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:2px; }
 .vk-title { font-size:1.55rem; font-weight:700; margin:0; }

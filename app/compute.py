@@ -70,6 +70,7 @@ class Result:
     fetch_status: dict
     forecasts: list = None     # линии прогнозов NOAA (история)
     orbit: Any = None          # OrbitResult
+    kp_obs: list = None        # исторический разбор: наблюдения Kp (от, до, значение) для ленты
 
 
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
@@ -103,7 +104,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if disabled.get('kp') == 'off':
         kp, kp_raw = None, {}
         f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
-    events, hist_raw, excluded, fc_lines, fc_raw, forecasts = [], {}, [], [], {}, []
+    events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs = [], {}, [], [], {}, [], []
     if mode != 'live':
         goes, goes_raw = None, {}          # архива наблюдений GOES за 2024 нет (A1, в работе) — линия честно без данных
         h_samples, h_events, hist_raw = history_bundle()
@@ -112,6 +113,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
         kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and disabled.get('kp') != 'off') else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
+        if mode == 'history_review':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
+            kp_obs = sorted({(s.valid_from_utc, s.valid_to_utc, s.value) for s in h_samples
+                             if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
+                             and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min + 180)})
         # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
         # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
         def _touches(e):
@@ -270,4 +275,4 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
-                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb)
+                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb, kp_obs=kp_obs)

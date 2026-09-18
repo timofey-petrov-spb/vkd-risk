@@ -39,14 +39,14 @@ def two_windows(belts, g, mmod=1e-6, pattern=lambda i: i < 60):
 def test_missing_mandatory_line_gives_insufficient(belts):
     A, th = two_windows(belts, goes(0.2), mmod=None)
     r = recommend(A, th)
-    assert r.verdict == 'insufficient' and any('mmod_stat' in m for m in r.missing)
+    assert r.verdict == 'insufficient' and any('метеороид' in m for m in r.missing)
 
 
 def test_disabled_source_never_yields_favorable(belts):
     """Т6: отключённый GOES без кеша → «недостаточно», не «предпочтительно»."""
     A, th = two_windows(belts, None)
     r = recommend(A, th)
-    assert r.verdict == 'insufficient' and any('spaceweather' in m for m in r.missing)
+    assert r.verdict == 'insufficient' and any('космопогода' in m for m in r.missing)
 
 
 def test_clean_windows_prefer_less_saa(belts):

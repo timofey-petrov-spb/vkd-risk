@@ -28,7 +28,7 @@ from vkd.windows.scenario import Scenario
 
 UI = _settings_section('ui')          # умолчания элементов управления — config/settings.toml (Т7)
 MODE_IDS = {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}
-SEV_ICON = {'critical': '🔴', 'limiting': '🟠', 'info': '•'}
+SEV_ICON = {'critical': '🔴', 'limiting': '🟠', 'info': '○'}
 
 st.set_page_config(page_title='ВКД-Риск', page_icon='🛰', layout='wide', initial_sidebar_state='expanded')
 st.markdown(CSS, unsafe_allow_html=True)
@@ -143,7 +143,8 @@ if mode == 'live':
     g, k = R.goes, R.kp
     items.append(('GOES ≥10 МэВ', ('%.2g pfu · %s · %s' % (g.value, s_level(g.value), g.t_utc.strftime('%H:%MZ'))) if g else src['noaa_swpc_goes']['status'][:40],
                   ('crit' if g and g.value >= th.goes_p10_priority_pfu else 'warn' if g and g.value >= th.goes_p10_warning_pfu else 'ok') if g else 'crit'))
-    items.append(('Kp', ('%.1f · %s · %s' % (k.value, k.quality, k.t_utc.strftime('%d.%m %H:%MZ'))) if k else src['gfz_kp']['status'][:40],
+    QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
+    items.append(('Kp', ('%.1f · %s · %s' % (k.value, QUALITY_RU.get(k.quality, k.quality), k.t_utc.strftime('%d.%m %H:%MZ'))) if k else src['gfz_kp']['status'][:40],
                   ('crit' if k and k.value >= th.kp_check else 'ok') if k else 'crit'))
 else:
     items.append(('Отсечка' if mode == 'history_forecast' else 'Начало периода', t0.strftime('%Y-%m-%d %H:%MZ'), None))
@@ -168,11 +169,21 @@ st.markdown('<div class="legend">Происхождение везде поме�
 
 # ================================================================= лента времени
 st.subheader('Картина по времени')
-st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events, S.get('forecasts', []), mode),
-                width='stretch')
+kp_obs, goes_obs = [], []
+if mode == 'live':
+    from app.obs import goes_series, kp_series
+    tk, vk = kp_series(R.fetch_status['kp'].raw_path)
+    kp_obs = [(t, t + timedelta(hours=3), v) for t, v in zip(tk, vk) if t >= t0 - timedelta(hours=12)]
+    tg, vg = goes_series(R.fetch_status['goes'].raw_path)
+    goes_obs = [(t, v) for t, v in zip(tg, vg) if t >= t0 - timedelta(hours=12)]
+elif mode == 'history_review':
+    kp_obs = R.kp_obs or []
+st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events, S.get('forecasts', []), mode,
+                         kp_obs=kp_obs, goes_obs=goes_obs), width='stretch')
 st.caption('Верх: |B| по трассе (наш расчёт по IGRF), красные полосы — пролёты аномалии, синие — окна-кандидаты. '
-           'Низ: Kp — %s; маркеры — события и прогнозы с временем публикации.' % (
-               'прогноз NOAA по 3-часовым интервалам из выпуска до отсечки' if mode != 'live' else 'последнее наблюдение GFZ'))
+           'Низ: %s; маркеры — события и прогнозы с временем публикации.' % (
+               'прогноз Kp NOAA по 3-часовым интервалам из выпуска до отсечки' if mode == 'history_forecast' else
+               'наблюдения Kp (GFZ) и GOES ≥10 МэВ за последние 12 ч' if mode == 'live' else 'наблюдения Kp из архива (разбор после факта)'))
 
 # ================================================================= вкладки
 tab_names = ['Объяснения', 'Окна и факторы', 'Карта', 'Наблюдения и прогнозы', 'Данные и выгрузка'] + (['Устойчивость и нормы'] if pro else [])
