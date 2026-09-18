@@ -21,12 +21,24 @@ from datetime import datetime, timedelta, timezone
 import plotly.graph_objects as go
 import streamlit as st
 
+from dataclasses import replace as _replace
+
 from app.export import build_zip
 from app.norms import norms_rows, s_level
+from vkd.assess.cutoff import apply_cutoff
 from vkd.assess.trapped import BeltTable
 from vkd.explain.cards import KIND_RU, cards_for_window
 from vkd.types import EnvironmentSample, Kind, Window
 from vkd.windows.compare import Thresholds, assess_window, recommend
+from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
+from vkd.windows.sensitivity import resaa, robustness
+
+try:                                   # A2: исторический режим, когда появится
+    from vkd.history import history_bundle   # type: ignore
+    HIST_SRC = 'vkd.history'
+except ImportError:
+    from experiments.stub_history import history_bundle
+    HIST_SRC = 'experiments.stub_history — временно: архив DONKI, уведомления с messageIssueTime'
 
 try:                                   # A3: производственная орбита, когда появится
     from vkd.orbit import trajectory   # type: ignore
@@ -78,6 +90,16 @@ with st.sidebar:
                                                min(i * 240, search_min), step=30, key='w%d' % i)) for i in range(n_windows)]
     st.header('Источники')
     disabled = {s: st.checkbox('Отключить %s' % s, key='dis_' + s) for s in ('goes', 'kp')}
+    with st.expander('Что если — стресс-сценарий', expanded=False):
+        sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15)
+        sc_sep_on = st.checkbox('Смоделировать протонное событие')
+        sc_sep_off = st.slider('… начало через, мин после t0', 0, 1440, 120, step=30, disabled=not sc_sep_on)
+        sc_sep_pfu = st.select_slider('… уровень, pfu ≥10 МэВ', [10.0, 100.0, 1000.0, 10000.0], value=100.0, disabled=not sc_sep_on)
+        sc_kp_on = st.checkbox('Смоделировать скачок Kp')
+        sc_kp = st.slider('… Kp', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on)
+    scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
+                        sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
+    is_sim = bool(sc_delay or sc_sep_on or sc_kp_on)
     if pro:
         st.header('Пороги и настройки')
         th = Thresholds(
@@ -105,9 +127,20 @@ with st.sidebar:
         _fetch_all.clear()
 with st.spinner('Источники: GOES, Kp, TLE — до 12 с на каждый при живом запросе…'):
     (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = _fetch_all(disabled['goes'], disabled['kp'])
-    if mode != 'Текущая обстановка':
-        goes, goes_raw = None, {}        # живое наблюдение не относится к исторической дате (A2 подключит архив)
-        kp, kp_raw = None, {}
+events, hist_raw, excluded = [], {}, []
+if mode != 'Текущая обстановка':
+    goes, goes_raw = None, {}            # архива GOES за 2024 в репозитории нет (A2) — линия честно без данных
+    h_samples, h_events, hist_raw = history_bundle()
+    cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
+    excluded = list(cut.excluded)
+    kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
+    kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and not disabled['kp']) else None
+    kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
+    events = [e for e in cut.events if e.start_utc is None or (e.start_utc <= t0 + timedelta(minutes=horizon_min) and
+                                                                (e.published_utc or e.start_utc) >= t0 - timedelta(hours=48))]
+# ----------------------------------------------------------------- сценарий «Что если»
+kp = simulated_kp(kp, t0, scenario)
+events = events + simulated_events(t0, scenario)
 
 # ================================================================= расчёт: один снимок на рендер
 with st.spinner('Траектория и поле, %d мин по 1 мин…' % horizon_min):
@@ -116,12 +149,29 @@ with st.spinner('Траектория и поле, %d мин по 1 мин…' %
         meta = meta.__class__(**{**meta.__dict__, 'is_reconstruction': mode != 'Текущая обстановка'})
 
 belts = BeltTable('min')
-windows = [Window(s, duration_min) for s in starts]
-assessments = [assess_window(w, traj, belts, goes, kp, [], th, now) for w in windows]
+windows = apply_to_windows([Window(s, duration_min) for s in starts], scenario)
+
+
+def _run(tr, kw):
+    th_i = _replace(th, **kw)
+    A_i = [assess_window(w, tr, belts, goes, kp, [], th_i, now, events=events) for w in windows]
+    return A_i, recommend(A_i, th_i)
+
+# устойчивость: сетка порога аномалии и канала → допуск равнозначности из разброса (О7, CONTRACT 4.5)
+with st.spinner('Устойчивость вердикта на сетке порогов…'):
+    rob = robustness(traj, windows, _run,
+                     thr_grid=[th.saa_B_threshold_nT - 2000, th.saa_B_threshold_nT, th.saa_B_threshold_nT + 2000],
+                     e_grid=[12.5, 30.0, 50.0])
+th = _replace(th, equiv_tol_min=max(1.0, rob.saa_spread_min))
+assessments = [assess_window(w, traj, belts, goes, kp, [], th, now, events=events) for w in windows]
 rec = recommend(assessments, th)
+rec = _replace(rec, is_simulated=is_sim,
+               tolerance_basis='допуск %.0f мин — разброс минут в аномалии у лучшего окна при порогах %s нТл' % (
+                   th.equiv_tol_min, '/'.join('%.0f' % x for x in rob.grid[0])) + ('; выбор устойчив' if rob.stable else '; ВЫБОР МЕНЯЕТСЯ на сетке'))
 samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {})}
 cards = cards_for_window(assessments[0], samples)
-raw_records = {**(goes_raw or {}), **(kp_raw or {}),
+ev_raw = {e.raw_record_id: hist_raw[e.raw_record_id] for e in events if e.raw_record_id in hist_raw}
+raw_records = {**(goes_raw or {}), **(kp_raw or {}), **ev_raw,
                'iss.tle': {'text': tle_text, 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None, 'fetch': f_tle.status_ru}}
 
 
@@ -160,6 +210,12 @@ S = {
     'policy_note': 'Исключение окон с S1–S2, Kp ≥ 7 или сообщением о сближении из автоматического выбора — '
                    'консервативная политика прототипа, не эксплуатационная норма; из индексов NOAA не следует '
                    'ни прерывание, ни продолжение ВКД.',
+    'is_simulated': is_sim, 'scenario': scenario.__dict__ if is_sim else None,
+    'history': {'provider': HIST_SRC if mode != 'Текущая обстановка' else None, 'excluded_by_cutoff': excluded,
+                'events_used': [{'id': e.event_id, 'kind': e.kind_of_event, 'published_utc': e.published_utc.isoformat() if e.published_utc else None,
+                                 'start_utc': e.start_utc.isoformat() if e.start_utc else None, 'simulated': e.is_simulated} for e in events]},
+    'robustness': {'stable': rob.stable, 'saa_spread_min': rob.saa_spread_min, 'grid': rob.grid,
+                   'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()}},
 }
 
 # ================================================================= траектория
@@ -183,6 +239,18 @@ def show_verdict():
         st.error('Чего не хватает: ' + '; '.join(rec.missing))
     st.caption('Охват: учтено — %s. Не учтено — %s.' % (', '.join(assessments[0].coverage_declared), ', '.join(assessments[0].coverage_missing)))
 
+if is_sim:
+    st.warning('**Моделируемый сценарий «Что если».** %s Результат и выгрузка помечены как сценарий; синтетические '
+               'значения не попадают в кеш и в строгий исторический режим.' % ' '.join(
+                   ([f'Задержка работ {sc_delay} мин — изменение плана, не улучшение условий.'] if sc_delay else []) +
+                   ([f'Протонное событие {sc_sep_pfu:g} pfu через {sc_sep_off} мин.'] if sc_sep_on else []) +
+                   ([f'Kp = {sc_kp:.1f}.'] if sc_kp_on else [])))
+if mode == 'Прогноз из прошлого':
+    st.info('**Строгий прогноз из прошлого.** Отсечка %s: использованы только записи, опубликованные до неё; '
+            'исключено %d записей (список в блоке «Данные»). Орбита — реконструкция по текущему TLE до подключения OEM (A3).'
+            % (cutoff_utc.strftime('%Y-%m-%d %H:%MZ'), len(excluded)))
+elif mode == 'Исторический разбор':
+    st.info('**Исторический разбор** по всему доступному сегодня архиву, без отсечки. Не является проверяемым прогнозом.')
 if not pro:
     st.subheader('Рекомендация')
     show_verdict()
@@ -232,6 +300,19 @@ if pro:
     st.subheader('Рекомендация')
     show_verdict()
     st.caption('Допуск равнозначности: ' + rec.tolerance_basis)
+    with st.expander('Устойчивость вердикта на сетке порогов (О7)', expanded=not rob.stable):
+        st.write('Порог аномалии × канал захваченных протонов → предпочтительное окно. '
+                 + ('**Выбор устойчив**: одно и то же окно (или одинаковый отказ) на всей сетке.' if rob.stable
+                    else '**Выбор меняется** на сетке — рекомендация чувствительна к настройке, показано честно.'))
+        st.dataframe([{'порог |B|, нТл': '%.0f' % k[0], 'канал, МэВ от': '%g' % k[1], 'предпочтительное окно': v or 'отказ / равнозначны'}
+                      for k, v in rob.preferred_starts.items()], use_container_width=True)
+    if events:
+        with st.expander('События, учтённые в окне (уведомления с временем публикации)', expanded=False):
+            st.dataframe([{'событие': e.event_id, 'тип': e.kind_of_event, 'происхождение': KIND_RU[e.kind],
+                           'начало': e.start_utc.strftime('%m-%d %H:%MZ') if e.start_utc else '—',
+                           'действие с': e.valid_from_utc.strftime('%m-%d %H:%MZ') if e.valid_from_utc else '—',
+                           'публикация': e.published_utc.strftime('%m-%d %H:%MZ') if e.published_utc else 'нет — синтетика',
+                           'сценарий': 'да' if e.is_simulated else ''} for e in events], use_container_width=True)
 
 # ================================================================= предупреждения по семи пунктам
 st.subheader('Предупреждения и доказательства' + ('' if pro else ' — условия и основные величины'))
@@ -262,6 +343,10 @@ if pro:
 st.subheader('Данные и выгрузка')
 if pro:
     st.dataframe([{'источник': k, **v} for k, v in sources.items()], use_container_width=True)
+    if mode != 'Текущая обстановка':
+        st.caption('Поставщик истории: %s' % HIST_SRC)
+        with st.expander('Исключено отсечкой: %d записей' % len(excluded), expanded=False):
+            st.write('\n'.join('- ' + x for x in excluded[:200]) + ('\n- …' if len(excluded) > 200 else ''))
 c1, c2 = st.columns(2)
 c1.download_button('Скачать расчёт (JSON)', json.dumps(S, ensure_ascii=False, indent=1, default=str),
                    file_name='vkd_risk_%s.json' % now.strftime('%Y%m%dT%H%M'), mime='application/json')

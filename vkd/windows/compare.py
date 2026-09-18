@@ -19,7 +19,7 @@ from datetime import timedelta
 from typing import Optional, Sequence
 
 from vkd.assess.trapped import BeltTable
-from vkd.types import (Conjunction, Coverage, EnvironmentSample, FactorValue, Kind,
+from vkd.types import (Conjunction, Coverage, EnvironmentSample, EventInterval, FactorValue, Kind,
                        MechanismAssessment, Presence, Recommendation, TrajectoryPoint,
                        Window, WindowAssessment)
 
@@ -52,9 +52,12 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                   goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],
                   conj: Sequence[Conjunction], th: Thresholds,
                   now_utc, mmod_hits: Optional[float] = None,
-                  mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается') -> WindowAssessment:
+                  mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается',
+                  events: Sequence[EventInterval] = ()) -> WindowAssessment:
     """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
-    спецификации A5). None — линия не подключена, покрытие NONE."""
+    спецификации A5). None — линия не подключена, покрытие NONE.
+    events: события с интервалами (в т. ч. моделируемые); пересечение окна
+    с интервалом действия или физическим интервалом даёт условие проверки."""
     end = win.start_utc + timedelta(minutes=win.duration_min)
     pts = [p for p in traj if win.start_utc <= p.t_utc < end]
     step_min = 1.0
@@ -136,6 +139,18 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         limit.append('Kp = %.1f ≥ %.0f (G3): триггер дополнительной проверки — политика прототипа' % (kp.value, th.kp_check))
     if in_win:
         limit.append('сообщение о сближении с TCA в окне: требует ручной оценки')
+    for e in events:
+        a0 = e.valid_from_utc or e.start_utc
+        a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=24) if a0 else None)   # конец неизвестен: считаем сутки
+        if a0 is None or not (a0 < end and (a1 is None or a1 > win.start_utc)):
+            continue
+        tag = 'МОДЕЛИРУЕМОЕ ' if e.is_simulated else ''
+        if e.kind_of_event == 'SEP':
+            (crit if 'приоритет' in e.note else limit).append(
+                '%sпротонное событие %s с %s пересекает окно (%s): исключено из автовыбора' % (
+                    tag, e.event_id, a0.strftime('%m-%d %H:%MZ'), e.note or e.source_id))
+        else:
+            limit.append('%sсобытие %s (%s) с %s пересекает окно: проверка' % (tag, e.kind_of_event, e.event_id, a0.strftime('%m-%d %H:%MZ')))
     m1 = MechanismAssessment(m1.mechanism_id, m1.mandatory, m1.factors, m1.coverage,
                              needs_check=bool(crit or limit), needs_check_reasons=tuple(crit + limit))
 
