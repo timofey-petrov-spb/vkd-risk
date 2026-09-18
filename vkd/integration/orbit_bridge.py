@@ -92,8 +92,9 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
         except OrbitDataError as e:
             return OrbitResult(None, [], {'errors': [str(e)]}, 'орбита недоступна: %s' % e, 'unavailable', str(e))
         prov['staged_root'] = root
-        return OrbitResult(meta, pts, prov, 'SGP4 по TLE CelesTrak, эпоха %s; предел возраста %.0f сут'
-                           % (meta.epoch_utc.strftime('%Y-%m-%d %H:%MZ'), max_tle_age_days), 'strict', None)
+        host = tle_url.split('/')[2] if tle_url and '://' in tle_url else 'TLE'
+        return OrbitResult(meta, pts, prov, 'SGP4 по TLE (%s), эпоха %s; предел возраста %.0f сут'
+                           % (host, meta.epoch_utc.strftime('%Y-%m-%d %H:%MZ'), max_tle_age_days), 'strict', None)
 
     errors = []
     cutoff = cutoff_utc or t0

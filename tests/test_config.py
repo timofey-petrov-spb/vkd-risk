@@ -24,7 +24,8 @@ def test_repo_settings_file_matches_thresholds_fields(monkeypatch):
     for k, v in raw.items():
         assert getattr(th, k) == pytest.approx(float(v))
     assert cfg.section('history').get('enlil_kp_fields') == ['kp_90']
-    assert cfg.section('sources')['urls']['tle'].startswith('https://celestrak.org/')
+    tle = cfg.section('sources')['urls']['tle']
+    assert isinstance(tle, list) and len(tle) >= 2 and tle[0].startswith('https://celestrak.org/')   # резервная цепочка
     cfg.settings.cache_clear()
 
 
