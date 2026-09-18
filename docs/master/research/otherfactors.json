@@ -1,0 +1,551 @@
+{
+ "dimension": "otherfactors",
+ "summary_ru": "Проверены девять кандидатов «прочих» внешних факторов ВКД, которых нет в двух основных механизмах (космическая погода на траектории; MMOD). Итог по решениям: **два условия работ включить** — (1) освещённость (орбитальный день/ночь, бета-угол, переходы свет/тень; сюда же видеодокументирование и солнечный визор) и (2) зона связи (геометрическая радиовидимость российских НИП и ретрансляторов «Луч»/TDRS вдоль трассы). Оба считаются строго из траектории (TLE → SGP4 → положение) плюс эфемерида Солнца, без внешних прогнозов, и потому напрямую усиливают Т2 («привязка фактора к траектории или условиям работ содержательна и проверяема») и О1 («учтены существенные ограничения выбранного охвата»). Постановка (с. 6) прямо говорит: смена освещённости — условие, а не опасность, и она «связывается с явно заданным ограничением или моделью» — поэтому условия входят в правило только как явные, включаемые пользователем ограничения и как разрешение ничьей на шаге 3 правила из CONTRACT.md, а не как «риск».\n\n**Третьей линией (условно, О7) — авроральное заряжение станции**: единственный из «прочих» факторов, у которого есть и нормативная модель (ECSS-E-ST-10-04C Rev.1, п. 8.2.1a(2): среда аврорального заряжения обязательна для наклонений > 50° на высотах 80…2000 км; п. 8.2.3 — наихудшая среда; п. 8.2.4b — Kp = 9 как наихудший случай), и операционная литература NASA именно про опасность поражения током экипажа при ВКД (Koontz et al., 2020, NTRS 20200001609: порог −45,5 В, процесс «обнаружение и предупреждение», ~7 «дней беспокойства» в год; Minow et al., 2010, NTRS 20100042504: авроральное заряжение −17…−20 В, выход из тени −40…−65 В). Наш расчёт: дипольная геомагнитная широта трассы МКС не превышает 61,0°, а экваториальная граница овала по Старкову (наша реализация по коэффициентам из Sigernes et al.) опускается до 61,6° при Kp = 5 и 60,5° при Kp = 9 в полночь MLT — то есть станция касается овала только на полярных экстремумах витка и только в возмущённых условиях (16 мин/сут с |φ_m| ≥ 60°). Линия выдаёт «минуты окна в тени при |φ_m| ≥ 60° и Kp выше границы» как условие внимания без вероятностей; вероятность удара током не заявляем (анализ NASA сделан для ферм АС и скафандра EMU, не для «Орлана»).\n\n**Исключить с обоснованием**: тепловой режим (производная от освещённости; ECSS табл. 6-2: 1361 Вт/м²; NASA: −250…+250 °F; скафандр закрывает диапазон, открытой модели теплового состояния скафандра нет), атомарный кислород (ресурсный эффект за месяцы, поток ~10^14 атом/(см²·с) — за 6-часовой выход ничтожен), ионосфера и шкала R (R-шкала NOAA — это ВЧ-связь 3…30 МГц на освещённой стороне; линии ВКД — ~130 МГц, ~400 МГц, S- и Ku-диапазоны через ретрансляторы, поглощение падает как 1/f²; сцинтилляции бьют по GNSS, а наша траектория из TLE). ГОСТ Р 25645.166-2004 — не фактор риска, а инструмент точности: использовать как флаг неопределённости траектории «давность TLE × уровень Ap» (по Parker & Linares 2024 плотность на 400 км в бурю Гэннон выросла до 6×, скорость снижения одного КА — с 38 до 180 м/сут, прогнозы ap за сутки не угадали бурю). Все источники проверены фактически; что не проверено — помечено.",
+ "findings": [
+  {
+   "title": "Освещённость: условие работ, полностью считается из траектории; включить условием 1",
+   "detail_ru": "**Что это.** Орбитальный день/ночь, бета-угол β (угол между плоскостью орбиты и направлением на Солнце), число переходов свет/тень внутри окна, доля окна на свету. Постановка, с. 6: «Смена освещённости может быть важным условием работ, но сама по себе не означает опасность. Такой фактор связывается с явно заданным ограничением или моделью». NASA OCHMO-TB-001 Rev B (брошюра по NASA-STD-3001), с. 1: работы вне корабля на МКС «have been operated in full sunlight every 45 minutes during each orbit in Low Earth Orbit». NASA-STD-3001 Vol. 2 Rev D [V2 8051]: при отсутствии орбитального солнечного света система обязана обеспечить уровни освещённости по таблице 8.7-1 «that accommodate both human observers and remote camera systems»; [V2 8104]: для зон, частично освещённых Солнцем, контраст в тенях — в пределах двух порядков от максимальной яркости. OCHMO-TB-026: «20 lux for night activities, 100-300 lux for nominal activities and to over 1000 lux for high precision activities». Иллюстрация цены тьмы: NASA, EVA-23 (16.07.2013, Пармитано) — «the space station at that moment entered into orbital night, and Parmitano could only see the small area illuminated by his headlamps». Солнечный визор с золотым покрытием («The sun visor has a special gold coating», NASA Spacewalk Spacesuit Basics; NASA ISS EVA Space Suits, в репозитории, с. с «gold-plated sun visor») — режим ослепления на светлой стороне, тоже условие, а не опасность.\n\n**Наш расчёт (18.09.2026, TLE CelesTrak эпоха 2026-09-18 03:25Z, старт 16:17Z, SGP4 через skyfield, Солнце из JPL DE421, шаг 1 мин):** период 93,0 мин; средняя высота 425,5 км; β = 17,6°; критический бета-угол, выше которого тени нет, β_crit = arcsin(R_E/(R_E+h)) = 69,6°; за 24 ч на свету 871 мин, в тени 569 мин (39,5 %); 16 восходов; длина тени 33…36 мин. Для окон длительностью 6 ч с шагом старта 30 мин минуты тени лежат в диапазоне 128…144 мин — то есть разница между окнами по освещённости мала (≈ 16 мин), но число переходов и положение теней относительно этапов ВКД различаются, и именно это аналитик задаёт как ограничение (например, «шлюзование и переход к рабочему месту — на свету»). Периоды |β| > ~70° (без тени) бывают дважды в год по ~неделе (AMS-02, thermal-operation: «There is no eclipse (no nighttime) when the absolute value of β is above ~70°, which occurs for one week each summer and another week in the winter»).\n\n**Источник данных:** только TLE (CelesTrak, проверено) и эфемерида Солнца (DE421, 17 МБ, проверено по пути a_old_versions). Живой и исторический режимы работают одинаково (для мая 2024 — TLE того периода). Время публикации — не требуется, это детерминированный расчёт.\n\n**Границы применимости:** геометрия тени Земли без учёта затенения конструкциями станции и без атмосферной рефракции (полутень ~ ±1 мин); ошибка TLE-давности переходит в ошибку моментов восхода/захода не более десятков секунд.\n\n**Стоимость:** ~2 ч (skyfield `is_sunlit`, β из r×v и вектора на Солнце; код уже написан в пробном расчёте).",
+   "confidence": "high",
+   "sources": [
+    "docs/case/Postanovka_zadachi_VKD.txt, с. 6 «Предметные ориентиры»",
+    "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-001-artemis-lighting-considerations.pdf (OCHMO-TB-001 Rev B, с. 1 и с. 21 — [V2 8051], [V2 8104])",
+    "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-026-lighting-design.pdf (OCHMO-TB-026, уровни lux)",
+    "https://www.nasa.gov/general/10-years-ago-eva-23-how-a-high-visibility-close-call-cut-short-a-spacewalk/",
+    "https://www.nasa.gov/centers-and-facilities/johnson/spacewalk-spacesuit-basics/",
+    "https://ams02.space/operations/thermal-operation",
+    "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
+    "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp",
+    "наш расчёт (scratchpad, skyfield + DE421), 18.09.2026"
+   ]
+  },
+  {
+   "title": "Зона связи: радиовидимость российских НИП и ретрансляторов «Луч»/TDRS — включить условием 2 (геометрия, не гарантия сеанса)",
+   "detail_ru": "**Связь с ВКД.** Роскосмос (новость ЦУП от 02.11.2010, Интерфакс-АВН, страница проверена в кодировке cp1251): «Связь российского сегмента станции с Центром управления полетами возможна только тогда, когда МКС пролетает над наземными станциями приема, размещенными на территории России. Для контакта с Землей за пределами зоны радиовидимости наземных измерительных пунктов российские космонавты используют американские каналы связи». Позже появилась МКСР «Луч»: приёмный модуль «Луч» установлен на МКС в ходе ВКД 02.02.2018 (gonets.ru, новости), система принята в опытную эксплуатацию в декабре 2015 (ru.wikipedia, вторичный источник). ЦНИИмаш (страница ЦУП «О ЦУП»): ЦУП «на этапе экспериментальной отработки задействует ретрансляционные спутники для обеспечения управления полётом транспортных грузовых и пилотируемых кораблей». Значит для российских ВКД по-прежнему важны: минуты окна в зоне радиовидимости НИП (голос, ТВ «Глиссер», телеметрия скафандра), наличие и длина разрывов, и отдельно — геометрическое покрытие «Луч» как резерв. russianspaceweb.com/kik.html: повреждение кабеля у Щёлково в 2012 «interrupted control over ... the Russian segment of the ISS» — подтверждение, что НИП-14 Щёлково задействован для РС МКС.\n\n**Координаты и точки стояния (вторичные источники, обязательно вынести в конфиг с пометкой):** НИП-14 Щёлково 55°56′59″ с.ш. 37°58′00″ в.д.; НИП-13 Улан-Удэ (Звёздный) 51°52′23″ с.ш. 107°56′15″ в.д.; НИП-15 Галёнки (Уссурийск) 44°01′27″ с.ш. 131°45′25″ в.д.; также действующие НИП-4 Енисейск, НИП-6 Елизово, НИП-9 Красное Село, НИП-17 Якутск, НИП-18 Воркута, НИП-20 Хабаровск (ru.wikipedia «Командно-измерительный комплекс»). «Луч-5А» 167° в.д. (запуск 11.12.2011), «Луч-5Б» 16° з.д. (02.11.2012), «Луч-5В» 95° в.д. (28.04.2014) (ru.wikipedia, по документам РКС/ИСС/ЦНИИмаш; vpk.name даёт 167° в.д. для 5В — расхождение, см. critical_claims). TDRS (eoPortal): TDRS-L 41° з.д., TDRS-K 174° з.д., TDRS-G 85° в.д., TDRS-H 89° в.д., TDRS-F 46° з.д., TDRS-M 49° з.д.\n\n**Наш расчёт по той же трассе (маска угла места 7°, три НИП):** Щёлково 24 мин/сут, Улан-Удэ 33 мин/сут, Галёнки 42 мин/сут; суммарно 86 мин/сут; по 6-часовым окнам — от 0 до 51 мин видимости, то есть окна различаются кардинально (есть окна вообще без российских сеансов). Геометрическая видимость хотя бы одного «Луча» — 1440 мин/сут (100 %; по отдельности 833/790/820 мин), TDRS — тоже 100 %. Это геометрия «луч не пересекает Землю + 100 км», не учёт диаграмм антенн, затенения конструкцией и расписания сеансов — так и подписывать.\n\n**Исторический режим:** координаты статичны, трасса из TLE периода — условие полностью воспроизводимо на май–июнь 2024.\n\n**Стоимость:** ~3 ч; входы — конфиг станций (широта, долгота, маска) и ретрансляторов (долгота), выбор сегмента (РС/АС) пользователем. Усиливает Т2 (траектория в ограничении работ) и О1.",
+   "confidence": "medium",
+   "sources": [
+    "https://www.roscosmos.ru/13007/ (ЦУП, 02.11.2010, Интерфакс-АВН)",
+    "https://gonets.ru/rus/media/news/na_mks_ustanovlen_novyy_priemnyy_modul_mksr_luch/",
+    "https://gonets.ru/rus/uslugi/sistema-retranslyacii-luch/iss-telemetry/",
+    "https://tsniimash.ru/science/scientific-and-technical-centers/flight-control-center-fcc/about-fcc/",
+    "https://www.russianspaceweb.com/kik.html",
+    "https://ru.wikipedia.org/wiki/Командно-измерительный_комплекс (координаты НИП, вторичный)",
+    "https://ru.wikipedia.org/wiki/Луч-5А , /Луч-5Б , /Луч-5В (точки стояния, вторичный)",
+    "https://www.eoportal.org/satellite-missions/tdrs",
+    "наш расчёт (scratchpad), 18.09.2026"
+   ]
+  },
+  {
+   "title": "Плазма и электризация: авроральное заряжение и выход из тени — единственный «прочий» фактор с нормативной моделью и литературой именно про опасность для ВКД; включить третьей линией без вероятностей",
+   "detail_ru": "**Норматив.** ECSS-E-ST-10-04C Rev.1 (в репозитории), п. 8.1.1: требования к анализу заряжения — в ECSS-E-ST-20-06 (нет в репозитории). П. 8.1.2: «Intense auroral charging environments are associated with discrete aurorae which are generally found between 60 and 77 degrees magnetic latitude. However, at times of enhanced geomagnetic activity, the auroral zone is moved southwards»; энергии электронов — десятки кэВ; плотность плазмы может меняться в 100 раз. П. 8.2.1a(2): «The auroral charging environment for orbital inclinations above 50 degrees for altitudes above 80 km and below 2 000 km» — МКС (51,6°, ~420 км) попадает под это требование. П. 8.2.3a–d: наихудшая среда — N_0 = 1,13·10^6 м^-3, kT_0 = 3,96 кэВ, E_0 = 17,44 кэВ; ионы 125 см^-3 при 0,2 эВ; прикладывать 10 с; п. 8.2.4b: «For spacecraft charging assessments, Kp=9 shall be used to represent a worst case». NOAA Space Weather Scales: G3 — «Surface charging may occur on satellite components», G5 — «May experience extensive surface charging».\n\n**Литература NASA про МКС и ВКД.** Koontz S., Castillo T., Hartman W. et al., «International Space Station Spacecraft Charging Hazards: Hazard Identification, Management, and Control Methodologies…», NTRS 20200001609 (2020): три механизма — взаимодействие 160-В солнечных батарей с плазмой F2, индукция v×B (на высоких широтах на концах 100-м фермы ~+10 В и ~−40 В), авроральные электроны; порог опасности −45,5 В; события авроральной зарядки > −10 В «exceedingly rare», но длятся минуты (в отличие от 2…3-секундных RCE); двухотказная защита (PCU) заменена процессом «detection and warning»; «expected number of space weather days of concern per year (~7)», при ~10 днях ВКД в год — ~1 совпадение за 6 лет; P(удар, отрицательный потенциал) < 10^-7 за 8-часовую ВКД; для положительного потенциала при выключенных PCU 1 на 290 000 на конце фермы. **Ключевая оговорка авторов:** низкая P1 держится на «unusually low solar activity during the past two decades»; «If solar activity ... were more typical ... the detection and warning process would likely not be acceptable» — 2024–2026 это максимум 25-го цикла. Minow J. et al., «Summary of 2006 to 2010 FPMU Measurements…», NTRS 20100042504: экстремумы — авроральное заряжение −17…−20 В, быстрое заряжение на выходе из тени −40…−65 В, при снятии шунтов −65…−85 В; FPMU одобрен «for use in short term plasma hazard forecasting for EVA support».\n\n**Наш расчёт.** Дипольная геомагнитная широта трассы (IGRF-14, эпоха 2025,0: g_10 = −29350,0, g_11 = −1410,3, h_11 = 4545,5 нТл): максимум 61,0° с.ш., минимум −60,9°; за сутки 16 мин с |φ_m| ≥ 60°, 0 мин с |φ_m| ≥ 62°. Экваториальная граница овала по Старкову (1994) в нашей реализации по коэффициентам таблиц 1–2 из Sigernes et al. (UNIS, SvalTrack II): Kp = 1 → 67,4°, Kp = 3 → 63,8°, Kp = 5 → 61,6°, Kp = 7 → 61,5°, Kp = 9 → 60,5° в полночь MLT. Вывод: станция входит в авроральную зону только на полярных экстремумах витка и только при Kp ≳ 5; при сверхбурях модель занижает расширение (пересчёт Kp→AL насыщается; Sigernes: границы «well defined ... for Kp ≤ 7»).\n\n**Что выдаёт линия:** минуты окна, где одновременно (а) тень, (б) |φ_m| ≥ границы овала при текущем/прогнозном Kp, — как «условия, при которых NASA задействует процесс обнаружения и предупреждения», статус PRESENT/ABSENT/INSUFFICIENT; плюс отдельно моменты выхода из тени на высоких широтах. Не выдаём: потенциал станции (FPMU не публичен), состояние PCU, вероятность удара током (анализ сделан для EMU и ферм АС, не для «Орлана» и РС).\n\n**Не двойной счёт:** Kp уже используется в механизме 1 для границы проникновения. Здесь он входит в **другой физический механизм** (электрический, а не дозовый), но по Т3 «связанные сигналы не увеличивают риск автоматически несколько раз» — поэтому линия только информирует и не меняет ранжирование окон при вердикте механизма 1.\n\n**Данные:** живые — Kp (GFZ, проверено), OVATION 30–90-минутный прогноз (services.swpc.noaa.gov/json/ovation_aurora_latest.json, 918 кБ, поля Observation Time / Forecast Time / [lon, lat, aurora]), полусферная мощность (5-мин); архив — OVATION у NCEI не задокументирован (для истории — только Kp-модель границы), DMSP F18 SSJ за май 2024 есть (NCEI, файл 20240509 подтверждён) как данные проверки.\n\n**Стоимость:** ~0,5 дня поверх готовой цепочки L/B (φ_m из того же IGRF), 30 строк для границы Старкова, тень — из условия 1.",
+   "confidence": "medium",
+   "sources": [
+    "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf, п. 8.1.1, 8.1.2, 8.2.1a, 8.2.3, 8.2.4b (с. 52–58)",
+    "https://ntrs.nasa.gov/api/citations/20200001609/downloads/20200001609.pdf (Koontz et al., 2020)",
+    "https://ntrs.nasa.gov/api/citations/20100042504/downloads/20100042504.pdf (Minow et al., 2010)",
+    "https://www.spaceweather.gov/noaa-scales-explanation (G3, G5)",
+    "https://aurora.unis.no/doc/Sigernes_Oval.pdf (коэффициенты Старкова; сертификат сайта просрочен, файл прочитан)",
+    "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+    "https://www.ncei.noaa.gov/data/dmsp-space-weather-sensors/access/f18/ssj/2024/05/",
+    "наш расчёт (scratchpad), 18.09.2026"
+   ]
+  },
+  {
+   "title": "Атмосферное торможение и ГОСТ Р 25645.166-2004: не риск, а флаг точности траектории (давность TLE × Ap); отдельной линией не делать",
+   "detail_ru": "**Что даёт ГОСТ (PDF в репозитории, 28 с.).** Раздел 1: модель плотности «в диапазоне высот 120— 1500 км для различных уровней солнечной активности при известных дате, времени и координатах точки пространства»; назначение — «баллистического обеспечения полетов». П. 3.1–3.2: входы — среднесуточный F_10,7 и средневзвешенный F_81 (81 сут); обозначения: K_p — «квазилогарифмический планетарный среднесуточный (k_p — 3-часовой) индекс», A_p/a_p — линейные. П. 5.4: ρ = ρ_н·K_0·(1 + K_1 + K_2 + K_3 + K_4), где K_4 — геомагнитный член, полином по K_p до третьей степени; коэффициенты табличные по фиксированным уровням F_0. П. 5.1: построена по торможению ИСЗ 1964–2000 гг. ECSS-E-ST-10-04C Rev.1 п. 7.2.1 предписывает NRLMSISE-00/JB-2006, табл. 6-3/6-4 задают уровни F_10,7 и a_p (низкий 65/0, умеренный 140/15, высокий 250/45 — прил. G).\n\n**Почему это про точность, а не про риск.** Parker W.E., Linares R., «Satellite Drag Analysis During the May 2024 Gannon Geomagnetic Storm», J. Spacecraft and Rockets 61 (2024) 1412, arXiv:2406.08617: пик ap = 400; плотность на 400 км — до 6× базовой через 12 ч после прихода; скорость снижения одного КА (SATCAT 43180) — с ~38 до ~180 м/сут (4,7×); «the magnitude and duration of the storm were poorly predicted, even one day in advance»; ошибки прогноза положения «reach several kilometers even within a single day». Для нас: положение МКС по устаревшему TLE во время бури ошибается вдоль трассы на километры, что сдвигает моменты входа в аномалию/тень/зону связи на секунды–десятки секунд (460 км/мин) — не критично для 1-минутного шага, но обязано быть показано как неопределённость (Т2: «учтены эпоха ... и время»).\n\n**Решение:** не реализовывать модель ГОСТ целиком (это день работы ради величины, которая не входит в вердикт); ввести флаг «давность TLE, ч × максимальный Ap за давность» с текстом ограничения и ссылкой на ГОСТ 166 и Parker & Linares; в историческом режиме — по Ap GFZ (проверено: Kp 9,0 в 2024-05-11T00:00Z и 09:00Z, статус def). Стоимость ~2 ч. Данные F_10,7/A_p: GFZ-файл в репозитории (с 1932), NOAA 27-суточный прогноз (в репозитории), CelesTrak SW-Last5Years.csv (первый запрос 200, повторные — обрывы TLS; ненадёжен без кеша).",
+   "confidence": "high",
+   "sources": [
+    "docs/istochniki/GOST_R_25645.166-2004_atmosfera.pdf, разд. 1, 3.1–3.2, 4, 5.1–5.4",
+    "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf, п. 7.2.1, табл. 6-3, 6-4, прил. G",
+    "https://arxiv.org/html/2406.08617v1 (Parker & Linares, 2024)",
+    "https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-12T00:00:00Z&index=Kp",
+    "https://celestrak.org/SpaceData/SW-Last5Years.csv (нестабилен)"
+   ]
+  },
+  {
+   "title": "Тепловой режим: исключить как отдельный фактор, показывать как производную освещённости и бета-угла",
+   "detail_ru": "ECSS-E-ST-10-04C Rev.1, п. 6.1.2.1 и табл. 6-2: TSI 1361 ± 0,5 Вт/м² на 1 а.е., 1316 Вт/м² в афелии, 1407 Вт/м² в перигелии; вариация по циклу ~1,3 Вт/м². NASA Spacewalk Spacesuit Basics: «Temperatures on spacewalks may vary from as cold as minus 250 degrees Fahrenheit to as hot as 250 degrees in the sunlight». Для «Орлана» открытые источники дают ±120 °C (ar.culture.ru, вторичный, не норматив). Скафандр закрывает весь диапазон системой терморегулирования (LCVG у EMU; NASA ISS EVA Space Suits в репозитории описывает слои TMG). Постановка: «Телеметрия скафандра ... не входят в обязательный охват». Открытой модели теплового состояния скафандра/перчаток как функции времени нет, а без неё «тепловой риск окна» был бы придуманным числом (нарушение О2). Что реально и честно: доля окна на свету, длина непрерывного света (при |β| > 69,6° — тень отсутствует, AMS-02: две недели в году), максимум температуры не считаем. Всё это уже выдаёт условие 1. Стоимость: 0 сверх условия 1; в отчёте — одна фраза «почему не считаем».",
+   "confidence": "high",
+   "sources": [
+    "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf, п. 6.1.2.1, табл. 6-2 (с. 40, 45)",
+    "https://www.nasa.gov/centers-and-facilities/johnson/spacewalk-spacesuit-basics/",
+    "https://ams02.space/operations/thermal-operation",
+    "docs/case/Postanovka_zadachi_VKD.txt, с. 6"
+   ]
+  },
+  {
+   "title": "Атомарный кислород: исключить — ресурсный эффект за месяцы, не риск конкретного выхода",
+   "detail_ru": "ECSS-E-ST-10-04C Rev.1, п. 7.1.1: «Surface corrosion effects due to the impact of large fluxes of atomic oxygen are assessed to predict the degradation of a wide range of sensitive coatings»; п. 11.2a: оценка загрязнения должна учитывать «Atomic oxygen at altitudes below 400 km»; прил. G, рис. G-3 — концентрация O по высоте для низкой/умеренной/высокой активности (NRLMSISE-00). Порядок потока на высоте МКС ~1·10^14 атом/(см²·с) на набегающую поверхность (вторичные источники; первоисточник NASA TM-2002-211479 не прочитан — «не проверено»); за 6 ч это ~2·10^18 атом/см², против годовой флюенции ~3·10^21 — эффект на внешнюю оболочку скафандра проявляется за месяцы–годы эксплуатации, а не за один выход. Уже отражено в docs/ZAMYSEL.md разд. 11 («ресурс скафандра, а не риск конкретного выхода»). Решение: исключить; в разделе «Чего не учитываем» одна строка со ссылкой на ECSS п. 7.1.1. Стоимость 0.",
+   "confidence": "high",
+   "sources": [
+    "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf, п. 7.1.1, 11.2a, прил. G рис. G-3",
+    "https://www.reading.ac.uk/infrared/technical-library/space-environment/atomic-oxygen (вторичный)",
+    "https://ntrs.nasa.gov/api/citations/20020061718/downloads/20020061718.pdf (NASA TM-2002-211479, не прочитан — не проверено)",
+    "docs/ZAMYSEL.md, разд. 11"
+   ]
+  },
+  {
+   "title": "Ионосфера и радионарушения (шкала R, D-RAP, сцинтилляции): исключить как фактор риска ВКД с обоснованием по частотам; показывать информационно",
+   "detail_ru": "NOAA Space Weather Scales, шкала R: R1 (M1, 10^-5 Вт/м²) — «Weak or minor degradation of HF radio communication on sunlit side»; R3 (X1, 10^-4 Вт/м²) — «Wide area blackout of HF radio communication, loss of radio contact for about an hour»; R5 (X20, 2·10^-3 Вт/м²) — «Complete HF (high frequency) radio blackout on the entire sunlit side». Это ВЧ (3…30 МГц) и низкочастотная навигация. Радиолинии ВКД: скафандр EMU — «slightly above 400 MHz», ~125 кбит/с (Bakula, Theofylaktos, NASA GRC, NTRS 20150008350; конкретные 414,2/417,1 МГц — по вторичным источникам); российский борт–«Орлан» ~130,167 МГц (issfanclub, вторичный); борт–земля S-диапазон и Ku через TDRS (NTRS 20110004354 про вторую Ku-антенну). Ионосферное поглощение в D-слое убывает как 1/f²: при переходе от 10 МГц к 400 МГц — в 1600 раз, к 2 ГГц — в 40 000 раз; вспышка не рвёт линии ВКД. Сцинтилляции (экваториальные/авроральные) бьют по GNSS L-диапазона, что касается бортового GPS МКС, но наша траектория — из TLE (SGP4), сцинтилляции на неё не влияют. Постановка: «Геомагнитная буря, солнечное протонное событие и радионарушение — разные явления»; шкала R не должна поднимать оценку окна. Решение: отображать текущий уровень R (services.swpc.noaa.gov/products/noaa-scales.json, проверено) с подписью «не применяется к радиолиниям ВКД: причина», D-RAP (живой текст проверен, архив NCEI 2009–настоящее — страница есть, файлы не проверены) — только как доказательство. Стоимость 0…1 ч.",
+   "confidence": "high",
+   "sources": [
+    "https://www.spaceweather.gov/noaa-scales-explanation",
+    "https://ntrs.nasa.gov/citations/20150008350 (Bakula & Theofylaktos, 2015)",
+    "https://ntrs.nasa.gov/api/citations/20110004354/downloads/20110004354.pdf (Ku-band, не прочитан подробно)",
+    "https://issfanclub.eu/iss-frequencies/ (вторичный)",
+    "https://services.swpc.noaa.gov/products/noaa-scales.json",
+    "https://services.swpc.noaa.gov/text/drap_global_frequencies.txt",
+    "docs/case/Postanovka_zadachi_VKD.txt, с. 6"
+   ]
+  },
+  {
+   "title": "Освещённость для видеонаблюдения и фотодокументирования — не отдельный фактор, а подпоказатель условия 1",
+   "detail_ru": "NASA-STD-3001 Vol. 2 [V2 8051] требует освещённость, которая «accommodate both human observers and remote camera systems», а [V2 8104] — контраст в тенях в пределах двух порядков «that accommodate both human observers and remote camera systems». То есть камеры (шлемные, на станции, «Глиссер» у РС) — тот же критерий день/ночь и та же геометрия теней. Дополнительный подпоказатель: «минут окна на свету для документирования» и «наибольший непрерывный светлый отрезок». Требования по lux (20/100–300/1000+) — из OCHMO-TB-026; таблица 8.7-1 NASA-STD-3001 не прочитана (не проверено). Решение: объединить с условием 1, не плодить линий. Стоимость 0.",
+   "confidence": "medium",
+   "sources": [
+    "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-001-artemis-lighting-considerations.pdf ([V2 8051], [V2 8104])",
+    "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-026-lighting-design.pdf"
+   ]
+  },
+  {
+   "title": "Доступность источников для «прочих» факторов: что проверено фактически 18.09.2026",
+   "detail_ru": "Живые (HTTP 200, время ответа): CelesTrak GP TLE 25544 — 200, 10,9 с (медленно; кешировать); JPL DE421 по пути a_old_versions — 200, 16,8 МБ (нужен для Солнца); NOAA OVATION JSON — 200, 918 кБ, поля «Observation Time», «Forecast Time», «[Longitude, Latitude, Aurora]»; полусферная мощность — 200, «Cadence: 5 minutes», столбцы Observation/Forecast; D-RAP — 200, «Product Valid At»; noaa-scales.json — 200 (R/S/G с прогнозными вероятностями на 3 суток); 3-day-forecast.txt — 200 с «:Issued: 2026 Sep 18 1230 UTC»; Kp-прогноз JSON — 200 (observed/estimated/predicted); GFZ Kp JSON — 200, лицензия CC BY 4.0, статус def; GOES X-ray 6 ч — 200, 20,6 с. Архивы: NCEI 3-суточные прогнозы 03/2022–настоящее — листинг 2024/05 подтверждён, файл 202405091230three_day_forecast.txt содержит «:Issued: 2024 May 09 1230 UTC» и прогноз «greatest expected 3 hr Kp for May 09-May 11 2024 is 6.67 (NOAA Scale G3)» против наблюдённого Kp 9,0 (GFZ) — готовый пример «внешний прогноз vs наблюдение» для Т5; forecast_discussion 03/2024–настоящее — листинг 2024/05 подтверждён; DMSP F18 SSJ 2024/05 — есть (EDR-бинарник, файл ...20240509...); D-RAP архив — страница NCEI есть, файлы не проверены; OVATION/полусферная мощность — архива у NCEI не задокументировано. Недоступно/не проверено: ftp.swpc.noaa.gov/pub/warehouse — тайм-аут; CelesTrak SW-Last5Years.csv — 200 в первом запросе, затем обрывы TLS; DONKI WS живой — не проверен в этой сессии (архив в репозитории с submissionTime/versionId есть); Space-Track — не проверялся (аккаунт); Wiley/SWSC (Carbary 2005, Sigernes 2011) — 403; aurora.unis.no — просроченный сертификат, PDF прочитан.",
+   "confidence": "high",
+   "sources": [
+    "см. data_sources",
+    "наши запросы curl/WebFetch 18.09.2026"
+   ]
+  },
+  {
+   "title": "Как встроить условия в правило рекомендации без подмены «риска» «условием» (О2, О3, Т3)",
+   "detail_ru": "Правило CONTRACT.md разд. 4 лексикографическое: (1) недостаток данных → нет рекомендации; (2) протонное событие; (3) минуты в аномалии/на высоких широтах, затем сближения; (4) равнозначность. Условия работ добавляются так: **шаг 0 (опционально, включает пользователь):** жёсткие ограничения — «переход к рабочему месту на свету», «минимум N мин связи с НИП внутри окна», «не более M переходов свет/тень» — окна, нарушающие ограничение, помечаются «нарушает заданное ограничение», а не «опасно» (постановка: условие «связывается с явно заданным ограничением»); **шаг 3+:** при равенстве по механизмам 1–2 в пределах допуска ничья разрешается по минутам связи с НИП и по числу переходов свет/тень — с явным текстом «выбрано по условию работ, риск равен». Третья линия (авроральное заряжение) не участвует в ранжировании; она даёт статус и текст «условия, при которых NASA задействует процесс обнаружения и предупреждения» — иначе Kp был бы учтён дважды (Т3). Типы: WindowAssessment получает `conditions: tuple[FactorValue, ...]` с kind = OWN_CALCULATION; Recommendation.reasons — текст условия. Это изменение замороженного vkd/types.py — только по согласованию с записью в журналах.",
+   "confidence": "high",
+   "sources": [
+    "CONTRACT.md, разд. 3, 4, 6, 7",
+    "vkd/types.py",
+    "docs/case/Kriterii_ocenki_VKD.txt (О2, О3, Т3)",
+    "docs/case/Postanovka_zadachi_VKD.txt, с. 3 и 6"
+   ]
+  }
+ ],
+ "literature": [
+  {
+   "ref": "ECSS-E-ST-10-04C Rev.1 «Space environment», 15 June 2020",
+   "what_it_gives_ru": "Разд. 6 (табл. 6-2: TSI 1361 Вт/м², 1316/1407 в афелии/перигелии; табл. 6-1 Kp→ap; табл. 6-3/6-4 уровни F10.7/ap), разд. 7 (атмосфера, атомарный кислород, NRLMSISE-00/JB-2006), разд. 8 (плазма: п. 8.1.2 овал 60–77° магн. широты; п. 8.2.1a(2) авроральная среда обязательна при i > 50°, 80…2000 км; п. 8.2.3 наихудшая среда; п. 8.2.4b Kp = 9), п. 9.2.1e (дрейф ЮАА 0,3°/год), п. 11.2a (АК ниже 400 км)",
+   "have": true,
+   "where": "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf",
+   "clauses": "6.1.2.1; табл. 6-1…6-4; 7.1.1; 7.2.1; 8.1.1; 8.1.2; 8.2.1a; 8.2.3a–d; 8.2.4b; 9.2.1e; 11.2a; прил. G рис. G-3"
+  },
+  {
+   "ref": "ГОСТ Р 25645.166-2004 «Атмосфера Земли верхняя. Модель плотности для баллистического обеспечения полётов ИСЗ»",
+   "what_it_gives_ru": "Область 120…1500 км; входы F10.7, F81, Kp/ap; формула плотности п. 5.4 с геомагнитным членом K4; назначение — баллистика, не риск",
+   "have": true,
+   "where": "docs/istochniki/GOST_R_25645.166-2004_atmosfera.pdf",
+   "clauses": "разд. 1; 3.1–3.2; 4; 5.1–5.4; прил. А, Б"
+  },
+  {
+   "ref": "Koontz S., Castillo T., Hartman W., Schmidl W., Haught M., Duncan G., Gingras B., Vera J. International Space Station Spacecraft Charging Hazards: Hazard Identification, Management, and Control Methodologies, with Possible Applications to Human Spaceflight Beyond LEO. NASA NTRS 20200001609 (2020)",
+   "what_it_gives_ru": "Три механизма заряжения МКС; порог −45,5 В; авроральные события > −10 В «exceedingly rare», длятся минуты; ~7 дней беспокойства в год; ~1 совпадение с ВКД за 6 лет; P < 1e-7 за 8 ч (отриц.); 1/290 000 на конце фермы (полож., PCU off); оговорка о низкой солнечной активности",
+   "have": false,
+   "where": "https://ntrs.nasa.gov/api/citations/20200001609/downloads/20200001609.pdf (скачано в scratchpad; положить в docs/istochniki/)",
+   "clauses": "Abstract; разд. 2 (P1, критерии 1–4); разд. 3 (типы событий, рис. 2); разд. 5.1–5.2"
+  },
+  {
+   "ref": "Minow J.I., Wright K.H., Chandler M.O., Coffey V.N., Craven P.D., Schneider T.A., Parker L.N., Ferguson D.C., Koontz S.L., Alred J.W. Summary of 2006 to 2010 FPMU Measurements of International Space Station Frame Potential Variations. 11th SCTC, 2010. NASA NTRS 20100042504",
+   "what_it_gives_ru": "Экстремумы потенциала: авроральное заряжение −17…−20 В; выход из тени −40…−65 В; снятие шунтов −65…−85 В; FPMU одобрен для краткосрочного прогноза плазменной опасности при ВКД",
+   "have": false,
+   "where": "https://ntrs.nasa.gov/api/citations/20100042504/downloads/20100042504.pdf (скачано в scratchpad)",
+   "clauses": "с. 1 (abstract), с. 10, 15–16, 19"
+  },
+  {
+   "ref": "NASA OCHMO-TB-001 Rev B «Artemis Lighting Considerations Overview» (технический бриф по NASA-STD-3001 Vol. 2 Rev D)",
+   "what_it_gives_ru": "«full sunlight every 45 minutes» на МКС; тексты требований [V2 8051] (освещение без орбитального солнца, камеры), [V2 8058] (блики), [V2 8104] (контраст в тенях, 2 порядка), [V2 11020] (экранирование шлема)",
+   "have": false,
+   "where": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-001-artemis-lighting-considerations.pdf",
+   "clauses": "с. 1; с. 21 (перечень требований)"
+  },
+  {
+   "ref": "NASA OCHMO-TB-026 «Lighting Design» (технический бриф по NASA-STD-3001)",
+   "what_it_gives_ru": "Уровни освещённости задач: 20 лк ночные, 100–300 лк штатные, > 1000 лк точные",
+   "have": false,
+   "where": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-026-lighting-design.pdf",
+   "clauses": "раздел Intensity/illumination"
+  },
+  {
+   "ref": "Parker W.E., Linares R. Satellite Drag Analysis During the May 2024 Gannon Geomagnetic Storm. J. Spacecraft and Rockets 61(5), 1412 (2024); arXiv:2406.08617",
+   "what_it_gives_ru": "ap до 400; плотность на 400 км до 6×; снижение 38→180 м/сут; прогнозы ap за сутки не угадали; ошибки положения «several kilometers even within a single day»",
+   "have": false,
+   "where": "https://arxiv.org/html/2406.08617v1 ; DOI 10.2514/1.A36164",
+   "clauses": "Abstract; разд. по плотности и по прогнозу ap"
+  },
+  {
+   "ref": "Sigernes F., Dyrland M., Brekke P. et al. Real time aurora oval forecasting — SvalTrack II (UNIS); содержит коэффициенты Starkov G.V. (1994) для границ овала по Kp→AL",
+   "what_it_gives_ru": "Формулы (1)–(3): AL = c0 + c1 Kp + c2 Kp² + c3 Kp³ (18; −12,3; 27,2; −2,0); ряд Фурье по MLT с коэффициентами-полиномами; таблицы для полярной, экваториальной и диффузной границ; область уверенности Kp ≤ 7",
+   "have": false,
+   "where": "https://aurora.unis.no/doc/Sigernes_Oval.pdf (сертификат сайта просрочен; PDF прочитан); журнальная версия: J. Space Weather Space Clim. 1, A03 (2011), DOI 10.1051/swsc/2011003 — 403",
+   "clauses": "табл. 1, 2; ур. (1)–(3)"
+  },
+  {
+   "ref": "Carbary J.F. A Kp-based model of auroral boundaries. Space Weather 3, S10001 (2005), DOI 10.1029/2005SW000162",
+   "what_it_gives_ru": "Альтернативная Kp-модель границ овала (DMSP/Polar UVI); нужна как перекрёстная проверка Старкова",
+   "have": false,
+   "where": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2005SW000162 — HTTP 403, не прочитано",
+   "clauses": "не проверено"
+  },
+  {
+   "ref": "NOAA SWPC Space Weather Scales (R, S, G)",
+   "what_it_gives_ru": "R-шкала — только ВЧ и НЧ-навигация, пороги M1…X20; G3/G5 — поверхностное заряжение и торможение; S3 — «Radiation hazard avoidance recommended for astronauts on EVA» (10³ pfu), S4/S5 — «Unavoidable»",
+   "have": false,
+   "where": "https://www.spaceweather.gov/noaa-scales-explanation",
+   "clauses": "таблицы R, S, G"
+  },
+  {
+   "ref": "Bakula C.J., Theofylaktos O. Antenna Design Considerations for the Advanced Extravehicular Mobility Unit. NASA GRC, NTRS 20150008350 (2015)",
+   "what_it_gives_ru": "Радио EMU «slightly above 400 MHz», ~125 кбит/с — основание для исключения R-шкалы",
+   "have": false,
+   "where": "https://ntrs.nasa.gov/citations/20150008350",
+   "clauses": "abstract"
+  },
+  {
+   "ref": "NASA ISS EVA Space Suits (NTRS 20040031719)",
+   "what_it_gives_ru": "Золочёный солнечный визор и солнцезащитный козырёк; послойный состав TMG; (упоминаний фонарей, связи, заряжения нет — проверено grep)",
+   "have": true,
+   "where": "docs/istochniki/NASA_ISS_EVA_Space_Suits_20040031719.pdf",
+   "clauses": "описание шлема (с. ~1797 текстовой выгрузки), TMG"
+  },
+  {
+   "ref": "ОСТ 134-1044-2007 изм. 2",
+   "what_it_gives_ru": "Проверено grep: освещённости, электризации, атмосферы, связи в документе нет — он только про заряженные частицы; для «прочих» факторов не источник",
+   "have": true,
+   "where": "docs/istochniki/OST_134-1044-2007_tekst.txt",
+   "clauses": "—"
+  },
+  {
+   "ref": "Роскосмос, ЦУП: «У российских космонавтов на МКС появится широкополосный доступ в Интернет» (Интерфакс-АВН, 02.11.2010)",
+   "what_it_gives_ru": "Связь РС МКС с ЦУП только над российскими наземными станциями; вне зоны радиовидимости — американские каналы; планы «Луч-5А/5Б»",
+   "have": false,
+   "where": "https://www.roscosmos.ru/13007/ (кодировка cp1251)",
+   "clauses": "текст новости"
+  },
+  {
+   "ref": "АО «Спутниковая система «Гонец»: МКСР «Луч» — ретрансляция связи с МКС; новость об установке приёмного модуля «Луч» на МКС 02.02.2018",
+   "what_it_gives_ru": "Назначение системы для МКС, объекты до 2000 км, приём на станции на территории России; факт установки модуля в ходе ВКД",
+   "have": false,
+   "where": "https://gonets.ru/rus/uslugi/sistema-retranslyacii-luch/iss-telemetry/ ; https://gonets.ru/rus/media/news/na_mks_ustanovlen_novyy_priemnyy_modul_mksr_luch/",
+   "clauses": "—"
+  },
+  {
+   "ref": "ru.wikipedia: «Командно-измерительный комплекс» (координаты НИП); «Луч-5А», «Луч-5Б», «Луч-5В» (точки стояния 167° в.д., 16° з.д., 95° в.д.)",
+   "what_it_gives_ru": "Координаты и точки стояния для конфигурации условия 2; вторичный источник, помечать",
+   "have": false,
+   "where": "https://ru.wikipedia.org/wiki/Командно-измерительный_комплекс ; https://ru.wikipedia.org/wiki/Луч-5А ; /Луч-5Б ; /Луч-5В",
+   "clauses": "таблица НИП; карточки КА"
+  },
+  {
+   "ref": "eoPortal: Tracking and Data Relay Satellites (TDRS)",
+   "what_it_gives_ru": "Позиции TDRS-F 46° з.д., G 85° в.д., H 89° в.д., K 174° з.д., L 41° з.д., M 49° з.д.",
+   "have": false,
+   "where": "https://www.eoportal.org/satellite-missions/tdrs",
+   "clauses": "раздел статуса"
+  },
+  {
+   "ref": "AMS-02 Collaboration: Thermal operation (бета-угол МКС)",
+   "what_it_gives_ru": "«no eclipse when |β| above ~70°, one week each summer and another week in the winter»",
+   "have": false,
+   "where": "https://ams02.space/operations/thermal-operation",
+   "clauses": "—"
+  },
+  {
+   "ref": "ECSS-E-ST-20-06C «Spacecraft charging»",
+   "what_it_gives_ru": "Требования к анализу заряжения (на него ссылается 10-04C п. 8.1.1); нужен, если третья линия идёт в отчёт",
+   "have": false,
+   "where": "ecss.nl (не скачивался)",
+   "clauses": "не проверено"
+  },
+  {
+   "ref": "JSC-28918 «EVA Design Requirements and Considerations» (2005)",
+   "what_it_gives_ru": "Требования к освещённости задач ВКД (разд. 3.13–3.19, 4.4.4 по ссылкам); первоисточник для «света как условия»",
+   "have": false,
+   "where": "не найден в открытом доступе",
+   "clauses": "не проверено"
+  }
+ ],
+ "data_sources": [
+  {
+   "name": "CelesTrak GP, NORAD 25544 (TLE)",
+   "url": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
+   "quantity": "орбитальные элементы (эпоха 2026-09-18 03:25Z на момент проверки)",
+   "units": "TLE",
+   "live": true,
+   "archive": false,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "несколько раз в сутки",
+   "limits_ru": "ответ 10,9 с; эпоха ≠ время публикации; история — только Space-Track (аккаунт)",
+   "verification_note": "HTTP 200, 168 байт, 18.09.2026"
+  },
+  {
+   "name": "JPL NAIF DE421 (эфемерида Солнца для тени и β)",
+   "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp",
+   "quantity": "положения Солнца/Земли",
+   "units": "км",
+   "live": false,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "статика",
+   "limits_ru": "16,8 МБ; путь без a_old_versions даёт 404; положить в репозиторий или качать при установке",
+   "verification_note": "HTTP 200, скачан, использован в расчёте"
+  },
+  {
+   "name": "NOAA SWPC OVATION aurora 30–90 min forecast (JSON)",
+   "url": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+   "quantity": "сетка [долгота, широта, aurora 0…100] + Observation Time, Forecast Time",
+   "units": "градусы; безразмерный индекс 0…100",
+   "live": true,
+   "archive": false,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "~5 мин",
+   "limits_ru": "заблаговременность = время пролёта ветра от L1 (30–90 мин); семантика значения (вероятность/интенсивность) уточнить; архива у NCEI не задокументировано",
+   "verification_note": "HTTP 200, 918 148 байт, поля проверены"
+  },
+  {
+   "name": "NOAA SWPC hemispheric power (OVATION)",
+   "url": "https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt",
+   "quantity": "полусферная мощность высыпаний, север/юг",
+   "units": "ГВт",
+   "live": true,
+   "archive": false,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "5 мин (Observation и Forecast столбцы)",
+   "limits_ru": "только текущие сутки; архив не найден",
+   "verification_note": "HTTP 200, заголовок «Cadence: 5 minutes» проверен"
+  },
+  {
+   "name": "NOAA SWPC D-RAP (D-region absorption)",
+   "url": "https://services.swpc.noaa.gov/text/drap_global_frequencies.txt",
+   "quantity": "максимальная поглощённая частота ВЧ по сетке",
+   "units": "МГц",
+   "live": true,
+   "archive": true,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "1 мин",
+   "limits_ru": "относится к ВЧ; для ВКД только информационно; архив NCEI 2009–настоящее (страница есть, файлы не проверены)",
+   "verification_note": "HTTP 200, «Product Valid At : 2026-09-18 16:10 UTC»; архив: https://www.ncei.noaa.gov/products/space-weather/ionospheric-program/d-region-absorption-prediction — 200"
+  },
+  {
+   "name": "NOAA SWPC scales (R/S/G текущие и прогноз)",
+   "url": "https://services.swpc.noaa.gov/products/noaa-scales.json",
+   "quantity": "уровни R, S, G и вероятности на 3 суток",
+   "units": "уровень 0…5; вероятность %",
+   "live": true,
+   "archive": false,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "1 мин",
+   "limits_ru": "внешний прогноз; R не применять к линиям ВКД",
+   "verification_note": "HTTP 200, 1096 байт"
+  },
+  {
+   "name": "NOAA SWPC 3-day forecast (текст с отметкой Issued)",
+   "url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+   "quantity": "Kp по 3-часовым интервалам на 3 суток, S и R вероятности",
+   "units": "Kp; %",
+   "live": true,
+   "archive": true,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "2 раза в сутки (00:30, 12:30 UTC)",
+   "limits_ru": "архив NCEI с 03/2022; имена файлов вида 202405091230three_day_forecast.txt",
+   "verification_note": "живой: «:Issued: 2026 Sep 18 1230 UTC»; архив: https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/3day_forecast/2024/05/202405091230three_day_forecast.txt — 200, «:Issued: 2024 May 09 1230 UTC», прогноз max Kp 6,67 (G3) на 10–11 мая"
+  },
+  {
+   "name": "NOAA SWPC forecast discussion (архив NCEI)",
+   "url": "https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/discussion/2024/05/",
+   "quantity": "текстовое обсуждение прогноза",
+   "units": "текст",
+   "live": true,
+   "archive": true,
+   "publication_time_available": true,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "2 раза в сутки",
+   "limits_ru": "архив с 03/2024 — май–июнь 2024 покрыт",
+   "verification_note": "листинг 2024/05 — 200, файлы 202405010030forecast_discussion.txt и далее"
+  },
+  {
+   "name": "NOAA SWPC planetary K-index forecast (JSON)",
+   "url": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json",
+   "quantity": "Kp наблюдённый/оценённый/прогнозный",
+   "units": "Kp",
+   "live": true,
+   "archive": false,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "3 ч",
+   "limits_ru": "поле observed ∈ {observed, estimated, predicted}; время выпуска в файле отсутствует — брать из 3-day-forecast",
+   "verification_note": "HTTP 200, 6906 байт"
+  },
+  {
+   "name": "GFZ Kp JSON API",
+   "url": "https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-12T00:00:00Z&index=Kp",
+   "quantity": "Kp 3-часовой",
+   "units": "Kp",
+   "live": true,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "3 ч",
+   "limits_ru": "статус def/prel есть, времени публикации нет; лицензия CC BY 4.0",
+   "verification_note": "HTTP 200: Kp 9,0 в 2024-05-11T00:00Z и 09:00Z, status def"
+  },
+  {
+   "name": "NCEI DMSP F18 SSJ (высыпающиеся частицы) за май 2024",
+   "url": "https://www.ncei.noaa.gov/data/dmsp-space-weather-sensors/access/f18/ssj/2024/05/",
+   "quantity": "потоки авроральных электронов/ионов вдоль орбиты DMSP",
+   "units": "по формату EDR",
+   "live": false,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "суточные файлы",
+   "limits_ru": "бинарный EDR, нужен парсер; только для проверки третьей линии, не для расчёта",
+   "verification_note": "листинг 200, файл PS.CKGWC_...SSJ5X-F18-...DD.20240509... присутствует"
+  },
+  {
+   "name": "NOAA GOES X-ray 6-hour (для отображения уровня R)",
+   "url": "https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json",
+   "quantity": "поток 0,1–0,8 нм",
+   "units": "Вт/м²",
+   "live": true,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": false,
+   "cadence": "1 мин",
+   "limits_ru": "ответ 20,6 с; архив GOES у NCEI (страница есть, не проверялась по файлам)",
+   "verification_note": "HTTP 200, 163 302 байта"
+  },
+  {
+   "name": "CelesTrak SW-Last5Years.csv (F10.7, Ap суточные)",
+   "url": "https://celestrak.org/SpaceData/SW-Last5Years.csv",
+   "quantity": "F10.7, Ap, Kp суточные",
+   "units": "sfu; Ap",
+   "live": true,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": false,
+   "coverage_2024_05_06": true,
+   "cadence": "суточно",
+   "limits_ru": "первый запрос 200 (259 655 байт), два повторных — обрывы TLS/тайм-аут; содержимое не проверено; дублирует GFZ-файл в репозитории",
+   "verification_note": "нестабилен 18.09.2026"
+  },
+  {
+   "name": "NOAA SWPC FTP warehouse (старый архив выпусков)",
+   "url": "https://ftp.swpc.noaa.gov/pub/warehouse/2024/",
+   "quantity": "выпуски продуктов SWPC",
+   "units": "текст",
+   "live": false,
+   "archive": true,
+   "publication_time_available": true,
+   "verified_access": false,
+   "coverage_2024_05_06": false,
+   "cadence": "—",
+   "limits_ru": "тайм-аут 40 с дважды; использовать NCEI-зеркало выше",
+   "verification_note": "не доступен 18.09.2026"
+  },
+  {
+   "name": "NASA CCMC DONKI WS (живой API)",
+   "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/GST?startDate=2024-05-09&endDate=2024-05-12",
+   "quantity": "GST/SEP/FLR/CME/IPS/RBE с submissionTime, versionId",
+   "units": "Kp; pfu; класс вспышки",
+   "live": true,
+   "archive": true,
+   "publication_time_available": true,
+   "verified_access": false,
+   "coverage_2024_05_06": true,
+   "cadence": "по событиям",
+   "limits_ru": "живой вызов в этой сессии не выполнен (обрыв цепочки команд); архив за 01.05–30.06.2024 лежит в data/archive_2024/ с submissionTime и versionId (проверено локально: GST 2024-05-02 submissionTime 18:44Z; RBE 2024-05-15 14:02Z)",
+   "verification_note": "не проверено живьём; локальный архив проверен"
+  },
+  {
+   "name": "Координаты НИП и точки стояния «Луч»/TDRS (статический конфиг)",
+   "url": "https://ru.wikipedia.org/wiki/Командно-измерительный_комплекс",
+   "quantity": "широта/долгота НИП; долготы ГСО-ретрансляторов",
+   "units": "градусы",
+   "live": false,
+   "archive": true,
+   "publication_time_available": false,
+   "verified_access": true,
+   "coverage_2024_05_06": true,
+   "cadence": "статика",
+   "limits_ru": "вторичные источники (Википедия, eoPortal); какие именно НИП обслуживают МКС — не подтверждено первичным документом; хранить в config.toml с полем source",
+   "verification_note": "страницы прочитаны 18.09.2026"
+  }
+ ],
+ "gaps_ru": [
+  "Первичный российский документ о планировании ВКД по освещённости и по сеансам связи (ЦПК, РКК «Энергия», ЦУП) не найден; опираемся на NASA-STD-3001 (через брифы OCHMO), заявления Роскосмоса/ЦУП и ЦНИИмаш.",
+  "JSC-28918 «EVA Design Requirements and Considerations» и таблица 8.7-1 NASA-STD-3001 Vol. 2 недоступны/не прочитаны — уровни освещённости взяты из брифа OCHMO-TB-026.",
+  "Нет первичного подтверждения, какие НИП ведут РС МКС сегодня и используется ли «Луч» для голосовой связи «Орлан»–ЦУП во время ВКД (есть только факт установки модуля 2018 г. и общие описания); расхождение по точке стояния «Луч-5В» (95° в.д. по Википедии против 167° в.д. у vpk.name).",
+  "FPMU и состояние PCU не публичны; анализ Koontz 2020 сделан для EMU и ферм АС — для «Орлана»/РС аналогичного открытого анализа не найдено; поэтому третья линия не может выдавать потенциал или вероятность.",
+  "Архива OVATION/полусферной мощности у NCEI не задокументировано — в историческом режиме авроральная граница считается только по Kp-модели (Старков), проверка — по DMSP SSJ (бинарный EDR, парсер не написан).",
+  "Реализация формулы (3) Старкова у нас — по коэффициентам из PDF UNIS с допущением полинома по log10|AL|; Carbary 2005 (Wiley) и журнальная версия Sigernes (SWSC) закрыты 403 — независимой перекрёстной проверки границы овала нет; при Kp > 7 модель занижает расширение.",
+  "Дипольная геомагнитная широта — приближение; нужна CGM (aacgmv2) для честного сравнения с границей овала и с ECSS «60–77° magnetic latitude».",
+  "ECSS-E-ST-20-06C (заряжение) нет в репозитории; ГОСТ/ОСТ по электризации КА (для ГСО) к МКС неприменим — российской нормы для аврорального заряжения на НОО не найдено.",
+  "Поток атомарного кислорода 1·10^14 атом/(см²·с) — из вторичных источников; NASA TM-2002-211479 не прочитан.",
+  "Частоты линий ВКД (414,2/417,1 МГц EMU; 130,167 МГц РС) — из вторичных источников; первичное NTRS даёт лишь «slightly above 400 MHz».",
+  "Живой DONKI и ftp.swpc не проверены/недоступны в сессии; CelesTrak SW-CSV нестабилен — нужен кеш и запасной источник (GFZ).",
+  "Для сравнения окон по условиям нужна поправка vkd/types.py (поле conditions в WindowAssessment) — замороженный файл, требует согласования."
+ ],
+ "critical_claims": [
+  {
+   "claim": "Освещённость окна (тень/свет, β, переходы) корректно считается из TLE + DE421 и совпадает с независимыми расчётами; β_crit ≈ 69,6° при h ≈ 425 км",
+   "why_critical_ru": "Условие 1 — главный кандидат на усиление Т2 и О1; если наш расчёт тени ошибочен (знак β, полутень, время), обе условные линии теряют доверие",
+   "how_to_check": "Сравнить моменты входа/выхода из тени по нашему скрипту (skyfield `is_sunlit`, DE421) с независимым калькулятором (например https://hawklogicsystems.com/tools/eclipse-beta-timeline или Orbitron/GMAT) для того же TLE и суток; допуск ±1 мин; сверить β с формулой β = arcsin(cos δ_s·sin i·sin(Ω−α_s) + sin δ_s·cos i); проверить |β| > 69,6° ⇒ 0 мин тени на неделе высокого β (AMS-02: https://ams02.space/operations/thermal-operation)"
+  },
+  {
+   "claim": "Связь РС МКС при ВКД по-прежнему опирается на сеансы с российскими НИП (Щёлково, Улан-Удэ, Уссурийск/Галёнки и др.), а «Луч» — резерв/дополнение; координаты НИП и точки стояния «Луч-5А/5Б/5В» = 167° в.д. / 16° з.д. / 95° в.д.",
+   "why_critical_ru": "Если «Луч» даёт непрерывную голосовую связь при ВКД, условие 2 в части НИП теряет содержательность и остаётся только геометрия ретрансляторов (100 % покрытия — ничего не различает)",
+   "how_to_check": "Роскосмос/ЦУП: https://www.roscosmos.ru/13007/ (2010) и свежие пресс-релизы о ВКД 2024–2026 с фразами «зона радиовидимости», «сеанс связи»; gonets.ru/rus/uslugi/sistema-retranslyacii-luch/ (состав и точки); tsniimash.ru страница «Спутники-ретрансляторы «Луч-5»»; сверить точки стояния по NORAD-каталогу CelesTrak (GEO элементы Луч-5А/5Б/5В: долгота подспутниковой точки из TLE); координаты НИП — по russianspaceweb.com/kik.html и Википедии, пометить как вторичные"
+  },
+  {
+   "claim": "Трасса МКС достигает геомагнитной широты ≤ 61° и входит в авроральный овал (по Старкову) только при Kp ≳ 5, ~16 мин/сут при |φ_m| ≥ 60°",
+   "why_critical_ru": "На этом стоит третья линия; если CGM-широта трассы заметно выше дипольной или граница овала при Kp 5–9 существенно ниже 60°, условие срабатывает гораздо чаще и должно считаться иначе",
+   "how_to_check": "Пересчитать φ_m через aacgmv2 (pip install aacgmv2) для той же трассы; реализовать границу Старкова по формулам (1)–(3) PDF UNIS https://aurora.unis.no/doc/Sigernes_Oval.pdf и сверить с кодом https://github.com/habtie-phys/auroraloval (FS_oval.py); наложить сетку OVATION (services.swpc.noaa.gov/json/ovation_aurora_latest.json) на трассу в возмущённый день и сравнить долю точек с aurora > 0 при |φ_m| ≥ 60°"
+  },
+  {
+   "claim": "Числа NASA по опасности удара током (−45,5 В; ~7 дней беспокойства/год; P < 1e-7 за 8 ч) относятся к EMU и фермам АС при низкой солнечной активности и не переносятся на «Орлан»/РС",
+   "why_critical_ru": "Если заявить их как оценку для российской ВКД — нарушение О2 («без необоснованных заявлений о безопасности»); если же существует открытый анализ для РС — линию можно усилить",
+   "how_to_check": "Прочитать целиком https://ntrs.nasa.gov/api/citations/20200001609/downloads/20200001609.pdf (разд. 2–5, рис. 2, 10–11) и найти явные указания на локации (truss tip, SARJ) и скафандр; поиск NTRS по «Orlan charging», «Russian segment floating potential», «ISS charging 2024 storm» (Parker/Minow, G4 2023: researchgate 393689171 — закрыт)"
+  },
+  {
+   "claim": "Архив датированных выпусков NOAA у NCEI (3-day forecast, forecast discussion) полный за 01.05–30.06.2024 с отметками Issued — база строгого replay внешних прогнозов и условий для третьей линии",
+   "why_critical_ru": "Т4 требует отсечку по времени публикации; пропуски дней ломают «прогноз из прошлого» и наш пример «прогноз G3 vs факт Kp 9»",
+   "how_to_check": "Скачать листинги https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/3day_forecast/2024/05/ и /2024/06/ и /discussion/2024/05,06/; ожидание — 2 файла в сутки (122 за период); в каждом проверить строку «:Issued:»; сверить прогноз 202405091230 (max Kp 6,67) с GFZ Kp 9,0 (https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-12T00:00:00Z&index=Kp)"
+  }
+ ],
+ "recommendations_ru": [
+  "Добавить к двум механизмам два условия работ, оба — только из траектории (kind = own_calculation): **условие 1 «Освещённость»** (минуты тени в окне, число переходов свет/тень, наибольший непрерывный светлый отрезок, β и флаг «|β| > 69,6° — тени нет») и **условие 2 «Зона связи»** (минуты геометрической радиовидимости выбранного набора НИП при маске 7°, наибольший разрыв; отдельно — геометрическое покрытие «Луч» и TDRS с подписью «геометрия, не сеанс»). Пользователь выбирает сегмент (РС/АС) и включает жёсткие ограничения; окна, нарушающие их, помечаются «нарушает заданное ограничение», а не «опасно».",
+  "Правило рекомендации: условия входят как шаг 0 (явные ограничения пользователя) и как разрешение ничьей на шаге 3 CONTRACT.md разд. 4 с текстом «выбрано по условию работ, риск равен»; вердикты insufficient/all_need_check условия не меняют. Согласовать через журнал поправку vkd/types.py: поле `conditions: tuple[FactorValue, ...]` в WindowAssessment.",
+  "Третьей линией (О7, после ядра) реализовать «авроральное заряжение»: статус по трём одновременным условиям — тень, |φ_m| ≥ граница овала по Старкову (Kp), Kp ≥ 5; выводить минуты, моменты выхода из тени на высоких широтах и текст «условия, при которых NASA задействует процесс обнаружения и предупреждения (Koontz et al. 2020)»; ничего не заявлять о потенциале и вероятности удара током. Kp не считать дважды: линия не ранжирует окна.",
+  "Исключить с обоснованием в интерфейсе (раздел «Чего не учитываем и почему»): тепловой режим (производная освещённости; ECSS табл. 6-2; NASA −250…+250 °F), атомарный кислород (ECSS п. 7.1.1; эффект за месяцы), R-шкала/ионосфера (ВЧ 3…30 МГц против 130 МГц/400 МГц/S/Ku линий ВКД; поглощение ∝ 1/f²; сцинтилляции бьют по GNSS, а траектория из TLE). Шкалу R показывать информационно как внешнее наблюдение с подписью «к ВКД не применяется».",
+  "ГОСТ Р 25645.166-2004 использовать не как фактор, а как обоснование флага неопределённости траектории «давность TLE × Ap» (Т2), со ссылкой на Parker & Linares 2024 (плотность ×6, прогнозы ap за сутки не угадали бурю); полную модель плотности не реализовывать.",
+  "Данные: положить de421.bsp (16,8 МБ) в репозиторий или в шаг установки с проверкой хэша; вынести координаты НИП, маску и долготы «Луч»/TDRS в config.toml с полем source и датой; кешировать CelesTrak (TLE 11 с, SW-CSV нестабилен); подключить OVATION JSON и hemispheric power как живые доказательства третьей линии с полями Observation Time/Forecast Time; для истории — Kp GFZ (проверено) и DMSP SSJ как данные проверки.",
+  "Для Т5 использовать готовый факт из проверенного архива NCEI: выпуск 3-day forecast от 2024-05-09 12:30 UTC прогнозировал max Kp 6,67 (G3) на 10–11 мая, наблюдено Kp 9,0 (GFZ) — показать как «внешний прогноз vs наблюдение» рядом с нашим детерминированным расчётом условий, который от этого прогноза не зависит.",
+  "В презентации (О1, О6): одна схема «что фактор, что условие, что исключено и почему» с номерами пунктов ECSS/ГОСТ и ссылками NASA; фраза постановки про освещённость — дословно; третья линия — как пример зрелости («знаем, что заряжение существует, знаем, чего не знаем»).",
+  "Порядок работ с учётом плана: условие 1 (2 ч) и условие 2 (3 ч) — в день 1 после пунктов 3–5 PLAN_RAZRABOTKI.md, потому что усиливают Т2 дёшево; третья линия (0,5 дня) — день 2, пункт 15, только если ядро готово; флаг ГОСТ 166 (2 ч) — вместе с выводом давности TLE (Т2).",
+  "Перед защитой закрыть пять critical_claims фактическими проверками (независимый расчёт тени; первичные источники по НИП/«Луч»; CGM-широта и граница овала; область применимости чисел NASA; полнота архива NCEI за май–июнь 2024) и записать результаты в journal/tim.md."
+ ]
+}

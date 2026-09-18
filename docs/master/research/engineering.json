@@ -1,0 +1,630 @@
+{
+ "dimension": "engineering",
+ "summary_ru": "Каркас проекта на 18.09.2026 состоит из замороженных типов стыка `vkd/types.py`, девяти пустых пакетов (`vkd/sources`, `orbit`, `conjunctions`, `history`, `assess`, `windows`, `explain`, `suit`, `app`) и одной работающей сквозной демонстрации `experiments/demo_pipeline.py` (0,58 с на 1800 точек траектории с шагом 1 мин; SGP4 + геодезия 0,03 с, IGRF через ppigrf 0,03 с — измерено). Ни одного теста, ни `.env.example`, ни `config.toml`, ни CI нет; `pytest` на машине Тимофея не установлен; README и CLAUDE.md/AGENTS.md до сих пор описывают отменённый стек C++/Qt. Инженерная работа по Т1, Т6, Т7, Т8 — это не исследование, а строительство: слой источников с сырыми записями и дедупликацией, конфигурация вне кода, тесты на инварианты, воспроизводимая выгрузка и дисциплина совместной работы двух ассистентов.\n\nФактическая проверка источников по сети (все URL ниже запрошены curl с этой машины) дала четыре результата, которые меняют план. Первое: CelesTrak не даёт исторических элементов МКС за май–июнь 2024 (параметр EPOCH игнорируется, архивы заканчиваются 2004 годом по закону 108-136), но NASA JSC TOPO публикует датированные OEM-эфемериды МКС в открытом S3-хранилище `nasa-public-data/iss-coords/<дата>/ISS_OEM/` — 13 файлов за май и 12 за июнь 2024, каждый с `CREATION_DATE`, шагом 240 с и охватом 15 суток; это даёт историческую орбиту с меткой публикации без учётной записи Space-Track, но требует правки CONTRACT.md раздел 10 (там написано «из TLE того периода»). Второе: склад SWPC `ftp.swpc.noaa.gov` с этой сети недоступен (шесть запросов, таймаут 60 с каждый), однако датированные выпуски SWPC за 2024 лежат на NGDC: `swpc-products/daily_reports/3day_forecast/2024/05/202405100030three_day_forecast.txt` с отметкой `Issued: 2024 May 10 0030 UTC` и разбивкой Kp по 3 ч на трое суток — это и есть «датированный прогноз» для строгого replay. Третье: архив GOES на NCEI (SGPS L2 avg1m, netCDF по суткам) содержит интегральный канал только >500 МэВ; интеграл ≥10 МэВ, по которому определяется шкала S, придётся считать самим из 13 дифференциальных каналов 1,02–390 МэВ — на тихих сутках 17.09.2026 наш интеграл совпал с живым SWPC по медиане 1,00 на 286 точках, на событийных сутках сверка не проведена. Четвёртое: в архиве DONKI у 67 из 259 CME и 86 из 244 вспышек `versionId` больше 1, то есть время первой публикации утрачено (максимальное запаздывание `submissionTime` — 302 суток), поэтому для replay пригодны только уведомления DONKI с `messageIssueTime` (61 сообщение за 9–13 мая 2024) и файлы NGDC с `Issued`.\n\nОтдельно по обязательному тесту Т3: в приложении К ОСТ 134-1044-2007 кроме дозовых таблиц есть таблицы К.1.1/К.1.2 и К.2.1/К.2.2 — орбитально-усреднённые дифференциальные спектры потоков электронов и протонов ЕРПЗ за 10 лет для наклонений 30° и 60° на 18 высотах от 400 до 36 000 км. Значит нормировка «прил. А против прил. К» ставится как сравнение потока с потоком на синтетических круговых орбитах 30° и 60°, без дозового ядра и без интерполяции по наклонению; эти четыре таблицы ещё не оцифрованы. Таблица Ж.1 (вертикальная жёсткость обрезания на 450 км, эпоха 2010, сетка 5° по широте и 30° по долготе) в текстовой выгрузке цела, но формулы Ж.3–Ж.8 потеряны: в DOCX они хранятся как 192 OLE-объекта и 179 картинок WMF/EMF, их надо переписать вручную из Word.\n\nСовместная работа: обе стороны толкают в `main`, журналы append-only в разных файлах, `origin/main` и `gitverse/main` синхронны (0 коммитов разницы), GitHub-репозиторий приватный (404 без авторизации), GitVerse-репозиторий тоже. GitHub Actions на приватном репозитории даёт 2000 минут в месяц бесплатно — этого достаточно для `pytest` на каждый push. Площадка Streamlit Community Cloud доступна с этой сети, по умолчанию Python 3.12, лимит памяти 2,7 ГБ и 2 ядра; локально стоит Python 3.14.6, у Codex 3.14.3 — версию для развёртывания надо закрепить явно.",
+ "findings": [
+  {
+   "title": "Типы стыка vkd/types.py: что уточнить, не меняя договор самостоятельно",
+   "detail_ru": "Файл прочитан целиком (144 строки, 9 dataclass, 2 Enum). Он хорошо согласован с постановкой (три времени раздельно, `value=None` как пропуск, `published_utc=None` как «непригоден для строгого replay»). Рекомендации к согласованию вдвоём через журнал (правит человек, CONTRACT.md правило 4):\n\n1. `TrajectoryPoint`: (а) `cutoff_GV: float` — сделать `Optional[float]` и добавить `cutoff_kind: str` со значениями «vertical_table_zh1» (по таблице Ж.1 ОСТ, эпоха 2010, H_0 = 450 км) и «corrected_kp_mlt» (после поправки Ж.4–Ж.6); без этого нельзя отличить сырую табличную жёсткость от скорректированной по Kp; (б) добавить `mlt_h: Optional[float]` — магнитное местное время, оно входит в формулы Ж.5–Ж.6 ОСТ (параметры A, B, C зависят от Kp и t_MLT); (в) добавить `B_nT: float` — модуль поля, чтобы порог аномалии (сейчас 24 000 нТл, инженерная оценка в demo_pipeline.py строка 44) жил в `config.toml`, а не в чужом пакете; (г) зафиксировать соглашение о долготе: таблица Ж.1 использует 0…330°, skyfield выдаёт −180…180°; (д) зафиксировать, что `alt_km` — геодезическая WGS84 (skyfield `wgs84.geographic_position_of`), а формула Ж.3 ОСТ использует геоцентрический радиус R_З + H — расхождение до 21 км на широте 45°.\n\n2. `TrajectoryMeta`: добавить `published_utc: Optional[datetime]` отдельно от `fetched_utc` — у OEM NASA это `CREATION_DATE` (например 2024-05-08T16:49:32 для файла 2024-05-08), у Space-Track GP_HISTORY — `CREATION_DATE`, у CelesTrak GP — отсутствует (в OMM XML поле `CREATION_DATE` пустое, проверено); добавить `source_kind` ∈ {tle_sgp4, oem_interpolation} и `frame` («TEME» для SGP4, «EME2000» для OEM).\n\n3. `EnvironmentSample`: добавить `fetched_utc`, `quality: str` (у GFZ Kp есть флаг `status` def/prov — проверено запросом с `&status=def`; у NCEI GOES есть DQF-маски `IntDQFerrSum`), `raw_ref: str` — путь к сырой записи и номер строки/индекс, иначе требование Т1 «результат прослеживается до исходной записи» не выполнимо.\n\n4. Нужен новый тип `EventInterval(start_utc, end_utc: Optional, kind, source_id, published_utc, version, label)` — для протонных событий и бурь DONKI (`eventTime`, `startTime`) скалярное `value` не подходит, а постановка требует «интервал либо явно указанная неопределённость».\n\n5. `Conjunction`: добавить `dse_days_1`, `dse_days_2` (столбцы DSE_1/DSE_2 в CSV SOCRATES — возраст элементов в сутках; у МКС 4,4–6,7 сут на 18.09.2026) и `dilution` — это и есть «полнота данных» по механизму 2.\n\n6. `Recommendation.verdict: str` — заменить на Enum с четырьмя значениями из demo_pipeline.py (preferred, equivalent, insufficient, all_need_check). `CutoffPolicy.algorithm_version = \"0.1.0\"` — источник версии должен быть один: `vkd/__init__.py` плюс SHA коммита.\n\n7. Отсутствуют типы `SourceStatus` (source_id, enabled, frozen, last_success_utc, last_error, age_s, quota_state) и `RunManifest` (всё, что идёт в выгрузку). Без первого нельзя показать «время последнего успешного получения» (постановка, раздел 2), без второго — выполнить Т8.",
+   "confidence": "high",
+   "sources": [
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/vkd/types.py",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/CONTRACT.md разделы 6–7",
+    "ОСТ 134-1044-2007 прил. Ж, формулы Ж.3–Ж.6 (docs/istochniki/OST_134-1044-2007_tekst.txt строки 18105–18126)",
+    "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=XML (CREATION_DATE пуст)",
+    "https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-10T06:00:00Z&index=Kp&status=def"
+   ]
+  },
+  {
+   "title": "Слой источников: единый интерфейс, сырые записи, дедупликация, квоты — с измеренными объёмами и наблюдённым троттлингом",
+   "detail_ru": "Предлагаемый интерфейс (пакет `vkd/sources/`, владелец Codex):\n\n```\nclass Source(Protocol):\n    source_id: str            # \"celestrak_gp\", \"swpc_goes_int\", \"gfz_kp\", \"donki_notif\", \"ngdc_3day\", \"nasa_oem\", \"socrates\"\n    cadence_s: int            # частота публикации источника\n    max_age_s: int            # после этого — статус STALE\n    def fetch_live(self) -> RawRecord\n    def fetch_archive(self, start_utc, end_utc) -> list[RawRecord]\n    def parse(self, raw: RawRecord) -> list[EnvironmentSample | EventInterval | Conjunction]\n    def status(self, now_utc) -> SourceStatus\n```\n\n`RawRecord` = байты ответа + сайдкар JSON: `url`, `fetched_utc`, `http_status`, `etag`/`last_modified` (у S3 NASA и NCEI есть Last-Modified), `content_sha256`, `bytes`, `source_version` (для NCEI — версия файла из имени `v3-0-2`/`v3-0-3`; для DONKI — `versionId`; для OEM — `CREATION_DATE`). Хранение: `data/cache/<source_id>/<fetched_utc>_<sha8>.<ext>` (`data/cache/` уже в .gitignore). Отключение и заморозка — два флага в `SourceStatus`, управляются из интерфейса и из `config.toml` (`[sources.<id>] enabled=false`, `frozen=true`), результат — статус INSUFFICIENT по механизму, никогда ABSENT.\n\nКлючи дедупликации (обязательны, Т1 «дубли сообщений»): GOES JSON — (satellite, energy, time_tag); Kp GFZ — (datetime, status) с приоритетом def над prov; DONKI события — (activityID, versionId); уведомления DONKI — messageID; SOCRATES — (NORAD_CAT_ID_1, NORAD_CAT_ID_2, TCA); OEM — CREATION_DATE; выпуски NGDC — строка `:Issued:`.\n\nИзмеренные объёмы и времена (curl, 18.09.2026): SOCRATES `sort-minRange.csv` 17 416 442 байта, 154 558 строк, 12,9 с, у МКС 3 строки, горизонт TCA 2026-09-17 22:00 — 2026-09-24 22:00 (7 суток), запуск 3 раза в сутки (текст страницы SOCRATES Plus); GOES 7-day JSON 1 695 035 байт, 0,4 с; GOES 3-day 724 863 байта; GFZ файл с 1932 года 5 504 038 байт, 1,0 с; NCEI GOES-18 SGPS L2 за 2024-05-10 2 621 659 байт, за 2026-09-17 420 830 байт; OEM NASA 2024-05-08 718 328 байт (5403 вектора); уведомления DONKI за 9–13 мая 2024 102 668 байт (61 сообщение).\n\nНаблюдённый троттлинг: после двух загрузок 17-МБ CSV три следующих запроса к CelesTrak (`table-socrates.php`, `search.php`, `socrates-format.php`) завершились таймаутом 60 с (код 000); `pub/TLE/catalog.txt` — 403. Space-Track документирует лимит «менее 30 запросов в минуту и 300 в час». Следовательно: SOCRATES качать не чаще раза в 8 ч, через HEAD с If-Modified-Since, в фоне, с кешем; в интерфейсе показывать возраст кеша. Ошибки классифицировать: Timeout, HTTPError, Quota (429/403), ParseError, PartialResponse — все ведут к INSUFFICIENT/STALE с сообщением, ни одна — к «благоприятно» (Т6).",
+   "confidence": "high",
+   "sources": [
+    "https://celestrak.org/SOCRATES/sort-minRange.csv",
+    "https://celestrak.org/SOCRATES/ (текст «Three times each day … over the next seven days»)",
+    "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-7-day.json",
+    "https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt",
+    "https://www.space-track.org/documentation (API Throttling)",
+    "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/notifications?startDate=2024-05-09&endDate=2024-05-13&type=all"
+   ]
+  },
+  {
+   "title": "Историческая орбита без Space-Track: CelesTrak не годится, NASA JSC OEM в S3 — датированный источник с CREATION_DATE",
+   "detail_ru": "Проверено запросами: `gp.php?CATNR=25544&FORMAT=TLE&EPOCH=2024-05-10` вернул текущие элементы (эпоха 26261.14 = 2026-09-18), параметр EPOCH игнорируется; страница `celestrak.org/NORAD/archives/` прямо говорит, что исторические данные после 31.12.2004 CelesTrak не предоставляет (US Public Law 108-136, Section 913), только через форму Special Data Request с reCAPTCHA — автоматизации нет.\n\nНайден и проверен открытый источник: `https://nasa-public-data.s3.amazonaws.com/iss-coords/<ГГГГ-ММ-ДД>/ISS_OEM/ISS.OEM_J2K_EPH.txt`, формат CCSDS OEM 2.0, ORIGINATOR NASA/JSC/FOD/TOPO. Листинг S3 (префикс `iss-coords/2024-05`, `IsTruncated=false`): 13 файлов за май 2024 (02, 05, 07, 08, 12, 13, 14, 15, 17, 20, 23, 28, 29) и 12 за июнь (01, 05, 07, 11, 13, 14, 18, 19, 21, 24, 27, 28). Файл 2024-05-08: `CREATION_DATE = 2024-05-08T16:49:32.385`, `REF_FRAME = EME2000`, `TIME_SYSTEM = UTC`, START 2024-05-08T12:00 — STOP 2024-05-23T12:00 (15 суток), 5403 вектора с шагом 240 с, в COMMENT — масса 459 821,6 кг, площадь 1398,7 м², план событий (CFT_Launch 138:22:16, CFT_Dock 139:22:16). Преобразование EME2000 → геодезические в skyfield проверено: `ICRF(r/AU, t, center=399)` → `wgs84.geographic_position_of` дало высоту 418,6 км на 2024-05-08T18:40Z.\n\nСледствия: (1) на даты 9–11 мая 2024 (буря Гэннон) собственного файла нет — для отсечки 2024-05-10T12:00Z последняя опубликованная эфемерида датирована 2024-05-08T16:49Z (возраст 1,8 сут), и это честно показывается как «давность орбитальных данных»; (2) это интерполяция эфемериды, а не SGP4 по TLE — CONTRACT.md раздел 10 («Орбита периода — из TLE того периода») требует правки человеком: «из орбитальных сведений периода с временем публикации не позже отсечки (OEM NASA JSC или GP_HISTORY Space-Track)»; (3) Space-Track остаётся опцией: класс `gp_history` с предикатом `CREATION_DATE` есть в документации (пример `class/gp_history/norad_cat_id/25544/CREATION_DATE/>now-10`), но требует учётной записи и лимит 30 запросов/мин; регистрацию выполняет только человек; (4) для текущего режима OEM `current/` тоже есть (CREATION_DATE 2026-09-18T15:36:07) — можно показывать расхождение SGP4 по TLE и OEM как оценку точности траектории (Т2).",
+   "confidence": "high",
+   "sources": [
+    "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE&EPOCH=2024-05-10",
+    "https://celestrak.org/NORAD/archives/",
+    "https://nasa-public-data.s3.amazonaws.com/?prefix=iss-coords/2024-05&max-keys=1000",
+    "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+    "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+    "https://www.space-track.org/documentation",
+    "CONTRACT.md раздел 10"
+   ]
+  },
+  {
+   "title": "Датированные выпуски NOAA за май–июнь 2024 найдены на NGDC (ftp-склад SWPC недоступен); в DONKI-архиве версии стирают время первой публикации",
+   "detail_ru": "Склад `https://ftp.swpc.noaa.gov/pub/warehouse/2024/` и соседние пути (`/pub/alerts/`, `/pub/forecasts/`, http и https) — шесть запросов, все таймаут 60 с, код 000; с этой сети источник непригоден. Рабочая замена: `https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/` с подкаталогами `3day_forecast`, `geoalerts`, `space_weather_event_reports`, `summary_space_weather_observations`, `solar_region_summaries`, `space_weather_indices`, `45_day_forecast`, `discussion`. Проверено содержимое: `3day_forecast/2024/05/202405100030three_day_forecast.txt` — `:Issued: 2024 May 10 0030 UTC`, таблица Kp по 3-часовым интервалам на 10–12 мая (максимум 8,33, G4, 06–09 UT 11 мая) — это датированный внешний прогноз для строгого replay по линии космопогоды; `space_weather_event_reports/2024/05/20240510dayevt.txt` — `:Issued: 2024 May 11 0245 UTC`, перечень вспышек (X3.9 в 06:54 UT 10 мая, регион 3664) — итоговая информация для проверки, не для расчёта; `geoalerts/2024/05/20240510GEOA.txt` — `:Issued: 2024 May 10 0330 UTC`, кодированный формат WMO (UGEOA/UGEOE), декодер писать не стоит. В каталоге за май 2024 28 файлов 3-суточных прогнозов из 31 дня — какие дни пропущены, не проверено (см. критическое утверждение 2).\n\nDONKI (`data/archive_2024/`, 6 файлов, проверено скриптом): CME 259 записей, у 67 `versionId>1`, у 27 `submissionTime` позже события более чем на 7 суток, максимум 302 сут; FLR 244 записи, 86 с версией >1, максимум 282 сут; IPS 23, 12 с версией >1; SEP 27, 6 с версией >1, причём у 2 записей `submissionTime` раньше `eventTime` — это модельные прогнозы REleASE (инструмент «MODEL: REleASE:ACE/EPAM»), их `kind` = external_forecast, а не observation; GST 7 записей, все версии 1, запаздывание подачи ≤ 3 ч 44 мин; RBE 1. Вывод: у записи с `versionId>1` известна только дата подачи последней версии, время первой публикации утрачено — по правилу постановки такой источник «помечается непригодным для строгого воспроизведения». Для replay пригодны уведомления DONKI: конечная точка `WS/get/notifications` (без ключа), у всех 61 сообщения за 9–13 мая есть `messageIssueTime` и неизменяемый `messageID` (SEP 16, FLR 19, CME 12, GST 9, MPC 3, IPS 2); первое SEP-уведомление `20240509-AL-004` выпущено 2024-05-09T14:00:13Z. Живые эквиваленты: `services.swpc.noaa.gov/text/3-day-forecast.txt` (`:Issued: 2026 Sep 18 1230 UTC`), `products/alerts.json` (поле `issue_datetime`), `text/27-day-outlook.txt` (`:Issued: 2026 Sep 14 0117 UTC`).",
+   "confidence": "high",
+   "sources": [
+    "https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/3day_forecast/2024/05/202405100030three_day_forecast.txt",
+    "https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/space_weather_event_reports/2024/05/20240510dayevt.txt",
+    "https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/geoalerts/2024/05/20240510GEOA.txt",
+    "https://ftp.swpc.noaa.gov/pub/warehouse/2024/ (таймаут 60 с)",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/data/archive_2024/*.json",
+    "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/notifications?startDate=2024-05-09&endDate=2024-05-13&type=all",
+    "https://services.swpc.noaa.gov/text/3-day-forecast.txt"
+   ]
+  },
+  {
+   "title": "Исторический GOES: NCEI даёт только >500 МэВ интегрально; интеграл ≥10 МэВ считаем сами из дифференциальных каналов и это «наш расчёт», а не «наблюдение SWPC»",
+   "detail_ru": "Архив: `https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg1m/2024/05/` — 31 файл `sci_sgps-l2-avg1m_g18_dГГГГММДД_v3-0-2.nc`, за июнь 30; аналогичный каталог для GOES-16. Формат netCDF-4 (HDF5), читается `h5py` 3.16 (установлен; `netCDF4`, `xarray` не установлены, на PyPI есть: netCDF4 1.7.4, xarray 2026.7.0, h5netcdf 1.8.1). Атрибут `license`: «These data may be redistributed and used without restriction». Содержимое файла за 2024-05-10: `time` (1440, секунды от 2000-01-01T12:00 UTC), `AvgIntProtonFlux` (1440, 2) — только канал P11 >500 МэВ (`IntegralProtonEffectiveEnergy` = 500 000 кэВ), `AvgDiffProtonFlux` (1440, 2, 13) в протонах/(см²·ср·кэВ·с), границы каналов 1020–1860 … 267 000–390 000 кэВ, плюс DQF-маски и `AvgDiffProtonFluxUncert`.\n\nЗначит поток ≥10 МэВ для шкалы S в архиве надо получать интегрированием 13 каналов (наш расчёт, kind = own_calculation с пометкой «из наблюдений GOES-18 SGPS L2»). Сверка на перекрытии с живым SWPC-JSON (спутник 18, 2026-09-17, 286 пятиминутных точек): медиана SWPC 0,226 pfu, наш интеграл с долей частичного канала 5,84–11 МэВ — медиана 0,230 pfu, отношение наш/SWPC медиана 1,00, 10-й процентиль 0,37, 90-й 2,03 (разброс на уровне фона 0,2 pfu — шум). На событийных сутках 2024-05-10 наш интеграл даёт максимум 160 pfu в 17:47 UTC (шкала S2 ≥ 100 pfu), сверка с оперативным значением SWPC не выполнена — это критическое утверждение 3. Запаздывание NCEI: файл за 2026-09-17 (версия v3-0-3) доступен 18.09 — около суток, поэтому для текущего режима остаётся живой SWPC-JSON (5-минутный шаг, 3 и 7 суток), а NCEI — только для исторического. Порог S1 = 10 pfu по ≥10 МэВ — страница шкал NOAA загружена (текст «Flux level of >= 10 MeV particles»), само число 10 в извлечённом тексте страницы не захвачено — проверено частично.",
+   "confidence": "medium",
+   "sources": [
+    "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg1m/2024/05/sci_sgps-l2-avg1m_g18_d20240510_v3-0-2.nc",
+    "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg1m/2026/09/sci_sgps-l2-avg1m_g18_d20260917_v3-0-3.nc",
+    "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-7-day.json",
+    "https://www.swpc.noaa.gov/noaa-scales-explanation"
+   ]
+  },
+  {
+   "title": "Тест Т3 реализуем как «поток против потока» по таблицам К.1.1/К.1.2/К.2.1/К.2.2 ОСТ; приложение Ж: таблица Ж.1 цела, формулы Ж.3–Ж.8 потеряны в текстовой выгрузке",
+   "detail_ru": "В приложении К ОСТ 134-1044-2007 (строки 18677–25795 текстовой выгрузки) есть не только дозы за защитой (К.1.5, К.1.6, К.2.5, К.2.6 — уже оцифрованы в `data/ost1044/`), но и «Дифференциальные спектры потоков электронов/протонов ЕРПЗ за САС КА 10 лет» для наклонений 30° (К.1.1, К.2.1) и 60° (К.1.2, К.2.2) на 18 высотах 400, 600, 700, 800, 1000, 1700, 2000, 2500, 3000, 4000, 5000, 6000, 8000, 10 000, 15 000, 20 000, 30 000, 36 000 км, единица пр./(МэВ·см²) за 10 лет, энергии от 0,1 МэВ. Это позволяет поставить обязательный тест договора (раздел 8, «среднее по орбите через прил. А = таблица прил. К») без дозового ядра: генерируем синтетические круговые орбиты с наклонением ровно 30° и 60° на табличных высотах, интегрируем поток прил. А по (L, B/B_0) вдоль траектории за интервал не короче цикла прецессии, умножаем на 3,156·10^8 с (10 лет) и сравниваем со спектром К.x.1/К.x.2 — без интерполяции по наклонению, что убирает главный источник расхождения. Допуск задать заранее (предложение: расхождение не более ×2 по каждой энергии выше 1 МэВ, поскольку в ОСТ таблицы прил. А сами получены из AE-8/AP-8 с уточнениями при L ≤ 1,5, а в прил. К усреднение своё). Четыре таблицы не оцифрованы — расширить `scripts/ost_parse.py`; в тексте есть OCR-артефакты («i98», «i 0-5»), парсер должен их отбрасывать по регулярному выражению чисел.\n\nПриложение Ж (обязательное): таблица Ж.1 «Вертикальная жёсткость обрезания R0c, ГВ на высоте H_0 = 450 км для эпохи 2010», сетка долгот 0…330° шаг 30°, широт 85…−85° шаг 5° (35 строк). В текстовой выгрузке 479 числовых токенов = 12 (заголовок) + 35×13 + 12 (повтор заголовка после разрыва страницы) — парсер обязан пропустить повтор. Контроль: широта 0°, долгота 0° — 11,908 ГВ; максимум 14,77 ГВ на долготе 90°; у полюсов 0,004 ГВ. Формулы Ж.1–Ж.8 в тексте заменены на «\\s \\* MERGEFORMAT»: в DOCX они хранятся как OLE-объекты (192 штуки) и картинки WMF/EMF (179), OMML-формул всего одна — их надо переписать вручную из Word (Ж.3 — пересчёт по высоте через R_З, Ж.4–Ж.6 — фактор ослабления по Kp и t_MLT из [12] Ныммик и др., Космические исследования, 2009, т. 47, № 3, с. 213–218, Ж.7–Ж.8 — доля незатенённых направлений). Инженерное следствие для Codex: в `TrajectoryPoint` нужен MLT, а «минуты на высоких широтах» договора стоит определить физически — как минуты, где R_c* (после поправки по Kp) меньше жёсткости протона порога шкалы S: по Ж.2 R = sqrt(E² + 2·E·938,27)/1000 ГВ, для E = 10 МэВ это 0,137 ГВ, для 100 МэВ — 0,444 ГВ; оба порога показывать.",
+   "confidence": "high",
+   "sources": [
+    "docs/istochniki/OST_134-1044-2007_tekst.txt строки 17601–18139 (прил. Ж), 18677–25795 (прил. К), 20949–20991 (табл. К.2.1)",
+    "docs/istochniki/OST_134-1044-2007_izm2_radiaciya.docx (подсчёт OLE/WMF выполнен zipfile)",
+    "CONTRACT.md раздел 8",
+    "data/ost1044/index.json"
+   ]
+  },
+  {
+   "title": "Тесты и pytest: чего нет и как организовать, включая фикстуры из уже записанных ответов",
+   "detail_ru": "Состояние: `tests/` содержит только `__init__.py`; `pytest` не установлен (ModuleNotFoundError), в `pyproject.toml` он в `optional-dependencies.dev` — установить `pip install -e .[dev]`; на PyPI доступны pytest 9.1.1, hypothesis 6.168.0, responses 0.26.3, vcrpy 8.3.0, pytest-recording 0.13.4, freezegun 1.5.5, ruff 0.16.8.\n\nСтруктура: `tests/unit/` (чистые функции: интерполяция прил. А, окно, правило), `tests/invariants/` (обязательные тесты договора), `tests/sources/` (парсеры на записанных ответах, без сети), `tests/network/` (помечены `@pytest.mark.network`, в CI не запускаются). Маркеры объявить в `[tool.pytest.ini_options] markers`.\n\nОбязательные инварианты: (Т3) нормировка прил. А против К.1.1/К.2.1 на синтетической орбите 30° и 60° (см. предыдущую находку); (Т4) отсечка: собрать набор записей, посчитать `factors.json` при `cutoff_utc = 2024-05-10T12:00Z`, затем добавить в набор записи с `published_utc` позже отсечки (например уведомление DONKI `20240513-AL-012`, выпущенное 2024-05-13T19:09Z) и убедиться, что sha256 результата не изменился; второй вариант — запись без `published_utc` обязана давать статус «непригоден для replay», а не участвовать; (Т6) при `enabled=false` или `age_s > max_age_s` у любого источника механизма статус механизма INSUFFICIENT и `verdict != preferred`; отдельный тест, что пустой ответ (0 записей при HTTP 200) не даёт ABSENT; (сессии) два `UserRequest` в одном процессе не смешивают параметры — тест на чистые функции без глобального состояния; (окна) сдвиг начала на k·шаг равен срезу того же массива, изменение длительности не помечается как «улучшение»; (свёртка/поворот) — только если делается `vkd/suit/` (О7).\n\nФикстуры: реальные ответы уже лежат во временной папке сессии и должны быть перенесены в `tests/fixtures/<source_id>/` с сайдкаром (url, fetched_utc, sha256): `socrates.csv` (17,4 МБ — хранить только заголовок + строки 25544 + первые 100 строк, а sha256 полного файла записать в сайдкар), `goes7d.json` (1,7 МБ), `g18_20240510.nc` (2,6 МБ), `latest.nc` (0,4 МБ), `oem_20240508.txt` (0,7 МБ), плюс скачать JSON GFZ за 10–12 мая, три файла NGDC за 10 мая, уведомления DONKI за 9–13 мая. Все они помещаются в репозиторий (суммарно ≈ 6 МБ при усечённом SOCRATES). Тесты парсеров сравнивают не значения, а инварианты: число записей, монотонность времени, единицы, ключи дедупликации без повторов.",
+   "confidence": "high",
+   "sources": [
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/pyproject.toml",
+    "https://pypi.org/simple/pytest/ (pip index versions: pytest 9.1.1, hypothesis 6.168.0, responses 0.26.3, vcrpy 8.3.0)",
+    "CONTRACT.md раздел 8",
+    "Kriterii_ocenki_VKD.txt Т3, Т4, Т6, Т7"
+   ]
+  },
+  {
+   "title": "Конфигурация и секреты: ничего не вынесено; что должно быть в config.toml и .env, и версия Python для площадки",
+   "detail_ru": "Проверено: файлов `.env`, `.env.example`, `config.toml`, `config.example.toml` нет; `.gitignore` уже исключает `.env`, `.streamlit/secrets.toml`, `data/cache/`, `.venv/`, `__pycache__/`. В `experiments/demo_pipeline.py` шесть настроек зашиты константами: SEARCH_HOURS 24, DURATION_MIN 360, STEP_MIN 1, START_STEP_MIN 30, SAA_B_THRESHOLD_nT 24 000, S1_THRESHOLD_pfu 10, EQUIV_TOL_MIN 5 — все, кроме первых двух (это вход пользователя), должны уехать в `config.toml` с источником в комментарии.\n\nПредлагаемый `config.toml` (в git, без секретов): `[trajectory] step_min=1, start_step_min=30, propagator=\"sgp4\"`; `[saa] b_threshold_nT=24000` (инженерная оценка, в чувствительность); `[cutoff] e_thresholds_MeV=[10,100]`; `[rule] s1_threshold_pfu=10, equiv_tol_min=5`; `[sources.<id>] url, cadence_s, max_age_s, timeout_s, enabled, frozen` для каждого из ≈ 12 источников; `[cache] dir=\"data/cache\", offline=false`; `[history] period_start=\"2024-05-01\", period_end=\"2024-06-30\"`. Значения читаются один раз в `vkd/config.py` через `tomllib` (стандартная библиотека с Python 3.11, `requires-python >= 3.11` уже задан) и передаются явно, без глобалов — иначе нарушается Т6 «параметры сессий не смешиваются».\n\n`.env` (вне git, образец `.env.example` в git): `SPACETRACK_USER`, `SPACETRACK_PASS` (только если решено использовать GP_HISTORY; без них источник помечается disabled, а не падает), `NASA_API_KEY` (необязателен: конечная точка kauai работает без ключа, api.nasa.gov принял DEMO_KEY, лимиты DEMO_KEY страница не отдала — не проверено), `VKD_CACHE_DIR`, `VKD_OFFLINE`. На Streamlit Community Cloud секреты вводятся в поле Secrets при развёртывании (документация проверена), в коде читаются через `st.secrets` с запасным чтением `.env` (`python-dotenv` уже в зависимостях).\n\nВерсии: локально Python 3.14.6 (numpy 2.5.1, skyfield 1.55, sgp4 2.27, scipy 1.18.0, streamlit 1.64.0, plotly 5.24.1, requests 2.34.2, ppigrf с файлом IGRF14.shc), у Codex по журналу 3.14.3. Streamlit Community Cloud «поддерживает все выпущенные версии Python, ещё получающие обновления безопасности», по умолчанию 3.12, версия выбирается в Advanced settings. Рекомендация: закрепить 3.12 для площадки (и проверить, что все колёса — sgp4, ppigrf, h5py, apexpy если возьмём — ставятся на 3.12 Linux) и прогонять CI на 3.12 и 3.14. Строки `.gitattributes` `* text=auto eol=crlf` заставят `pyproject.toml`, `requirements.txt`, `*.md`, `*.json` выгружаться с CRLF на Mac и на площадке — pip и tomllib это переживают, но лучше добавить явные `*.md *.toml *.json *.txt text eol=lf`.",
+   "confidence": "high",
+   "sources": [
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/.gitignore",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/.gitattributes",
+    "experiments/demo_pipeline.py строки 40–47",
+    "https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy (раздел Optional: Configure secrets and Python version)",
+    "https://api.nasa.gov/DONKI/GST?startDate=2024-05-09&endDate=2024-05-13&api_key=DEMO_KEY"
+   ]
+  },
+  {
+   "title": "Воспроизводимость Т8: структура выгрузки, версия алгоритма, сырые записи, команда replay, README",
+   "detail_ru": "Постановка требует, чтобы выгрузка содержала параметры запроса, момент отсечки, оценки по факторам, рекомендацию, ссылки и версии исходных данных, версию алгоритма, и чтобы сведения совпадали с интерфейсом. Предлагаемый архив `vkd_<ГГГГММДД_ЧЧММ>_<режим>.zip`:\n\n```\nrequest.json    режим (current | replay_review | replay_strict), start_utc, duration_min, search_period_h, cutoff_utc, суффиксы единиц\nfactors.json    список FactorValue по окнам и механизмам: name, value, unit, kind, status, source_ids, note, интервалы пересечений\nrecommendation.json  verdict, rule_applied, reasons, missing, preferred window\nsources.json    по каждому source_id: url, fetched_utc, published_utc/Issued, content_sha256, bytes, record_count, version (versionId, v3-0-2, CREATION_DATE, эпоха TLE и номер элемента), enabled/frozen, age_s\nversions.json   algorithm_version (vkd.__version__), git_commit (git rev-parse HEAD), config_sha256, python и версии пакетов (pip freeze), igrf_model (\"IGRF-14\"), таблицы ОСТ с sha256 CSV\ntrajectory.csv  t_utc, lat_deg, lon_deg, alt_km, L, B_over_B0, cutoff_GV, in_saa (1800 строк)\nreport.md       человекочитаемый отчёт, генерируемый из тех же JSON одной функцией, которую использует и интерфейс\nraw/            сырые ответы источников (для SOCRATES — заголовок и строки 25544, sha256 полного файла в sources.json)\n```\n\nПринцип «один источник истины»: интерфейс рисует `factors.json`, а не считает заново — тогда равенство выгрузки и экрана гарантировано конструкцией. Команда `python -m vkd.replay <архив.zip>` пересчитывает из `raw/` и печатает diff с `factors.json` — это и есть проверка Т8 «для сохранённого запроса можно восстановить данные, параметры и версию алгоритма». Версия алгоритма поднимается при любом изменении правила или таблиц; хеш `config.toml` ловит изменение порогов.\n\nREADME сейчас описывает C++/CMake/Qt (раздел «Сборка», строки 66–77) и «семь зон скафандра» — для жюри это дезинформация по Т8; нужен новый README: назначение по постановке, два механизма, установка (`python -m venv`, `pip install -e .[dev]`), запуск (`streamlit run app/main.py`), переменные `.env.example`, режим офлайн из `data/cache/`, три примера сохранённых расчётов в `examples/` (текущий; строгий replay 2024-05-10T12:00Z; контрольная неделя июня), перечень источников с единицами и ограничениями, версии библиотек и их роль (skyfield/sgp4 — SGP4; ppigrf — IGRF-14; h5py — NCEI). Устаревшие `PLAN_17_09.md`, `docs/ARHITEKTURA.md`, `docs/STEK_VOZDEYSTVIYA_LITERATURA.md`, `docs/arhitektura_geometrii.md` перенести в `docs/archive/` с пометкой «отменено 18.09», а CLAUDE.md/AGENTS.md перестать ссылаться на них как на обязательное чтение.",
+   "confidence": "high",
+   "sources": [
+    "Postanovka_zadachi_VKD.txt раздел «Интерфейс и форма результата»",
+    "Kriterii_ocenki_VKD.txt Т8",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/README.md",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/CLAUDE.md",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/AGENTS.md"
+   ]
+  },
+  {
+   "title": "Производительность измерена: траектория и IGRF — миллисекунды; узкие места — L-оболочка, SOCRATES 17 МБ и NCEI; фоновые задачи и изоляция сессий в Streamlit",
+   "detail_ru": "Замеры на этой машине (Python 3.14.6, skyfield 1.55, ppigrf с IGRF-14): SGP4 + геодезия для 1800 точек 0,03 с, для 10 800 — 0,13 с, для 108 000 (75 суток по минуте — весь исторический период) — 1,35 с; ppigrf для тех же массивов 0,03 / 0,13 / 1,17 с; весь `demo_pipeline.py` (включая чтение таблиц, окна и правило) — 0,58 с. Цикл Python по 1800 точкам для дипольной L — менее 1 мс. Вывод: при шаге 1 мин на 24 ч + 8 ч (1920 точек) расчёт траектории и поля мгновенный; прогресс-бар нужен не для этого.\n\nЧто будет дорого: (1) McIlwain L трассировкой силовой линии — если делать в Python вектором по всем 1800 точкам одновременно (один вызов ppigrf на шаг интегрирования, ≈ 30 мс на 1800 точек, 200–400 шагов) — 6–12 с; допустимо один раз на запрос с кешем по ключу (эпоха элементов, t_0, шаг); альтернатива без трассировки — `apexpy` 2.1.1 (PyPI, скомпилированные колёса): L_apex = 1/cos²(λ_apex) и B_0 через IGRF в апексе; IRBEM на PyPI отсутствует, spacepy 0.7.0 тяжёлый; выбор за Codex, но нужен тест согласия с дипольной L демо в экваториальной зоне и с таблицей Ж.1 (порядок величины R_c ≈ 14,9/L² ГВ — приближение Смарта–Ши, не проверено по первоисточнику); (2) SOCRATES CSV 17,4 МБ за 12,9 с — только в фоне, не чаще раза в 8 ч, парсинг потоковый с фильтром по 25544; (3) NCEI netCDF 0,4–2,6 МБ в сутки, за май–июнь 2024 61 файл ≈ 100–160 МБ — качать по требованию на нужные сутки ±1 и кешировать; (4) OEM 0,7 МБ, 5403 вектора — интерполяция Лагранжа/Эрмита по 240-с узлам на минутную сетку, миллисекунды.\n\nStreamlit: код выполняется заново при каждом взаимодействии, поэтому (а) все тяжёлые вызовы под `st.cache_data(ttl=cadence_s)` с ключом (source_id, режим, cutoff_utc) и `st.cache_resource` для таблиц ОСТ; (б) длительная операция — `concurrent.futures.ThreadPoolExecutor` с идентификатором задания в `st.session_state`, статус через `st.status`/`st.progress`, опрос по `st.rerun` с интервалом; (в) параметры запроса только в `st.session_state` и в аргументах функций — никаких модульных глобалов (Т6 «параметры разных запросов и сессий не смешиваются»); (г) принудительное обновление — кнопка, сбрасывающая ключ кеша источника. Лимиты Streamlit Community Cloud по документации (состояние на февраль 2024): CPU 0,078–2 ядра, память 690 МБ–2,7 ГБ, хранилище до 50 ГБ; наш профиль (numpy-массивы ~10^5 чисел, кеш ≤ 200 МБ) укладывается с запасом.",
+   "confidence": "high",
+   "sources": [
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/experiments/demo_pipeline.py (замер time: real 0,581 с)",
+    "замеры skyfield/ppigrf на 1800/10800/108000 точках (скрипт в сессии)",
+    "https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app (App resources and limits)",
+    "https://pypi.org/simple/pytest/ и pip index versions: apexpy 2.1.1, spacepy 0.7.0, IRBEM отсутствует"
+   ]
+  },
+  {
+   "title": "Совместная работа Claude Code и Codex: папки плюс короткие ветки, CI на pytest, зеркало на GitVerse",
+   "detail_ru": "Состояние git: одна ветка `main`, 13 коммитов, рабочее дерево чистое; `origin` = `https://github.com/timofey-petrov-spb/vkd-risk.git` (без авторизации 404 — приватный), `gitverse` = `git@gitverse.ru:hackrus.experts/kosmo-piter_matmehovtsy_111.git` (HTTPS-страница 404 — приватный, SSH настроен); `gitverse/main` совпадает с `origin/main` (0 коммитов разницы). `.github/` нет. `scripts/push_both.cmd` толкает в оба адреса последовательно. Журналы — два файла, каждый пишет только свой, конфликтов не даёт.\n\nРекомендуемая схема: (1) владение по пакетам из CONTRACT.md раздел 5 остаётся основой — это уже разводит 90 % правок; (2) поверх — короткие ветки `codex/<тема>` и `claude/<тема>` с `git pull --rebase origin main` перед каждым пушем и слиянием fast-forward в `main` не реже раза в час; прямой push в `main` только для журналов и документации; (3) общие файлы, которые трогают оба (`pyproject.toml`, `README.md`, `config.toml`), получают владельца — Claude; Codex добавляет зависимости через журнал (поле «Нужно от товарища»), а до слияния — в `requirements-codex.txt`; (4) сообщения коммитов на русском, глагол в начале, и обязательная строка `Co-Authored-By` по правилам сессии; (5) CI: GitHub Actions на приватном репозитории бесплатно 2000 минут в месяц (план Free, документация проверена) — один workflow `pytest -m \"not network\" -q` на push и pull request, матрица Python 3.12 и 3.14, кеш pip; сетевые тесты — по ручному запуску `workflow_dispatch`; (6) зеркало на GitVerse: пока ручное `git push gitverse main` после каждого слияния (правило в CLAUDE.md/AGENTS.md шаг 5), к вечеру 20.09 — обязательно; автоматизировать через Actions с SSH-ключом в секретах можно, но это ещё один секрет и ещё один риск — отложить; (7) `.gitattributes`: добавить LF для `*.md`, `*.toml`, `*.json`, `*.txt`, иначе на Mac у Codex каждый файл, созданный с LF, при нормализации даёт «изменено всё» в diff и ложные конфликты; (8) размер репозитория: `docs/istochniki/` 31 МБ, из них NASA ISS EVA Space Suits 19,7 МБ — терпимо, но фикстуры тестов держать ≤ 10 МБ и не класть полный SOCRATES CSV.",
+   "confidence": "high",
+   "sources": [
+    "git status / git remote -v / git log в репозитории",
+    "https://github.com/timofey-petrov-spb/vkd-risk (404)",
+    "https://gitverse.ru/hackrus.experts/kosmo-piter_matmehovtsy_111 (404)",
+    "https://docs.github.com/en/billing/managing-billing-for-your-products/about-billing-for-github-actions (GitHub Free: 2,000 минут в месяц, 500 MB artifact storage)",
+    "C:/ScienceintheDepartmentofPhysicsandMechanics/vkd-risk/scripts/push_both.cmd"
+   ]
+  },
+  {
+   "title": "Механизм 2 инженерно: SOCRATES только живой и только 7 суток, архива нет — исторический режим по сближениям возможен только как «честный разбор без данных»",
+   "detail_ru": "CSV SOCRATES Plus (`sort-minRange.csv`) содержит столбцы NORAD_CAT_ID_1, OBJECT_NAME_1, DSE_1, NORAD_CAT_ID_2, OBJECT_NAME_2, DSE_2, TCA, TCA_RANGE (км), TCA_RELATIVE_SPEED (км/с), MAX_PROB, DILUTION; у МКС на 18.09.2026 три сближения: 39469 SMDC ONE 2.4 (TCA 2026-09-21 21:20:22, 1,732 км, 15,319 км/с, MAX_PROB 3,045·10^-5), 60488 FLOCK 4BE-31 (3,507 км, 9,119·10^-6), 64888 OBJECT N (4,979 км, 8,800·10^-6). Времени запуска расчёта в файле нет — только DSE (возраст элементов, сут) и HTTP Last-Modified; `published_utc` для Conjunction брать из Last-Modified и помечать «время запуска SOCRATES оценено по заголовку ответа». Страница SOCRATES Plus: три запуска в сутки, горизонт семь суток, расчёт STK/CAT + SGP4; документация формата `socrates-format.php` — запрос завершился таймаутом (не проверено). Архива SOCRATES за 2024 нет; Space-Track CDM для МКС публично не выдаётся (не проверялось). Значит для мая–июня 2024 по сближениям честный статус — INSUFFICIENT с текстом «архив сближений недоступен», а статистическая часть (ГОСТ Р 25645.167-2005, ECSS-E-ST-10-04C раздел 10) считается климатологически и не зависит от даты — это надо прямо написать в интерфейсе и в отчёте, иначе жюри примет за маскировку по Т4. Оцифровка ГОСТ Р 25645.167-2005 (PDF 3,4 МБ в `docs/istochniki/`) по-прежнему не сделана — блокер механизма 2 в части «ожидаемое число попаданий на опорную площадь».",
+   "confidence": "high",
+   "sources": [
+    "https://celestrak.org/SOCRATES/sort-minRange.csv (заголовок и строки 25544)",
+    "https://celestrak.org/SOCRATES/",
+    "CONTRACT.md разделы 2, 3, 9",
+    "docs/istochniki/GOST_R_25645.167-2005_tehnogennoe_veschestvo.pdf"
+   ]
+  }
+ ],
+ "literature": [
+  {
+   "ref": "Постановка задачи «Прогнозирование внешних рисков и планирование ВКД на МКС», КосмоХакатон 2026, 7 с.",
+   "what_it_gives_ru": "Функциональные требования (разделы 1–4), исторический режим 01.05–30.06.2024, требования к источникам, неполным данным, выгрузке, направления поиска данных [1]–[8]",
+   "have": true,
+   "where": "docs/case/Postanovka_zadachi_VKD.txt",
+   "clauses": "разделы «Мониторинг и прогноз», «Исторический режим и проверяемость», «Данные и источники», «Неполные данные и сбои», «Интерфейс и форма результата», «С чего начать поиск данных»"
+  },
+  {
+   "ref": "Критерии оценки, КосмоХакатон 2026, 3 с., 100 баллов",
+   "what_it_gives_ru": "Т1 (7), Т6 (5), Т7 (4), Т8 (4) — целевые критерии направления; Т2–Т5 задают требования к стыку",
+   "have": true,
+   "where": "docs/case/Kriterii_ocenki_VKD.txt",
+   "clauses": "Т1, Т4, Т6, Т7, Т8"
+  },
+  {
+   "ref": "ОСТ 134-1044-2007 с изм. 2 «Аппаратура, приборы, устройства и оборудование космических аппаратов. Методы испытаний и оценки стойкости … к воздействию заряженных частиц … по дозовым эффектам»",
+   "what_it_gives_ru": "Прил. А — потоки ЕРПЗ по (L, B/B_0) и энергии (оцифровано, 4 таблицы); прил. Д — методы расчёта геоцентрических и L-B координат; прил. Ж (обязательное) — функция проникновения, таблица Ж.1 жёсткости обрезания на 450 км эпохи 2010, формулы Ж.1–Ж.8; прил. К — спектры К.1.1/К.1.2/К.2.1/К.2.2 (не оцифрованы) и дозы К.x.5/К.x.6 (оцифрованы)",
+   "have": true,
+   "where": "docs/istochniki/OST_134-1044-2007_tekst.txt (625 КБ), docs/istochniki/OST_134-1044-2007_izm2_radiaciya.docx",
+   "clauses": "прил. А табл. А.1.1–А.2.2; прил. Д п. Д.1; прил. Ж табл. Ж.1, формулы Ж.2–Ж.8, ссылка [12]; прил. К табл. К.1.1, К.1.2, К.2.1, К.2.2, К.1.5, К.1.6, К.2.5, К.2.6, К.3.1"
+  },
+  {
+   "ref": "Ныммик Р.А., Панасюк М.И., Петрухин В.В., Юшков Б.Ю. Метод расчёта вертикальной жёсткости обрезания в геомагнитном поле // Космические исследования. 2009. Т. 47, № 3. С. 213–218",
+   "what_it_gives_ru": "Первоисточник таблицы Ж.1 и фактора ослабления обрезания по Kp и MLT (формулы Ж.4–Ж.6); нужен для восстановления формул, потерянных в текстовой выгрузке ОСТ",
+   "have": false,
+   "where": "не найден; искать в eLibrary или журнале «Космические исследования» 2009 т. 47 № 3 (URL не проверялся)",
+   "clauses": "ссылка [12] в ОСТ 134-1044-2007"
+  },
+  {
+   "ref": "ГОСТ Р 25645.165-2001 «Лучи космические солнечные. Вероятностная модель потоков протонов»",
+   "what_it_gives_ru": "Вероятностная рамка для протонного события (флюенс и пиковый поток при вероятностях 0,9…0,01) — статистическая оценка, а не прогноз",
+   "have": true,
+   "where": "docs/istochniki/GOST_R_25645.165-2001_SKL_protony.pdf (скан, не оцифрован)",
+   "clauses": "таблицы флюенса и пикового потока (номера не сверены)"
+  },
+  {
+   "ref": "ГОСТ Р 25645.167-2005 «Вещество космическое техногенного происхождения. Модель пространственно-временного распределения плотности потоков»",
+   "what_it_gives_ru": "Статистический поток мусора для механизма 2 (ожидаемое число попаданий на опорную площадь за окно)",
+   "have": true,
+   "where": "docs/istochniki/GOST_R_25645.167-2005_tehnogennoe_veschestvo.pdf (не оцифрован)",
+   "clauses": "таблицы плотности потока по высотам и наклонениям (номера не сверены)"
+  },
+  {
+   "ref": "ECSS-E-ST-10-04C Rev.1 «Space environment»",
+   "what_it_gives_ru": "Раздел 10 — метеороидная среда (вторая составляющая механизма 2); упоминание дрейфа Южно-Атлантической аномалии на запад с применением к ВКД",
+   "have": true,
+   "where": "docs/istochniki/ECSS-E-ST-10-04C-Rev1.pdf",
+   "clauses": "раздел 10; пункт о дрейфе аномалии — номер пункта не проверен"
+  },
+  {
+   "ref": "ECSS-E-ST-10-12C «Methods for the calculation of radiation received and its effects, and a policy for design margins»",
+   "what_it_gives_ru": "Перечень воздействий для пилотируемых миссий (п. 11.3) и четыре расчётных условия (п. 11.5) — только для О7",
+   "have": true,
+   "where": "docs/istochniki/ECSS-E-ST-10-12C.pdf",
+   "clauses": "п. 11.3, 11.5, 11.5 d"
+  },
+  {
+   "ref": "ГОСТ Р 25645.166-2004 «Атмосфера Земли верхняя. Модель плотности для баллистического обеспечения полётов ИСЗ»",
+   "what_it_gives_ru": "Не на критическом пути (SGP4 сам содержит модель торможения); полезен только для объяснения входов F10.7 и Ap",
+   "have": true,
+   "where": "docs/istochniki/GOST_R_25645.166-2004_atmosfera.pdf",
+   "clauses": "—"
+  },
+  {
+   "ref": "ГОСТ 25645.202-83 «Безопасность радиационная экипажа космического аппарата в космическом полёте. Требования к дозиметрическому контролю»",
+   "what_it_gives_ru": "Категории контроля; для ядра не нужен",
+   "have": true,
+   "where": "docs/istochniki/GOST_25645.202-83_dozimetricheskiy_kontrol.pdf",
+   "clauses": "—"
+  },
+  {
+   "ref": "NASA NTRS 20190002586 «Extravehicular Activity Micrometeoroid and Orbital Debris Risk Assessment Methodology» (2019)",
+   "what_it_gives_ru": "Предметная постановка оценки MMOD при ВКД — ссылка [1] постановки: какие сведения используют специалисты (условия и продолжительность работ)",
+   "have": false,
+   "where": "https://ntrs.nasa.gov/api/citations/search?q=EVA%20MMOD%20risk%20ISS (поиск проверен, идентификатор в выдаче; сам PDF не скачан)",
+   "clauses": "—"
+  },
+  {
+   "ref": "NASA NTRS 20230008502 / 20240004062 «A Historical Overview / A Review of ISS EVA Meteoroid and Orbital Debris Risk»",
+   "what_it_gives_ru": "Обзор практики оценки MMOD-риска при ВКД на МКС; обоснование связи фактора с работами (О1, О2)",
+   "have": false,
+   "where": "тот же поисковый запрос NTRS; PDF не скачан",
+   "clauses": "—"
+  },
+  {
+   "ref": "NASA NTRS 20230015411 / 20240000950 «MMOD Testing, Ballistic Limit Equation Definition and Risk Assessment of the xEMU»",
+   "what_it_gives_ru": "Источник тезиса «96 % риска в мягких зонах» — только для О7",
+   "have": true,
+   "where": "docs/istochniki/xEMU_MMOD_abstract.docx (тезисы); полный текст не скачан",
+   "clauses": "—"
+  },
+  {
+   "ref": "NASA ISS EVA Space Suits (NTRS 20040031719); ERI-000501 depth-dose EVA suits",
+   "what_it_gives_ru": "Послойный состав скафандров и измеренные глубинные кривые — только для О7",
+   "have": true,
+   "where": "docs/istochniki/NASA_ISS_EVA_Space_Suits_20040031719.pdf (19,7 МБ), docs/istochniki/ERI-000501_depth_dose_EVA_suits.pdf",
+   "clauses": "—"
+  },
+  {
+   "ref": "CCSDS 502.0-B «Orbit Data Messages» (формат OEM 2.0)",
+   "what_it_gives_ru": "Разбор заголовка и векторов OEM NASA JSC (CREATION_DATE, REF_FRAME EME2000, TIME_SYSTEM UTC, COMMENT)",
+   "have": false,
+   "where": "файлы OEM самодокументированы; стандарт не скачивался",
+   "clauses": "—"
+  },
+  {
+   "ref": "NOAA SWPC «NOAA Space Weather Scales»",
+   "what_it_gives_ru": "Пороги шкалы S по потоку ≥10 МэВ (S1 = 10 pfu) и G по Kp",
+   "have": false,
+   "where": "https://www.swpc.noaa.gov/noaa-scales-explanation (страница загружается; число 10 pfu в извлечённом тексте не захвачено — проверено частично)",
+   "clauses": "таблица Solar Radiation Storms"
+  },
+  {
+   "ref": "Matzka J., Stolle C., Yamazaki Y., Bronkalla O., Morschhauser A. (2021) — цитирование Kp GFZ (указано в заголовке файла GFZ)",
+   "what_it_gives_ru": "Обязательная ссылка при использовании Kp GFZ (лицензия CC BY 4.0; числа пятен CC BY-NC 4.0)",
+   "have": true,
+   "where": "data/spaceweather/kp_ap_sn_f107.txt, заголовок; https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt",
+   "clauses": "строки PLEASE CITE и LICENSE"
+  },
+  {
+   "ref": "Документация Space-Track API",
+   "what_it_gives_ru": "Класс gp_history, предикат CREATION_DATE, лимиты 30 запросов/мин и 300/час",
+   "have": false,
+   "where": "https://www.space-track.org/documentation (проверено)",
+   "clauses": "API Use Guidelines, GP_History"
+  },
+  {
+   "ref": "Документация Streamlit Community Cloud",
+   "what_it_gives_ru": "Лимиты ресурсов (CPU до 2 ядер, память до 2,7 ГБ), версии Python (по умолчанию 3.12), секреты",
+   "have": false,
+   "where": "https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app; https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy (проверено)",
+   "clauses": "App resources and limits; Optional: Configure secrets and Python version"
+  },
+  {
+   "ref": "GitHub Docs «About billing for GitHub Actions»",
+   "what_it_gives_ru": "2000 бесплатных минут в месяц и 500 МБ артефактов для приватных репозиториев на плане Free",
+   "have": false,
+   "where": "https://docs.github.com/en/billing/managing-billing-for-your-products/about-billing-for-github-actions (проверено)",
+   "clauses": "таблица Free use of GitHub Actions"
+  }
+ ],
+ "data_sources": [
+  {
+   "name": "CelesTrak GP, NORAD 25544 (TLE / JSON / OMM XML)",
+   "url": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
+   "quantity": "текущие орбитальные элементы МКС (эпоха 2026-09-18T03:25:38 на момент проверки)",
+   "units": "элементы SGP4; наклонение 51,6307°, 15,4916 об/сут",
+   "cadence": "несколько раз в сутки по мере обновления каталога",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "параметр EPOCH игнорируется; исторических данных после 2004 нет (закон 108-136); CREATION_DATE в OMM пуст; pub/TLE/catalog.txt даёт 403; троттлинг при частых запросах",
+   "verified_access": true,
+   "verification_note": "curl 18.09.2026: TLE 200/168 байт, JSON 200/425 байт, XML 200/1208 байт; запрос с EPOCH=2024-05-10 вернул элементы 2026 года"
+  },
+  {
+   "name": "CelesTrak Supplemental GP (ISS сегменты, из данных NASA)",
+   "url": "https://celestrak.org/NORAD/elements/supplemental/sup-gp.php?CATNR=25544&FORMAT=TLE",
+   "quantity": "дополнительные элементы МКС по сегментам с учётом манёвров",
+   "units": "TLE",
+   "cadence": "по мере публикации NASA",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "несколько наборов (сегменты); формат «SupGP»; для истории не годится",
+   "verified_access": true,
+   "verification_note": "curl 200/10 080 байт, первая строка «ISS [Segment 01]»"
+  },
+  {
+   "name": "NASA JSC TOPO ISS OEM (nasa-public-data S3)",
+   "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+   "quantity": "векторы положения и скорости МКС, EME2000, UTC; масса, площадь, план манёвров",
+   "units": "км, км/с; шаг 240 с; охват 15 суток",
+   "cadence": "нерегулярно, 12–13 файлов в месяц; текущий — iss-coords/current/",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "датированные папки покрывают не каждый день (май 2024: 02, 05, 07, 08, 12, 13, 14, 15, 17, 20, 23, 28, 29; июнь: 01, 05, 07, 11, 13, 14, 18, 19, 21, 24, 27, 28); интерполяция эфемериды, не SGP4; требует правки CONTRACT.md разд. 10",
+   "verified_access": true,
+   "verification_note": "листинг S3 с prefix=iss-coords/2024-05 (IsTruncated=false); файл 2024-05-08: CREATION_DATE 2024-05-08T16:49:32, 5403 вектора; current: CREATION_DATE 2026-09-18T15:36:07"
+  },
+  {
+   "name": "Space-Track GP_HISTORY",
+   "url": "https://www.space-track.org/documentation",
+   "quantity": "история элементов МКС с CREATION_DATE",
+   "units": "OMM/TLE/JSON",
+   "cadence": "по мере публикации 18 SDS",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "учётная запись обязательна (регистрирует человек); менее 30 запросов/мин и 300/час; правила использования",
+   "verified_access": false,
+   "verification_note": "страница документации 200, login-endpoint отвечает {\"Login\":\"Untried\"}; запросы данных без учётной записи не выполнялись — не проверено"
+  },
+  {
+   "name": "CelesTrak SOCRATES Plus, CSV",
+   "url": "https://celestrak.org/SOCRATES/sort-minRange.csv",
+   "quantity": "сближения всех активных КА, включая МКС: TCA, дальность, скорость, MAX_PROB, DILUTION, DSE",
+   "units": "км, км/с, безразмерная вероятность, сут",
+   "cadence": "3 запуска в сутки, горизонт 7 суток",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "файл 17,4 МБ (154 558 строк), 12,9 с; после двух загрузок подстраницы отвечали таймаутом; времени запуска в файле нет; архива нет",
+   "verified_access": true,
+   "verification_note": "curl 200; у 25544 три строки (TCA 2026-09-21…09-24); диапазон TCA 2026-09-17 22:00 — 2026-09-24 22:00"
+  },
+  {
+   "name": "NOAA SWPC GOES integral protons (primary), 3-day и 7-day JSON",
+   "url": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-7-day.json",
+   "quantity": "интегральный поток протонов ≥1, ≥5, ≥10, ≥30, ≥50, ≥60, ≥100, ≥500 МэВ, GOES-18",
+   "units": "част./(см²·с·ср) (pfu)",
+   "cadence": "5 мин",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "только последние 3/7 суток; измерение на ГСО — переносить на МКС только через обрезание (прил. Ж ОСТ); ≥10 МэВ наблюдался 0,207–0,367 pfu 15–17.09.2026",
+   "verified_access": true,
+   "verification_note": "curl 200: 3-day 724 863 байта, 7-day 1 695 035 байт, satellite 18"
+  },
+  {
+   "name": "NOAA NCEI GOES-18 SEISS/SGPS L2 avg1m (netCDF)",
+   "url": "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg1m/2024/05/",
+   "quantity": "1-минутные средние: 13 дифференциальных каналов протонов 1,02–390 МэВ, интегральный только >500 МэВ, неопределённости, DQF",
+   "units": "протоны/(см²·ср·кэВ·с); протоны/(см²·ср·с); время в с от 2000-01-01T12:00 UTC",
+   "cadence": "суточные файлы, запаздывание около 1 суток",
+   "live": false,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": false,
+   "limits_ru": "интеграл ≥10 МэВ надо считать самим из дифференциальных каналов; reprocessed-версии v3-0-2/v3-0-3 отличаются от оперативных; файлы 0,4–2,6 МБ; чтение через h5py; лицензия «без ограничений» (атрибут файла)",
+   "verified_access": true,
+   "verification_note": "листинг 31 файл за май, 30 за июнь; файл 2024-05-10 скачан (2 621 659 байт), разобран h5py; на 2026-09-17 наш интеграл ≥10 МэВ vs SWPC: медиана отношения 1,00 (286 точек)"
+  },
+  {
+   "name": "NOAA SWPC planetary K-index JSON и прогноз Kp",
+   "url": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+   "quantity": "оценка Kp по 3-часовым интервалам; в forecast-файле поле observed/estimated/predicted и noaa_scale",
+   "units": "Kp 0…9",
+   "cadence": "3 ч",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "около недели истории; перепечатка тех же наблюдений, что у GFZ — не независимое подтверждение",
+   "verified_access": true,
+   "verification_note": "curl 200: 4712 байт; forecast 6906 байт"
+  },
+  {
+   "name": "NOAA SWPC 3-Day Forecast (текст с Issued)",
+   "url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+   "quantity": "прогноз Kp по 3-часовым интервалам на 3 суток, вероятности S1+ и R1-R2/R3+, обоснование",
+   "units": "Kp; проценты",
+   "cadence": "ежесуточно (Issued 2026 Sep 18 1230 UTC)",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "живой файл — только текущий выпуск; архив см. NGDC",
+   "verified_access": true,
+   "verification_note": "curl 200, 1986 байт, строка :Issued:"
+  },
+  {
+   "name": "NOAA NGDC архив продуктов SWPC: daily_reports/3day_forecast, geoalerts, space_weather_event_reports, summary_space_weather_observations",
+   "url": "https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/3day_forecast/2024/05/202405100030three_day_forecast.txt",
+   "quantity": "датированные выпуски: 3-суточный прогноз Kp, geoalert (WMO-код), отчёты о событиях (вспышки, протонные события), сводки наблюдений",
+   "units": "Kp; классы вспышек; UTC",
+   "cadence": "ежесуточно, файлы по дням",
+   "live": false,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "за май 2024 в 3day_forecast 28 файлов из 31 дня (пропуски не идентифицированы); geoalerts в кодированном формате; event reports выпускаются на следующий день — для проверки, не для расчёта",
+   "verified_access": true,
+   "verification_note": "файл 2024-05-10: «:Issued: 2024 May 10 0030 UTC», Kp до 8,33 (G4) на 11 мая; dayevt за 10 мая: Issued 2024 May 11 0245 UTC, X3.9 в 06:54"
+  },
+  {
+   "name": "NOAA SWPC alerts.json, noaa-scales.json, 27-day outlook",
+   "url": "https://services.swpc.noaa.gov/products/alerts.json",
+   "quantity": "предупреждения и наблюдения с issue_datetime, серийными номерами и Valid From/To; текущие уровни R/S/G; прогноз F10.7/Ap/Kp на 27 суток",
+   "units": "текст; Kp; sfu",
+   "cadence": "по событиям; шкалы — ежедневно; 27-day — еженедельно (Issued 2026 Sep 14 0117 UTC)",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": true,
+   "limits_ru": "около месяца истории в alerts.json; архива в живом виде нет",
+   "verified_access": true,
+   "verification_note": "curl 200: alerts 42 955 байт, scales 1096 байт, 27DO с Issued"
+  },
+  {
+   "name": "SWPC ftp-склад (pub/warehouse, pub/alerts, pub/forecasts)",
+   "url": "https://ftp.swpc.noaa.gov/pub/warehouse/2024/",
+   "quantity": "исходные выпуски продуктов SWPC по годам",
+   "units": "текст",
+   "cadence": "—",
+   "live": false,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "с этой сети недоступен: 6 запросов (https и http), таймаут 60 с, код 000",
+   "verified_access": false,
+   "verification_note": "недоступен 18.09.2026 с машины Тимофея; проверить с сети Codex"
+  },
+  {
+   "name": "GFZ Kp API (JSON)",
+   "url": "https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-12T00:00:00Z&index=Kp",
+   "quantity": "Kp по 3-часовым интервалам с флагом status (def/prov)",
+   "units": "Kp 0…9",
+   "cadence": "3 ч; nowcast и окончательные значения",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": false,
+   "limits_ru": "времени публикации нет — годится как наблюдение, для replay считать доступным по окончании интервала с оговоркой; CC BY 4.0; зеркало kp.gfz-potsdam.de работает",
+   "verified_access": true,
+   "verification_note": "curl 200: 10–11 мая 2024 Kp 7,667 … 9,0 (9,0 в 00:00 и 09:00 UTC 11 мая); запрос с &status=def вернул status [def, def, def]"
+  },
+  {
+   "name": "GFZ Kp_ap_Ap_SN_F107_since_1932.txt",
+   "url": "https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt",
+   "quantity": "Kp, ap, Ap, число пятен, F10.7 посуточно с 1932 года",
+   "units": "Kp; ap; sfu",
+   "cadence": "ежесуточно",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": false,
+   "limits_ru": "5,5 МБ; локальная копия до 16.09.2026 в data/spaceweather/",
+   "verified_access": true,
+   "verification_note": "curl 200, 5 504 038 байт"
+  },
+  {
+   "name": "NASA CCMC DONKI WS (GST, SEP, FLR, CME, IPS, RBE)",
+   "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/GST?startDate=2024-05-09&endDate=2024-05-13",
+   "quantity": "события космопогоды с submissionTime, versionId, link; у GST — allKpIndex",
+   "units": "UTC; Kp; классы вспышек",
+   "cadence": "по событиям",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "submissionTime относится к текущей версии; при versionId>1 время первой публикации утрачено (CME 67/259, FLR 86/244, SEP 6/27); у 2 SEP-записей submissionTime раньше события (модель REleASE = внешний прогноз); ключ не нужен; зеркало api.nasa.gov требует ключ (DEMO_KEY сработал, лимиты не проверены)",
+   "verified_access": true,
+   "verification_note": "curl 200: GST 3226 байт, буря 2024-05-10T15:00Z, Kp 9,0; локальный архив data/archive_2024/ 6 файлов"
+  },
+  {
+   "name": "NASA CCMC DONKI notifications",
+   "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/notifications?startDate=2024-05-09&endDate=2024-05-13&type=all",
+   "quantity": "неизменяемые сообщения с messageIssueTime и messageID: прогнозы SEP/CME-прибытия, уведомления о вспышках, бурях",
+   "units": "UTC; текст",
+   "cadence": "по событиям",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": true,
+   "limits_ru": "текстовый разбор тела сообщения; продукт «Experimental Research Information», не официальный прогноз NOAA (дисклеймер в теле)",
+   "verified_access": true,
+   "verification_note": "61 сообщение за 9–13 мая 2024 (SEP 16, FLR 19, CME 12, GST 9, MPC 3, IPS 2); первое SEP 20240509-AL-004 выпущено 2024-05-09T14:00:13Z"
+  },
+  {
+   "name": "IGRF-14 (коэффициенты IAGA; ppigrf IGRF14.shc)",
+   "url": "локально: data/spaceweather/igrf14coeffs.txt; пакет ppigrf (файл IGRF14.shc)",
+   "quantity": "коэффициенты сферических гармоник, степень 13, эпохи 1900–2030",
+   "units": "нТл",
+   "cadence": "статика",
+   "live": false,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": false,
+   "limits_ru": "вековой ход экстраполяция после 2025; аномалия дрейфует ~0,3°/год относительно эпохи моделей поясов",
+   "verified_access": true,
+   "verification_note": "ppigrf.igrf на 1800 точках 0,03 с; файл IGRF14.shc присутствует в пакете"
+  },
+  {
+   "name": "ОСТ 134-1044-2007 прил. А (CSV) и прил. К, Ж (текст)",
+   "url": "локально: data/ost1044_belts/A_*.csv; docs/istochniki/OST_134-1044-2007_tekst.txt",
+   "quantity": "потоки ЕРПЗ по (L, B/B_0, E); орбитально-усреднённые спектры за 10 лет для 30°/60°; таблица жёсткости обрезания Ж.1",
+   "units": "см⁻²·с⁻¹·МэВ⁻¹; пр./(МэВ·см²) за 10 лет; ГВ",
+   "cadence": "статика",
+   "live": false,
+   "archive": true,
+   "coverage_2024_05_06": true,
+   "publication_time_available": false,
+   "limits_ru": "К.1.1/К.1.2/К.2.1/К.2.2 и Ж.1 не оцифрованы; формулы Ж.3–Ж.8 в тексте потеряны (OLE/WMF в DOCX)",
+   "verified_access": true,
+   "verification_note": "A_2_1.csv используется demo_pipeline.py; строки прил. К 18677–25795, Ж 17601–18139 прочитаны"
+  },
+  {
+   "name": "NASA NTRS API (литература [1])",
+   "url": "https://ntrs.nasa.gov/api/citations/search?q=EVA%20MMOD%20risk%20ISS",
+   "quantity": "метаданные публикаций NASA по MMOD-риску при ВКД",
+   "units": "—",
+   "cadence": "—",
+   "live": true,
+   "archive": true,
+   "coverage_2024_05_06": false,
+   "publication_time_available": true,
+   "limits_ru": "только для литературы, не для расчёта",
+   "verified_access": true,
+   "verification_note": "200, 14 результатов, идентификаторы 20190002586, 20230008502, 20240004062, 20230015411"
+  },
+  {
+   "name": "NASA Meteoroid Environment Office (страница [8])",
+   "url": "https://www.nasa.gov/meteoroid-environment-office/",
+   "quantity": "описание метеороидной среды, направления прогнозирования (статистические воздействия)",
+   "units": "—",
+   "cadence": "—",
+   "live": true,
+   "archive": false,
+   "coverage_2024_05_06": false,
+   "publication_time_available": false,
+   "limits_ru": "HTML-страница, не поток данных; для механизма 2 берём ECSS раздел 10 и ГОСТ Р 25645.167",
+   "verified_access": true,
+   "verification_note": "200, 261 646 байт"
+  }
+ ],
+ "gaps_ru": [
+  "Нет `.env.example`, `config.toml`, `vkd/config.py`: все пороги (24 000 нТл, 10 pfu, 5 мин, шаги) зашиты в demo_pipeline.py — Т7 «настройки вынесены из кода» не выполнен.",
+  "Нет ни одного теста и не установлен pytest; обязательные тесты Т3/Т4/Т6 из CONTRACT.md раздел 8 не написаны; нет CI.",
+  "CONTRACT.md раздел 10 требует орбиту периода «из TLE того периода», а единственный проверенный открытый датированный источник — OEM NASA JSC (не TLE); правка договора за человеком.",
+  "Не оцифрованы таблицы К.1.1, К.1.2, К.2.1, К.2.2 (нужны для теста Т3 «поток против потока») и таблица Ж.1 (35×12, с повтором заголовка); формулы Ж.3–Ж.8 надо переписать вручную из DOCX (OLE-объекты), первоисточник [12] Ныммик и др. 2009 не найден.",
+  "Не определён метод расчёта L и B/B_0 в vkd/orbit (диполь в демо; кандидаты: трассировка на ppigrf, apexpy 2.1.1); не определён расчёт MLT для поправки Ж.4–Ж.6; «минуты на высоких широтах» договора не имеют физического определения — предложено через R_c* < R(10 МэВ) = 0,137 ГВ и R(100 МэВ) = 0,444 ГВ.",
+  "Интеграл ≥10 МэВ из архива NCEI — наш расчёт из 13 дифференциальных каналов; сверен только на фоне (медиана 1,00), не сверен на событии 10–11 мая 2024.",
+  "Пропуски в NGDC-архиве 3-суточных прогнозов за май 2024 (28 файлов из 31) не идентифицированы; каталог за июнь не проверен.",
+  "SOCRATES: нет архива за 2024, нет времени запуска в CSV, документация формата не открылась (таймаут) — исторический режим по сближениям только как честный INSUFFICIENT; вероятный троттлинг CelesTrak при частых запросах.",
+  "ГОСТ Р 25645.167-2005 не оцифрован — статистическая часть механизма 2 не считается.",
+  "README, CLAUDE.md, AGENTS.md, PLAN_17_09.md, docs/ARHITEKTURA.md, docs/STEK_VOZDEYSTVIYA_LITERATURA.md, docs/ZAMYSEL.md описывают отменённый стек и скафандр как ядро — для жюри по Т8 это дезинформация; нужна чистка и перенос в docs/archive/.",
+  "Не выбрана и не проверена площадка развёртывания «из сети жюри» (Streamlit Cloud, HF Spaces, VPS доступны с этой сети; Python на площадке надо закрепить 3.12, локально 3.14).",
+  "Не решён вопрос учётной записи Space-Track (регистрирует только человек) и не проверены лимиты api.nasa.gov для DEMO_KEY (страница не отдала текст).",
+  "Лицензионные условия не сведены в одном месте: GFZ CC BY 4.0 (пятна CC BY-NC 4.0), NCEI «без ограничений», CelesTrak/SOCRATES и NASA S3 — условия использования не проверены."
+ ],
+ "critical_claims": [
+  {
+   "claim": "OEM-эфемериды NASA JSC TOPO из S3 (nasa-public-data/iss-coords/<дата>/ISS_OEM/) с полем CREATION_DATE годятся как «орбитальные сведения соответствующего периода» для строгого прогноза из прошлого по май–июнь 2024 и заменяют TLE Space-Track.",
+   "why_critical_ru": "Без этого исторический режим (Т4, 8 баллов) держится либо на учётной записи Space-Track (лимиты, регистрация человеком), либо на «реконструкции» по современной орбите, что постановка прямо запрещает подменять. Договор (раздел 10) пока говорит «из TLE того периода» — план ломается, если Тимофей не примет правку или жюри сочтёт интерполяцию OEM неподходящей.",
+   "how_to_check": "1) Открыть https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt и убедиться в строках CREATION_DATE = 2024-05-08T16:49:32.385, REF_FRAME = EME2000, START/STOP 2024-05-08T12:00 — 2024-05-23T12:00; 2) листинг https://nasa-public-data.s3.amazonaws.com/?prefix=iss-coords/2024-05&max-keys=1000 — 13 файлов ISS.OEM_J2K_EPH.txt; 3) для текущей даты сравнить положение по OEM current и по SGP4 из CelesTrak GP на один момент (skyfield): расхождение по широте/долготе должно быть менее 0,1° при разнице эпох менее суток; 4) записать в журнал запрос на правку CONTRACT.md раздел 10 и дождаться решения Тимофея."
+  },
+  {
+   "claim": "Архив NGDC swpc-products/daily_reports/3day_forecast/2024/{05,06}/ содержит датированные (Issued) 3-суточные прогнозы NOAA на все дни 1 мая — 30 июня 2024, включая 9–12 мая, и вместе с уведомлениями DONKI (messageIssueTime) полностью закрывает требование «датированные выпуски прогнозов» для replay.",
+   "why_critical_ru": "Это единственный найденный доступный с этой сети источник датированных внешних прогнозов (ftp.swpc.noaa.gov недоступен). За май в каталоге 28 файлов из 31 дня; если пропущены именно дни бури, строгий прогноз из прошлого для выраженного события придётся строить только на DONKI, а сравнение «наш подход против одного готового предупреждения NOAA» (Т5) теряет опору.",
+   "how_to_check": "Запросить https://www.ngdc.noaa.gov/stp/space-weather/swpc-products/daily_reports/3day_forecast/2024/05/ и /2024/06/, извлечь имена вида ГГГГММДДЧЧММthree_day_forecast.txt, построить список отсутствующих дат; открыть файлы за 20240509, 20240510, 20240511 и убедиться в строке «:Issued:» и таблице «NOAA Kp index breakdown»; проверенный образец: 202405100030three_day_forecast.txt, Issued 2024 May 10 0030 UTC, максимум Kp 8,33 (G4)."
+  },
+  {
+   "claim": "Интегральный поток ≥10 МэВ, рассчитанный нами из 13 дифференциальных каналов GOES-18 SGPS L2 (NCEI), воспроизводит оперативный интеграл SWPC на событийных сутках в пределах множителя 1,5 и потому пригоден для восстановления шкалы S в историческом режиме.",
+   "why_critical_ru": "В NCEI-архиве нет интеграла ≥10 МэВ (только >500 МэВ), а живой SWPC-JSON хранит 7 суток. Если расхождение на событии больше порогов шкалы (10/100/1000 pfu), историческая оценка «идёт ли протонное событие» будет опираться на наш, а не на наблюдённый показатель, и правило рекомендации п. 2 в replay станет непроверяемым. Сверка сделана только на фоне 0,2 pfu (медиана 1,00, разброс 0,37–2,03).",
+   "how_to_check": "Скачать https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg1m/2024/05/sci_sgps-l2-avg1m_g18_d20240510_v3-0-2.nc и d20240511, посчитать интеграл по каналам с нижней границей ≥ 10 000 кэВ плюс долю канала 5840–11 000 кэВ, найти время превышения 10 и 100 pfu; сравнить с уведомлениями DONKI типа SEP с инструментом «GOES-P: SEISS >10 MeV» (начало 2024-05-10T13:35Z) и с отчётом NGDC space_weather_event_reports за 10–11 мая (раздел протонных событий); наш максимум за 10 мая — 160 pfu в 17:47 UTC."
+  },
+  {
+   "claim": "CelesTrak не заблокирует и не будет троттлить развёрнутый сервис при загрузке SOCRATES CSV (17,4 МБ) и GP не чаще одного раза в 8 часов с кешем, так что механизм 2 и орбита остаются живыми во время проверки жюри.",
+   "why_critical_ru": "После двух загрузок CSV подряд три следующих запроса к celestrak.org завершились таймаутом 60 с, а pub/TLE/catalog.txt даёт 403. Если площадка с общим IP (Streamlit Cloud) окажется ограничена, живой режим по сближениям и TLE упадёт в INSUFFICIENT в момент демонстрации; это честно, но обнуляет О3/О5 по механизму 2.",
+   "how_to_check": "1) Через час после последней загрузки выполнить один запрос HEAD к https://celestrak.org/SOCRATES/sort-minRange.csv и один GET к https://celestrak.org/SOCRATES/socrates-format.php с той же машины — ожидается 200; 2) повторить то же с площадки развёртывания (в приложении завести страницу «Диагностика источников» с кодами ответов и временем); 3) реализовать If-Modified-Since и интервал не менее 8 ч, зафиксировать в config.toml; 4) держать в data/cache/ последний удачный CSV и показывать его возраст."
+  },
+  {
+   "claim": "Streamlit Community Cloud с Python 3.12 выдерживает наше приложение (кеш до 200 МБ, расчёт менее 15 с) и открывается из сети жюри в РФ до конца проверки.",
+   "why_critical_ru": "Постановка требует «развёрнутое решение со ссылкой и доступом для жюри до окончания проверки»; без работающей ссылки не оцениваются О5 и весь пользовательский путь. С машины Тимофея площадка отвечает 200, но доступ из сети жюри и стабильность под лимитами (память до 2,7 ГБ, 2 ядра) не проверены; локальная версия Python 3.14 может отличаться от площадки.",
+   "how_to_check": "Утром 19.09 развернуть пустое приложение из приватного GitHub-репозитория с выбором Python 3.12 в Advanced settings; открыть ссылку с мобильной сети и с сети Codex; на странице приложения вывести версии Python и пакетов, объём кеша и время последнего расчёта; при отказе — запасной вариант HF Spaces (sdk: streamlit) или VPS Timeweb/Selectel (оба ответили 200), инструкцию для запасного варианта держать в README."
+  }
+ ],
+ "recommendations_ru": [
+  "День 1, до кода: Тимофей принимает решения по трём пунктам договора — (а) раздел 10: орбита периода из OEM NASA JSC или GP_HISTORY с временем публикации не позже отсечки; (б) раздел 6: добавить в TrajectoryPoint поля B_nT, mlt_h, cutoff_kind и сделать cutoff_GV Optional; добавить тип EventInterval и SourceStatus; (в) раздел 3: определить «минуты на высоких широтах» как минуты с R_c* ниже 0,137 ГВ (10 МэВ) и 0,444 ГВ (100 МэВ) по формуле Ж.2 ОСТ.",
+  "Codex, vkd/sources: реализовать Protocol Source с fetch_live/fetch_archive/parse/status, RawRecord с сайдкаром (url, fetched_utc, sha256, etag/last_modified, version), дедупликацию по ключам из находки 2, классификацию ошибок и флаги enabled/frozen; источники первой очереди: celestrak_gp, nasa_oem (current и датированные), swpc_goes_int (3/7-day), gfz_kp (API), swpc_3day (живой), ngdc_3day (архив), donki_notif, donki_events, socrates (фон, раз в 8 ч), ncei_sgps (h5py, по требованию).",
+  "Codex, vkd/orbit: выбрать метод L/B_0 (трассировка на ppigrf вектором или apexpy) и MLT; оцифровать таблицу Ж.1 (пропустить повтор заголовка, проверить 11,908 ГВ в точке 0°/0°); переписать формулы Ж.3–Ж.8 из DOCX в Word и положить в docs/ost_zh_formuly.md с указанием источника [12]; тест согласия дипольной L демо и нового метода при L < 1,5.",
+  "Claude, scripts/ost_parse.py: извлечь К.1.1, К.1.2, К.2.1, К.2.2 в data/ost1044_spectra/ и написать tests/invariants/test_t3_normirovka.py на синтетических орбитах 30° и 60° (высоты 400 и 600 км) с заранее объявленным допуском.",
+  "Claude, конфигурация: создать config.toml, vkd/config.py (tomllib, без глобалов), .env.example с SPACETRACK_USER/PASS, NASA_API_KEY, VKD_CACHE_DIR, VKD_OFFLINE; перенести шесть констант из demo_pipeline.py; добавить в .gitattributes LF для *.md, *.toml, *.json, *.txt.",
+  "Оба: pip install -e .[dev]; каркас tests/{unit,invariants,sources,network}; маркер network; фикстуры из уже записанных ответов (усечённый SOCRATES с sha256 полного файла, goes7d.json, два файла NCEI, OEM 2024-05-08, GFZ JSON за 10–12 мая, три файла NGDC за 10 мая, уведомления DONKI за 9–13 мая); тесты Т4 (отсечка по sha256 результата) и Т6 (отключение и устаревание → INSUFFICIENT, verdict != preferred).",
+  "Claude, app/ и vkd/export: одна функция строит factors.json, из него и экран, и report.md; архив выгрузки по структуре из находки 9; команда python -m vkd.replay; versions.json с git SHA, sha256 config.toml и CSV таблиц ОСТ; три примера в examples/ (текущий; строгий replay 2024-05-10T12:00Z; контрольная неделя июня).",
+  "Развёртывание: 19.09 утром пустой Streamlit по ссылке (Python 3.12, секреты через Secrets), страница «Диагностика источников» с HTTP-кодами, возрастом кеша, версиями; проверка открытия с двух сетей; запасной план HF Spaces или VPS описан в README.",
+  "CI и git: .github/workflows/tests.yml (pytest -m \"not network\", Python 3.12 и 3.14, кеш pip); ветки codex/* и claude/* с rebase перед пушем, слияние в main не реже раза в час; общие файлы pyproject.toml/README/config.toml — владелец Claude, заявки через журнал; git push gitverse main после каждого слияния, финально до 20.09 12:00.",
+  "Документация для жюри (Т8): переписать README под постановку (установка, запуск, источники с единицами и ограничениями, версии библиотек и их роль, примеры выгрузок, чего не заявляем); устаревшие PLAN_17_09.md, docs/ARHITEKTURA.md, docs/STEK_VOZDEYSTVIYA_LITERATURA.md, docs/arhitektura_geometrii.md перенести в docs/archive/ с пометкой; убрать ссылки на них из CLAUDE.md и AGENTS.md; в docs/ISTOCHNIKI.md свести реестр источников из этого отчёта (URL, величина, единицы, частота, lag, лицензия, publication_time_available).",
+  "Исторический режим по механизму 2: в интерфейсе и отчёте явная надпись «архив сближений SOCRATES за 2024 недоступен — статус INSUFFICIENT; статистический поток по ГОСТ Р 25645.167-2005 не зависит от даты»; Codex оцифровывает ГОСТ 167 (таблицы для 400–450 км, 51,6°) в data/gost167/.",
+  "Перед защитой: проверить, что ни один тест не сравнивает значения с «ожидаемыми числами», только инварианты; прогнать python -m vkd.replay на трёх примерах; убедиться, что при VKD_OFFLINE=1 сервис поднимается из data/cache/ с корректными пометками давности."
+ ]
+}
