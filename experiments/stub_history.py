@@ -107,6 +107,8 @@ def notifications_events() -> tuple[list[EventInterval], dict]:
                 # (API округляет вниз до минуты; у 20240516-7D-001 разница 13 ч 56 мин) — берём его
                 issued = max(issued, _a1_published().get(mid, issued))
                 rid = 'donki_msg#' + mid
+                if rid in raw:            # одно сообщение бывает привязано к нескольким карточкам — дубли не создаём (Т1)
+                    continue
                 kp = message_kp(mid) if kind == 'gst' else None
                 out.append(EventInterval(
                     event_id=rid, kind_of_event=kind.upper(), kind=Kind.EXTERNAL_FORECAST,

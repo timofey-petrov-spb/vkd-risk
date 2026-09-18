@@ -19,18 +19,21 @@ def _strip(S):
 
 
 def test_history_forecast_is_deterministic_with_pinned_tle():
+    """Без сети: живые источники в истории не нужны (иначе тест зависел бы от отказов CelesTrak)."""
+    from tests.test_integration import _fetched
     t0 = datetime(2024, 5, 20, 12, 0, tzinfo=timezone.utc)
-    a = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE)
-    b = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE)
+    a = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, fetched=_fetched(), now=t0)
+    b = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, fetched=_fetched(), now=t0)
     assert _strip(a.S) == _strip(b.S)
     assert a.S['recommendation']['verdict'] == b.S['recommendation']['verdict']
 
 
 def test_robustness_spread_independent_of_saved_tolerance():
     """Дефект, найденный повтором примера: допуск в порогах не должен менять разброс."""
+    from tests.test_integration import _fetched
     from vkd.windows.compare import Thresholds
     t0 = datetime(2024, 5, 20, 12, 0, tzinfo=timezone.utc)
-    a = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, thresholds=Thresholds())
-    b = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, thresholds=Thresholds(equiv_tol_min=39.0))
+    a = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, thresholds=Thresholds(), fetched=_fetched(), now=t0)
+    b = run('history_forecast', t0, 360, 1440, [0, 480], tle_override_path=TLE, thresholds=Thresholds(equiv_tol_min=39.0), fetched=_fetched(), now=t0)
     assert a.rob.saa_spread_min == b.rob.saa_spread_min
     assert a.S['recommendation']['verdict'] == b.S['recommendation']['verdict']

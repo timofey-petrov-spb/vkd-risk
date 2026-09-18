@@ -36,7 +36,8 @@ URLS = {
     'goes': 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json',
     'tle': 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE',
 }
-URLS.update({k: str(v) for k, v in (_cfg_section('sources').get('urls') or {}).items()})   # адреса — из настроек
+URLS.update({k: (list(v) if isinstance(v, (list, tuple)) else str(v))
+             for k, v in (_cfg_section('sources').get('urls') or {}).items()})   # адреса — из настроек; TLE — список резервов
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ class Fetch:
     status_ru: str
     payload: Any                   # разобранный ответ или None
     raw_path: Optional[str]
+    url: Optional[str] = None      # адрес, с которого фактически получены данные (в манифест)
 
 
 def _now():
@@ -78,33 +80,42 @@ def _write_cache(key: str, text: str):
     return p
 
 
-def fetch_text(source_id: str, url: str, key: str, disabled: bool = False, force_live: bool = True) -> Fetch:
-    """Живой запрос с кешем. disabled → только кеш, помечено. force_live=False → сначала кеш."""
+def _live(url: str) -> str:
+    """Один живой запрос; любая ошибка — исключение наверх."""
+    r = requests.get(url, timeout=TIMEOUT_S, headers={'User-Agent': 'vkd-risk/0.4 (hackathon prototype)'})
+    r.raise_for_status()
+    if not r.text.strip():
+        raise ValueError('пустой ответ')
+    return r.text
+
+
+def _fallback(source_id: str, key: str, why: str, disabled: bool = False) -> Fetch:
+    """Кеш с давностью, затем снимок репозитория, затем «данных нет». Никогда не «благоприятно»."""
+    txt, fetched = _read_cache(key)
+    if txt is not None:
+        age = (_now() - fetched).total_seconds() / 60 if fetched else None
+        return Fetch(source_id, False, True, fetched, age, '%s: кеш, давность %.0f мин' % (why, age or 0), txt, _cache_path(key))
     if disabled:
-        txt, fetched = _read_cache(key)
-        if txt is None:
-            return Fetch(source_id, False, False, None, None, 'источник отключён, кеша нет — данных нет', None, None)
-        age = (_now() - fetched).total_seconds() / 60 if fetched else None
-        return Fetch(source_id, False, True, fetched, age, 'источник отключён: данные из кеша, давность %.0f мин' % (age or 0), txt, _cache_path(key))
+        return Fetch(source_id, False, False, None, None, '%s, кеша нет — данных нет' % why, None, None)
+    snap = os.path.join(SNAP, key)
+    if os.path.exists(snap):
+        fetched = datetime.fromtimestamp(os.path.getmtime(snap), tz=timezone.utc)
+        age = (_now() - fetched).total_seconds() / 60
+        return Fetch(source_id, False, True, fetched, age, '%s: снимок репозитория, давность %.0f мин' % (why, age),
+                     io.open(snap, encoding='utf-8').read(), snap)
+    return Fetch(source_id, False, False, None, None, '%s, кеша нет — данных нет' % why, None, None)
+
+
+def fetch_text(source_id: str, url: str, key: str, disabled: bool = False, force_live: bool = True) -> Fetch:
+    """Живой запрос с кешем. disabled → только кеш, помечено (имитация отказа)."""
+    if disabled:
+        return _fallback(source_id, key, 'источник отключён', disabled=True)
     try:
-        r = requests.get(url, timeout=TIMEOUT_S, headers={'User-Agent': 'vkd-risk/0.2 (hackathon prototype)'})
-        r.raise_for_status()
-        if not r.text.strip():
-            raise ValueError('пустой ответ')
-        p = _write_cache(key, r.text)
-        return Fetch(source_id, True, False, _now(), 0.0, 'получено живьём, HTTP %d' % r.status_code, r.text, p)
+        txt = _live(url)
     except Exception as e:            # noqa: BLE001 — любой отказ источника обрабатывается одинаково
-        txt, fetched = _read_cache(key)
-        if txt is None:
-            snap = os.path.join(SNAP, key)
-            if os.path.exists(snap):
-                fetched = datetime.fromtimestamp(os.path.getmtime(snap), tz=timezone.utc)
-                age = (_now() - fetched).total_seconds() / 60
-                return Fetch(source_id, False, True, fetched, age, 'отказ источника (%s): снимок репозитория, давность %.0f мин' % (type(e).__name__, age),
-                             io.open(snap, encoding='utf-8').read(), snap)
-            return Fetch(source_id, False, False, None, None, 'отказ источника (%s), кеша нет — данных нет' % type(e).__name__, None, None)
-        age = (_now() - fetched).total_seconds() / 60 if fetched else None
-        return Fetch(source_id, False, True, fetched, age, 'отказ источника (%s): кеш, давность %.0f мин' % (type(e).__name__, age or 0), txt, _cache_path(key))
+        return _fallback(source_id, key, 'отказ источника (%s)' % type(e).__name__)
+    p = _write_cache(key, txt)
+    return Fetch(source_id, True, False, _now(), 0.0, 'получено живьём, HTTP 200', txt, p, url=url)
 
 
 # ----------------------------------------------------------------- GOES
@@ -124,7 +135,7 @@ def goes_latest(disabled: bool = False) -> tuple[Optional[EnvironmentSample], di
     rid = 'goes_p10#' + last['time_tag']
     s = EnvironmentSample(t, 'goes_p_ge10MeV', float(last['flux']), 'pfu', 'noaa_swpc_goes', Kind.OBSERVATION,
                           None, None, None, f.fetched_utc or _now(), 'preliminary', rid)
-    return s, {rid: last}, f
+    return s, {rid: {**last, 'url': URLS['goes'], 'fetched_utc': (f.fetched_utc or _now()).isoformat()}}, f
 
 
 # ----------------------------------------------------------------- Kp (GFZ)
@@ -147,12 +158,68 @@ def kp_latest(disabled: bool = False) -> tuple[Optional[EnvironmentSample], dict
     q = 'final' if (status and str(status[-1]).lower().startswith('def')) else 'preliminary'
     s = EnvironmentSample(t, 'kp', float(vals[-1]), '', 'gfz_kp', Kind.OBSERVATION, None, t, t + timedelta(hours=3),
                           f.fetched_utc or _now(), q, rid)
-    return s, {rid: {'datetime': times[-1], 'Kp': vals[-1], 'status': status[-1] if status else None}}, f
+    return s, {rid: {'datetime': times[-1], 'Kp': vals[-1], 'status': status[-1] if status else None, 'url': url,
+                     'fetched_utc': (f.fetched_utc or _now()).isoformat()}}, f
 
 
 # ----------------------------------------------------------------- TLE
+def tle_from_text(txt: Optional[str]) -> Optional[str]:
+    """TLE МКС из ответа любого из резервных адресов → три строки; None, если не разобрать.
+    CelesTrak отдаёт текст (имя + две строки); wheretheiss.at и tle.ivanstanojevic.me — JSON
+    с полями line1/line2 (имя — header или name). Контрольные суммы и NORAD проверяет A3."""
+    if not txt:
+        return None
+    t = txt.strip()
+    if t.startswith('{') or t.startswith('['):
+        try:
+            d = json.loads(t)
+        except ValueError:
+            return None
+        if isinstance(d, list):
+            d = d[0] if d else {}
+        l1, l2 = d.get('line1'), d.get('line2')
+        if not (isinstance(l1, str) and isinstance(l2, str)):
+            return None
+        name = str(d.get('header') or d.get('name') or 'ISS (ZARYA)').strip()
+        lines = [name[:24], l1.strip(), l2.strip()]
+    else:
+        lines = [l.rstrip() for l in t.splitlines() if l.strip()]
+        if len(lines) == 2:
+            lines = ['ISS (ZARYA)'] + lines
+        if len(lines) > 3:                       # список станций: берём блок с 25544
+            for i in range(len(lines) - 2):
+                if lines[i + 1].startswith('1 25544') and lines[i + 2].startswith('2 25544'):
+                    lines = lines[i:i + 3]
+                    break
+    if len(lines) != 3 or not lines[1].startswith('1 ') or not lines[2].startswith('2 '):
+        return None
+    if len(lines[1]) != 69 or len(lines[2]) != 69:
+        return None
+    return '%s\n%s\n%s\n' % (lines[0][:24], lines[1], lines[2])
+
+
 def tle_latest(disabled: bool = False) -> tuple[Optional[str], Fetch]:
-    f = fetch_text('celestrak_gp', URLS['tle'], 'iss.tle', disabled)
-    if f.payload is None or 'ISS' not in f.payload:
-        return None, f
-    return f.payload, f
+    """Резервная цепочка адресов TLE (config [sources.urls].tle): первый разобранный ответ
+    идёт в расчёт и в кеш, адрес — в Fetch.url и далее в манифест орбиты. Ни один адрес не
+    ответил → кеш, затем снимок репозитория, со статусом и давностью."""
+    urls = URLS['tle'] if isinstance(URLS['tle'], list) else [URLS['tle']]
+    if disabled:
+        f = _fallback('celestrak_gp', 'iss.tle', 'источник отключён', disabled=True)
+        return tle_from_text(f.payload), f
+    errors = []
+    for u in urls:
+        try:
+            txt = _live(u)
+        except Exception as e:        # noqa: BLE001
+            errors.append('%s: %s' % (u.split('/')[2], type(e).__name__))
+            continue
+        tle = tle_from_text(txt)
+        if tle is None:
+            errors.append('%s: ответ не разобран' % u.split('/')[2])
+            continue
+        p = _write_cache('iss.tle', tle)
+        host = u.split('/')[2]
+        note = '' if not errors else '; ранее отказали: ' + ', '.join(errors)
+        return tle, Fetch('celestrak_gp', True, False, _now(), 0.0, 'получено живьём с %s%s' % (host, note), tle, p, url=u)
+    f = _fallback('celestrak_gp', 'iss.tle', 'отказ всех адресов TLE (%s)' % '; '.join(errors))
+    return tle_from_text(f.payload), f

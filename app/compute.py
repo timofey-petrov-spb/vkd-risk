@@ -70,6 +70,7 @@ class Result:
     fetch_status: dict
     forecasts: list = None     # линии прогнозов NOAA (история)
     orbit: Any = None          # OrbitResult
+    kp_obs: list = None        # исторический разбор: наблюдения Kp (от, до, значение) для ленты
 
 
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
@@ -93,15 +94,29 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if fetched is None:
         fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
     (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched
-    events, hist_raw, excluded, fc_lines, fc_raw, forecasts = [], {}, [], [], {}, []
+    # Т6: два разных состояния источника. 'cache' (или True) — имитация отказа: живого запроса нет,
+    # берётся кеш с давностью, покрытие становится частичным и объявляется. 'off' — источник
+    # исключён: данных нет, покрытие обязательной линии NONE → рекомендации нет. Ни одно из них
+    # не превращается в «благоприятно».
+    if disabled.get('goes') == 'off':
+        goes, goes_raw = None, {}
+        f_goes = replace(f_goes, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
+    if disabled.get('kp') == 'off':
+        kp, kp_raw = None, {}
+        f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
+    events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs = [], {}, [], [], {}, [], []
     if mode != 'live':
         goes, goes_raw = None, {}          # архива наблюдений GOES за 2024 нет (A1, в работе) — линия честно без данных
         h_samples, h_events, hist_raw = history_bundle()
         cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
         excluded = list(cut.excluded)
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
-        kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and not disabled['kp']) else None
+        kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and disabled.get('kp') != 'off') else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
+        if mode == 'history_review':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
+            kp_obs = sorted({(s.valid_from_utc, s.valid_to_utc, s.value) for s in h_samples
+                             if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
+                             and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min + 180)})
         # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
         # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
         def _touches(e):
@@ -122,8 +137,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         tle_text = open(tle_override_path, encoding='utf-8').read()
         f_tle = replace(f_tle, status_ru='TLE из сохранённого расчёта (воспроизведение)', ok=False, from_cache=True)
     orb = build_orbit(mode, t0, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
-                      tle_fetched_utc=f_tle.fetched_utc, tle_available_utc=f_tle.fetched_utc, tle_url=TLE_URL,
-                      tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days, cutoff_utc=cutoff_utc)
+                      tle_fetched_utc=f_tle.fetched_utc, tle_available_utc=f_tle.fetched_utc,
+                      tle_url=(getattr(f_tle, 'url', None) or TLE_URL),
+                      tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days,
+                      cutoff_utc=(cutoff_utc if mode != 'live' else max(now, t0)))
     meta = orb.meta
     # координаты для таблиц ОСТ — эксцентричный диполь (Б): центральный диполь A3 в ядре аномалии
     # даёт L ниже сетки и нулевой поток на всей трассе (см. vkd/assess/magcoords.py); |B| — от A3
@@ -259,4 +276,4 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
-                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb)
+                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb, kp_obs=kp_obs)

@@ -109,10 +109,13 @@ def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample])
         for reason in m.needs_check_reasons:
             sev = 'critical' if 'приоритетное' in reason else 'limiting'
             sim = 'МОДЕЛИРУЕМОЕ' in reason
+            # идентификаторы записей, давших условие, — после «DONKI — » (О4: от предупреждения к первоисточнику)
+            ids = tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ()
+            # заголовок — до первого «: » (двоеточие со пробелом), чтобы не резать время вида 13:59Z;
+            # происхождение: прогнозы (NOAA, ENLIL) — внешний прогноз, события и индексы — наблюдение
             cards.append(Card(
-                title=('Сценарий: ' if sim else 'Условие: ') + reason.split(':')[0],
-                kind=Kind.OWN_CALCULATION if sim else (Kind.EXTERNAL_FORECAST if 'прогноз' in reason else (
-                    Kind.OBSERVATION if ('GOES' in reason or 'Kp' in reason) else Kind.EXTERNAL_FORECAST)),
+                title=('Сценарий: ' if sim else 'Условие: ') + reason.split(': ')[0],
+                kind=Kind.OWN_CALCULATION if sim else (Kind.EXTERNAL_FORECAST if 'прогноз' in reason else Kind.OBSERVATION),
                 impact_ru=('Приоритетное предупреждение (S ≥ 3): NOAA рекомендует избегать радиационной опасности '
                            'при ВКД; окно требует срочной проверки специалистом. Команды прервать или продолжать ВКД '
                            'из индекса не следуют.' if sev == 'critical'
@@ -125,7 +128,7 @@ def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample])
                 rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки',
                 limits_ru='порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; '
                           'при иной шкале организации порог меняется в конфигурации',
-                record_ids=(),
+                record_ids=ids,
                 severity=sev,
             ))
     return cards
