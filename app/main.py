@@ -63,23 +63,6 @@ with st.sidebar:
         st.cache_data.clear()
     auto_min = st.select_slider('Автообновление в текущем режиме, мин', [0, 5, 10, 15], value=5,
                                 help='0 — выключено. Частота публикации: GOES 5 мин, Kp 3 ч, TLE по мере выпуска.')
-
-
-# автообновление: фрагмент перезапускает расчёт с очисткой кеша по таймеру (Т1: «данные обновляются
-# автоматически с учётом частоты публикации»; кнопка выше — принудительное обновление)
-if mode == 'live' and auto_min:
-    @st.fragment(run_every=timedelta(minutes=auto_min))
-    def _auto_refresh():
-        last = st.session_state.get('_auto_last')
-        nowr = datetime.now(timezone.utc)
-        if last is not None and (nowr - last) >= timedelta(minutes=auto_min) - timedelta(seconds=5):
-            st.cache_data.clear()
-            st.session_state['_auto_last'] = nowr
-            st.rerun()
-        if last is None:
-            st.session_state['_auto_last'] = nowr
-        st.caption('Автообновление каждые %d мин; последнее: %s UTC' % (auto_min, st.session_state['_auto_last'].strftime('%H:%M:%S')))
-    _auto_refresh()
     with st.expander('Что если — стресс-сценарий', expanded=False):
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15)
         sc_sep_on = st.checkbox('Смоделировать протонное событие')
@@ -100,6 +83,24 @@ if mode == 'live' and auto_min:
     else:
         th, T_months = Thresholds(), 6
 
+# автообновление: фрагмент перезапускает расчёт с очисткой кеша по таймеру (Т1: «данные обновляются
+# автоматически с учётом частоты публикации»; кнопка выше — принудительное обновление).
+# Стоит ПОСЛЕ боковой панели: раньше блок был внутри неё и прятал панели сценария и порогов
+# под условие текущего режима — исторические режимы падали (найдено проверкой README).
+if mode == 'live' and auto_min:
+    @st.fragment(run_every=timedelta(minutes=auto_min))
+    def _auto_refresh():
+        last = st.session_state.get('_auto_last')
+        nowr = datetime.now(timezone.utc)
+        if last is not None and (nowr - last) >= timedelta(minutes=auto_min) - timedelta(seconds=5):
+            st.cache_data.clear()
+            st.session_state['_auto_last'] = nowr
+            st.rerun()
+        if last is None:
+            st.session_state['_auto_last'] = nowr
+        st.sidebar.caption('Автообновление каждые %d мин; последнее: %s UTC' % (auto_min, st.session_state['_auto_last'].strftime('%H:%M:%S')))
+    _auto_refresh()
+
 
 # ================================================================= расчёт: один снимок на рендер
 @st.cache_data(ttl=300, show_spinner=False)
@@ -108,7 +109,7 @@ def _fetch_all(dis_goes: bool, dis_kp: bool):
     Не автоматическое обновление: обновление — кнопкой или перезапуском (Codex п. 14)."""
     return goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False)
 
-with st.spinner('Источники: GOES, Kp, TLE — до 12 с на каждый при живом запросе…'):
+with st.spinner('Источники: GOES, Kp, TLE — до 8 с на каждый при живом запросе…'):
     fetched = _fetch_all(disabled['goes'], disabled['kp'])
 with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
     R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
