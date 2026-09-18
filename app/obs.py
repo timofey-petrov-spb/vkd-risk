@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import json
+import math
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -54,13 +55,15 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
     if tg:
         fig.add_trace(go.Scatter(x=tg, y=vg, name='GOES ≥10 МэВ', line=dict(color=GREEN, width=1.5)), row=1, col=1)
         for thr, name in S_LEVELS:
-            fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
+            # на логарифмической оси координата линии — log10 значения, иначе 1000 читается как 10^1000
+            fig.add_hline(y=math.log10(thr), line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
     if tk:
         fig.add_trace(go.Bar(x=tk, y=vk, name='Kp', marker_color=[RED if v >= 7 else GREEN for v in vk]), row=2, col=1)
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79', annotation_text='запрос')
-    fig.update_yaxes(type='log', title_text='pfu', row=1, col=1)
+    lo = min([v for v in vg if v > 0] or [0.1])
+    fig.update_yaxes(type='log', title_text='pfu', range=[math.log10(lo) - 0.5, 4.2], row=1, col=1)
     fig.update_yaxes(range=[0, 9], title_text='Kp', row=2, col=1)
     fig.update_layout(height=420, margin=dict(l=10, r=10, t=40, b=10), showlegend=False)
     return fig
