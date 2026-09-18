@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
 import json
 import math
 import re
@@ -105,7 +106,40 @@ def parse_kp(raw: bytes, now: datetime) -> dict:
 def parse_tle(raw: bytes, now: datetime) -> dict:
     # Lazy import avoids sources -> orbit -> sources.registry import cycles.
     from vkd.orbit.trajectory import satellite_from_tle
-    satellite = satellite_from_tle(raw)
+    text = raw.decode('ascii')
+    payload_format = 'tle_text'
+    if text.lstrip().startswith(('{', '[')):
+        data = json.loads(text)
+        if not isinstance(data, dict):
+            raise LiveDataError('TLE endpoint must return one JSON object')
+        if data.get('error') or data.get('status') == 'error':
+            raise LiveDataError('TLE endpoint returned an error object')
+        for key in ('id', 'satelliteId'):
+            if key in data and (isinstance(data[key], bool) or str(data[key]) != '25544'):
+                raise LiveDataError('JSON satellite identity mismatch')
+        line1, line2 = data.get('line1'), data.get('line2')
+        name = data.get('header') or data.get('name') or 'ISS'
+        if (not isinstance(name, str) or not name.strip()
+                or any(c in name for c in '\r\n')
+                or not all(isinstance(line, str) and not any(c in line for c in '\r\n')
+                           for line in (line1, line2))):
+            raise LiveDataError('Invalid JSON TLE fields')
+        text = name.strip() + '\n' + line1 + '\n' + line2 + '\n'
+        payload_format = 'tle_json'
+    else:
+        # The stations product can contain other satellites; select exactly one
+        # ISS pair, while preserving the full original body as raw evidence.
+        lines = [line.rstrip() for line in text.splitlines() if line.strip()]
+        if len(lines) > 3:
+            matches = [i for i, line in enumerate(lines[:-1])
+                       if line.startswith('1 25544') and lines[i+1].startswith('2 25544')]
+            if len(matches) != 1:
+                raise LiveDataError('Missing or ambiguous ISS element set')
+            i = matches[0]
+            name = lines[i-1] if i and not lines[i-1].startswith(('1 ', '2 ')) else 'ISS'
+            text = '\n'.join([name, lines[i], lines[i+1]]) + '\n'
+            payload_format = 'tle_catalog'
+    satellite = satellite_from_tle(text.encode('ascii'))
     sat = satellite.model
     if not (math.isfinite(sat.ecco) and 0 <= sat.ecco < 1
             and math.isfinite(sat.no_kozai) and sat.no_kozai > 0
@@ -117,8 +151,11 @@ def parse_tle(raw: bytes, now: datetime) -> dict:
     epoch = satellite.epoch.utc_datetime()
     if epoch > now:
         raise LiveDataError('TLE epoch is in the future')
+    tle_sha = hashlib.sha256(text.encode('ascii')).hexdigest()
     return dict(data_utc=epoch, published_utc=None, quality='model', norad_id=25544,
-                selected={'epoch_utc': iso_utc(epoch), 'norad_id': 25544})
+                payload_text=text,
+                selected={'epoch_utc': iso_utc(epoch), 'norad_id': 25544,
+                          'input_format': payload_format, 'parsed_tle_sha256': tle_sha})
 
 
 def parse_noaa_live(raw: bytes, now: datetime) -> dict:

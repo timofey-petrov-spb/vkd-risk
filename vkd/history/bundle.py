@@ -13,12 +13,14 @@ from pathlib import Path
 
 from vkd.sources.donki import NotificationParseError, SOURCE_ID as DONKI, parse_notification
 from vkd.sources.noaa import SOURCE_3DAY, SOURCE_DAYPRE
+from vkd.sources.goes_archive import (REGISTRY_PATH as GOES_REGISTRY_PATH,
+    archive_snapshot as goes_archive_snapshot, interval_coverage as goes_coverage)
 from vkd.sources.registry import RegistryError, SourceRegistry, iso_utc, utc
 from vkd.types import EnvironmentSample, Kind, Request
 from .replay import replay_forecast
 
 ROOT = Path(__file__).resolve().parents[2]
-ADAPTER_VERSION = 'history-a2-v2'
+ADAPTER_VERSION = 'history-a2-v3'
 
 
 class HistoryDataError(ValueError):
@@ -157,9 +159,9 @@ def _forecast_channels(snapshot, registry, cutoff, start, end):
 
 
 def _coverage(snapshot, start=None, end=None):
-    snapshot['coverage_map']['goes_p_ge10MeV:observations'] = {
+    snapshot['coverage_map'].setdefault('goes_p_ge10MeV:observations', {
         'status': 'missing', 'coverage_fraction': 0.0,
-        'reason': 'numerical historical GOES observations not present; threshold notifications do not replace them'}
+        'reason': 'numerical historical GOES observations not present; threshold notifications do not replace them'})
     intervals = sorted({(s.valid_from_utc, s.valid_to_utc) for s in snapshot['samples']
                         if s.channel_id == 'kp' and s.kind == Kind.OBSERVATION})
     kp_coverage = {'status': 'sparse' if intervals else 'missing', 'kind': 'observation',
@@ -188,7 +190,8 @@ def _coverage(snapshot, start=None, end=None):
 
 
 def history_snapshot(request: Request, *, repo_root: str | Path = ROOT,
-                     registry: SourceRegistry | None = None, lookback_hours: int = 48) -> dict:
+                     registry: SourceRegistry | None = None, lookback_hours: int = 48,
+                     goes_registry: SourceRegistry | None = None) -> dict:
     """Typed samples/events, exact raw bytes, source versions and per-channel gaps.
 
     For review, observations may use later publications, while the NOAA forecast
@@ -228,6 +231,25 @@ def history_snapshot(request: Request, *, repo_root: str | Path = ROOT,
         disabled_sources=list(request.disabled_sources))
     _forecast_channels(snapshot, registry, cutoff or requested_start, start, end)
     _notifications(snapshot, registry, cutoff, context_start=start-timedelta(hours=lookback_hours), end=end)
+    # This is a separately versioned archive: existing A1 release identities and
+    # strict NOAA/DONKI replay are unchanged. No network is used by this adapter.
+    if goes_registry is not None or (Path(repo_root)/GOES_REGISTRY_PATH).is_file():
+        try:
+            goes_registry = goes_registry if goes_registry is not None else SourceRegistry(repo_root, GOES_REGISTRY_PATH)
+            goes = goes_archive_snapshot(goes_registry, start_utc=start-timedelta(hours=lookback_hours),
+                end_utc=end, mode=request.mode, cutoff_utc=cutoff)
+        except (OSError, RegistryError, KeyError, ValueError) as exc:
+            raise HistoryDataError(f'Historical GOES archive unavailable or invalid: {exc}') from exc
+        snapshot['samples'].extend(goes['samples'])
+        snapshot['excluded'].extend(goes['excluded'])
+        snapshot['raw_records'].update(goes['raw_records'])
+        snapshot['source_versions'].update(goes['source_versions'])
+        coverage = goes_coverage(goes['samples'], start, end)
+        if request.mode == 'history_forecast':
+            coverage['reason'] = 'historic_publication_and_version_availability_not_proven'
+        snapshot['coverage_map']['goes_p_ge10MeV:observations'] = coverage
+        snapshot['goes_archive_audit'] = goes['record_audit']
+        snapshot['limitations'].append('GOES iSWA numerical archive is review-only; no historic publication receipts or instrument quality flags.')
     _coverage(snapshot, start, end)
     # Source disabling controls acquisition, not erasure of an already verified
     # offline archive. No network is used and no shared cache is mutated here.
@@ -239,7 +261,7 @@ def history_snapshot(request: Request, *, repo_root: str | Path = ROOT,
 
 
 def history_bundle(request: Request | None = None, *, repo_root: str | Path = ROOT,
-                   registry: SourceRegistry | None = None):
+                   registry: SourceRegistry | None = None, goes_registry: SourceRegistry | None = None):
     """B1 tuple interface; pass Request to include the correct NOAA releases.
 
     Legacy no-argument mode supplies the audited notification catalog only.
@@ -255,7 +277,7 @@ def history_bundle(request: Request | None = None, *, repo_root: str | Path = RO
         _coverage(snapshot)
         snapshot['raw_record_ids'] = sorted(snapshot['raw_records'])
     else:
-        snapshot = history_snapshot(request, repo_root=repo_root, registry=registry)
+        snapshot = history_snapshot(request, repo_root=repo_root, registry=registry, goes_registry=goes_registry)
     raw = deepcopy(snapshot['raw_records'])
     raw['_history'] = {key: deepcopy(value) for key, value in snapshot.items()
                        if key not in ('samples', 'events', 'raw_records')}

@@ -1,0 +1,62 @@
+{
+  "hapi_dataset": "goesp_part_flux_P5M",
+  "hapi_url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-10T00:00:00.0Z&time.max=2024-05-10T00:30:00.0Z&format=json",
+  "crosscheck_url": "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes18/l2/data/sgps-l2-avg5m/2024/05/sci_sgps-l2-avg5m_g18_d20240510_v3-0-2.nc",
+  "crosscheck_sha256": "c4845f6da65b090525cac560037bc038dde9850a7334dbf76d4b4c944c59cb02",
+  "crosscheck_variable": "AvgIntProtonFlux[:,0]",
+  "crosscheck_threshold_mev": 500,
+  "crosscheck_sensor_index": 0,
+  "crosscheck_yaw_flip_flag": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "time_names_equal": true,
+  "values_exactly_equal": true,
+  "max_abs_difference": 0.0,
+  "timestamps": [
+    "2024-05-10T00:00:00Z",
+    "2024-05-10T00:05:00Z",
+    "2024-05-10T00:10:00Z",
+    "2024-05-10T00:15:00Z",
+    "2024-05-10T00:20:00Z",
+    "2024-05-10T00:25:00Z"
+  ],
+  "values_pfu": [
+    0.17734336853027344,
+    0.19067706167697906,
+    0.15067468583583832,
+    0.16534225642681122,
+    0.1893434077501297,
+    0.16667553782463074
+  ],
+  "netcdf_time_long_name": "Time stamp at the start of the averaging period, in seconds since 2000-01-01 12:00:00 UTC",
+  "hapi_satelliteProton": [
+    "GOES-18",
+    "GOES-18",
+    "GOES-18",
+    "GOES-18",
+    "GOES-18",
+    "GOES-18"
+  ],
+  "time_semantics_sources": [
+    {
+      "url": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf",
+      "table": 7,
+      "printed_page": 37
+    },
+    {
+      "url": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss20_event-detection_v1-1.pdf",
+      "table": 4,
+      "printed_page": 22
+    }
+  ],
+  "proof_version": "1.0",
+  "hapi_raw_path": "iswa_primary_20240510_0000_0030.json",
+  "hapi_raw_sha256": "f19686c797ef94a77e59002e33313d4cada4d96a764ee793b4af67cd8c900f75",
+  "crosscheck_path": "sci_sgps-l2-avg5m_g18_d20240510_v3-0-2.nc",
+  "scope": "Six P500 points cross-check timestamp alignment and GOES-18 west-looking sensor provenance; this does not validate the P10 values or prove historical publication."
+}

@@ -43,6 +43,18 @@ def get_goes(tmp_path, raw=None, **kwargs):
     return goes_latest(cache_dir=tmp_path, now=kwargs.pop('now', NOW), transport=transport, **kwargs)
 
 
+@pytest.fixture
+def configure_tle(monkeypatch):
+    import vkd.config as cfg
+    original = cfg.section
+    def configure(urls):
+        def section(name):
+            result = original(name)
+            return {**result, 'urls': {**result.get('urls', {}), 'tle': urls}} if name == 'sources' else result
+        monkeypatch.setattr(cfg, 'section', section)
+    return configure
+
+
 def test_exact_bytes_and_publication_unknown(tmp_path):
     raw = b' \n' + goes_bytes() + b'\n'
     sample, records, f = get_goes(tmp_path, raw)
@@ -203,7 +215,8 @@ def test_tle_identity_checksum_epoch_and_throttle(tmp_path):
 
 
 @pytest.mark.parametrize('status', [301, 403, 429, 500])
-def test_celestrak_never_retries_non_200(tmp_path, status):
+def test_celestrak_never_retries_non_200(tmp_path, status, configure_tle):
+    configure_tle('https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE')
     get = Mock(return_value=Response(status=status))
     text, f = tle_latest(cache_dir=tmp_path, now=NOW, transport=get, use_bundled=False)
     assert text is None and f.error == f'http_{status}' and get.call_count == 1
@@ -332,3 +345,121 @@ def test_windows_lock_uses_same_byte_and_maps_contention(tmp_path, monkeypatch):
         lock.side_effect = OSError(errno.EACCES, 'locked')
         with pytest.raises(BlockingIOError):
             cache._file_lock(handle)
+
+
+@pytest.mark.parametrize('mode', [True, 'cache'])
+def test_three_state_cache_uses_bytes_without_io(tmp_path, mode):
+    sample, _, original = get_goes(tmp_path)
+    get = Mock(side_effect=AssertionError('cache-only performed HTTP'))
+    current, _, fetch = get_goes(tmp_path, disabled=mode, transport=get)
+    assert current == sample and fetch.raw == original.raw and fetch.from_cache
+    get.assert_not_called()
+
+
+def test_off_excludes_existing_cache_without_reading_or_writing(tmp_path, monkeypatch):
+    import vkd.sources.live_cache as cache
+    get_goes(tmp_path)
+    never = Mock(side_effect=AssertionError('off accessed cache/network'))
+    monkeypatch.setattr(cache, '_read_receipt', never)
+    sample, raw, fetch = get_goes(tmp_path, disabled='off', transport=never)
+    assert sample is None and raw == {} and fetch.status == 'off'
+    assert fetch.payload is fetch.raw is fetch.url is None and not fetch.from_cache
+    text, tle_fetch = tle_latest(disabled='off', cache_dir=tmp_path, transport=never, now=NOW)
+    assert text is None and tle_fetch.status == 'off'
+    never.assert_not_called()
+
+
+def test_on_string_enables_acquisition(tmp_path):
+    sample, _, fetch = get_goes(tmp_path, disabled='on')
+    assert sample is not None and fetch.ok
+
+
+def _json_tle(provider='wheretheiss'):
+    raw = (ROOT/'data/orbit/iss.tle').read_bytes()
+    name, line1, line2 = raw.decode().strip().splitlines()
+    identity = {'id': '25544', 'header': name} if provider == 'wheretheiss' else {'satelliteId': 25544, 'name': name}
+    return b' \n' + json.dumps({**identity, 'line1': line1, 'line2': line2}, indent=2).encode() + b'\n'
+
+
+@pytest.mark.parametrize('provider', ['wheretheiss', 'ivanstanojevic'])
+def test_json_tle_keeps_exact_entity_and_separate_derived_digest(tmp_path, configure_tle, provider):
+    url = ('https://api.wheretheiss.at/v1/satellites/25544/tles' if provider == 'wheretheiss'
+           else 'https://tle.ivanstanojevic.me/api/tle/25544')
+    configure_tle([url])
+    raw = _json_tle(provider)
+    text, f = tle_latest(cache_dir=tmp_path, now=NOW, transport=Mock(return_value=Response(raw)), use_bundled=False)
+    assert f.url == url and f.raw == raw and text.startswith('ISS')
+    assert f.metadata['sha256'] == hashlib.sha256(raw).hexdigest()
+    assert f.metadata['derived_tle']['sha256'] == hashlib.sha256(text.encode()).hexdigest()
+    assert f.metadata['derived_tle']['sha256'] != f.metadata['sha256']
+    assert Path(f.raw_path).read_bytes() == raw
+    never = Mock(side_effect=AssertionError('cache access made HTTP'))
+    again, cached = tle_latest(disabled='cache', cache_dir=tmp_path, now=NOW, transport=never, use_bundled=False)
+    assert again == text and cached.url == url and cached.raw == raw
+
+
+@pytest.mark.parametrize('mutation', [
+    {'id': '99999'}, {'id': True}, {'line1': '1 99999'}, {'line2': 'broken'},
+    {'header': 'ISS\nINJECTED'}, {'error': 'denied'},
+])
+def test_json_tle_identity_and_layout_cannot_bypass_validator(mutation):
+    data = json.loads(_json_tle())
+    data.update(mutation)
+    with pytest.raises(ValueError):
+        parse_tle(json.dumps(data).encode(), NOW)
+
+
+def test_tle_chain_preserves_prior_refusal_and_uses_actual_endpoint(tmp_path, configure_tle):
+    primary = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
+    secondary_celestrak = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle'
+    reserve = 'https://api.wheretheiss.at/v1/satellites/25544/tles'
+    configure_tle([primary, secondary_celestrak, reserve])
+    raw = _json_tle()
+    def transport(url, **kwargs):
+        if url == primary:
+            return Response(status=403)
+        assert url == reserve, 'second CelesTrak endpoint bypassed the provider limit'
+        return Response(raw)
+    get = Mock(side_effect=transport)
+    text, f = tle_latest(cache_dir=tmp_path, now=NOW, transport=get, use_bundled=False)
+    assert text is not None and f.ok and f.url == reserve and f.raw == raw
+    assert get.call_count == 2 and 'http_403' in f.status_ru
+    assert f.metadata['acquisition_attempts'][1]['status'] == 'cooldown'
+    get.reset_mock()
+    text2, f2 = tle_latest(cache_dir=tmp_path, now=NOW+timedelta(minutes=119),
+                          force_refresh=True, transport=get, use_bundled=False)
+    assert text2 == text and f2.url == reserve and f2.from_cache
+    get.assert_not_called()
+    # Cached records keep the selected source after the first URL changes.
+    configure_tle([secondary_celestrak, reserve])
+    assert tle_latest(disabled='cache', cache_dir=tmp_path, now=NOW, use_bundled=False)[1].url == reserve
+
+
+def test_changed_endpoint_has_an_independent_poll_gate(tmp_path, monkeypatch):
+    import vkd.config as cfg
+    old = cfg.section
+    get_goes(tmp_path)
+    monkeypatch.setattr(cfg, 'section', lambda key: {**old(key), 'urls': {'goes': 'https://example.invalid/new'}})
+    get = Mock(return_value=Response(goes_bytes(12)))
+    sample, _, f = get_goes(tmp_path, transport=get)
+    assert sample.value == 12 and f.url == 'https://example.invalid/new'
+    get.assert_called_once()
+
+
+def test_tle_stale_reserve_never_becomes_current(tmp_path, configure_tle):
+    configure_tle(['https://api.wheretheiss.at/v1/satellites/25544/tles'])
+    text, f = tle_latest(cache_dir=tmp_path, now=NOW+timedelta(days=4),
+                         transport=Mock(return_value=Response(_json_tle())), use_bundled=False)
+    assert text is None and f.status == 'stale' and f.raw is not None
+
+
+def test_celestrak_legacy_poll_gate_survives_upgrade(tmp_path, configure_tle):
+    configure_tle(['https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle'])
+    old_folder = tmp_path/'celestrak_gp'
+    old_folder.mkdir()
+    (old_folder/'attempt.json').write_text(json.dumps({
+        'next_attempt_utc': (NOW+timedelta(hours=2)).isoformat(), 'error': 'http_403'}))
+    get = Mock(side_effect=AssertionError('upgrade reset previous CelesTrak refusal'))
+    text, f = tle_latest(cache_dir=tmp_path, now=NOW, transport=get, use_bundled=False)
+    assert text is None and f.status == 'cooldown' and f.error == 'http_403'
+    get.assert_not_called()

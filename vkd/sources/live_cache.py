@@ -24,7 +24,7 @@ from .registry import iso_utc, utc
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CACHE = ROOT / 'data/cache/sources'
 MAX_BYTES = 4 * 1024 * 1024
-PARSER_VERSION = 'live-a4-v1'
+PARSER_VERSION = 'live-a4-v2'
 _WINDOWS = os.name == 'nt'
 
 
@@ -51,6 +51,22 @@ def _endpoint(url, source_id):
     return parts.scheme, parts.netloc, parts.path, tuple(sorted(query))
 
 
+def _celestrak(url):
+    host = (urlsplit(url).hostname or '').lower()
+    return any(host == name or host.endswith('.' + name) for name in ('celestrak.org', 'celestrak.com'))
+
+
+def source_mode(disabled):
+    """Legacy True means cache-only; explicit off forbids all source data."""
+    if disabled is False or disabled == 'on':
+        return 'on'
+    if disabled is True or disabled == 'cache':
+        return 'cache'
+    if disabled == 'off':
+        return 'off'
+    raise ValueError('disabled must be False/on, True/cache or off')
+
+
 @dataclass(frozen=True)
 class Fetch:
     # Existing B consumer interface; extra fields are optional audit information.
@@ -67,6 +83,11 @@ class Fetch:
     metadata: dict = field(default_factory=dict)
     parsed: dict = field(default_factory=dict)
     raw: bytes | None = None
+
+    @property
+    def url(self):
+        """Actual endpoint of the selected bytes, never the first configured URL."""
+        return self.metadata.get('url')
 
 
 @dataclass(frozen=True)
@@ -120,6 +141,11 @@ def _record(product, raw, parsed, fetched, headers, raw_path):
     sha = hashlib.sha256(raw).hexdigest()
     return dict(source_id=product.source_id, raw_record_id=f'{product.source_id}:{sha}',
                 url=product.url, version=sha, sha256=sha, bytes=len(raw),
+                **({'derived_tle': {'sha256': parsed['selected']['parsed_tle_sha256'],
+                                    'bytes': len(parsed['payload_text'].encode('ascii')),
+                                    'input_format': parsed['selected']['input_format'],
+                                    'derivation': 'validated ISS element set extracted from the exact HTTP entity'}}
+                   if 'payload_text' in parsed else {}),
                 published_utc=iso_utc(parsed['published_utc']) if parsed.get('published_utc') else None,
                 available_utc=iso_utc(fetched), fetched_utc=iso_utc(fetched),
                 data_utc=iso_utc(parsed['data_utc']), quality=parsed['quality'],
@@ -173,6 +199,9 @@ def _read_receipt(folder, product, now):
             if (iso_utc(parsed['data_utc']) != rec['data_utc']
                     or published != rec['published_utc'] or parsed['quality'] != rec['quality']):
                 raise ValueError('Receipt/data timestamp mismatch')
+            if 'derived_tle' in rec and (rec['derived_tle']['sha256'] != parsed['selected']['parsed_tle_sha256']
+                    or rec['derived_tle']['bytes'] != len(parsed['payload_text'].encode('ascii'))):
+                raise ValueError('Receipt/derived TLE mismatch')
             rec['raw_path'] = str(raw_path)
             return (raw, parsed, rec), corrupt
         except (OSError, ValueError, KeyError, TypeError, OverflowError):
@@ -209,7 +238,7 @@ def _result(product, entry, now, *, origin, error=None, corrupt=False):
     notes = []
     labels = dict(live='получено по сети', cached='проверенный кеш', disabled='источник отключён',
                   fallback='отказ сети: проверенный кеш', cooldown='пауза запросов', busy='получение уже выполняется',
-                  missing='данных нет', cache_unavailable='кеш недоступен')
+                  missing='данных нет', cache_unavailable='кеш недоступен', off='источник исключён пользователем')
     if entry is None:
         return Fetch(product.source_id, False, False, None, None,
                      labels.get(origin, origin) + ': пригодных данных нет' + (f' ({error})' if error else ''),
@@ -234,10 +263,11 @@ def _result(product, entry, now, *, origin, error=None, corrupt=False):
         notes.append(error)
     rec = {**rec, 'admissibility': {'max_age_min': product.max_age_min, 'data_age_min': age,
                                  'usable': usable}, 'parser_audit': {
-                                     k: v for k, v in parsed.items() if k in ('rejected_rows', 'ongoing_rows', 'sampling_note', 'attribution')}}
+                                     k: v for k, v in parsed.items() if k in ('rejected_rows', 'ongoing_rows', 'sampling_note', 'attribution')},
+           **({'selected': parsed['selected']} if 'selected' in parsed else {})}
     return Fetch(product.source_id, origin == 'live', origin != 'live', utc(rec['fetched_utc']), age,
                  f"{labels[origin]}, давность данных {age:.1f} мин" + ('; ' + '; '.join(notes) if notes else ''),
-                 raw.decode('utf-8') if usable else None, rec['raw_path'],
+                 parsed.get('payload_text', raw.decode('utf-8')) if usable else None, rec['raw_path'],
                  origin if usable else 'stale', error, rec, parsed, raw)
 
 
@@ -255,16 +285,29 @@ def _retry_time(value, now, fallback):
 def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, transport=None,
             force_refresh=False, use_bundled=True) -> Fetch:
     now = utc(now or datetime.now(timezone.utc))
-    if not isinstance(disabled, bool) or not isinstance(force_refresh, bool):
-        raise ValueError('disabled and force_refresh must be booleans')
-    folder = Path(cache_dir or DEFAULT_CACHE) / product.source_id
+    mode = source_mode(disabled)
+    if not isinstance(force_refresh, bool):
+        raise ValueError('force_refresh must be a boolean')
+    if mode == 'off':
+        return _result(product, None, now, origin='off')
+    source_folder = Path(cache_dir or DEFAULT_CACHE) / product.source_id
+    endpoint_id = hashlib.sha256(repr(_endpoint(product.url, product.source_id)).encode()).hexdigest()[:24]
+    folder = source_folder / 'endpoints' / endpoint_id
+    # Distinct CelesTrak query URLs share one provider gate: changing a query
+    # after a refusal must not bypass its two-hour request limit.
+    gate_folder = source_folder / 'provider-celestrak' if _celestrak(product.url) else folder
     try:
         entry, corrupt = _read_receipt(folder, product, now)
+        # Receipts from A4 v1 remain admissible only for their exact endpoint.
+        # This preserves existing verified data across the cache layout change.
+        if entry is None:
+            entry, legacy_bad = _read_receipt(source_folder, product, now)
+            corrupt = corrupt or legacy_bad
         if entry is None and use_bundled:
             entry = _bundled_tle(product, now)
-        if disabled:
+        if mode == 'cache':
             return _result(product, entry, now, origin='disabled', corrupt=corrupt)
-        with _gate(folder) as locked:
+        with _gate(gate_folder) as locked:
             if not locked:
                 return _result(product, entry, now, origin='busy', corrupt=corrupt)
             # Another process may have completed while this call opened the gate.
@@ -272,7 +315,13 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
             entry, corrupt = current or entry, corrupt or bad
             attempt = {}
             try:
-                attempt = json.loads((folder / 'attempt.json').read_bytes())
+                attempt_path = gate_folder / 'attempt.json'
+                # A deployment upgrade must not reset CelesTrak's previous
+                # provider interval. Reserve endpoints have independent gates.
+                if (_celestrak(product.url) and not attempt_path.exists()
+                        and (source_folder / 'attempt.json').exists()):
+                    attempt_path = source_folder / 'attempt.json'
+                attempt = json.loads(attempt_path.read_bytes())
                 if utc(attempt['next_attempt_utc']) > now and (
                         product.strict_poll or attempt.get('error') or not force_refresh):
                     return _result(product, entry, now, origin='cooldown' if attempt.get('error') else 'cached',
@@ -281,7 +330,7 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                 pass
             except (ValueError, KeyError, TypeError):
                 # A corrupt throttle record must not trigger a request burst.
-                _json(folder / 'attempt.json', {'next_attempt_utc': iso_utc(now + timedelta(seconds=product.poll_seconds)),
+                _json(gate_folder / 'attempt.json', {'next_attempt_utc': iso_utc(now + timedelta(seconds=product.poll_seconds)),
                                                'error': 'invalid_poll_metadata'})
                 return _result(product, entry, now, origin='cooldown', error='invalid_poll_metadata', corrupt=True)
             if (entry and (product.strict_poll or not force_refresh)
@@ -289,7 +338,7 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                 return _result(product, entry, now, origin='cached', corrupt=corrupt)
             # Reserve before I/O so crashes also respect the provider interval.
             next_time = now + timedelta(seconds=product.poll_seconds)
-            _json(folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error='request_incomplete'))
+            _json(gate_folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error='request_incomplete'))
             get = transport or requests.get
             error = None
             for attempt_index in range(1 if product.strict_poll else 2):
@@ -330,7 +379,7 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                                 except OSError:
                                     rec = _record(product, raw, parsed, fetched, response.headers, None)
                                     error = 'cache_write_failed'
-                                _json(folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error=None))
+                                _json(gate_folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error=None))
                                 return _result(product, (raw, parsed, rec), fetched, origin='live', error=error, corrupt=corrupt)
                     finally:
                         response.close()
@@ -343,7 +392,7 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                 if not retry or attempt_index == 1:
                     break
                 time.sleep(.25)
-            _json(folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error=error))
+            _json(gate_folder / 'attempt.json', dict(attempted_utc=iso_utc(now), next_attempt_utc=iso_utc(next_time), error=error))
             return _result(product, entry, now, origin='fallback', error=error, corrupt=corrupt)
     except OSError:
         return _result(product, locals().get('entry'), now, origin='cache_unavailable', error='cache_io_error')
