@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "file": "IGRF13.shc",
+      "sha256": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522",
+      "bytes": 40160,
+      "source": "https://github.com/IAGA-VMOD/ppigrf",
+      "distribution": "ppigrf 2.1.0",
+      "model": "IGRF13",
+      "raw_path": "data/orbit/IGRF13.shc",
+      "source_id": "igrf13",
+      "raw_record_id": "igrf13:357536152bb6",
+      "release_id": "ppigrf 2.1.0"
+    },
+    {
+      "file": "IGRF14.shc",
+      "sha256": "717f6dce821a8f2bfcc6a77f79cc227ba91f61aeb458d5433e8c72450d48f8e0",
+      "bytes": 42115,
+      "source": "https://github.com/IAGA-VMOD/ppigrf",
+      "distribution": "ppigrf 2.1.0",
+      "model": "IGRF14",
+      "raw_path": "data/orbit/IGRF14.shc",
+      "source_id": "igrf14",
+      "raw_record_id": "igrf14:717f6dce821a",
+      "release_id": "ppigrf 2.1.0"
+    },
+    {
+      "file": "iss.tle",
+      "sha256": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+      "bytes": 168,
+      "url": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
+      "fetched_utc": "2026-09-18T21:08:13.248299Z",
+      "available_utc": "2026-09-18T21:08:13.248323Z",
+      "evidence": "Direct HTTP retrieval of these bytes; epoch is separate from publication.",
+      "raw_path": "data/orbit/iss.tle",
+      "source_id": "celestrak_gp",
+      "raw_record_id": "celestrak_gp:25544:9135d19ca3b6",
+      "release_id": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533"
+    }
+  ]
+}

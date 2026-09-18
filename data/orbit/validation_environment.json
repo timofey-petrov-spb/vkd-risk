@@ -1,0 +1,17 @@
+{
+  "generated_utc": "2026-09-18T21:29:02.585317+00:00",
+  "python": "3.14.3",
+  "platform": "macOS-14.6.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "pandas": "3.0.6",
+    "sgp4": "2.27",
+    "skyfield": "1.55",
+    "ppigrf": "2.1.0",
+    "pytest": "9.1.1",
+    "requests": "2.34.2",
+    "pyIGRF": "0.3.3"
+  },
+  "note": "Environment of A verification; pyIGRF is reference regeneration only. Shared deployment lock belongs to B."
+}

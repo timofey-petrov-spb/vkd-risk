@@ -1,0 +1,53 @@
+:Product: 06281230three_day_forecast.txt
+:Issued: 2024 Jun 28 1230 UTC
+# Prepared by the U.S. Dept. of Commerce, NOAA, Space Weather Prediction Center
+#
+A. NOAA Geomagnetic Activity Observation and Forecast
+
+The greatest observed 3 hr Kp over the past 24 hours was 6 (NOAA Scale
+G2).
+The greatest expected 3 hr Kp for Jun 28-Jun 30 2024 is 6.00 (NOAA Scale
+G2).
+
+NOAA Kp index breakdown Jun 28-Jun 30 2024
+
+             Jun 28       Jun 29       Jun 30
+00-03UT       4.33         4.67 (G1)    3.33     
+03-06UT       4.33         4.00         2.67     
+06-09UT       3.67         2.67         2.33     
+09-12UT       6.00 (G2)    2.67         1.67     
+12-15UT       5.00 (G1)    2.00         1.33     
+15-18UT       3.67         2.00         1.00     
+18-21UT       3.33         1.67         1.33     
+21-00UT       4.67 (G1)    2.67         1.67     
+
+Rationale: G1-G2 (Minor-Moderate) geomagnetic storm levels are expected
+on 28 Jun with G1 storming likely to continue early on 29 Jun due to CME
+effects.
+
+B. NOAA Solar Radiation Activity Observation and Forecast
+
+Solar radiation, as observed by NOAA GOES-18 over the past 24 hours, was
+below S-scale storm level thresholds.
+
+Solar Radiation Storm Forecast for Jun 28-Jun 30 2024
+
+              Jun 28  Jun 29  Jun 30
+S1 or greater    5%      5%      5%
+
+Rationale: No S1 (Minor) or greater solar radiation storms are expected.
+No significant active region activity favorable for radiation storm
+production is forecast.
+
+C. NOAA Radio Blackout Activity and Forecast
+
+No radio blackouts were observed over the past 24 hours.
+
+Radio Blackout Forecast for Jun 28-Jun 30 2024
+
+              Jun 28        Jun 29        Jun 30
+R1-R2           50%           50%           50%
+R3 or greater    5%            5%            5%
+
+Rationale: There is a chance for R1-R2 (Minor-Moderate) radio blackouts
+on 28-30 Jun.

@@ -1,0 +1,13 @@
+{
+  "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/notifications?startDate=2024-06-01&endDate=2024-07-01&type=all",
+  "fetched_utc": "2026-09-18T20:39:57.198553Z",
+  "sha256": "3527ab0b65a589c9fdb2c1d046eee60231008ed8c648fa94bf79d78c45d13d51",
+  "bytes": 162484,
+  "headers": {
+    "Date": "Fri, 18 Sep 2026 20:39:56 GMT",
+    "Content-Type": "application/json"
+  },
+  "raw_path": "data/source_registry_2024/donki/raw/notifications_2024-06_response.json",
+  "query_start_date": "2024-06-01",
+  "query_end_date": "2024-07-01"
+}

@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "source_sha256": "c8bbbc139066eab8300665206b581a2d1b40a9b6ace6342831403078fc4204bc",
+  "geometry": "one-sided randomly tumbling flat plate",
+  "area_m2": 1.0,
+  "default_mass_g": 0.001,
+  "seconds_per_julian_year": 31557600,
+  "j5_reference": [
+    {
+      "mass_g": 1e-12,
+      "F0_table_per_m2_year": 1090.0,
+      "F0_formula_per_m2_year": 1087.9372890625373
+    },
+    {
+      "mass_g": 5e-12,
+      "F0_table_per_m2_year": 611.0,
+      "F0_formula_per_m2_year": 610.6210457387173
+    },
+    {
+      "mass_g": 1e-11,
+      "F0_table_per_m2_year": 471.0,
+      "F0_formula_per_m2_year": 471.06317736473557
+    },
+    {
+      "mass_g": 5e-11,
+      "F0_table_per_m2_year": 257.0,
+      "F0_formula_per_m2_year": 257.1132555966348
+    },
+    {
+      "mass_g": 1e-10,
+      "F0_table_per_m2_year": 202.0,
+      "F0_formula_per_m2_year": 201.75023890194075
+    },
+    {
+      "mass_g": 5e-10,
+      "F0_table_per_m2_year": 120.0,
+      "F0_formula_per_m2_year": 119.52180410800464
+    },
+    {
+      "mass_g": 1e-09,
+      "F0_table_per_m2_year": 95.1,
+      "F0_formula_per_m2_year": 95.06350781790515
+    },
+    {
+      "mass_g": 5e-09,
+      "F0_table_per_m2_year": 51.5,
+      "F0_formula_per_m2_year": 51.506676414123945
+    },
+    {
+      "mass_g": 1e-08,
+      "F0_table_per_m2_year": 37.4,
+      "F0_formula_per_m2_year": 37.34867360227366
+    },
+    {
+      "mass_g": 5e-08,
+      "F0_table_per_m2_year": 15.1,
+      "F0_formula_per_m2_year": 15.116169522398069
+    },
+    {
+      "mass_g": 1e-07,
+      "F0_table_per_m2_year": 9.54,
+      "F0_formula_per_m2_year": 9.543733414085496
+    },
+    {
+      "mass_g": 5e-07,
+      "F0_table_per_m2_year": 2.75,
+      "F0_formula_per_m2_year": 2.7449306836110074
+    },
+    {
+      "mass_g": 1e-06,
+      "F0_table_per_m2_year": 1.49,
+      "F0_formula_per_m2_year": 1.4879868371813947
+    },
+    {
+      "mass_g": 5e-06,
+      "F0_table_per_m2_year": 0.307,
+      "F0_formula_per_m2_year": 0.3067364603997572
+    },
+    {
+      "mass_g": 1e-05,
+      "F0_table_per_m2_year": 0.147,
+      "F0_formula_per_m2_year": 0.1464574860893131
+    },
+    {
+      "mass_g": 5e-05,
+      "F0_table_per_m2_year": 0.0236,
+      "F0_formula_per_m2_year": 0.02359918189796605
+    },
+    {
+      "mass_g": 0.0001,
+      "F0_table_per_m2_year": 0.0104,
+      "F0_formula_per_m2_year": 0.01034928304125388
+    },
+    {
+      "mass_g": 0.0005,
+      "F0_table_per_m2_year": 0.00143,
+      "F0_formula_per_m2_year": 0.0014302463417007368
+    },
+    {
+      "mass_g": 0.001,
+      "F0_table_per_m2_year": 0.000597,
+      "F0_formula_per_m2_year": 0.0005967535505346167
+    },
+    {
+      "mass_g": 0.005,
+      "F0_table_per_m2_year": 7.57e-05,
+      "F0_formula_per_m2_year": 7.566526956140972e-05
+    },
+    {
+      "mass_g": 0.01,
+      "F0_table_per_m2_year": 3.07e-05,
+      "F0_formula_per_m2_year": 3.073159799135929e-05
+    },
+    {
+      "mass_g": 0.05,
+      "F0_table_per_m2_year": 3.72e-06,
+      "F0_formula_per_m2_year": 3.723421613065202e-06
+    },
+    {
+      "mass_g": 0.1,
+      "F0_table_per_m2_year": 1.49e-06,
+      "F0_formula_per_m2_year": 1.4913422942628361e-06
+    },
+    {
+      "mass_g": 0.5,
+      "F0_table_per_m2_year": 1.77e-07,
+      "F0_formula_per_m2_year": 1.7653984281866169e-07
+    },
+    {
+      "mass_g": 1.0,
+      "F0_table_per_m2_year": 7.02e-08,
+      "F0_formula_per_m2_year": 7.021268540538107e-08
+    },
+    {
+      "mass_g": 5.0,
+      "F0_table_per_m2_year": 8.22e-09,
+      "F0_formula_per_m2_year": 8.21501980656546e-09
+    },
+    {
+      "mass_g": 10.0,
+      "F0_table_per_m2_year": 3.26e-09,
+      "F0_formula_per_m2_year": 3.2557446441206575e-09
+    },
+    {
+      "mass_g": 50.0,
+      "F0_table_per_m2_year": 3.79e-10,
+      "F0_formula_per_m2_year": 3.787175661880611e-10
+    },
+    {
+      "mass_g": 100.0,
+      "F0_table_per_m2_year": 1.5e-10,
+      "F0_formula_per_m2_year": 1.4982908794200187e-10
+    },
+    {
+      "mass_g": 500.0,
+      "F0_table_per_m2_year": 1.74e-11,
+      "F0_formula_per_m2_year": 1.737828334065484e-11
+    }
+  ],
+  "j6_circular_orbit_factors": [
+    {
+      "alt_km": 100,
+      "G_bar": 2.04,
+      "shielding_factor": 0.5,
+      "motion_factor": 1.09
+    },
+    {
+      "alt_km": 200,
+      "G_bar": 2.03,
+      "shielding_factor": 0.58,
+      "motion_factor": 1.09
+    },
+    {
+      "alt_km": 400,
+      "G_bar": 2,
+      "shielding_factor": 0.63,
+      "motion_factor": 1.09
+    },
+    {
+      "alt_km": 800,
+      "G_bar": 1.94,
+      "shielding_factor": 0.7,
+      "motion_factor": 1.08
+    },
+    {
+      "alt_km": 1000,
+      "G_bar": 1.92,
+      "shielding_factor": 0.72,
+      "motion_factor": 1.08
+    },
+    {
+      "alt_km": 2000,
+      "G_bar": 1.81,
+      "shielding_factor": 0.79,
+      "motion_factor": 1.08
+    },
+    {
+      "alt_km": 4000,
+      "G_bar": 1.65,
+      "shielding_factor": 0.87,
+      "motion_factor": 1.07
+    },
+    {
+      "alt_km": 10000,
+      "G_bar": 1.41,
+      "shielding_factor": 0.95,
+      "motion_factor": 1.05
+    },
+    {
+      "alt_km": 20000,
+      "G_bar": 1.26,
+      "shielding_factor": 0.98,
+      "motion_factor": 1.04
+    },
+    {
+      "alt_km": 35790,
+      "G_bar": 1.16,
+      "shielding_factor": 0.99,
+      "motion_factor": 1.03
+    },
+    {
+      "alt_km": 100000,
+      "G_bar": 1.06,
+      "shielding_factor": 1,
+      "motion_factor": 1.01
+    }
+  ],
+  "baseline_control": {
+    "mass_g": 0.001,
+    "alt_km": 400.0,
+    "F0_per_m2_year": 0.0005967535505346167,
+    "F_LEO_per_m2_year": 0.0008195813263042426,
+    "N_1m2_6h": 5.609728448352106e-07,
+    "N_1m2_8h": 7.47963793113614e-07
+  },
+  "raw_stream_controls_not_plate_flux": [
+    {
+      "name": "ηAquarids",
+      "mass_kg": 1e-06,
+      "Q": 1.0,
+      "k_m_power_minus_alpha_per_m2_s": 1.3064453849341208e-12,
+      "note": "Before projection/transport/annual-mean subtraction; not added directly to Grun."
+    },
+    {
+      "name": "Da.Arietids",
+      "mass_kg": 1e-06,
+      "Q": 1.0,
+      "k_m_power_minus_alpha_per_m2_s": 2.2645053338858093e-11,
+      "note": "Before projection/transport/annual-mean subtraction; not added directly to Grun."
+    },
+    {
+      "name": "Geminids",
+      "mass_kg": 1e-06,
+      "Q": 1.0,
+      "k_m_power_minus_alpha_per_m2_s": 3.909260422292722e-11,
+      "note": "Before projection/transport/annual-mean subtraction; not added directly to Grun."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "verified_utc": "2026-09-18T20:47:57.113973Z",
+  "result": "pass",
+  "record_count": 390,
+  "unique_raw_record_ids": 390,
+  "evidence_file_count": 401,
+  "evidence_bytes": 22379597,
+  "json_files_parsed": 265,
+  "checks": [
+    "Every registered record, directory listing and full response SHA-256 and size verified against disk.",
+    "All raw_record_id values unique; full hash retained; content-version equality checked.",
+    "All populated core timestamps parsed as UTC; ordered validity intervals checked.",
+    "Every registered numeric channel names its unit.",
+    "git check-attr confirms text=unset for all original/extracted evidence paths.",
+    "No tracked code, contract, journal or other baseline file modified; nothing staged.",
+    "NOAA publication/channel coverage and DONKI extraction-to-response mapping independently reviewed by a second agent."
+  ],
+  "not_tested": [
+    "Application imports, event parsing, orbit interpolation or risk calculation: no application code changed.",
+    "Historical payload immutability or OEM public availability: not established by checksums.",
+    "Complete GOES/NOAA alert/Kp observation archive: pending."
+  ],
+  "reproduce": {
+    "hash": "Compute SHA-256 and byte length of each records.json raw_path, nasa_oem listing_evidence, noaa indexes.json and donki responses.json; compare sha256 and bytes.",
+    "git_attributes": "git check-attr text -- <evidence path> must return unset."
+  }
+}

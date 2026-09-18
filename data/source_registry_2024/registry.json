@@ -1,0 +1,2215 @@
+{
+  "schema_version": 1,
+  "task_id": "A1",
+  "status": "in_progress_initial_snapshot_verified",
+  "generated_utc": "2026-09-18T20:47:57.113973Z",
+  "base_commit": "10972c1",
+  "working_branch": "codex/a1-sources",
+  "handoff": "local_uncommitted_data",
+  "agreement_commit": "d84564b87045b7a07d0e486aa7110d3fdea441a2",
+  "target_period": {
+    "from_utc": "2024-05-01T00:00:00Z",
+    "to_utc_exclusive": "2024-07-01T00:00:00Z"
+  },
+  "record_count": 390,
+  "sources": {
+    "noaa_ngdc_3day_forecast": {
+      "status": "collected_initial_snapshot",
+      "purpose": "Kp and daily NOAA R/S forecast probabilities",
+      "records_path": "data/source_registry_2024/noaa/records.json",
+      "records_sha256": "edcfdd894d37a990d8f8c236cf06b6cc58f35a92f355f5383995fb19db844cbb",
+      "coverage_path": "data/source_registry_2024/noaa/coverage.json",
+      "coverage_sha256": "97e13e6801bc102ede0ac900bb6f39f761a6b70657d5cb2d4cacf30c964980ec",
+      "record_count": 57,
+      "unique_content_hashes": 57,
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k."
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability."
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts."
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts."
+        }
+      ],
+      "strict_replay_status_counts": {
+        "dated_official_bulletin": 57
+      },
+      "fallback_policy": "Use previously issued still-valid bulletin; daypre supplements its own channels only, never substitutes Kp.",
+      "records": {
+        "noaa_ngdc_3day_forecast:202405010030three_day_forecast:1ba6cb109b88": {
+          "record_index": 0,
+          "release_id": "202405010030three_day_forecast",
+          "sha256": "1ba6cb109b8804813e53fe2ba20c93b4743afdd849dcc101cdada120e5f19ac9"
+        },
+        "noaa_ngdc_3day_forecast:202405011230three_day_forecast:f3ad61df2b46": {
+          "record_index": 1,
+          "release_id": "202405011230three_day_forecast",
+          "sha256": "f3ad61df2b46e0d83d4b507411056c30677038d02122b6d656079cb69753cb47"
+        },
+        "noaa_ngdc_3day_forecast:202405020030three_day_forecast:783667d89ceb": {
+          "record_index": 2,
+          "release_id": "202405020030three_day_forecast",
+          "sha256": "783667d89ceb84636bca56af9623d560f681cdf195b933b75936ca65d8b0e905"
+        },
+        "noaa_ngdc_3day_forecast:202405021230three_day_forecast:e824fc7ba5d6": {
+          "record_index": 3,
+          "release_id": "202405021230three_day_forecast",
+          "sha256": "e824fc7ba5d649690bcffce335433ada8514ae7e4913e3c7fec0de6030adba91"
+        },
+        "noaa_ngdc_3day_forecast:202405030030three_day_forecast:5f86b5abaebf": {
+          "record_index": 4,
+          "release_id": "202405030030three_day_forecast",
+          "sha256": "5f86b5abaebf140049ec89f5ee4946cbf704552fa95b66847c0be18c3c043178"
+        },
+        "noaa_ngdc_3day_forecast:202405031230three_day_forecast:ce31281dfd90": {
+          "record_index": 5,
+          "release_id": "202405031230three_day_forecast",
+          "sha256": "ce31281dfd90df52f9fec1992bd81808bde0a17cb09f3a0f7bc91db955e1146f"
+        },
+        "noaa_ngdc_3day_forecast:202405040030three_day_forecast:6dd1a64cb103": {
+          "record_index": 6,
+          "release_id": "202405040030three_day_forecast",
+          "sha256": "6dd1a64cb1034dbed52532fe9d223b77fc8925591b8f41445ff96a3c2371f354"
+        },
+        "noaa_ngdc_3day_forecast:202405041230three_day_forecast:2b9653bbcc9f": {
+          "record_index": 7,
+          "release_id": "202405041230three_day_forecast",
+          "sha256": "2b9653bbcc9f0714acd17932cee0f86b1a05dc6f1bf0e663937117540497f083"
+        },
+        "noaa_ngdc_3day_forecast:202405050030three_day_forecast:8797787016bd": {
+          "record_index": 8,
+          "release_id": "202405050030three_day_forecast",
+          "sha256": "8797787016bdfd81a1993c92720ec9a0677ed5ea2b79b9cc76ec79f8aea9f1fb"
+        },
+        "noaa_ngdc_3day_forecast:202405051230three_day_forecast:9d97e9f5fe11": {
+          "record_index": 9,
+          "release_id": "202405051230three_day_forecast",
+          "sha256": "9d97e9f5fe11b1ba284c2566612d8b2562b01dff20755390c1d212051a8fde43"
+        },
+        "noaa_ngdc_3day_forecast:202405060030three_day_forecast:69fb7ccadb7a": {
+          "record_index": 10,
+          "release_id": "202405060030three_day_forecast",
+          "sha256": "69fb7ccadb7ae6bd7eb47a230b4dcfc014e215c2e66a7f9436ef590cca38f684"
+        },
+        "noaa_ngdc_3day_forecast:202405061230three_day_forecast:85428a5da757": {
+          "record_index": 11,
+          "release_id": "202405061230three_day_forecast",
+          "sha256": "85428a5da757a2bafdbc41f2ac045cbc423e25b25559c394b5c3ce7fce89d134"
+        },
+        "noaa_ngdc_3day_forecast:202405070030three_day_forecast:5fd51ae3718e": {
+          "record_index": 12,
+          "release_id": "202405070030three_day_forecast",
+          "sha256": "5fd51ae3718e08fa2036ba62db358d3e903a7968faf8874f7d96ab6fc31eca8c"
+        },
+        "noaa_ngdc_3day_forecast:202405071230three_day_forecast:27c54859377f": {
+          "record_index": 13,
+          "release_id": "202405071230three_day_forecast",
+          "sha256": "27c54859377f37122751de53e56c5f6d4d729c814887a2374077b612ca13290c"
+        },
+        "noaa_ngdc_3day_forecast:202405080030three_day_forecast:7b71c78fd969": {
+          "record_index": 14,
+          "release_id": "202405080030three_day_forecast",
+          "sha256": "7b71c78fd96918bc54fb0a5285c52724146c1a7f00b7f38d749ff07b5452edbf"
+        },
+        "noaa_ngdc_3day_forecast:202405081230three_day_forecast:3730f7bed362": {
+          "record_index": 15,
+          "release_id": "202405081230three_day_forecast",
+          "sha256": "3730f7bed362d15305a211dfadd1d750d2b27924c8b9a4ccda9310f1153ab7ae"
+        },
+        "noaa_ngdc_3day_forecast:202405090030three_day_forecast:9d293fa22454": {
+          "record_index": 16,
+          "release_id": "202405090030three_day_forecast",
+          "sha256": "9d293fa22454824cc0fb9805763c97410a800649da478655c8bd5350544a6ce0"
+        },
+        "noaa_ngdc_3day_forecast:202405091230three_day_forecast:16b2583f2f93": {
+          "record_index": 17,
+          "release_id": "202405091230three_day_forecast",
+          "sha256": "16b2583f2f93bd2cfaffce0d96080281edd547b67d0523c5dd26689d9e960473"
+        },
+        "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a": {
+          "record_index": 18,
+          "release_id": "202405100030three_day_forecast",
+          "sha256": "e60a3823263a365e04b2a150f7a7a8f5b7ab44358956c88ed2fa9408c716f5b3"
+        },
+        "noaa_ngdc_3day_forecast:202405101230three_day_forecast:bfa0e470d421": {
+          "record_index": 19,
+          "release_id": "202405101230three_day_forecast",
+          "sha256": "bfa0e470d421690a1213d51005b59e9f9522a6f3cbeb1c90e7df814f073651a3"
+        },
+        "noaa_ngdc_3day_forecast:202405110030three_day_forecast:730ec0e3340a": {
+          "record_index": 20,
+          "release_id": "202405110030three_day_forecast",
+          "sha256": "730ec0e3340ab5c2281cd5e685a268a7192c6299b9bc0e919631eab903e5497f"
+        },
+        "noaa_ngdc_3day_forecast:202405111230three_day_forecast:b471ec4f6107": {
+          "record_index": 21,
+          "release_id": "202405111230three_day_forecast",
+          "sha256": "b471ec4f6107bc0e1d5625c0d16e748f95f97327fe1a52313968f0636723b086"
+        },
+        "noaa_ngdc_3day_forecast:202405120030three_day_forecast:e48ba3aae578": {
+          "record_index": 22,
+          "release_id": "202405120030three_day_forecast",
+          "sha256": "e48ba3aae57852b5bd6519049af724125d85f218673130ef3cc44247d993622c"
+        },
+        "noaa_ngdc_3day_forecast:202405121230three_day_forecast:c1f68ebf1f2a": {
+          "record_index": 23,
+          "release_id": "202405121230three_day_forecast",
+          "sha256": "c1f68ebf1f2afa55b2849187a1f228041ad986d92723391a7038c97287db7ad2"
+        },
+        "noaa_ngdc_3day_forecast:202405130030three_day_forecast:c4e9c64129f6": {
+          "record_index": 24,
+          "release_id": "202405130030three_day_forecast",
+          "sha256": "c4e9c64129f627ff8f6fd6c2c998b277bfd6deb9cfb8fc44c7b52113f5469ffe"
+        },
+        "noaa_ngdc_3day_forecast:202405131230three_day_forecast:fc69186a294d": {
+          "record_index": 25,
+          "release_id": "202405131230three_day_forecast",
+          "sha256": "fc69186a294d47d409026f0a8bb61b1ed06a2d4f4c4e6f0e02a302ff41685041"
+        },
+        "noaa_ngdc_3day_forecast:202405140030three_day_forecast:c5ac2015c332": {
+          "record_index": 26,
+          "release_id": "202405140030three_day_forecast",
+          "sha256": "c5ac2015c332038bdff5d69e5559efbc48e0be6c82f69a969c539b143de30500"
+        },
+        "noaa_ngdc_3day_forecast:202405141230three_day_forecast:17ebdc80b728": {
+          "record_index": 27,
+          "release_id": "202405141230three_day_forecast",
+          "sha256": "17ebdc80b728dbae87f665be8fcadb6bb698812b56aeab02bb0bd12fb64d969f"
+        },
+        "noaa_ngdc_3day_forecast:202406161230three_day_forecast:1c2f0c63160d": {
+          "record_index": 28,
+          "release_id": "202406161230three_day_forecast",
+          "sha256": "1c2f0c63160df09821ac6a60b9e5b7c6450eac3cb0b17b935f98c0fdb127480e"
+        },
+        "noaa_ngdc_3day_forecast:202406170030three_day_forecast:baa1ef522e4b": {
+          "record_index": 29,
+          "release_id": "202406170030three_day_forecast",
+          "sha256": "baa1ef522e4b9210c67783546e2529d828e56bf069c80e022618ad0e83526745"
+        },
+        "noaa_ngdc_3day_forecast:202406171230three_day_forecast:95e0c3c9b992": {
+          "record_index": 30,
+          "release_id": "202406171230three_day_forecast",
+          "sha256": "95e0c3c9b9921859c9bb1cdcd30559b10759eeca3ed77457b87170e58796af11"
+        },
+        "noaa_ngdc_3day_forecast:202406180030three_day_forecast:a858e8b120d7": {
+          "record_index": 31,
+          "release_id": "202406180030three_day_forecast",
+          "sha256": "a858e8b120d782ca5600f98fab4c76031e652bdd530b3a4c8ac3585bbba760e7"
+        },
+        "noaa_ngdc_3day_forecast:202406181230three_day_forecast:7d98a52d51b5": {
+          "record_index": 32,
+          "release_id": "202406181230three_day_forecast",
+          "sha256": "7d98a52d51b5913bc312afaf9bd6b223dae62f4a54a6254027759a19c4f62a13"
+        },
+        "noaa_ngdc_3day_forecast:202406190030three_day_forecast:034aee2933fe": {
+          "record_index": 33,
+          "release_id": "202406190030three_day_forecast",
+          "sha256": "034aee2933fe85ce1a41f526926e0e59123c7448320e4fcf85599de99a29b607"
+        },
+        "noaa_ngdc_3day_forecast:202406191230three_day_forecast:e79c01d0d51e": {
+          "record_index": 34,
+          "release_id": "202406191230three_day_forecast",
+          "sha256": "e79c01d0d51e6403df14280d082d71741f7fd5851d1fe29b4065907c06295f6e"
+        },
+        "noaa_ngdc_3day_forecast:202406200030three_day_forecast:9f85b4d70769": {
+          "record_index": 35,
+          "release_id": "202406200030three_day_forecast",
+          "sha256": "9f85b4d7076995ac54cb333b20a44101d4508833017f2b83a3f411b744c2d8fd"
+        },
+        "noaa_ngdc_3day_forecast:202406201230three_day_forecast:8fa51fe84602": {
+          "record_index": 36,
+          "release_id": "202406201230three_day_forecast",
+          "sha256": "8fa51fe8460223621bd33935de0594def5f3ce3bcb969cc241f34141c94e94f1"
+        },
+        "noaa_ngdc_3day_forecast:202406210030three_day_forecast:94452e9c8ca5": {
+          "record_index": 37,
+          "release_id": "202406210030three_day_forecast",
+          "sha256": "94452e9c8ca59f8d45cb8edbb73fcb97075e4c1d8efc5e02eb852df8dbe7ce8a"
+        },
+        "noaa_ngdc_3day_forecast:202406211230three_day_forecast:b23a4d733e35": {
+          "record_index": 38,
+          "release_id": "202406211230three_day_forecast",
+          "sha256": "b23a4d733e35a52f787cf952fdf68e472b01bef1dc14e3ad1f53084c22c673d8"
+        },
+        "noaa_ngdc_3day_forecast:202406220030three_day_forecast:926018e38d23": {
+          "record_index": 39,
+          "release_id": "202406220030three_day_forecast",
+          "sha256": "926018e38d23f7b95d8057c804b1d0575f31cc94bc471aebfd1322ce81044019"
+        },
+        "noaa_ngdc_3day_forecast:202406221230three_day_forecast:bb2da396dd07": {
+          "record_index": 40,
+          "release_id": "202406221230three_day_forecast",
+          "sha256": "bb2da396dd07907fb1188fce86722dc8bd75836bc51965141d7b31db3291bdbd"
+        },
+        "noaa_ngdc_3day_forecast:202406230030three_day_forecast:bc9e117af898": {
+          "record_index": 41,
+          "release_id": "202406230030three_day_forecast",
+          "sha256": "bc9e117af89814e3901a6a8a861f3739115eaf7396ab5acac1ced31d63886ebc"
+        },
+        "noaa_ngdc_3day_forecast:202406231230three_day_forecast:cb532016a84f": {
+          "record_index": 42,
+          "release_id": "202406231230three_day_forecast",
+          "sha256": "cb532016a84fec0a5d5e79986d653d1481cfa07eff43427f7827cca956475926"
+        },
+        "noaa_ngdc_3day_forecast:202406240030three_day_forecast:aa8706cfd115": {
+          "record_index": 43,
+          "release_id": "202406240030three_day_forecast",
+          "sha256": "aa8706cfd115b692e536ebdf1dcf4adcd57dc1816f10baa75a3b03eb1ba5d083"
+        },
+        "noaa_ngdc_3day_forecast:202406241230three_day_forecast:d7b27e749d8f": {
+          "record_index": 44,
+          "release_id": "202406241230three_day_forecast",
+          "sha256": "d7b27e749d8f282be2704fb6ddb9da4c3ecd66bd61818e47fd569f50b39584d8"
+        },
+        "noaa_ngdc_3day_forecast:202406250030three_day_forecast:5f273aeb9734": {
+          "record_index": 45,
+          "release_id": "202406250030three_day_forecast",
+          "sha256": "5f273aeb9734bc731cdac499bddb4b811a3cc81a40a06fec1814a68ac1131be7"
+        },
+        "noaa_ngdc_3day_forecast:202406251230three_day_forecast:d11955ec8e1c": {
+          "record_index": 46,
+          "release_id": "202406251230three_day_forecast",
+          "sha256": "d11955ec8e1cb5e57622acac7bcbef766469287cf4816ca5e296695a3d196b6b"
+        },
+        "noaa_ngdc_3day_forecast:202406260030three_day_forecast:8c2abe9c5ce1": {
+          "record_index": 47,
+          "release_id": "202406260030three_day_forecast",
+          "sha256": "8c2abe9c5ce1a9c9877f6db9c694dca87ce06aecc6a8b5e6ff39201c3ab542a1"
+        },
+        "noaa_ngdc_3day_forecast:202406261230three_day_forecast:8383a4660e83": {
+          "record_index": 48,
+          "release_id": "202406261230three_day_forecast",
+          "sha256": "8383a4660e839915d65b68f99fb8df982bf36e4ebdc98acc6ce6befea787ba14"
+        },
+        "noaa_ngdc_3day_forecast:202406270030three_day_forecast:84599492f8c9": {
+          "record_index": 49,
+          "release_id": "202406270030three_day_forecast",
+          "sha256": "84599492f8c92c43e8cdaa434097c87600644061c74a7493acb146cf002101fe"
+        },
+        "noaa_ngdc_3day_forecast:202406271230three_day_forecast:81806afe5ea8": {
+          "record_index": 50,
+          "release_id": "202406271230three_day_forecast",
+          "sha256": "81806afe5ea89cad76c421eb4e1ca4be53b75111e58e806df99b55951e36d609"
+        },
+        "noaa_ngdc_3day_forecast:202406280030three_day_forecast:0207d70ff7a0": {
+          "record_index": 51,
+          "release_id": "202406280030three_day_forecast",
+          "sha256": "0207d70ff7a083209caa01a7f0cf1ad9782e0b02a7562e2d9ef1d939be5a1968"
+        },
+        "noaa_ngdc_3day_forecast:202406281230three_day_forecast:bfa08af7019c": {
+          "record_index": 52,
+          "release_id": "202406281230three_day_forecast",
+          "sha256": "bfa08af7019c8ad4c7edd50981fda48df208de2ab3568ce6a9b5007061db8208"
+        },
+        "noaa_ngdc_3day_forecast:202406290030three_day_forecast:d02c99bf12f9": {
+          "record_index": 53,
+          "release_id": "202406290030three_day_forecast",
+          "sha256": "d02c99bf12f94d6adaca3428db3d67b6d2298fe00292bace4b8eb367bd3def2d"
+        },
+        "noaa_ngdc_3day_forecast:202406291230three_day_forecast:e0623b31d63c": {
+          "record_index": 54,
+          "release_id": "202406291230three_day_forecast",
+          "sha256": "e0623b31d63c947337342c097899b99c384aa24a5c8083a44d9034245273c6de"
+        },
+        "noaa_ngdc_3day_forecast:202406300030three_day_forecast:c0ca7233acfb": {
+          "record_index": 55,
+          "release_id": "202406300030three_day_forecast",
+          "sha256": "c0ca7233acfb6e61c1e3d1af13c4a8bd99003946be6b09e1fb73481d1c6c97d5"
+        },
+        "noaa_ngdc_3day_forecast:202406301230three_day_forecast:e197c6f73d24": {
+          "record_index": 56,
+          "release_id": "202406301230three_day_forecast",
+          "sha256": "e197c6f73d24797f0f084063c5fc0f0ce241057868ac930f1522cb3eb4730ed8"
+        }
+      }
+    },
+    "noaa_ngdc_daypre": {
+      "status": "collected_initial_snapshot",
+      "purpose": "Daily and three-hour forecast channels, distinct from observations",
+      "records_path": "data/source_registry_2024/noaa/records.json",
+      "records_sha256": "edcfdd894d37a990d8f8c236cf06b6cc58f35a92f355f5383995fb19db844cbb",
+      "coverage_path": "data/source_registry_2024/noaa/coverage.json",
+      "coverage_sha256": "97e13e6801bc102ede0ac900bb6f39f761a6b70657d5cb2d4cacf30c964980ec",
+      "record_count": 60,
+      "unique_content_hashes": 60,
+      "channels": [
+        {
+          "channel_id": "mid_latitude_k",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Predicted station/middle-latitude k index, NOT planetary Kp."
+        },
+        {
+          "channel_id": "high_latitude_k",
+          "unit": "1",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Predicted high-latitude k index, NOT planetary Kp."
+        },
+        {
+          "channel_id": "mid_active_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of middle-latitude active conditions."
+        },
+        {
+          "channel_id": "mid_minor_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of middle-latitude minor storm conditions."
+        },
+        {
+          "channel_id": "mid_major_severe_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of middle-latitude major/severe storm conditions."
+        },
+        {
+          "channel_id": "high_active_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of high-latitude active conditions."
+        },
+        {
+          "channel_id": "high_minor_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of high-latitude minor storm conditions."
+        },
+        {
+          "channel_id": "high_major_severe_storm_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of high-latitude major/severe storm conditions."
+        },
+        {
+          "channel_id": "f107",
+          "unit": "sfu",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily 10.7 cm solar radio flux; 1 sfu = 1e-22 W m^-2 Hz^-1."
+        },
+        {
+          "channel_id": "whole_disk_m_flare_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily whole-disk M-class flare probability."
+        },
+        {
+          "channel_id": "whole_disk_x_flare_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily whole-disk X-class flare probability."
+        },
+        {
+          "channel_id": "whole_disk_proton_probability",
+          "unit": "%",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily whole-disk proton-event probability; NOT a timed event or a six-hour probability."
+        }
+      ],
+      "strict_replay_status_counts": {
+        "dated_official_bulletin": 60
+      },
+      "fallback_policy": "Use previously issued still-valid daypre. The 3day product supplies only semantically matching explicitly mapped channels; otherwise retain a gap.",
+      "records": {
+        "noaa_ngdc_daypre:20240430daypre:94b1ef5bda88": {
+          "record_index": 57,
+          "release_id": "20240430daypre",
+          "sha256": "94b1ef5bda881fbd3ad966df551a39c65fbc29f2a61ea6c82a9324e8975738b0"
+        },
+        "noaa_ngdc_daypre:20240501daypre:8be4bb090aeb": {
+          "record_index": 58,
+          "release_id": "20240501daypre",
+          "sha256": "8be4bb090aebf3c9bc9894a56372d08764153a80ce7b260e5a0e491ee8a529d6"
+        },
+        "noaa_ngdc_daypre:20240502daypre:cadaeb8c2ebc": {
+          "record_index": 59,
+          "release_id": "20240502daypre",
+          "sha256": "cadaeb8c2ebcfaa0a0b9599a8629969bc3c9d4d4d89f3e245346efb4f2e5b7d7"
+        },
+        "noaa_ngdc_daypre:20240503daypre:45ddb3f9cf26": {
+          "record_index": 60,
+          "release_id": "20240503daypre",
+          "sha256": "45ddb3f9cf267edf90ef4ad033093e8f1f39dc8824e067507d731f0ae7499a98"
+        },
+        "noaa_ngdc_daypre:20240504daypre:be294b1222dd": {
+          "record_index": 61,
+          "release_id": "20240504daypre",
+          "sha256": "be294b1222dde352bd468ce858fc1b4c8022875ddb90dcdbd5ff47782de5305c"
+        },
+        "noaa_ngdc_daypre:20240505daypre:83051f86707f": {
+          "record_index": 62,
+          "release_id": "20240505daypre",
+          "sha256": "83051f86707ff95d888cdd1a7d0cabae2c4f513dda5481bb32ac57e15ca2774c"
+        },
+        "noaa_ngdc_daypre:20240506daypre:d88777548f2e": {
+          "record_index": 63,
+          "release_id": "20240506daypre",
+          "sha256": "d88777548f2e13a128ee8ce28bfbcfe3a81149c3823a97523826479bd1103787"
+        },
+        "noaa_ngdc_daypre:20240507daypre:6b5201a86459": {
+          "record_index": 64,
+          "release_id": "20240507daypre",
+          "sha256": "6b5201a86459db5d19d8436441bc985c4831d7f1ddfc02965f01af01c73d8f58"
+        },
+        "noaa_ngdc_daypre:20240508daypre:a9c10352baf0": {
+          "record_index": 65,
+          "release_id": "20240508daypre",
+          "sha256": "a9c10352baf09219669386727117c640727fa6b0b1bd3b8ccee05c5cb4f7ea38"
+        },
+        "noaa_ngdc_daypre:20240509daypre:22af1782371c": {
+          "record_index": 66,
+          "release_id": "20240509daypre",
+          "sha256": "22af1782371cdebe283c60bca677c19d75765b327051cfa32e6e7f454bc5fc87"
+        },
+        "noaa_ngdc_daypre:20240510daypre:e8f56a1bf0cf": {
+          "record_index": 67,
+          "release_id": "20240510daypre",
+          "sha256": "e8f56a1bf0cfb55f86f31ac568a137a05851b8d205d018b329cd3ff830800380"
+        },
+        "noaa_ngdc_daypre:20240511daypre:6973dc3828c7": {
+          "record_index": 68,
+          "release_id": "20240511daypre",
+          "sha256": "6973dc3828c7fe0617cfe3f96f03fe93c153a3bc8814271c1bacbc5769906fdd"
+        },
+        "noaa_ngdc_daypre:20240512daypre:47bd5564e027": {
+          "record_index": 69,
+          "release_id": "20240512daypre",
+          "sha256": "47bd5564e027761fe7fce69c44f4541ada5d969654ed38b83199a9e7e2568bb6"
+        },
+        "noaa_ngdc_daypre:20240513daypre:87d7212c93b4": {
+          "record_index": 70,
+          "release_id": "20240513daypre",
+          "sha256": "87d7212c93b409245fd3be4f5b35001c742cfa1d98ee6331837ab5a7dfdd6ffa"
+        },
+        "noaa_ngdc_daypre:20240514daypre:dc68722924b2": {
+          "record_index": 71,
+          "release_id": "20240514daypre",
+          "sha256": "dc68722924b228fe5636fe733acb5039d35cfb4e0b15335bdb2d9fea0750afdc"
+        },
+        "noaa_ngdc_daypre:20240515daypre:d8f7d19a071e": {
+          "record_index": 72,
+          "release_id": "20240515daypre",
+          "sha256": "d8f7d19a071e7183ff6bfb80118f80677c9f955244fe6cd28867b963698da033"
+        },
+        "noaa_ngdc_daypre:20240516daypre:0bfdbcbfbe7d": {
+          "record_index": 73,
+          "release_id": "20240516daypre",
+          "sha256": "0bfdbcbfbe7db6bdfff238f3deded522c4a9e80725151e266ea5e42d527793e8"
+        },
+        "noaa_ngdc_daypre:20240517daypre:a8150f007786": {
+          "record_index": 74,
+          "release_id": "20240517daypre",
+          "sha256": "a8150f007786eda520530c58cec7d1ad25d2615d28266f417925b60ce37a080c"
+        },
+        "noaa_ngdc_daypre:20240518daypre:1fbfddac5d55": {
+          "record_index": 75,
+          "release_id": "20240518daypre",
+          "sha256": "1fbfddac5d55df97530713891585c97e5399ae686774133baf60e46c4be6dd8b"
+        },
+        "noaa_ngdc_daypre:20240519daypre:b909ac8a5379": {
+          "record_index": 76,
+          "release_id": "20240519daypre",
+          "sha256": "b909ac8a5379edc8a318e47729c61a64de724737045f40b5ca9d9da1a83a11f6"
+        },
+        "noaa_ngdc_daypre:20240520daypre:615539f4037f": {
+          "record_index": 77,
+          "release_id": "20240520daypre",
+          "sha256": "615539f4037f9bac21cfa71b94a001d58a09e53ef7cf69d1a0c0b4852e535054"
+        },
+        "noaa_ngdc_daypre:20240521daypre:d6208a2f9106": {
+          "record_index": 78,
+          "release_id": "20240521daypre",
+          "sha256": "d6208a2f9106c6882cd4545d70385ef4e7c78327f50ca9e4f2040d8d82e37ba8"
+        },
+        "noaa_ngdc_daypre:20240522daypre:6a8cbbc06148": {
+          "record_index": 79,
+          "release_id": "20240522daypre",
+          "sha256": "6a8cbbc06148810b7734d941dfbd2fc69288752d78387b1f1d45de493a7e2687"
+        },
+        "noaa_ngdc_daypre:20240523daypre:2fe33e974121": {
+          "record_index": 80,
+          "release_id": "20240523daypre",
+          "sha256": "2fe33e974121d35ee42fb1ae83f628ce8bd3337671130731e25bb3884b2e2394"
+        },
+        "noaa_ngdc_daypre:20240524daypre:47691f714211": {
+          "record_index": 81,
+          "release_id": "20240524daypre",
+          "sha256": "47691f7142112c5417e724f5b10977b6cf59b50ad078a7f48653efba9f36891b"
+        },
+        "noaa_ngdc_daypre:20240525daypre:a74e9615eb4b": {
+          "record_index": 82,
+          "release_id": "20240525daypre",
+          "sha256": "a74e9615eb4b02c4e4cd4899249d3a1f1d0e1dd05f1742ba81dbd01d10051d00"
+        },
+        "noaa_ngdc_daypre:20240526daypre:d464a024605b": {
+          "record_index": 83,
+          "release_id": "20240526daypre",
+          "sha256": "d464a024605b57693429da834cc20720924b947a27c14916bfefba8d25c436ae"
+        },
+        "noaa_ngdc_daypre:20240527daypre:1a0cad00a640": {
+          "record_index": 84,
+          "release_id": "20240527daypre",
+          "sha256": "1a0cad00a640a0510cdac246f26e84d695fd080201827eb713ba39b14657da59"
+        },
+        "noaa_ngdc_daypre:20240528daypre:c10a072f2127": {
+          "record_index": 85,
+          "release_id": "20240528daypre",
+          "sha256": "c10a072f21279f1d91ba2206b2d5f96b1bc10a0c90f2468a8fcb4639dd3f1aad"
+        },
+        "noaa_ngdc_daypre:20240529daypre:1e0efa3447e0": {
+          "record_index": 86,
+          "release_id": "20240529daypre",
+          "sha256": "1e0efa3447e0716503f16ca2efb573bae8bb50ecd5403a126cd1c5c0e60f47bf"
+        },
+        "noaa_ngdc_daypre:20240530daypre:48dedfc14858": {
+          "record_index": 87,
+          "release_id": "20240530daypre",
+          "sha256": "48dedfc148588893e6584354a21a03d1504e431da44c17754c598c4f2067cc61"
+        },
+        "noaa_ngdc_daypre:20240531daypre:4d99b5ae869b": {
+          "record_index": 88,
+          "release_id": "20240531daypre",
+          "sha256": "4d99b5ae869b775f9e1cc8228747a195ae530b3f05477b9d7383eb6732d5c00e"
+        },
+        "noaa_ngdc_daypre:20240602daypre:fe2614d6dfd6": {
+          "record_index": 89,
+          "release_id": "20240602daypre",
+          "sha256": "fe2614d6dfd658eb9cf48a11b0995f1bc2a6e2ea0d4e4c90b4226464e7a20456"
+        },
+        "noaa_ngdc_daypre:20240603daypre:5a4d50865794": {
+          "record_index": 90,
+          "release_id": "20240603daypre",
+          "sha256": "5a4d50865794b2b168a5b492afa2636be8b1a0c80777297813f2f3b8ccc06798"
+        },
+        "noaa_ngdc_daypre:20240604daypre:b54af7b2b2b8": {
+          "record_index": 91,
+          "release_id": "20240604daypre",
+          "sha256": "b54af7b2b2b8bd2def52574d46b7ab3977f8d80b8ef059191f8e11e8e9ae6998"
+        },
+        "noaa_ngdc_daypre:20240605daypre:64f18301b88e": {
+          "record_index": 92,
+          "release_id": "20240605daypre",
+          "sha256": "64f18301b88ed2496e030b5132de3e82b678071b6f1a651b8353615cbb6818e5"
+        },
+        "noaa_ngdc_daypre:20240606daypre:609ec831bc86": {
+          "record_index": 93,
+          "release_id": "20240606daypre",
+          "sha256": "609ec831bc86e45d6ec5d070edaa86a1a38c5de84273aa0372886522be400970"
+        },
+        "noaa_ngdc_daypre:20240607daypre:949d1de81fc7": {
+          "record_index": 94,
+          "release_id": "20240607daypre",
+          "sha256": "949d1de81fc7ab89459b288945f89eaf82a515ff4757bd7b5e5890fd9278cdc5"
+        },
+        "noaa_ngdc_daypre:20240608daypre:941145252d48": {
+          "record_index": 95,
+          "release_id": "20240608daypre",
+          "sha256": "941145252d484f93f1e7c613a94ba391dac1b3e65400150ce3e00e8b49082826"
+        },
+        "noaa_ngdc_daypre:20240609daypre:2d1ff3d14c14": {
+          "record_index": 96,
+          "release_id": "20240609daypre",
+          "sha256": "2d1ff3d14c142e0b75c56ed7577c392bf098956146d4494e6231b8733587163e"
+        },
+        "noaa_ngdc_daypre:20240610daypre:f1f4e1346b29": {
+          "record_index": 97,
+          "release_id": "20240610daypre",
+          "sha256": "f1f4e1346b29e3a035a9aa03295898164cc8f29b84d9b56b175513474fa5b850"
+        },
+        "noaa_ngdc_daypre:20240611daypre:427fbaef24a1": {
+          "record_index": 98,
+          "release_id": "20240611daypre",
+          "sha256": "427fbaef24a190634cfc438c1eb8821c4815433631a0e42fcbed839c30af14e2"
+        },
+        "noaa_ngdc_daypre:20240612daypre:9a9e5613ffa6": {
+          "record_index": 99,
+          "release_id": "20240612daypre",
+          "sha256": "9a9e5613ffa6f56d8cd97282ba49e3341925821c27e855ccd62860bc1cd8802b"
+        },
+        "noaa_ngdc_daypre:20240613daypre:a843a32598e0": {
+          "record_index": 100,
+          "release_id": "20240613daypre",
+          "sha256": "a843a32598e0d5166c9a3f6943ce2a6b26de8216b37382004ab852ff07b46d15"
+        },
+        "noaa_ngdc_daypre:20240614daypre:5c3c1b95d94f": {
+          "record_index": 101,
+          "release_id": "20240614daypre",
+          "sha256": "5c3c1b95d94f182359210c7772f5585ec15773794d08b9b4676c88cf067816ab"
+        },
+        "noaa_ngdc_daypre:20240615daypre:f27732d5f433": {
+          "record_index": 102,
+          "release_id": "20240615daypre",
+          "sha256": "f27732d5f433a5da542bcc2ef325294fea9852502d99deff0f3d7ca54670d2ba"
+        },
+        "noaa_ngdc_daypre:20240616daypre:c3da3696e764": {
+          "record_index": 103,
+          "release_id": "20240616daypre",
+          "sha256": "c3da3696e764a8f5dc5229132ac85d2ea300275b9de57088d6064710df50cc53"
+        },
+        "noaa_ngdc_daypre:20240617daypre:27bbc83add73": {
+          "record_index": 104,
+          "release_id": "20240617daypre",
+          "sha256": "27bbc83add73ce7b298aa79224cc773c59776a2a849e4cc348038e83f75c9852"
+        },
+        "noaa_ngdc_daypre:20240619daypre:b652d0c76e8a": {
+          "record_index": 105,
+          "release_id": "20240619daypre",
+          "sha256": "b652d0c76e8afbf710e24e2ad9ea0cdb14c25ae98261f8bc0cee6e86041cc37a"
+        },
+        "noaa_ngdc_daypre:20240620daypre:74bff7e95ec9": {
+          "record_index": 106,
+          "release_id": "20240620daypre",
+          "sha256": "74bff7e95ec9f6dfebfeeefbcd31ccb6d91d8f89504b07c52d317b858c0d1505"
+        },
+        "noaa_ngdc_daypre:20240621daypre:68339045724f": {
+          "record_index": 107,
+          "release_id": "20240621daypre",
+          "sha256": "68339045724f352ac8c80fff49d10c474d2b4755d49e40f81ef7a769d8a2bfce"
+        },
+        "noaa_ngdc_daypre:20240622daypre:40b9ae746fec": {
+          "record_index": 108,
+          "release_id": "20240622daypre",
+          "sha256": "40b9ae746fec1b38f8e9bc39d0b9f1b33e4aaa83ba85d809e2897a9f62113d15"
+        },
+        "noaa_ngdc_daypre:20240623daypre:76fb068a7a46": {
+          "record_index": 109,
+          "release_id": "20240623daypre",
+          "sha256": "76fb068a7a464acfcb80f517e9e862b85d7ca168e0c25d35f385ba80fb6ded7c"
+        },
+        "noaa_ngdc_daypre:20240624daypre:cf6aaffdd39c": {
+          "record_index": 110,
+          "release_id": "20240624daypre",
+          "sha256": "cf6aaffdd39cb3b64231051c3f5e2cf3793c7bc657d1cf3e1d3bf60f656df91a"
+        },
+        "noaa_ngdc_daypre:20240625daypre:66098c2afaf9": {
+          "record_index": 111,
+          "release_id": "20240625daypre",
+          "sha256": "66098c2afaf9902505aa374a4a8a37636287d2df071dfe4bc3f71d60dddbf2d1"
+        },
+        "noaa_ngdc_daypre:20240626daypre:0fb317086ab3": {
+          "record_index": 112,
+          "release_id": "20240626daypre",
+          "sha256": "0fb317086ab3bda91e1591d77af7ad3617c6e75c5cae5466524145b1b9cef045"
+        },
+        "noaa_ngdc_daypre:20240627daypre:edc6384c6a19": {
+          "record_index": 113,
+          "release_id": "20240627daypre",
+          "sha256": "edc6384c6a191f4afd0acabae554a8df6b52039a236244d2669dcc90aece6b21"
+        },
+        "noaa_ngdc_daypre:20240628daypre:1a285d02bdd3": {
+          "record_index": 114,
+          "release_id": "20240628daypre",
+          "sha256": "1a285d02bdd30ef68c94061ed92dbffdab8a0be995e1e2a1f3877c9a42920cfe"
+        },
+        "noaa_ngdc_daypre:20240629daypre:8405f8e63814": {
+          "record_index": 115,
+          "release_id": "20240629daypre",
+          "sha256": "8405f8e638149f603503acb3150a6d821cfb6871e96a0164d35f73deca86bc5e"
+        },
+        "noaa_ngdc_daypre:20240630daypre:d2d079b234f7": {
+          "record_index": 116,
+          "release_id": "20240630daypre",
+          "sha256": "d2d079b234f79e921e527f8dc74d86e99435f9fad0fd48dda9a8a467f1bb960b"
+        }
+      }
+    },
+    "nasa_jsc_oem": {
+      "status": "collected_initial_snapshot",
+      "purpose": "Historical reconstruction of ISS position/velocity in EME2000 UTC",
+      "records_path": "data/source_registry_2024/nasa_oem/records.json",
+      "records_sha256": "ba330be7a8f3eb3ff363f5ab640a53be20f47208520fc7c1bf002f82a50750bd",
+      "coverage_path": "data/source_registry_2024/nasa_oem/coverage.json",
+      "coverage_sha256": "2cfc0e3267f42818c22b06ada63d6298cde9fae1e2f629d4fd3309fef224f26e",
+      "record_count": 26,
+      "unique_content_hashes": 25,
+      "channels": [
+        {
+          "channel_id": "position",
+          "components": [
+            "x",
+            "y",
+            "z"
+          ],
+          "unit": "km"
+        },
+        {
+          "channel_id": "velocity",
+          "components": [
+            "vx",
+            "vy",
+            "vz"
+          ],
+          "unit": "km/s"
+        }
+      ],
+      "strict_replay_status_counts": {
+        "historical_reconstruction_only": 26
+      },
+      "fallback_policy": "Use another OEM only inside its declared usable interval; keep each segment provenance. No extrapolation and no silent admission into strict replay.",
+      "records": {
+        "nasa_jsc_oem:2024-04-29:ed86a5d4d878": {
+          "record_index": 0,
+          "release_id": "2024-04-29",
+          "sha256": "ed86a5d4d878796c523ddd87028f92af712b4f9435154bbcabcabfe5352e3da2"
+        },
+        "nasa_jsc_oem:2024-05-02:9337242c0562": {
+          "record_index": 1,
+          "release_id": "2024-05-02",
+          "sha256": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce"
+        },
+        "nasa_jsc_oem:2024-05-05:750ef2553023": {
+          "record_index": 2,
+          "release_id": "2024-05-05",
+          "sha256": "750ef25530238b84804039e6b87586f8fe3d2fbf017815deafcae31530b280d9"
+        },
+        "nasa_jsc_oem:2024-05-07:376bee9b3245": {
+          "record_index": 3,
+          "release_id": "2024-05-07",
+          "sha256": "376bee9b32456a317b0d32d159f81b6837c72552077f4e526c160d22baa5cb25"
+        },
+        "nasa_jsc_oem:2024-05-08:a164f5909b9f": {
+          "record_index": 4,
+          "release_id": "2024-05-08",
+          "sha256": "a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce"
+        },
+        "nasa_jsc_oem:2024-05-12:ce3ea506d8a2": {
+          "record_index": 5,
+          "release_id": "2024-05-12",
+          "sha256": "ce3ea506d8a2731fc55bd791f354679bb084b21582128fd4803fe2bad0465082"
+        },
+        "nasa_jsc_oem:2024-05-13:16a920292e2f": {
+          "record_index": 6,
+          "release_id": "2024-05-13",
+          "sha256": "16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc"
+        },
+        "nasa_jsc_oem:2024-05-14:16a920292e2f": {
+          "record_index": 7,
+          "release_id": "2024-05-14",
+          "sha256": "16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc"
+        },
+        "nasa_jsc_oem:2024-05-15:b6005d4b1e86": {
+          "record_index": 8,
+          "release_id": "2024-05-15",
+          "sha256": "b6005d4b1e8655bc51166aa8a5a7c064b89fa0a317f6eed70f6d39d78be9d4b1"
+        },
+        "nasa_jsc_oem:2024-05-17:c27c3b8acb46": {
+          "record_index": 9,
+          "release_id": "2024-05-17",
+          "sha256": "c27c3b8acb4618ffb66c98515285b6e11b95914cdc71073319f2c57cb10c1970"
+        },
+        "nasa_jsc_oem:2024-05-20:90c71861e3df": {
+          "record_index": 10,
+          "release_id": "2024-05-20",
+          "sha256": "90c71861e3df0aa1398d920681d7ccc38e0d44c0885ea2816c3d5b5811db37a3"
+        },
+        "nasa_jsc_oem:2024-05-23:8ee1b70e8aeb": {
+          "record_index": 11,
+          "release_id": "2024-05-23",
+          "sha256": "8ee1b70e8aebe5f58938885d278cafad28da46f753abe8851c832af612d0597b"
+        },
+        "nasa_jsc_oem:2024-05-28:488c29c3dd7b": {
+          "record_index": 12,
+          "release_id": "2024-05-28",
+          "sha256": "488c29c3dd7b51024e5514b858a2b85308a61df0f965c8a09b82a15dc3a940a2"
+        },
+        "nasa_jsc_oem:2024-05-29:180276a4f6af": {
+          "record_index": 13,
+          "release_id": "2024-05-29",
+          "sha256": "180276a4f6afba9785a69206418dd271abaf384688158eb071c07487bc5de7d9"
+        },
+        "nasa_jsc_oem:2024-06-01:76a85580c503": {
+          "record_index": 14,
+          "release_id": "2024-06-01",
+          "sha256": "76a85580c503a5bf9ea6118fac6d01150512b7ed2929a7945415de804a731c00"
+        },
+        "nasa_jsc_oem:2024-06-05:86d9b4020383": {
+          "record_index": 15,
+          "release_id": "2024-06-05",
+          "sha256": "86d9b4020383c996f91088d89eadb1cdacba6baeb51666008a95b0caa5d39405"
+        },
+        "nasa_jsc_oem:2024-06-07:83a1a0ff6ad3": {
+          "record_index": 16,
+          "release_id": "2024-06-07",
+          "sha256": "83a1a0ff6ad3bad708bcc54e7ba00767d563f28375c23a540a4f3c75ca41a5dd"
+        },
+        "nasa_jsc_oem:2024-06-11:6375f371b39a": {
+          "record_index": 17,
+          "release_id": "2024-06-11",
+          "sha256": "6375f371b39aa40f0ae45e90d538ffef897fedef9edcb825b7e4ce6fc034121b"
+        },
+        "nasa_jsc_oem:2024-06-13:336b1b83386f": {
+          "record_index": 18,
+          "release_id": "2024-06-13",
+          "sha256": "336b1b83386f4f5f8cb59a037d053aea81d91da35f6f8b080a8d7fda5aeb8635"
+        },
+        "nasa_jsc_oem:2024-06-14:7c46abd8eb55": {
+          "record_index": 19,
+          "release_id": "2024-06-14",
+          "sha256": "7c46abd8eb55e430bd9c97f35d2399303f1b68bf058f7771e4bd443101b9571e"
+        },
+        "nasa_jsc_oem:2024-06-18:8e9b95f56a10": {
+          "record_index": 20,
+          "release_id": "2024-06-18",
+          "sha256": "8e9b95f56a1097028e5b084ec9956acc9fb8080413fc3c6b5c6ccdb8248617c6"
+        },
+        "nasa_jsc_oem:2024-06-19:0917888a9028": {
+          "record_index": 21,
+          "release_id": "2024-06-19",
+          "sha256": "0917888a90280e4a51c50241f4314d80f05301b1a9d3990adafb640c9e6f4e63"
+        },
+        "nasa_jsc_oem:2024-06-21:48f4a9448767": {
+          "record_index": 22,
+          "release_id": "2024-06-21",
+          "sha256": "48f4a944876775647a3c4c1ea821770916314ebde68a043679ac64860d264e07"
+        },
+        "nasa_jsc_oem:2024-06-24:e0785fd963f7": {
+          "record_index": 23,
+          "release_id": "2024-06-24",
+          "sha256": "e0785fd963f7ddd8d0de7555af4ff57b22034c9d063e2bba20826d789af68ff2"
+        },
+        "nasa_jsc_oem:2024-06-27:6f869f44dc00": {
+          "record_index": 24,
+          "release_id": "2024-06-27",
+          "sha256": "6f869f44dc005448148a0a493f05ad8ad23d59522bd50effabb6a7a74db1b3da"
+        },
+        "nasa_jsc_oem:2024-06-28:a532fbf65e18": {
+          "record_index": 25,
+          "release_id": "2024-06-28",
+          "sha256": "a532fbf65e1837b43397420c79b1a821d404e8e710864503b1d9158f65c4aa78"
+        }
+      }
+    },
+    "nasa_donki_notification": {
+      "status": "collected_initial_snapshot",
+      "purpose": "Dated research notifications pending physical scope/validity audit",
+      "records_path": "data/source_registry_2024/donki/records.json",
+      "records_sha256": "65e48cc04f2fe99db82f3469d64e37598dbc9e28fa8477c9849769585b2e570e",
+      "coverage_path": "data/source_registry_2024/donki/coverage.json",
+      "coverage_sha256": "bfcbc1377f3d47de5b44cc93273998ea605d353ff419723bbc2b46e032905489",
+      "record_count": 247,
+      "unique_content_hashes": 247,
+      "channels": [],
+      "strict_replay_status_counts": {
+        "dated_notification_pending_content_and_version_audit": 247
+      },
+      "fallback_policy": "Use retained exact response snapshot; absence of messages is not a physical all-clear. Mutable parent event cards cannot fill missing historical revisions.",
+      "records": {
+        "nasa_donki_notification:20240430-AL-001:02e36900035e": {
+          "record_index": 0,
+          "release_id": "20240430-AL-001",
+          "sha256": "02e36900035ee4d3f4446089a36dc155a9178c361c437cf5f470c6f00c7ecac2"
+        },
+        "nasa_donki_notification:20240430-AL-002:4ab2ba02b180": {
+          "record_index": 1,
+          "release_id": "20240430-AL-002",
+          "sha256": "4ab2ba02b1805935cd9aa467c3c9a8a3bee453d5fa30f1547548725ba3ebcffa"
+        },
+        "nasa_donki_notification:20240501-AL-001:4d130fe06fc8": {
+          "record_index": 2,
+          "release_id": "20240501-AL-001",
+          "sha256": "4d130fe06fc8f1477d61f0fc7c2168a55cb7b9acded3c2f8ba1b15482c7f8bd7"
+        },
+        "nasa_donki_notification:20240501-AL-002:9414ad07c2ef": {
+          "record_index": 3,
+          "release_id": "20240501-AL-002",
+          "sha256": "9414ad07c2efe0df6ef83329c73332f27eb00f1edd1c5d8e811087427ec229df"
+        },
+        "nasa_donki_notification:20240501-7D-001:20932dd64e28": {
+          "record_index": 4,
+          "release_id": "20240501-7D-001",
+          "sha256": "20932dd64e2890e658ecd88fb391125a9c9495b6b2a0d1313322d9f30f0f3fab"
+        },
+        "nasa_donki_notification:20240502-AL-001:a1e858ee53d6": {
+          "record_index": 5,
+          "release_id": "20240502-AL-001",
+          "sha256": "a1e858ee53d6990a5fa1a9449d934e81a1708e6c3e4efe3cc329b3cf91c80147"
+        },
+        "nasa_donki_notification:20240502-AL-002:7234f6a6d090": {
+          "record_index": 6,
+          "release_id": "20240502-AL-002",
+          "sha256": "7234f6a6d09011d328634732d5b7def3b3dd6ed0a680440b14d95b48ba059e63"
+        },
+        "nasa_donki_notification:20240502-AL-003:8222296c9b61": {
+          "record_index": 7,
+          "release_id": "20240502-AL-003",
+          "sha256": "8222296c9b61cf68ecb67509d2323a54deb0f6e272c5f31123e0ee78ecac763b"
+        },
+        "nasa_donki_notification:20240502-AL-004:085a6d789233": {
+          "record_index": 8,
+          "release_id": "20240502-AL-004",
+          "sha256": "085a6d7892336641d7bf654d6c5ef42805dfe67b0e2b729f738c34e0af3be73f"
+        },
+        "nasa_donki_notification:20240502-AL-005:4ebfb9e25e03": {
+          "record_index": 9,
+          "release_id": "20240502-AL-005",
+          "sha256": "4ebfb9e25e039eb908cf814d0c0b8949559f9307c862106fa640f4abe6373bd1"
+        },
+        "nasa_donki_notification:20240502-AL-006:526dc2f2b6ee": {
+          "record_index": 10,
+          "release_id": "20240502-AL-006",
+          "sha256": "526dc2f2b6ee7c8774a735a4f1f619f3358d7f6583be7f31f4ee614689a74fb7"
+        },
+        "nasa_donki_notification:20240503-AL-001:82759bd8ef2d": {
+          "record_index": 11,
+          "release_id": "20240503-AL-001",
+          "sha256": "82759bd8ef2ddbedd71cd9b7e6eec398f3c4161bde61ab1e2343922726aaff8c"
+        },
+        "nasa_donki_notification:20240503-AL-002:c1860613cccd": {
+          "record_index": 12,
+          "release_id": "20240503-AL-002",
+          "sha256": "c1860613cccd995807ac21d5d3c83189f716caef823b83fa0f8cc82bf89a4f6f"
+        },
+        "nasa_donki_notification:20240503-AL-003:8be074c4aadd": {
+          "record_index": 13,
+          "release_id": "20240503-AL-003",
+          "sha256": "8be074c4aadddba862c9699ed97045b848741859a68095d64680ef15896409b4"
+        },
+        "nasa_donki_notification:20240504-AL-001:d1b7c4eb2a19": {
+          "record_index": 14,
+          "release_id": "20240504-AL-001",
+          "sha256": "d1b7c4eb2a193b13ed7bd1e3d243c8eb94557053ef950f0fe5ed2770c967fad3"
+        },
+        "nasa_donki_notification:20240504-AL-002:bdce5883c654": {
+          "record_index": 15,
+          "release_id": "20240504-AL-002",
+          "sha256": "bdce5883c654decbe288c40f809b161ac7aba70bf4b9704bff939f9770c28f24"
+        },
+        "nasa_donki_notification:20240504-AL-003:1b5119031f3a": {
+          "record_index": 16,
+          "release_id": "20240504-AL-003",
+          "sha256": "1b5119031f3ab18a0af46f83fd811f9cecbd854e6c52ed23acaf826e4beb304b"
+        },
+        "nasa_donki_notification:20240504-AL-004:1784a77dfff5": {
+          "record_index": 17,
+          "release_id": "20240504-AL-004",
+          "sha256": "1784a77dfff54db158655b04fc401a2cfd3f11dc8234672e6d38bfc4d07b01b7"
+        },
+        "nasa_donki_notification:20240504-AL-005:f85bd3fa3ae2": {
+          "record_index": 18,
+          "release_id": "20240504-AL-005",
+          "sha256": "f85bd3fa3ae287f5c5ba871ba28893398dface92a2037e7dfa83e732324f0f2c"
+        },
+        "nasa_donki_notification:20240505-AL-001:0ad09b1f12d3": {
+          "record_index": 19,
+          "release_id": "20240505-AL-001",
+          "sha256": "0ad09b1f12d327ca9ee357893d594a8659e5a07919ce3905788b9feae6fc3808"
+        },
+        "nasa_donki_notification:20240505-AL-002:b0c422b0339f": {
+          "record_index": 20,
+          "release_id": "20240505-AL-002",
+          "sha256": "b0c422b0339f9628f462d26accef2ed53c8c90fe21a0ef93f26f78f81afcb0b6"
+        },
+        "nasa_donki_notification:20240505-AL-003:12af4696c969": {
+          "record_index": 21,
+          "release_id": "20240505-AL-003",
+          "sha256": "12af4696c969de4d69efc2a07228c620b5048b7b04170b2f5b8026c89d4b39f6"
+        },
+        "nasa_donki_notification:20240505-AL-004:2014584c57af": {
+          "record_index": 22,
+          "release_id": "20240505-AL-004",
+          "sha256": "2014584c57afb0d797c9bfe2976d545bc6b9ce367f2e14146f03ab1e12cd3183"
+        },
+        "nasa_donki_notification:20240505-AL-005:567d88d1af4d": {
+          "record_index": 23,
+          "release_id": "20240505-AL-005",
+          "sha256": "567d88d1af4d4a6bdacc4237b1156f11454965367ea38f08deb9b0c86f9975c9"
+        },
+        "nasa_donki_notification:20240505-AL-006:ca617887c0b8": {
+          "record_index": 24,
+          "release_id": "20240505-AL-006",
+          "sha256": "ca617887c0b8bc6fb3b7dab1baf67bd2f4886b25ecdb4e9b038758c4b8fe1fc0"
+        },
+        "nasa_donki_notification:20240505-AL-007:db1a2dc53b13": {
+          "record_index": 25,
+          "release_id": "20240505-AL-007",
+          "sha256": "db1a2dc53b13567ee6edd227483e1f3d80084e753bcdfac10fc18aded90cf40e"
+        },
+        "nasa_donki_notification:20240505-AL-008:8a09b9a17d6c": {
+          "record_index": 26,
+          "release_id": "20240505-AL-008",
+          "sha256": "8a09b9a17d6cedbe4ace1364e25eca603bfbd6dbb17ffda3bcc4bcd08c9be6b0"
+        },
+        "nasa_donki_notification:20240505-AL-009:327085ecd190": {
+          "record_index": 27,
+          "release_id": "20240505-AL-009",
+          "sha256": "327085ecd19061a0a903333eaf9dbe62cb5fb4eb5787ff99ce8e06876683b633"
+        },
+        "nasa_donki_notification:20240505-AL-010:f1bd78bf3202": {
+          "record_index": 28,
+          "release_id": "20240505-AL-010",
+          "sha256": "f1bd78bf3202e74de048481a8e348ba0bfca98acafed29bed3523c430c5ced22"
+        },
+        "nasa_donki_notification:20240506-AL-001:f6c066c297f6": {
+          "record_index": 29,
+          "release_id": "20240506-AL-001",
+          "sha256": "f6c066c297f6ba9b63d179d1805215d95c599c1490894a66eb1fef20f12e38ac"
+        },
+        "nasa_donki_notification:20240506-AL-002:08292f3cdd26": {
+          "record_index": 30,
+          "release_id": "20240506-AL-002",
+          "sha256": "08292f3cdd2680f3eabcc35ff56a1c0c777cd2d9d10572244343ab37f6efcda1"
+        },
+        "nasa_donki_notification:20240507-AL-001:7a7c053277dd": {
+          "record_index": 31,
+          "release_id": "20240507-AL-001",
+          "sha256": "7a7c053277ddf7b922a93b01350b603cbd5551aaefd4d5efc15bfdbe809f9aad"
+        },
+        "nasa_donki_notification:20240507-AL-002:de8e01121bc4": {
+          "record_index": 32,
+          "release_id": "20240507-AL-002",
+          "sha256": "de8e01121bc43d6c845d561cbbe4ce986cae673f09b24d990c5749fa3ed4ecea"
+        },
+        "nasa_donki_notification:20240507-AL-003:b39eaa543feb": {
+          "record_index": 33,
+          "release_id": "20240507-AL-003",
+          "sha256": "b39eaa543feb44f121a1d2124786dd69370f09c324c14991eede9c63ea782a1c"
+        },
+        "nasa_donki_notification:20240507-AL-004:2b6a566ab145": {
+          "record_index": 34,
+          "release_id": "20240507-AL-004",
+          "sha256": "2b6a566ab1454933b131ec7f9f28712a64f33fd4f003e45f1d0708bafb969add"
+        },
+        "nasa_donki_notification:20240508-AL-001:ccc81e6ee669": {
+          "record_index": 35,
+          "release_id": "20240508-AL-001",
+          "sha256": "ccc81e6ee669dd8ac4788c3a0fe0de51a87ab6ea51dee92c12e779263859c670"
+        },
+        "nasa_donki_notification:20240508-AL-002:efa52158a980": {
+          "record_index": 36,
+          "release_id": "20240508-AL-002",
+          "sha256": "efa52158a980166c2bb22ce8e12df90372ad19be7785a4b1d6403ab678e3b857"
+        },
+        "nasa_donki_notification:20240508-AL-003:5785b8cc4e47": {
+          "record_index": 37,
+          "release_id": "20240508-AL-003",
+          "sha256": "5785b8cc4e47635f0de6c4ff445b5e399c3d2152493c75a6ed790d8d778f00c9"
+        },
+        "nasa_donki_notification:20240508-AL-004:eccd8d6d272d": {
+          "record_index": 38,
+          "release_id": "20240508-AL-004",
+          "sha256": "eccd8d6d272d7a7eead072b89f3fab7bcbf612fa6cf752fdf724676127bf4e22"
+        },
+        "nasa_donki_notification:20240508-AL-005:2f7898d33675": {
+          "record_index": 39,
+          "release_id": "20240508-AL-005",
+          "sha256": "2f7898d33675a328921aecbecdaf1abdde89b92f5402d278b41976ff9a68eff4"
+        },
+        "nasa_donki_notification:20240508-AL-006:988ffe5a5880": {
+          "record_index": 40,
+          "release_id": "20240508-AL-006",
+          "sha256": "988ffe5a5880872acd1b46a910dea9f308fbace665724b12b08de058c50f7fa6"
+        },
+        "nasa_donki_notification:20240508-AL-007:c27cdd015f82": {
+          "record_index": 41,
+          "release_id": "20240508-AL-007",
+          "sha256": "c27cdd015f822d7177e9d93f2c9eb37b3cc3d1d4ab0db3fdfc01e85dda231053"
+        },
+        "nasa_donki_notification:20240508-AL-008:a62f3e9f97d8": {
+          "record_index": 42,
+          "release_id": "20240508-AL-008",
+          "sha256": "a62f3e9f97d8b3f176cbf74be8b4acb7cf34ee616153a08ec3261a1809981129"
+        },
+        "nasa_donki_notification:20240508-AL-009:0cb007c3d2d0": {
+          "record_index": 43,
+          "release_id": "20240508-AL-009",
+          "sha256": "0cb007c3d2d0a3657c515e9446db8eb6e9473cbc74370dec6c7de879856b54ee"
+        },
+        "nasa_donki_notification:20240508-AL-010:bb2a311707ec": {
+          "record_index": 44,
+          "release_id": "20240508-AL-010",
+          "sha256": "bb2a311707eceafd99ce72deec11f980705bf910715c93a9f23183a70a26eecb"
+        },
+        "nasa_donki_notification:20240508-AL-011:90a872ba837f": {
+          "record_index": 45,
+          "release_id": "20240508-AL-011",
+          "sha256": "90a872ba837f4933114eadf8f727ceeb4aa75b67df4dd4df78aa61b782139aa9"
+        },
+        "nasa_donki_notification:20240508-AL-012:00f500121857": {
+          "record_index": 46,
+          "release_id": "20240508-AL-012",
+          "sha256": "00f500121857565e70c53e30bfb9ac39370906e26407addbd0498a50b3515317"
+        },
+        "nasa_donki_notification:20240508-7D-001:7afdb22d7c60": {
+          "record_index": 47,
+          "release_id": "20240508-7D-001",
+          "sha256": "7afdb22d7c6030bc0f3be1b100dd25dcf56cfb2f28a92bd72109ef03ed94e491"
+        },
+        "nasa_donki_notification:20240508-AL-013:3754e8e75832": {
+          "record_index": 48,
+          "release_id": "20240508-AL-013",
+          "sha256": "3754e8e75832d09e6791aad07d972ad56f0d7f5b163245150543671e74e835a6"
+        },
+        "nasa_donki_notification:20240508-AL-014:7b1b26be41cb": {
+          "record_index": 49,
+          "release_id": "20240508-AL-014",
+          "sha256": "7b1b26be41cbb04a91df909ab5ef25858d4b4b4d3f48f0cffcd98a01db1472c4"
+        },
+        "nasa_donki_notification:20240509-AL-001:7e52bd88c3d8": {
+          "record_index": 50,
+          "release_id": "20240509-AL-001",
+          "sha256": "7e52bd88c3d84e08b141e2b12a4aed343b95cb0e9757d8fab3632a0def543eae"
+        },
+        "nasa_donki_notification:20240509-AL-002:9f24c0f733af": {
+          "record_index": 51,
+          "release_id": "20240509-AL-002",
+          "sha256": "9f24c0f733afbb78cfbf92d493b5a6cb8044020724b8a344b8fde699216d00ce"
+        },
+        "nasa_donki_notification:20240509-AL-003:718197e41ad8": {
+          "record_index": 52,
+          "release_id": "20240509-AL-003",
+          "sha256": "718197e41ad865fb6218e6a51d7b345aa8692c91d45729cd7a921d5a09ade65f"
+        },
+        "nasa_donki_notification:20240509-AL-004:26d669747c68": {
+          "record_index": 53,
+          "release_id": "20240509-AL-004",
+          "sha256": "26d669747c68de807a846d3dcf8f33a95e8ee4998de303c07aa012e1d8e81b12"
+        },
+        "nasa_donki_notification:20240509-AL-005:52705644d239": {
+          "record_index": 54,
+          "release_id": "20240509-AL-005",
+          "sha256": "52705644d23998bf1970315f34fcc1c2c1bfd3295550b71bc78ffc0c13c42e35"
+        },
+        "nasa_donki_notification:20240509-AL-006:cc5e6d6ee3f0": {
+          "record_index": 55,
+          "release_id": "20240509-AL-006",
+          "sha256": "cc5e6d6ee3f009ad5a3d7e54b32a503e499a5616daaac74cc33d32eee0bf41b0"
+        },
+        "nasa_donki_notification:20240509-AL-007:7e5202b7d244": {
+          "record_index": 56,
+          "release_id": "20240509-AL-007",
+          "sha256": "7e5202b7d2442c806ebc148b8e3fcde8eac5a8dd6a7470a79aa50d2ee6ca0939"
+        },
+        "nasa_donki_notification:20240509-AL-008:3b32b722a466": {
+          "record_index": 57,
+          "release_id": "20240509-AL-008",
+          "sha256": "3b32b722a466f4acc7d0fa7c2f7c1363e116a01d09ed41ed220bfa14425a407c"
+        },
+        "nasa_donki_notification:20240509-AL-009:00b7484fe27a": {
+          "record_index": 58,
+          "release_id": "20240509-AL-009",
+          "sha256": "00b7484fe27ad3a29df533099dc649bafd004cc03f7c47a33b1d8d8c89de540a"
+        },
+        "nasa_donki_notification:20240509-AL-010:48845db3a98b": {
+          "record_index": 59,
+          "release_id": "20240509-AL-010",
+          "sha256": "48845db3a98b25b134bd0719104e06395f02011f69ee2cc414c68cc5af6d8fbd"
+        },
+        "nasa_donki_notification:20240509-AL-011:47b5baacfa28": {
+          "record_index": 60,
+          "release_id": "20240509-AL-011",
+          "sha256": "47b5baacfa28e67f0835049c625a55b43a08a30f8d11fb85c327e1785f49caec"
+        },
+        "nasa_donki_notification:20240510-AL-001:579bd22b7ed5": {
+          "record_index": 61,
+          "release_id": "20240510-AL-001",
+          "sha256": "579bd22b7ed59ff039ccc485b6991132394bbf30f274cba8f889e6b20d7b1df5"
+        },
+        "nasa_donki_notification:20240510-AL-002:167b50e605c2": {
+          "record_index": 62,
+          "release_id": "20240510-AL-002",
+          "sha256": "167b50e605c263cdadd8bff95f3b1b626b77f38cae5e132d332e99ea6bb966cd"
+        },
+        "nasa_donki_notification:20240510-AL-003:6630a02f98ab": {
+          "record_index": 63,
+          "release_id": "20240510-AL-003",
+          "sha256": "6630a02f98ab50a6b6ca36ac26bde4025a47dc246c72e1a3389b019a8cfbe8f6"
+        },
+        "nasa_donki_notification:20240510-AL-004:c3955880cb5f": {
+          "record_index": 64,
+          "release_id": "20240510-AL-004",
+          "sha256": "c3955880cb5fb4102fd450ba04e4774b91a5782888daafeaa6675b2070d985ac"
+        },
+        "nasa_donki_notification:20240510-AL-005:c306c7374c0f": {
+          "record_index": 65,
+          "release_id": "20240510-AL-005",
+          "sha256": "c306c7374c0f64ef6104b34ad7bf73b851ef0adf55de89148ae2e2c2c6774bff"
+        },
+        "nasa_donki_notification:20240510-AL-006:8e1b80b910d7": {
+          "record_index": 66,
+          "release_id": "20240510-AL-006",
+          "sha256": "8e1b80b910d7cc5333c4f9df2aadf301efc715bc0b0edfba37ba540097a7b40c"
+        },
+        "nasa_donki_notification:20240510-AL-007:bc8c1c5ce966": {
+          "record_index": 67,
+          "release_id": "20240510-AL-007",
+          "sha256": "bc8c1c5ce9666c8cff0147fb9344e503ee9be4bbf09f99b751d4109f898da6d2"
+        },
+        "nasa_donki_notification:20240510-AL-008:2af002bf5038": {
+          "record_index": 68,
+          "release_id": "20240510-AL-008",
+          "sha256": "2af002bf50387a3934aeb3fc96dbe27558a4bca05d975e43d0d9f06000fed501"
+        },
+        "nasa_donki_notification:20240510-AL-009:c4143eb25702": {
+          "record_index": 69,
+          "release_id": "20240510-AL-009",
+          "sha256": "c4143eb257027529ac0b7a1a04c261d0c7348657b261150d21c00548043ac20d"
+        },
+        "nasa_donki_notification:20240510-AL-010:3fa0f05d9c1d": {
+          "record_index": 70,
+          "release_id": "20240510-AL-010",
+          "sha256": "3fa0f05d9c1db5230116e63f1c263c3956a2ed8e417ccef2d2c06754fdf476a8"
+        },
+        "nasa_donki_notification:20240510-AL-011:879f5537b6c6": {
+          "record_index": 71,
+          "release_id": "20240510-AL-011",
+          "sha256": "879f5537b6c6df00f32ffe25a8235a39db319ee85385172e6b7ddca9734d9c83"
+        },
+        "nasa_donki_notification:20240510-AL-012:eb81004eeab1": {
+          "record_index": 72,
+          "release_id": "20240510-AL-012",
+          "sha256": "eb81004eeab10384531141cee36d79bc4c0ac31acbdf88301437387ff49b994e"
+        },
+        "nasa_donki_notification:20240510-AL-013:16a20180ac73": {
+          "record_index": 73,
+          "release_id": "20240510-AL-013",
+          "sha256": "16a20180ac73873208afb41e34f2ac724e9722cca8cdcafb7d7ceb2abe8c4a72"
+        },
+        "nasa_donki_notification:20240510-AL-014:afc20dece474": {
+          "record_index": 74,
+          "release_id": "20240510-AL-014",
+          "sha256": "afc20dece4742a3a3df179eb6bffdda18dd7ddedf819cd58aadcf3f676b19fd4"
+        },
+        "nasa_donki_notification:20240510-AL-015:d70cbb0081b9": {
+          "record_index": 75,
+          "release_id": "20240510-AL-015",
+          "sha256": "d70cbb0081b9155b91a5bc6d88e2e94050210ff840499ce805b98ebe2061dba7"
+        },
+        "nasa_donki_notification:20240510-AL-016:e1efdc16fefa": {
+          "record_index": 76,
+          "release_id": "20240510-AL-016",
+          "sha256": "e1efdc16fefa21038a032fe0f8a53ccd2ed79e100a39df96470a49e363666635"
+        },
+        "nasa_donki_notification:20240510-AL-017:42dd8a668a00": {
+          "record_index": 77,
+          "release_id": "20240510-AL-017",
+          "sha256": "42dd8a668a00b920ba97ebc430e047ccbb7e8ff628da20d98b9b5da293d8885d"
+        },
+        "nasa_donki_notification:20240511-AL-001:b88412996ea6": {
+          "record_index": 78,
+          "release_id": "20240511-AL-001",
+          "sha256": "b88412996ea64044b0c91615428690d4455d890d9ba680a7f9a8d44a70842de0"
+        },
+        "nasa_donki_notification:20240511-AL-002:3fb580f308b0": {
+          "record_index": 79,
+          "release_id": "20240511-AL-002",
+          "sha256": "3fb580f308b0352c717c948c41e37cd3d0f09ac890faf1b3bfb68b755bcac439"
+        },
+        "nasa_donki_notification:20240511-AL-003:3bb7ed12bf2d": {
+          "record_index": 80,
+          "release_id": "20240511-AL-003",
+          "sha256": "3bb7ed12bf2d500a111ec2752d9ee2f6e0a504633186972bc8a48c9372a897da"
+        },
+        "nasa_donki_notification:20240511-AL-004:fcb26a96ef73": {
+          "record_index": 81,
+          "release_id": "20240511-AL-004",
+          "sha256": "fcb26a96ef739128b8a82733a423c4b3c869fc82ae8237cddb5bbe183cfc8834"
+        },
+        "nasa_donki_notification:20240511-AL-005:ddb5854c959d": {
+          "record_index": 82,
+          "release_id": "20240511-AL-005",
+          "sha256": "ddb5854c959dea154e4c593d9c1402071a9e946965d03faa446882571cf4c9a6"
+        },
+        "nasa_donki_notification:20240511-AL-006:a6c59f7306b0": {
+          "record_index": 83,
+          "release_id": "20240511-AL-006",
+          "sha256": "a6c59f7306b0a214536e3421273ee3f3542ba67349cff18ef1e7fbc0362597c2"
+        },
+        "nasa_donki_notification:20240511-AL-007:b6de2246ef35": {
+          "record_index": 84,
+          "release_id": "20240511-AL-007",
+          "sha256": "b6de2246ef35ced5ff77ac610655e28838d2e4f3912a72a97196f63e550658b8"
+        },
+        "nasa_donki_notification:20240511-AL-008:2ef7557b5ac4": {
+          "record_index": 85,
+          "release_id": "20240511-AL-008",
+          "sha256": "2ef7557b5ac468f57a550b3ce224de4a441f6c4f46f5deff1f839d206ad396f8"
+        },
+        "nasa_donki_notification:20240511-AL-009:b08a11bbdcef": {
+          "record_index": 86,
+          "release_id": "20240511-AL-009",
+          "sha256": "b08a11bbdcef71fe4d45443a44cffbb100ddb8a97fc793b412a9857ad984fee5"
+        },
+        "nasa_donki_notification:20240511-AL-010:b16b2c655f2e": {
+          "record_index": 87,
+          "release_id": "20240511-AL-010",
+          "sha256": "b16b2c655f2e84472d83bf1296c7be0da678390a838335a3ec2c61cf90b167b2"
+        },
+        "nasa_donki_notification:20240511-AL-011:cc82a7032b8e": {
+          "record_index": 88,
+          "release_id": "20240511-AL-011",
+          "sha256": "cc82a7032b8e894a6a2ba75ad5e36f12dbdff187f002b0c1342c7ef2481ee96d"
+        },
+        "nasa_donki_notification:20240511-AL-012:810cb1844531": {
+          "record_index": 89,
+          "release_id": "20240511-AL-012",
+          "sha256": "810cb1844531d0a8f282beb116e82a65fb90db588dd4e008d3b9be7414ce734f"
+        },
+        "nasa_donki_notification:20240511-AL-013:47916877a488": {
+          "record_index": 90,
+          "release_id": "20240511-AL-013",
+          "sha256": "47916877a488e0e8b341229014ccbe74634637fbeada14e7b1f423f51519c51c"
+        },
+        "nasa_donki_notification:20240511-AL-014:03fa81f99b40": {
+          "record_index": 91,
+          "release_id": "20240511-AL-014",
+          "sha256": "03fa81f99b401044740186777f0fb172997fb308a34d76760465ea81d55662fe"
+        },
+        "nasa_donki_notification:20240511-AL-015:a744af975757": {
+          "record_index": 92,
+          "release_id": "20240511-AL-015",
+          "sha256": "a744af9757573b5d32a01798b53bfca251400d1b52f647de0b7a72ba82e9ebff"
+        },
+        "nasa_donki_notification:20240511-AL-016:50f10366c736": {
+          "record_index": 93,
+          "release_id": "20240511-AL-016",
+          "sha256": "50f10366c73648e7413431b2f21841c6d13863b24f7ef4e150151af973b730a7"
+        },
+        "nasa_donki_notification:20240511-AL-017:3a8249464704": {
+          "record_index": 94,
+          "release_id": "20240511-AL-017",
+          "sha256": "3a8249464704f917bdc0ff544b105753ae4738e7b09870708f7344884640543a"
+        },
+        "nasa_donki_notification:20240512-AL-001:d5a50f0bc329": {
+          "record_index": 95,
+          "release_id": "20240512-AL-001",
+          "sha256": "d5a50f0bc329b9c546fe616a71971bc0fe0bf96907c46dac65eb3f2ece763bf1"
+        },
+        "nasa_donki_notification:20240512-AL-002:867325f9a0b1": {
+          "record_index": 96,
+          "release_id": "20240512-AL-002",
+          "sha256": "867325f9a0b1e53c80c39f54d799ee76357e6df1f0d51c41ac06628cbefa7502"
+        },
+        "nasa_donki_notification:20240512-AL-003:100baf0ee053": {
+          "record_index": 97,
+          "release_id": "20240512-AL-003",
+          "sha256": "100baf0ee053fe768d58f5a22a0ce62bd9b066b6d60e3affaf23edd1116f3c5a"
+        },
+        "nasa_donki_notification:20240512-AL-004:9b04766824c2": {
+          "record_index": 98,
+          "release_id": "20240512-AL-004",
+          "sha256": "9b04766824c22cca9b61892494f9afb1703af24ca9fa5d53d504956e5dcdd148"
+        },
+        "nasa_donki_notification:20240513-AL-001:2d36bf30cdf2": {
+          "record_index": 99,
+          "release_id": "20240513-AL-001",
+          "sha256": "2d36bf30cdf23b26727e9ceafa6da60facc47f9283a958a5122ab3dd401beb01"
+        },
+        "nasa_donki_notification:20240513-AL-002:55c34b302ec3": {
+          "record_index": 100,
+          "release_id": "20240513-AL-002",
+          "sha256": "55c34b302ec34a84d85ee357480226bcbd1742503a9614fdaa0b6b7324655726"
+        },
+        "nasa_donki_notification:20240513-AL-003:3ded7aa98b8a": {
+          "record_index": 101,
+          "release_id": "20240513-AL-003",
+          "sha256": "3ded7aa98b8a439ebb2593cecafab9f28aed26f3b333cb5e840af9cea07522fc"
+        },
+        "nasa_donki_notification:20240513-AL-004:01aba71d52c4": {
+          "record_index": 102,
+          "release_id": "20240513-AL-004",
+          "sha256": "01aba71d52c481f0fd6a5cd30103efdb458800699110cfeba620a3c9b0693613"
+        },
+        "nasa_donki_notification:20240513-AL-005:d1bcd01138e9": {
+          "record_index": 103,
+          "release_id": "20240513-AL-005",
+          "sha256": "d1bcd01138e9573d492d0c80b766353038156d2e94697685689c246563041bbf"
+        },
+        "nasa_donki_notification:20240513-AL-006:691788dcf4a9": {
+          "record_index": 104,
+          "release_id": "20240513-AL-006",
+          "sha256": "691788dcf4a95efbb38ea4e24b597ebe888bf53c039fd947ee5a5443800c2e69"
+        },
+        "nasa_donki_notification:20240513-AL-007:b638dbcb909d": {
+          "record_index": 105,
+          "release_id": "20240513-AL-007",
+          "sha256": "b638dbcb909de10bb04153cec5e89f183dcec549adb5df97fafd1ec0c4dd2632"
+        },
+        "nasa_donki_notification:20240513-AL-008:0f3fe9f68532": {
+          "record_index": 106,
+          "release_id": "20240513-AL-008",
+          "sha256": "0f3fe9f68532aca784992ee799f69224d6782a24db440a87a74db4efa0957d80"
+        },
+        "nasa_donki_notification:20240513-AL-009:8cdde2cb1b56": {
+          "record_index": 107,
+          "release_id": "20240513-AL-009",
+          "sha256": "8cdde2cb1b569936bc65ade6dea93e0d2aab0aaa4525d951603f3ed651b47489"
+        },
+        "nasa_donki_notification:20240513-AL-010:905919a306b4": {
+          "record_index": 108,
+          "release_id": "20240513-AL-010",
+          "sha256": "905919a306b4893acbbf38a3541ab6cabebb93d198e3e04e8403cfb6e97ed1eb"
+        },
+        "nasa_donki_notification:20240513-AL-011:fe0217a826d7": {
+          "record_index": 109,
+          "release_id": "20240513-AL-011",
+          "sha256": "fe0217a826d7c52cda87d7f38e91a2a5e62706cfba996029ff4e6ac3451c2ff2"
+        },
+        "nasa_donki_notification:20240513-AL-012:e75ccc6297d2": {
+          "record_index": 110,
+          "release_id": "20240513-AL-012",
+          "sha256": "e75ccc6297d22c140b2b87290befcbdb2215517e75277bfdfe447079c54300e5"
+        },
+        "nasa_donki_notification:20240514-AL-001:57fb663197e2": {
+          "record_index": 111,
+          "release_id": "20240514-AL-001",
+          "sha256": "57fb663197e25390058d0df6865ce893b9559a07c41b38e535c8d01ffba19649"
+        },
+        "nasa_donki_notification:20240514-AL-002:a511baf9316e": {
+          "record_index": 112,
+          "release_id": "20240514-AL-002",
+          "sha256": "a511baf9316eaf8924705b00ea251d6d6ec5426679609712efad1f0fa7272682"
+        },
+        "nasa_donki_notification:20240514-AL-003:8b8bd17e182b": {
+          "record_index": 113,
+          "release_id": "20240514-AL-003",
+          "sha256": "8b8bd17e182bfc5cc9e7a6526e5c9dc8aa6db79e8dfdbbc7ad2125137867e174"
+        },
+        "nasa_donki_notification:20240514-AL-004:e69af6e5fafb": {
+          "record_index": 114,
+          "release_id": "20240514-AL-004",
+          "sha256": "e69af6e5fafb9034366217442527e007c6cd6da3811aae72c4af84a5ab5dbcb4"
+        },
+        "nasa_donki_notification:20240514-AL-005:aae2d63df6ba": {
+          "record_index": 115,
+          "release_id": "20240514-AL-005",
+          "sha256": "aae2d63df6ba2a6ec55ae403517d5656aace7c6b0dbd0ddbde3cdb2da1d336a1"
+        },
+        "nasa_donki_notification:20240514-AL-006:64ccf55c7935": {
+          "record_index": 116,
+          "release_id": "20240514-AL-006",
+          "sha256": "64ccf55c7935ba90297bb8745a85479911a7cd9ffd5c5b9152b77c03ebac4fd3"
+        },
+        "nasa_donki_notification:20240514-AL-007:83a0c870227b": {
+          "record_index": 117,
+          "release_id": "20240514-AL-007",
+          "sha256": "83a0c870227bc172a77f647e17fb218a1a0f6a14f32d65f423c281d054dcf1b4"
+        },
+        "nasa_donki_notification:20240514-AL-008:3ccc2b0287ae": {
+          "record_index": 118,
+          "release_id": "20240514-AL-008",
+          "sha256": "3ccc2b0287aebcf461d9637b3544b66c14202f6ab4bafc856f93b59b85c04bed"
+        },
+        "nasa_donki_notification:20240514-AL-009:811ad4d88c23": {
+          "record_index": 119,
+          "release_id": "20240514-AL-009",
+          "sha256": "811ad4d88c2374db5fc318c7214280129a481c654689b8c6a5f54e52861dbc8b"
+        },
+        "nasa_donki_notification:20240514-AL-010:c356d0d26830": {
+          "record_index": 120,
+          "release_id": "20240514-AL-010",
+          "sha256": "c356d0d26830595b086b27ae868222bbcf0bd46ce1fae82a774a7294735ce03c"
+        },
+        "nasa_donki_notification:20240515-AL-001:1929f31457de": {
+          "record_index": 121,
+          "release_id": "20240515-AL-001",
+          "sha256": "1929f31457de9ae23b339e4ad32e827b6e40bb9c05731412877e01d22f999c6f"
+        },
+        "nasa_donki_notification:20240515-AL-002:0d16d84d3414": {
+          "record_index": 122,
+          "release_id": "20240515-AL-002",
+          "sha256": "0d16d84d3414bdc9850cbc87b02cb885c773c393b4bfa3d229c22f4e96267177"
+        },
+        "nasa_donki_notification:20240515-AL-003:b7b60451bc4e": {
+          "record_index": 123,
+          "release_id": "20240515-AL-003",
+          "sha256": "b7b60451bc4e47a0a69d4d38597aefce49457479d22bb134002a4d753e9a9a5d"
+        },
+        "nasa_donki_notification:20240515-AL-004:d598c372bae1": {
+          "record_index": 124,
+          "release_id": "20240515-AL-004",
+          "sha256": "d598c372bae13eac5807feb7b1420c5b60698c9e9f8d171e7e4155dba23c4857"
+        },
+        "nasa_donki_notification:20240515-AL-005:ded77980fdb4": {
+          "record_index": 125,
+          "release_id": "20240515-AL-005",
+          "sha256": "ded77980fdb43ef180d8d97922e2d3aeacf2132b597c9d7347e01da46741c598"
+        },
+        "nasa_donki_notification:20240515-AL-006:574465f64c8e": {
+          "record_index": 126,
+          "release_id": "20240515-AL-006",
+          "sha256": "574465f64c8e3487f101c880aeca42f9089755d60ee20ba098f36c458e4d4bb2"
+        },
+        "nasa_donki_notification:20240515-AL-007:7c0c70568706": {
+          "record_index": 127,
+          "release_id": "20240515-AL-007",
+          "sha256": "7c0c70568706fa7ecd2c47cc8ae96d8b5f9788ddcb2821569dbf3a848d6a8fea"
+        },
+        "nasa_donki_notification:20240515-AL-008:a6b3b2300706": {
+          "record_index": 128,
+          "release_id": "20240515-AL-008",
+          "sha256": "a6b3b2300706a705caab6badf2fc468bcd36ab795d492a00309d8e3a209e0c0c"
+        },
+        "nasa_donki_notification:20240515-AL-009:c9e73047a941": {
+          "record_index": 129,
+          "release_id": "20240515-AL-009",
+          "sha256": "c9e73047a94120a7383ab1d59ae141f22a4ecc941a65bf060a2db73df66c56b2"
+        },
+        "nasa_donki_notification:20240515-AL-010:6d4a34339015": {
+          "record_index": 130,
+          "release_id": "20240515-AL-010",
+          "sha256": "6d4a343390159b6c4bf789b3b3798f55e741a408345ab565189086d2c93524ff"
+        },
+        "nasa_donki_notification:20240515-AL-011:362bae0759f9": {
+          "record_index": 131,
+          "release_id": "20240515-AL-011",
+          "sha256": "362bae0759f9e374194a21b8e0d12bb401a026a3a755c167a577596ca42f2fcc"
+        },
+        "nasa_donki_notification:20240516-AL-001:6361d55d81e1": {
+          "record_index": 132,
+          "release_id": "20240516-AL-001",
+          "sha256": "6361d55d81e19f8f4d7e67c063d533503b9a0a509058fca4ee893319f4d51e68"
+        },
+        "nasa_donki_notification:20240516-AL-002:29e0479e9208": {
+          "record_index": 133,
+          "release_id": "20240516-AL-002",
+          "sha256": "29e0479e920890827efc69c66a223f2d28bc155f1fe0c27f35751e56e62296b4"
+        },
+        "nasa_donki_notification:20240516-AL-003:20b0105c6df3": {
+          "record_index": 134,
+          "release_id": "20240516-AL-003",
+          "sha256": "20b0105c6df339be4806722c4d7764131f918c193a844e7031964ba4692d259a"
+        },
+        "nasa_donki_notification:20240516-AL-004:28311d278933": {
+          "record_index": 135,
+          "release_id": "20240516-AL-004",
+          "sha256": "28311d27893311e1895d9333c123ef0beb19d32efd06c99d4ff5276f3cf0dbc7"
+        },
+        "nasa_donki_notification:20240516-7D-001:59392987ebbf": {
+          "record_index": 136,
+          "release_id": "20240516-7D-001",
+          "sha256": "59392987ebbf47fdfdcdeb942fe5c3d4935252f808afbebd5512e1693d0000a2"
+        },
+        "nasa_donki_notification:20240516-AL-005:c12ad1150d1c": {
+          "record_index": 137,
+          "release_id": "20240516-AL-005",
+          "sha256": "c12ad1150d1c96847534d803781b1a64c0e69ed47b5d747901971a12c36398cf"
+        },
+        "nasa_donki_notification:20240516-AL-006:0f1ee8092eff": {
+          "record_index": 138,
+          "release_id": "20240516-AL-006",
+          "sha256": "0f1ee8092effb7136197e7b5b88ffcc627e1455ea42bbb6888736fbdccc07b63"
+        },
+        "nasa_donki_notification:20240516-AL-007:ab285f50663b": {
+          "record_index": 139,
+          "release_id": "20240516-AL-007",
+          "sha256": "ab285f50663b100704bfd0e06038add5098bd13ccd8ad6a0c3a4fe9697110d5e"
+        },
+        "nasa_donki_notification:20240516-AL-008:892ad864a199": {
+          "record_index": 140,
+          "release_id": "20240516-AL-008",
+          "sha256": "892ad864a19996609daee44f46dc26368cd6146cb5d67c2bcc1965ed49f6c240"
+        },
+        "nasa_donki_notification:20240517-AL-001:a3f9dc47793e": {
+          "record_index": 141,
+          "release_id": "20240517-AL-001",
+          "sha256": "a3f9dc47793e40bd4561585b7681db41c685cf6733660bf74a7d16c10a0db4c8"
+        },
+        "nasa_donki_notification:20240517-AL-002:62f263199169": {
+          "record_index": 142,
+          "release_id": "20240517-AL-002",
+          "sha256": "62f26319916935bb3a56f96e8d73512266d4c371c2dae643c548b27e3d35cf4a"
+        },
+        "nasa_donki_notification:20240517-AL-003:a1dd1567f1b7": {
+          "record_index": 143,
+          "release_id": "20240517-AL-003",
+          "sha256": "a1dd1567f1b72a72cd83b455c112e6d01ddcd489a648821c28d67edd3a5f65ac"
+        },
+        "nasa_donki_notification:20240517-AL-004:433e90dfe8eb": {
+          "record_index": 144,
+          "release_id": "20240517-AL-004",
+          "sha256": "433e90dfe8eba259749e4fd8e0cbdf912889b74447eca3c8be5e2bd31d346ffa"
+        },
+        "nasa_donki_notification:20240517-AL-005:87b64722c7bb": {
+          "record_index": 145,
+          "release_id": "20240517-AL-005",
+          "sha256": "87b64722c7bb5107867489f0a0c60b0ea39f33096e2d270fcd589bd802736dbc"
+        },
+        "nasa_donki_notification:20240517-AL-006:b755e09d0c77": {
+          "record_index": 146,
+          "release_id": "20240517-AL-006",
+          "sha256": "b755e09d0c772058df5491df6381080559965a7db23b77319c21e4fb17fbc57e"
+        },
+        "nasa_donki_notification:20240517-AL-007:704424c77b62": {
+          "record_index": 147,
+          "release_id": "20240517-AL-007",
+          "sha256": "704424c77b62beec05c0877afaa745e99b0f1c2d5d512f7ae14ae46e14e4d3ae"
+        },
+        "nasa_donki_notification:20240518-AL-001:2719901c4aae": {
+          "record_index": 148,
+          "release_id": "20240518-AL-001",
+          "sha256": "2719901c4aaea77ba7e27162c1b1261ef02ffdacc2552617f9cf52554e02ac78"
+        },
+        "nasa_donki_notification:20240518-AL-002:6884807b38a3": {
+          "record_index": 149,
+          "release_id": "20240518-AL-002",
+          "sha256": "6884807b38a3450693a59e9442eda72de5a6a0cca2b35b908bdbb2c254666579"
+        },
+        "nasa_donki_notification:20240518-AL-003:d20afbd5a2b9": {
+          "record_index": 150,
+          "release_id": "20240518-AL-003",
+          "sha256": "d20afbd5a2b9ba59e07e461fa3debd9c30322cb4025392a963ad005a244d1a44"
+        },
+        "nasa_donki_notification:20240520-AL-001:7154de56c7ec": {
+          "record_index": 151,
+          "release_id": "20240520-AL-001",
+          "sha256": "7154de56c7ec39c57c74db8cb6997fbb014288b38b0a9efd0434ea04ea7f90ec"
+        },
+        "nasa_donki_notification:20240520-AL-002:a8814db4c071": {
+          "record_index": 152,
+          "release_id": "20240520-AL-002",
+          "sha256": "a8814db4c071359b963f62ce48029cd46029b3e11bdf952d13d5c6e7c0960ee8"
+        },
+        "nasa_donki_notification:20240521-AL-001:d94846eafb62": {
+          "record_index": 153,
+          "release_id": "20240521-AL-001",
+          "sha256": "d94846eafb62f40440b28f64d62c57420ef61b6d79c1bd735d7a3690dce6cbe0"
+        },
+        "nasa_donki_notification:20240522-7D-001:e378dd98dc9e": {
+          "record_index": 154,
+          "release_id": "20240522-7D-001",
+          "sha256": "e378dd98dc9ed5260f28898b36445020ee4cb206c60315f5508a33b93125b036"
+        },
+        "nasa_donki_notification:20240523-AL-001:0ab3bf4dc000": {
+          "record_index": 155,
+          "release_id": "20240523-AL-001",
+          "sha256": "0ab3bf4dc0008a0ab2aa83432b675a660719a891917340f739c0cf6b23f9515d"
+        },
+        "nasa_donki_notification:20240523-AL-002:1d13d1f24140": {
+          "record_index": 156,
+          "release_id": "20240523-AL-002",
+          "sha256": "1d13d1f2414024bf71fdcaed0addf58a87b0e01f557eeafe1516973c2a124809"
+        },
+        "nasa_donki_notification:20240524-AL-001:e9e36ae6d9e6": {
+          "record_index": 157,
+          "release_id": "20240524-AL-001",
+          "sha256": "e9e36ae6d9e6b893db99bfef5d7cd709216924ab510ed25023e78b00ae13e733"
+        },
+        "nasa_donki_notification:20240525-AL-001:bf4e09fd9838": {
+          "record_index": 158,
+          "release_id": "20240525-AL-001",
+          "sha256": "bf4e09fd9838c284251addc9caa2be7653226e249a51c986a0788d3fb5656c86"
+        },
+        "nasa_donki_notification:20240527-AL-001:f364836c7608": {
+          "record_index": 159,
+          "release_id": "20240527-AL-001",
+          "sha256": "f364836c760827e53fe4b22b6516551d4121f054fa910157097daa6c8376bf72"
+        },
+        "nasa_donki_notification:20240527-AL-002:67c5d910c70d": {
+          "record_index": 160,
+          "release_id": "20240527-AL-002",
+          "sha256": "67c5d910c70d645759bb70f43cd5cf16419b79f5fd26b279f11ef7b005bedd35"
+        },
+        "nasa_donki_notification:20240527-AL-003:409ec15b9c7f": {
+          "record_index": 161,
+          "release_id": "20240527-AL-003",
+          "sha256": "409ec15b9c7ff23f7f5311dce7c620ff265a3013e84368435b0b3a0f08f5f384"
+        },
+        "nasa_donki_notification:20240528-AL-001:968850c93b4f": {
+          "record_index": 162,
+          "release_id": "20240528-AL-001",
+          "sha256": "968850c93b4f380be0a37d56aea571691f362fe9f407e4644c7d823284afbb31"
+        },
+        "nasa_donki_notification:20240529-AL-001:826fbdbf31fd": {
+          "record_index": 163,
+          "release_id": "20240529-AL-001",
+          "sha256": "826fbdbf31fdeb158de6581f835fffbe38731b2950ed9ce71e546d58805abf4c"
+        },
+        "nasa_donki_notification:20240529-AL-002:90f19a3a486a": {
+          "record_index": 164,
+          "release_id": "20240529-AL-002",
+          "sha256": "90f19a3a486aa1425369f0f39c8766559a2e5c31130b301e267034ee91ab86ad"
+        },
+        "nasa_donki_notification:20240529-AL-003:71d688359e45": {
+          "record_index": 165,
+          "release_id": "20240529-AL-003",
+          "sha256": "71d688359e45c5d05e7a52922dd2a32567cdf2265d186ac4a5cc73c0c0425206"
+        },
+        "nasa_donki_notification:20240529-AL-004:44a5bda2f9f0": {
+          "record_index": 166,
+          "release_id": "20240529-AL-004",
+          "sha256": "44a5bda2f9f0b8fe54cf42bd5e6c672ce7acc6cd8df7733e5fffc899a2fbc278"
+        },
+        "nasa_donki_notification:20240529-AL-005:691420ffe56f": {
+          "record_index": 167,
+          "release_id": "20240529-AL-005",
+          "sha256": "691420ffe56f3ecfb52353b0849252a3ccfe471aece4e77cb0b913dbee3dc069"
+        },
+        "nasa_donki_notification:20240529-7D-001:bba064e8ba0a": {
+          "record_index": 168,
+          "release_id": "20240529-7D-001",
+          "sha256": "bba064e8ba0aa14d1edc094c97e119f28896dacc4a74394741a1beb517a43001"
+        },
+        "nasa_donki_notification:20240529-7D-002:d4e9cf483138": {
+          "record_index": 169,
+          "release_id": "20240529-7D-002",
+          "sha256": "d4e9cf4831382e4179d1d2e77b1d7398c938698e23911b55e7fa9f7cb3124b3f"
+        },
+        "nasa_donki_notification:20240530-AL-001:ced24702f606": {
+          "record_index": 170,
+          "release_id": "20240530-AL-001",
+          "sha256": "ced24702f6063e4c940c472744252c4f0ba324de5d4e935b9eeec142252dfa8d"
+        },
+        "nasa_donki_notification:20240530-AL-002:50e33f0a2aa3": {
+          "record_index": 171,
+          "release_id": "20240530-AL-002",
+          "sha256": "50e33f0a2aa356ca5da81b21b520df1081f3a6ea03805f193a701dad00f384f1"
+        },
+        "nasa_donki_notification:20240531-AL-001:6320a2f45145": {
+          "record_index": 172,
+          "release_id": "20240531-AL-001",
+          "sha256": "6320a2f45145e6103a3bd526216f2a2c272ec5d371e3d4d264513ba3364467d4"
+        },
+        "nasa_donki_notification:20240531-AL-002:1f00cae13370": {
+          "record_index": 173,
+          "release_id": "20240531-AL-002",
+          "sha256": "1f00cae13370855b936b5cc1961f4884f08519e68c12861e3467e5eced478ce6"
+        },
+        "nasa_donki_notification:20240601-AL-001:803d135041c9": {
+          "record_index": 174,
+          "release_id": "20240601-AL-001",
+          "sha256": "803d135041c9ada95864295ae9020055ff82bbcc88e5a01552781006d6656997"
+        },
+        "nasa_donki_notification:20240601-AL-002:2c31a3dd5e2f": {
+          "record_index": 175,
+          "release_id": "20240601-AL-002",
+          "sha256": "2c31a3dd5e2fb33272dd0ac2bfc578c667593987d197e2b6d1ab558ee4f649d2"
+        },
+        "nasa_donki_notification:20240601-AL-003:075ba3877b3b": {
+          "record_index": 176,
+          "release_id": "20240601-AL-003",
+          "sha256": "075ba3877b3beab69125b07ea7712b445cb8799d21b82f673b9bb8fa9a2a63d2"
+        },
+        "nasa_donki_notification:20240601-AL-004:a49419952c73": {
+          "record_index": 177,
+          "release_id": "20240601-AL-004",
+          "sha256": "a49419952c73fa3434b0893a96beb3cfd5d911c70065e5a76644a6bfbdcaccf9"
+        },
+        "nasa_donki_notification:20240601-AL-005:0aa6c5493609": {
+          "record_index": 178,
+          "release_id": "20240601-AL-005",
+          "sha256": "0aa6c549360961ffa7b3ab2010c5ee7100914ac30099310c696644b5568eef78"
+        },
+        "nasa_donki_notification:20240601-AL-006:ba459b71e3d6": {
+          "record_index": 179,
+          "release_id": "20240601-AL-006",
+          "sha256": "ba459b71e3d6d2e443262f27df17688b149689870c8283a46105372e92382d1d"
+        },
+        "nasa_donki_notification:20240602-AL-001:f86fc1b034d4": {
+          "record_index": 180,
+          "release_id": "20240602-AL-001",
+          "sha256": "f86fc1b034d4a4264d11e5d71a2bc5c5298f817912fb4d67ff6cf0f67473ac82"
+        },
+        "nasa_donki_notification:20240602-AL-002:d23dbb92d031": {
+          "record_index": 181,
+          "release_id": "20240602-AL-002",
+          "sha256": "d23dbb92d03168f5d0606be6ad5acc37a005c3c1650b252ce2b48f97e77aec99"
+        },
+        "nasa_donki_notification:20240605-7D-001:a124b4bd57f6": {
+          "record_index": 182,
+          "release_id": "20240605-7D-001",
+          "sha256": "a124b4bd57f69ac88d9b1e6f4d800b900846bdcb82ec738a49ccdd1817bc1c36"
+        },
+        "nasa_donki_notification:20240606-AL-001:cdc171bb35eb": {
+          "record_index": 183,
+          "release_id": "20240606-AL-001",
+          "sha256": "cdc171bb35eb7ef3f419a8a7642411bc26b87ba57fecd547e3b337bbe847af6f"
+        },
+        "nasa_donki_notification:20240606-AL-002:83124b93bf28": {
+          "record_index": 184,
+          "release_id": "20240606-AL-002",
+          "sha256": "83124b93bf2860c9d0850adf7dfabe9323eb62c02409d60518a59905b6d33ff1"
+        },
+        "nasa_donki_notification:20240607-AL-001:d119be1b41e1": {
+          "record_index": 185,
+          "release_id": "20240607-AL-001",
+          "sha256": "d119be1b41e1e25949168c9d7660d4caa0416aaf1c1dcef4669d7aef7996108b"
+        },
+        "nasa_donki_notification:20240607-AL-002:11bb23b3afd5": {
+          "record_index": 186,
+          "release_id": "20240607-AL-002",
+          "sha256": "11bb23b3afd5c14a2092266f00bd6cd46a106e4b0a35843bc9445e8a30a0cef5"
+        },
+        "nasa_donki_notification:20240607-AL-003:ded12c8bf07e": {
+          "record_index": 187,
+          "release_id": "20240607-AL-003",
+          "sha256": "ded12c8bf07e3f53ab85f19e8e093053ba32ec1ee8e107fdc581eacbc71be9f4"
+        },
+        "nasa_donki_notification:20240608-AL-001:78342eb0478a": {
+          "record_index": 188,
+          "release_id": "20240608-AL-001",
+          "sha256": "78342eb0478aec3ef64e0b0059fff6360411b89a3be134dd4e5884d78afe4c1e"
+        },
+        "nasa_donki_notification:20240608-AL-002:59c332673e00": {
+          "record_index": 189,
+          "release_id": "20240608-AL-002",
+          "sha256": "59c332673e001450c19e253a50392c67c16b11fb2ae66aa2931162adb9f07359"
+        },
+        "nasa_donki_notification:20240608-AL-003:f0dbd83db509": {
+          "record_index": 190,
+          "release_id": "20240608-AL-003",
+          "sha256": "f0dbd83db5099050ee3cdd8c154b00cfeba004e6bb32029535e25ea048d372c0"
+        },
+        "nasa_donki_notification:20240608-AL-004:19205d250fe9": {
+          "record_index": 191,
+          "release_id": "20240608-AL-004",
+          "sha256": "19205d250fe91321038f2467eb75c6487fc9fd81f586b03e6d847d820427d320"
+        },
+        "nasa_donki_notification:20240608-AL-005:cf3b40291b49": {
+          "record_index": 192,
+          "release_id": "20240608-AL-005",
+          "sha256": "cf3b40291b4996ee5f2917e223781a9a4a00721ad18a97f8d592e8aed2731864"
+        },
+        "nasa_donki_notification:20240608-AL-006:73516f949818": {
+          "record_index": 193,
+          "release_id": "20240608-AL-006",
+          "sha256": "73516f94981874d9d85bdf1218fabd6ca655d7c3cb7134ed4047ef53f5fb84ba"
+        },
+        "nasa_donki_notification:20240608-AL-007:7e924cf010fb": {
+          "record_index": 194,
+          "release_id": "20240608-AL-007",
+          "sha256": "7e924cf010fb27c06c7390658acc982cdabec2f6563790fca97cda9ac728b06d"
+        },
+        "nasa_donki_notification:20240608-AL-008:355847544812": {
+          "record_index": 195,
+          "release_id": "20240608-AL-008",
+          "sha256": "355847544812401f41b9e5cf7ea8fd21c2dd6674318cbbea6b78bf33516f4fe6"
+        },
+        "nasa_donki_notification:20240608-AL-009:e1fad0908e62": {
+          "record_index": 196,
+          "release_id": "20240608-AL-009",
+          "sha256": "e1fad0908e623151e9364205812245bd0b90f5f4badc1502e3a25095a99d6a74"
+        },
+        "nasa_donki_notification:20240608-AL-010:4f1a112f532a": {
+          "record_index": 197,
+          "release_id": "20240608-AL-010",
+          "sha256": "4f1a112f532ab68a662203ba08be279d453c7a6bea99876ca717331411f84116"
+        },
+        "nasa_donki_notification:20240609-AL-001:23680cbf84ae": {
+          "record_index": 198,
+          "release_id": "20240609-AL-001",
+          "sha256": "23680cbf84ae1c2f4142ada0971a4464b9491f8dcf8daece790f69614b0ce7b8"
+        },
+        "nasa_donki_notification:20240610-AL-001:9d1a00236265": {
+          "record_index": 199,
+          "release_id": "20240610-AL-001",
+          "sha256": "9d1a00236265d9077328803c743541c58aa16b11641040db9f0a43dafc4b205b"
+        },
+        "nasa_donki_notification:20240610-AL-002:68ff3bd01429": {
+          "record_index": 200,
+          "release_id": "20240610-AL-002",
+          "sha256": "68ff3bd0142978052e0cdf193b7dfbea01add19d0524df197ad4c419885d9c43"
+        },
+        "nasa_donki_notification:20240610-AL-003:70829e91d77d": {
+          "record_index": 201,
+          "release_id": "20240610-AL-003",
+          "sha256": "70829e91d77d77c48e42f8d6a2e8565b2e65d2e670acf47732837360b2242451"
+        },
+        "nasa_donki_notification:20240610-AL-004:8545e4d6f67a": {
+          "record_index": 202,
+          "release_id": "20240610-AL-004",
+          "sha256": "8545e4d6f67a27723d564a7835bb8f60164a041afc5b77a5a29b14c29fccee3d"
+        },
+        "nasa_donki_notification:20240610-AL-005:dda2a841447d": {
+          "record_index": 203,
+          "release_id": "20240610-AL-005",
+          "sha256": "dda2a841447dd8738cb44cd634ca18c8e6db98efcd69712386106d2a9970a7e3"
+        },
+        "nasa_donki_notification:20240610-AL-006:6137e02049ea": {
+          "record_index": 204,
+          "release_id": "20240610-AL-006",
+          "sha256": "6137e02049ea6c4e6e70ba071361671e4f16f320858acb12415be7d933dd7aff"
+        },
+        "nasa_donki_notification:20240610-AL-007:0fc541ca56aa": {
+          "record_index": 205,
+          "release_id": "20240610-AL-007",
+          "sha256": "0fc541ca56aa62784fba52fc087cdb3f16ead5eb86d82edf275684fb9abe03d4"
+        },
+        "nasa_donki_notification:20240611-AL-001:54311c261d06": {
+          "record_index": 206,
+          "release_id": "20240611-AL-001",
+          "sha256": "54311c261d060d2a941781d2c3521d0606bc9a076439a2b52f5e83770b6ce38a"
+        },
+        "nasa_donki_notification:20240611-AL-002:1e7952605676": {
+          "record_index": 207,
+          "release_id": "20240611-AL-002",
+          "sha256": "1e795260567671ac918d17bd84713d9addf5e87616471d7240dfa65341f5384d"
+        },
+        "nasa_donki_notification:20240612-AL-001:c39f8d6a99d1": {
+          "record_index": 208,
+          "release_id": "20240612-AL-001",
+          "sha256": "c39f8d6a99d146b10dd017fe7033c8948dd9ff07a08c40f6e211b4ea83c7b07e"
+        },
+        "nasa_donki_notification:20240612-AL-002:ddbbb54cdaff": {
+          "record_index": 209,
+          "release_id": "20240612-AL-002",
+          "sha256": "ddbbb54cdaff2feb37adfa3e8e4dd1f9a894aad4ff67b7423f72f19fabf4153a"
+        },
+        "nasa_donki_notification:20240612-AL-003:8f93bf35d04e": {
+          "record_index": 210,
+          "release_id": "20240612-AL-003",
+          "sha256": "8f93bf35d04e226968eb557334255d8b6c06c1e83824bc1b59c66936411a53fb"
+        },
+        "nasa_donki_notification:20240612-AL-004:6943b44da2fb": {
+          "record_index": 211,
+          "release_id": "20240612-AL-004",
+          "sha256": "6943b44da2fb5fa1a28b7d61caeba2bf125ed6b6967580df0c0ed9e394b06c7a"
+        },
+        "nasa_donki_notification:20240612-AL-005:da0c39e07d1c": {
+          "record_index": 212,
+          "release_id": "20240612-AL-005",
+          "sha256": "da0c39e07d1cb94ba3d4e9d39e1f396092ab2ed22d616ebf50e4be247ae0e06b"
+        },
+        "nasa_donki_notification:20240612-AL-006:5770ea2aa1be": {
+          "record_index": 213,
+          "release_id": "20240612-AL-006",
+          "sha256": "5770ea2aa1be6164f6360d7362df48062ff3137efd7e5fcde8e4d22389a9960b"
+        },
+        "nasa_donki_notification:20240612-7D-001:1fce1817cf40": {
+          "record_index": 214,
+          "release_id": "20240612-7D-001",
+          "sha256": "1fce1817cf4011a28ce3892034b655fbfc2f84a0c3ca8ed64bdb8a0c51908e5e"
+        },
+        "nasa_donki_notification:20240613-AL-001:df9eba5e0f00": {
+          "record_index": 215,
+          "release_id": "20240613-AL-001",
+          "sha256": "df9eba5e0f0096903351e617b5f7ef9990ed94018c8809b7a648e7e35bb6056c"
+        },
+        "nasa_donki_notification:20240613-AL-002:d7cc7275e1fc": {
+          "record_index": 216,
+          "release_id": "20240613-AL-002",
+          "sha256": "d7cc7275e1fc59c4df1433a4d93f97a8b2718608aab1715213080508d8021bf5"
+        },
+        "nasa_donki_notification:20240613-AL-003:eba522a40d4c": {
+          "record_index": 217,
+          "release_id": "20240613-AL-003",
+          "sha256": "eba522a40d4cffbecb05994c56081c10e8f9d6d3ad626c12cb67feed1506c403"
+        },
+        "nasa_donki_notification:20240613-AL-004:24bd069901eb": {
+          "record_index": 218,
+          "release_id": "20240613-AL-004",
+          "sha256": "24bd069901ebf4668267769c22aa3451fd468addc08bb9c452bdaac16f672e13"
+        },
+        "nasa_donki_notification:20240614-AL-001:e033e02ac741": {
+          "record_index": 219,
+          "release_id": "20240614-AL-001",
+          "sha256": "e033e02ac741d2fa6df462a9cf1dc8803e732c826c8d55509a819e8262a09cad"
+        },
+        "nasa_donki_notification:20240615-AL-001:d8693166135c": {
+          "record_index": 220,
+          "release_id": "20240615-AL-001",
+          "sha256": "d8693166135ccc6da2985ce60de2dc41b74726f60e31d7370eaead8688ab342f"
+        },
+        "nasa_donki_notification:20240617-AL-001:caa050791291": {
+          "record_index": 221,
+          "release_id": "20240617-AL-001",
+          "sha256": "caa05079129105fe3093fdeabe110d187983c0fab8c213758703331a60f07427"
+        },
+        "nasa_donki_notification:20240617-AL-002:9baae5ff2c7c": {
+          "record_index": 222,
+          "release_id": "20240617-AL-002",
+          "sha256": "9baae5ff2c7c27f2ca7720d11c83e46f9624048f72b145b36f6babe5d757bbd7"
+        },
+        "nasa_donki_notification:20240618-AL-001:1df15e7c03b8": {
+          "record_index": 223,
+          "release_id": "20240618-AL-001",
+          "sha256": "1df15e7c03b89074cd4fdf1c56fc0a565ecbdb9c5246a9e18867a4857d7b8b1a"
+        },
+        "nasa_donki_notification:20240619-AL-001:f9197dedc529": {
+          "record_index": 224,
+          "release_id": "20240619-AL-001",
+          "sha256": "f9197dedc52989993148f77f203b4c713e7cc239d5d672beea61b24d23198493"
+        },
+        "nasa_donki_notification:20240619-7D-001:7c3c843c9475": {
+          "record_index": 225,
+          "release_id": "20240619-7D-001",
+          "sha256": "7c3c843c947575def5170984c458f9e3d8ebd7b8b70c63a21d9f1d9ec607e9c2"
+        },
+        "nasa_donki_notification:20240619-AL-002:98f537c7b72a": {
+          "record_index": 226,
+          "release_id": "20240619-AL-002",
+          "sha256": "98f537c7b72ac53c6bc450ef88c93f4e8111b42b7c43b0e6a2ee006cf22924e8"
+        },
+        "nasa_donki_notification:20240620-AL-001:cb5cdd89a2e0": {
+          "record_index": 227,
+          "release_id": "20240620-AL-001",
+          "sha256": "cb5cdd89a2e061bd95ec97a8926b7f406382ee59c19f762d3002d6c1b416b461"
+        },
+        "nasa_donki_notification:20240620-AL-002:eac1b6e43878": {
+          "record_index": 228,
+          "release_id": "20240620-AL-002",
+          "sha256": "eac1b6e43878e9446d9534fa4fa94706c254c8b7794d31c493d1d57dbecafd02"
+        },
+        "nasa_donki_notification:20240622-AL-001:4ff3e9a982e0": {
+          "record_index": 229,
+          "release_id": "20240622-AL-001",
+          "sha256": "4ff3e9a982e03e982e38e99adfee2de0994178d5eff706374fdac2ece911aaa6"
+        },
+        "nasa_donki_notification:20240622-AL-002:7f7f24bc67b0": {
+          "record_index": 230,
+          "release_id": "20240622-AL-002",
+          "sha256": "7f7f24bc67b09f1a03f7e39f6b3431d85d5ac321232b5851a48b23806fe5c8b3"
+        },
+        "nasa_donki_notification:20240623-AL-001:73b5c4942111": {
+          "record_index": 231,
+          "release_id": "20240623-AL-001",
+          "sha256": "73b5c4942111f2f0e19fc456578dfa3906dd6441c9fe2c818f55dba29a5da7dd"
+        },
+        "nasa_donki_notification:20240623-AL-002:2b57e7a68fc6": {
+          "record_index": 232,
+          "release_id": "20240623-AL-002",
+          "sha256": "2b57e7a68fc6c6172132fd06461f957aa26af880f36c9e7cfaea66d35882204c"
+        },
+        "nasa_donki_notification:20240623-AL-003:79e96b4f891b": {
+          "record_index": 233,
+          "release_id": "20240623-AL-003",
+          "sha256": "79e96b4f891b3dc5ed3586820a71445b716cfd795b619afe34cd57f0fb63a3c7"
+        },
+        "nasa_donki_notification:20240624-AL-001:f0930aa7e3f4": {
+          "record_index": 234,
+          "release_id": "20240624-AL-001",
+          "sha256": "f0930aa7e3f45452f25fbb08e6586247321d37974f1f4551faa7d2adeb92d3b7"
+        },
+        "nasa_donki_notification:20240625-AL-001:dfed9cb3b2e1": {
+          "record_index": 235,
+          "release_id": "20240625-AL-001",
+          "sha256": "dfed9cb3b2e18e0496af4909343c0c709da2674b33f722bd4c4687032250f3df"
+        },
+        "nasa_donki_notification:20240626-AL-001:bd87c1df785e": {
+          "record_index": 236,
+          "release_id": "20240626-AL-001",
+          "sha256": "bd87c1df785e933eb4dc6132c4b4eda1fc178dd100538e8a2e6e810275a0f57f"
+        },
+        "nasa_donki_notification:20240626-7D-001:b0dd6f337b09": {
+          "record_index": 237,
+          "release_id": "20240626-7D-001",
+          "sha256": "b0dd6f337b09aed52ae6d2fbcac460ee4743311b4baa92b35c14d70bfb770178"
+        },
+        "nasa_donki_notification:20240628-AL-001:e959ffd24aef": {
+          "record_index": 238,
+          "release_id": "20240628-AL-001",
+          "sha256": "e959ffd24aef923a67a37a6ed12402762a2c07c711e5cfe6433b6439762f4f00"
+        },
+        "nasa_donki_notification:20240628-AL-002:6d37565a62dc": {
+          "record_index": 239,
+          "release_id": "20240628-AL-002",
+          "sha256": "6d37565a62dc8ebcc4ba5bde83d46d547bc30e47d69698654908ac3193f7abd1"
+        },
+        "nasa_donki_notification:20240628-AL-003:f065e10528fa": {
+          "record_index": 240,
+          "release_id": "20240628-AL-003",
+          "sha256": "f065e10528fa73df3a5da0488aabb755b140d8b4836a54d78dfcc05c68ad5bf2"
+        },
+        "nasa_donki_notification:20240628-AL-004:5bcab1280d20": {
+          "record_index": 241,
+          "release_id": "20240628-AL-004",
+          "sha256": "5bcab1280d20502c8c94024c42130a6542543874165baacda4efebcffed42a5c"
+        },
+        "nasa_donki_notification:20240628-AL-005:12f2bbe43aa3": {
+          "record_index": 242,
+          "release_id": "20240628-AL-005",
+          "sha256": "12f2bbe43aa3cd654a85ac067c4d6f3413cc9fd7891f5cf0b07e68e2d29aa73a"
+        },
+        "nasa_donki_notification:20240628-AL-006:ae543f3b8633": {
+          "record_index": 243,
+          "release_id": "20240628-AL-006",
+          "sha256": "ae543f3b863311c7995753b3d3612109eee66b9e7f1dd65d6e8c0401bdbb1aa9"
+        },
+        "nasa_donki_notification:20240628-AL-007:0f9e21f01d97": {
+          "record_index": 244,
+          "release_id": "20240628-AL-007",
+          "sha256": "0f9e21f01d97fc651f6f26ffddda6d704bcc2eb11026005a8d84e848fb427f01"
+        },
+        "nasa_donki_notification:20240630-AL-001:d25dbcd5e2ea": {
+          "record_index": 245,
+          "release_id": "20240630-AL-001",
+          "sha256": "d25dbcd5e2ea9550fb9f8a735ec46cda37389f80445d065438516bbc1026081d"
+        },
+        "nasa_donki_notification:20240630-AL-002:94f5b8c9e2f2": {
+          "record_index": 246,
+          "release_id": "20240630-AL-002",
+          "sha256": "94f5b8c9e2f2bfde63a743e15cd1e650e0d4e431c18f16d1c9eab90648ead631"
+        }
+      }
+    }
+  },
+  "schema_notes": [
+    "Independent A1 data schema, not a replacement for vkd/types.py or final consumer API.",
+    "Source map -> raw_record_id -> zero-based index in records_path records array. Full metadata is in that record.",
+    "All paths are repository-relative. Null means unknown, never zero or available.",
+    "version is a SHA-256 content snapshot, not a proved provider version at historical cutoff.",
+    "available_utc for dated bulletins/notifications is provider issue-time evidence, not an independent contemporaneous capture. Check eligibility and limitations.",
+    "NOAA validity endpoints are exclusive; OEM uses coverage_end_inclusive=true.",
+    "No global coverage boolean: evaluate source, channel, issue cutoff, validity and scenario separately."
+  ],
+  "not_yet_collected_or_proven": [
+    {
+      "item": "GOES integral proton observation archive May-June 2024",
+      "owner": "A1/A2",
+      "needed": "Raw values, energy thresholds, pfu, time support, quality flags and satellite, provider revision/availability evidence; later reprocessed data only in reconstruction unless proven."
+    },
+    {
+      "item": "NOAA 3day_forecast before 2024-05-01T00:00Z",
+      "owner": "A1",
+      "needed": "Inspect and retain prior April release if available to cover start boundary; current subset does not establish absence of product."
+    },
+    {
+      "item": "NOAA warning/alert archive with validity intervals",
+      "owner": "A1/A2",
+      "needed": "If timed radiation warnings drive window rules, preserve exact publications and cancellations. Daily probability products cannot replace warning intervals."
+    },
+    {
+      "item": "Historical public availability of exact NASA OEM bytes",
+      "owner": "A1/A2",
+      "needed": "Independent evidence or retain reconstruction-only status. CREATION_DATE/S3 LastModified insufficient."
+    },
+    {
+      "item": "DONKI event validity, Earth/ISS scope and historical payload revisions",
+      "owner": "A2",
+      "needed": "Parse bodies, reject unrelated targets/retrospective content from forecasts, classify forecast vs observation without future leakage."
+    },
+    {
+      "item": "Definitive observed Kp archive, if included in validation scope",
+      "owner": "A1/A2/B5",
+      "needed": "Separate validation/reconstruction observations from issued forecasts and prove release version for strict use."
+    },
+    {
+      "item": "Current sources and optional SOCRATES",
+      "owner": "A4/A5",
+      "needed": "Outside this historical initial snapshot; no historical SOCRATES completeness asserted."
+    }
+  ],
+  "next_step": "Extend A1 observation/dated-warning evidence, then A2 admissibility and message parsing; do not declare I1 passed from inventory alone."
+}

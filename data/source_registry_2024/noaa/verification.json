@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "verified_utc": "2026-09-18T20:43:41Z",
+  "release_records": 117,
+  "catalog_records": 5,
+  "raw_files_verified": 122,
+  "sha256_mismatches": 0,
+  "bytes_mismatches": 0,
+  "unique_raw_record_ids": 117,
+  "forecast_table_numeric_cells_verified": 6561,
+  "six_cutoffs_checked": 6,
+  "publication_anomaly_count": 2,
+  "application_tests_run": false,
+  "note": "Data integrity and table-shape checks only; not a completed replay or model validation."
+}

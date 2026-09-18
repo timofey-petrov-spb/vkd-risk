@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-09-18T20:39:32Z",
+  "record_count": 26,
+  "release_counts": {
+    "2024-04": 1,
+    "2024-05": 13,
+    "2024-06": 12
+  },
+  "coverage_basis": "Union of declared usable segment intervals, inclusive endpoints; establishes reconstruction time coverage only. No interpolation is performed.",
+  "segments": [
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-04-29:ed86a5d4d878",
+      "segment_index": 0,
+      "from_utc": "2024-04-29T12:00:00.000Z",
+      "to_utc": "2024-05-14T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+      "segment_index": 0,
+      "from_utc": "2024-05-01T12:00:00.000Z",
+      "to_utc": "2024-05-16T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-05:750ef2553023",
+      "segment_index": 0,
+      "from_utc": "2024-05-03T12:00:00.000Z",
+      "to_utc": "2024-05-18T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-07:376bee9b3245",
+      "segment_index": 0,
+      "from_utc": "2024-05-06T12:00:00.000Z",
+      "to_utc": "2024-05-21T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-08:a164f5909b9f",
+      "segment_index": 0,
+      "from_utc": "2024-05-08T12:00:00.000Z",
+      "to_utc": "2024-05-23T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-12:ce3ea506d8a2",
+      "segment_index": 0,
+      "from_utc": "2024-05-10T12:00:00.000Z",
+      "to_utc": "2024-05-25T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-13:16a920292e2f",
+      "segment_index": 0,
+      "from_utc": "2024-05-13T12:00:00.000Z",
+      "to_utc": "2024-05-28T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-14:16a920292e2f",
+      "segment_index": 0,
+      "from_utc": "2024-05-13T12:00:00.000Z",
+      "to_utc": "2024-05-28T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-15:b6005d4b1e86",
+      "segment_index": 0,
+      "from_utc": "2024-05-15T12:00:00.000Z",
+      "to_utc": "2024-05-30T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-17:c27c3b8acb46",
+      "segment_index": 0,
+      "from_utc": "2024-05-17T12:00:00.000Z",
+      "to_utc": "2024-06-01T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-20:90c71861e3df",
+      "segment_index": 0,
+      "from_utc": "2024-05-20T12:00:00.000Z",
+      "to_utc": "2024-06-04T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-23:8ee1b70e8aeb",
+      "segment_index": 0,
+      "from_utc": "2024-05-22T12:00:00.000Z",
+      "to_utc": "2024-06-06T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-28:488c29c3dd7b",
+      "segment_index": 0,
+      "from_utc": "2024-05-27T12:00:00.000Z",
+      "to_utc": "2024-06-11T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-05-29:180276a4f6af",
+      "segment_index": 0,
+      "from_utc": "2024-05-29T12:00:00.000Z",
+      "to_utc": "2024-06-13T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-01:76a85580c503",
+      "segment_index": 0,
+      "from_utc": "2024-05-31T12:00:00.000Z",
+      "to_utc": "2024-06-15T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-05:86d9b4020383",
+      "segment_index": 0,
+      "from_utc": "2024-06-05T10:00:00.000Z",
+      "to_utc": "2024-06-20T10:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-07:83a1a0ff6ad3",
+      "segment_index": 0,
+      "from_utc": "2024-06-07T12:00:00.000Z",
+      "to_utc": "2024-06-22T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-11:6375f371b39a",
+      "segment_index": 0,
+      "from_utc": "2024-06-10T12:00:00.000Z",
+      "to_utc": "2024-06-25T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-13:336b1b83386f",
+      "segment_index": 0,
+      "from_utc": "2024-06-12T12:00:00.000Z",
+      "to_utc": "2024-06-27T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-14:7c46abd8eb55",
+      "segment_index": 0,
+      "from_utc": "2024-06-14T12:00:00.000Z",
+      "to_utc": "2024-06-29T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-18:8e9b95f56a10",
+      "segment_index": 0,
+      "from_utc": "2024-06-17T12:00:00.000Z",
+      "to_utc": "2024-07-02T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-19:0917888a9028",
+      "segment_index": 0,
+      "from_utc": "2024-06-19T12:00:00.000Z",
+      "to_utc": "2024-07-04T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-21:48f4a9448767",
+      "segment_index": 0,
+      "from_utc": "2024-06-21T12:00:00.000Z",
+      "to_utc": "2024-07-06T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-24:e0785fd963f7",
+      "segment_index": 0,
+      "from_utc": "2024-06-24T12:00:00.000Z",
+      "to_utc": "2024-07-09T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-27:6f869f44dc00",
+      "segment_index": 0,
+      "from_utc": "2024-06-26T12:00:00.000Z",
+      "to_utc": "2024-07-11T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    },
+    {
+      "raw_record_id": "nasa_jsc_oem:2024-06-28:a532fbf65e18",
+      "segment_index": 0,
+      "from_utc": "2024-06-28T12:00:00.000Z",
+      "to_utc": "2024-07-13T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    }
+  ],
+  "merged_intervals": [
+    {
+      "from_utc": "2024-04-29T12:00:00.000Z",
+      "to_utc": "2024-07-13T12:00:00.000Z",
+      "coverage_end_inclusive": true
+    }
+  ],
+  "target_interval": {
+    "from_utc": "2024-05-01T00:00:00.000Z",
+    "to_utc": "2024-07-01T00:00:00.000Z",
+    "end_exclusive": true
+  },
+  "target_gaps": [],
+  "duplicate_sha256_groups": [
+    {
+      "sha256": "16a920292e2f06d3ed15666d67cd15eea26e90ffa14174e616f4183118cce6dc",
+      "release_ids": [
+        "2024-05-13",
+        "2024-05-14"
+      ]
+    }
+  ],
+  "strict_replay_eligible_record_count": 0,
+  "cutoff_checks": [
+    {
+      "cutoff_utc": "2024-05-01T00:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-05-01T00:00:00.000Z",
+      "request_to_utc": "2024-05-02T08:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-04-29:ed86a5d4d878",
+      "candidate_release_id": "2024-04-29",
+      "candidate_created_utc": "2024-04-29T19:22:46.797Z",
+      "candidate_s3_last_modified": "2024-04-30T03:53:34.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    },
+    {
+      "cutoff_utc": "2024-05-03T12:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-05-03T12:00:00.000Z",
+      "request_to_utc": "2024-05-04T20:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+      "candidate_release_id": "2024-05-02",
+      "candidate_created_utc": "2024-05-02T13:10:49.055Z",
+      "candidate_s3_last_modified": "2024-05-03T03:05:37.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    },
+    {
+      "cutoff_utc": "2024-05-20T12:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-05-20T12:00:00.000Z",
+      "request_to_utc": "2024-05-21T20:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-05-17:c27c3b8acb46",
+      "candidate_release_id": "2024-05-17",
+      "candidate_created_utc": "2024-05-17T16:55:23.425Z",
+      "candidate_s3_last_modified": "2024-05-17T20:05:08.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    },
+    {
+      "cutoff_utc": "2024-06-01T12:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-06-01T12:00:00.000Z",
+      "request_to_utc": "2024-06-02T20:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-05-29:180276a4f6af",
+      "candidate_release_id": "2024-05-29",
+      "candidate_created_utc": "2024-05-29T18:28:56.742Z",
+      "candidate_s3_last_modified": "2024-05-30T03:35:08.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    },
+    {
+      "cutoff_utc": "2024-06-25T12:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-06-25T12:00:00.000Z",
+      "request_to_utc": "2024-06-26T20:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-06-24:e0785fd963f7",
+      "candidate_release_id": "2024-06-24",
+      "candidate_created_utc": "2024-06-24T20:20:05.041Z",
+      "candidate_s3_last_modified": "2024-06-25T03:29:12.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    },
+    {
+      "cutoff_utc": "2024-06-30T12:00:00Z",
+      "horizon_hours": 32,
+      "request_from_utc": "2024-06-30T12:00:00.000Z",
+      "request_to_utc": "2024-07-01T20:00:00.000Z",
+      "historical_reconstruction_union_covers_horizon": true,
+      "candidate_selection": "Latest CREATION_DATE among records with CREATION_DATE and S3 LastModified <= cutoff, ties by LastModified and release_id. This is only a candidate, not historical publication evidence.",
+      "candidate_raw_record_id": "nasa_jsc_oem:2024-06-28:a532fbf65e18",
+      "candidate_release_id": "2024-06-28",
+      "candidate_created_utc": "2024-06-28T16:14:36.949Z",
+      "candidate_s3_last_modified": "2024-06-29T04:51:51.000Z",
+      "candidate_covers_horizon": true,
+      "strict_replay_eligible": false,
+      "strict_replay_blocker": "No independently proved historical public availability of the exact OEM version."
+    }
+  ],
+  "retrieval_failures": []
+}

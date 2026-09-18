@@ -1,0 +1,82 @@
+{
+  "reference": "pyIGRF 0.3.3 independent harmonic synthesis with identical IGRF13.shc inputs",
+  "source": "https://github.com/zzyztyy/pyIGRF/tree/v0.3.3",
+  "coefficient_sha256": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522",
+  "tolerance_nT": 1.0,
+  "tolerance_reason": "Independent evaluators, identical coefficients/calendar; geodetic conversion constants differ slightly. Not a bound on physical IGRF error.",
+  "original_comparison_note": "Native coefficient bundles differed by up to 2.375 nT in total field. Inputs were aligned, not the acceptance tolerance widened.",
+  "cases": [
+    {
+      "lat_deg": 0,
+      "lon_deg": 0,
+      "alt_km": 400,
+      "decimal_year": 2024.0,
+      "time_utc": "2024-01-01T00:00:00Z",
+      "north_nT": 22618.12310106139,
+      "east_nT": -1726.7180890430514,
+      "down_nT": -11746.243045235602,
+      "B_nT": 25544.769986271964,
+      "native_coefficient_bundle_B_nT": 25545.19865809493
+    },
+    {
+      "lat_deg": -30,
+      "lon_deg": -50,
+      "alt_km": 420,
+      "decimal_year": 2024.0,
+      "time_utc": "2024-01-01T00:00:00Z",
+      "north_nT": 13805.743231347582,
+      "east_nT": -3976.2006085490193,
+      "down_nT": -12912.378775321258,
+      "B_nT": 19316.786562124977,
+      "native_coefficient_bundle_B_nT": 19319.16088115126
+    },
+    {
+      "lat_deg": 51,
+      "lon_deg": 20,
+      "alt_km": 410,
+      "decimal_year": 2024.0,
+      "time_utc": "2024-01-01T00:00:00Z",
+      "north_nT": 16416.918160588,
+      "east_nT": 1550.4804641180572,
+      "down_nT": 38279.58149897962,
+      "B_nT": 41680.27772577912,
+      "native_coefficient_bundle_B_nT": 41680.742446142656
+    },
+    {
+      "lat_deg": -51,
+      "lon_deg": 120,
+      "alt_km": 450,
+      "decimal_year": 2024.0,
+      "time_utc": "2024-01-01T00:00:00Z",
+      "north_nT": 7899.208073753692,
+      "east_nT": -1945.0177445199888,
+      "down_nT": -51798.569678490065,
+      "B_nT": 52433.5045839618,
+      "native_coefficient_bundle_B_nT": 52432.992990585575
+    },
+    {
+      "lat_deg": 0,
+      "lon_deg": 180,
+      "alt_km": 400,
+      "decimal_year": 2024.5,
+      "time_utc": "2024-07-02T00:00:00Z",
+      "north_nT": 27621.973035668,
+      "east_nT": 4785.94032614264,
+      "down_nT": -3095.282643416027,
+      "B_nT": 28203.889693288776,
+      "native_coefficient_bundle_B_nT": 28204.70800040214
+    },
+    {
+      "lat_deg": 80,
+      "lon_deg": 0,
+      "alt_km": 0,
+      "decimal_year": 2024.0,
+      "time_utc": "2024-01-01T00:00:00Z",
+      "north_nT": 6511.790420759966,
+      "east_nT": 87.22125306677626,
+      "down_nT": 54772.71638737275,
+      "B_nT": 55158.512330214806,
+      "native_coefficient_bundle_B_nT": 55160.179166215385
+    }
+  ]
+}
