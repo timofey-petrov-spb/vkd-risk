@@ -4,11 +4,11 @@ dist*/
 .vs/
 .vscode/
 *.user
-CMakeUserPresets.json
 __pycache__/
 *.pyc
-installer/output/
-*.obj
-*.pdb
-*.ilk
-*.exp
+.pytest_cache/
+.venv/
+.env
+*.egg-info/
+.streamlit/secrets.toml
+data/cache/
