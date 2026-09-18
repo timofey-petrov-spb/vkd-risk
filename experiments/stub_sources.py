@@ -29,7 +29,7 @@ from vkd.types import EnvironmentSample, Kind
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(_ROOT, 'data', 'cache')
 SNAP = os.path.join(_ROOT, 'data', 'spaceweather')
-TIMEOUT_S = 12
+TIMEOUT_S = 8      # CelesTrak временами не отвечает; при отказе — кеш или снимок со статусом
 
 URLS = {
     'goes': 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json',

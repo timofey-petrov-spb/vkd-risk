@@ -72,7 +72,11 @@ class Result:
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
         disabled: Optional[dict] = None, thresholds: Optional[Thresholds] = None,
         scenario: Optional[Scenario] = None, T_months: int = 6,
-        fetched: Optional[tuple] = None, now: Optional[datetime] = None) -> Result:
+        fetched: Optional[tuple] = None, now: Optional[datetime] = None,
+        tle_override_path: Optional[str] = None) -> Result:
+    """tle_override_path — воспроизведение сохранённого расчёта: орбита строится по
+    сохранённому TLE, а не по текущему (Т8). До подключения OEM (A3) орбита
+    исторических режимов зависит от текущего TLE, поэтому снимок хранит его текст."""
     assert mode in MODES, mode
     disabled = disabled or {'goes': False, 'kp': False}
     th = thresholds or Thresholds()
@@ -101,7 +105,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     events = events + simulated_events(t0, scenario)
 
     # ------------------------------------------------------------ траектория
-    meta, traj = trajectory(t0, horizon_min, th.saa_B_threshold_nT, tle_path=f_tle.raw_path)
+    tle_path = tle_override_path or f_tle.raw_path
+    if tle_override_path:
+        tle_text = open(tle_override_path, encoding='utf-8').read()
+        f_tle = replace(f_tle, status_ru='TLE из сохранённого расчёта (воспроизведение)', ok=False, from_cache=True)
+    meta, traj = trajectory(t0, horizon_min, th.saa_B_threshold_nT, tle_path=tle_path)
     if mode != 'live':
         meta = replace(meta, is_reconstruction=True)
 
@@ -171,7 +179,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                     'windows': [w.start_utc.isoformat() for w in windows], 'window_offsets_min': list(window_offsets_min),
                     'thresholds': th.__dict__, 'disabled': disabled, 'cutoff_utc': cutoff_utc.isoformat() if cutoff_utc else None,
                     'T_months': T_months, 'scenario': scenario.__dict__ if is_sim else None},
-        'trajectory_meta': {**{k: iso(v) for k, v in meta.__dict__.items()}, 'orbit_module': ORBIT_SRC},
+        'trajectory_meta': {**{k: iso(v) for k, v in meta.__dict__.items()}, 'orbit_module': ORBIT_SRC,
+                            'tle_text': tle_text, 'tle_fetch_status': f_tle.status_ru},
         'windows': [{'start_utc': a.window.start_utc.isoformat(), 'duration_min': a.window.duration_min, 'mechanisms': [
             {'id': m.mechanism_id, 'mandatory': m.mandatory, 'coverage': m.coverage.value, 'needs_check': list(m.needs_check_reasons),
              'factors': [{'name': f.name, 'value': f.value, 'unit': f.unit, 'kind': f.kind.value, 'presence': f.presence.value,

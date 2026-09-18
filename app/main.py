@@ -61,6 +61,25 @@ with st.sidebar:
     disabled = {s: st.checkbox('Отключить %s' % s, key='dis_' + s) for s in ('goes', 'kp')}
     if st.button('Обновить данные сейчас'):
         st.cache_data.clear()
+    auto_min = st.select_slider('Автообновление в текущем режиме, мин', [0, 5, 10, 15], value=5,
+                                help='0 — выключено. Частота публикации: GOES 5 мин, Kp 3 ч, TLE по мере выпуска.')
+
+
+# автообновление: фрагмент перезапускает расчёт с очисткой кеша по таймеру (Т1: «данные обновляются
+# автоматически с учётом частоты публикации»; кнопка выше — принудительное обновление)
+if mode == 'live' and auto_min:
+    @st.fragment(run_every=timedelta(minutes=auto_min))
+    def _auto_refresh():
+        last = st.session_state.get('_auto_last')
+        nowr = datetime.now(timezone.utc)
+        if last is not None and (nowr - last) >= timedelta(minutes=auto_min) - timedelta(seconds=5):
+            st.cache_data.clear()
+            st.session_state['_auto_last'] = nowr
+            st.rerun()
+        if last is None:
+            st.session_state['_auto_last'] = nowr
+        st.caption('Автообновление каждые %d мин; последнее: %s UTC' % (auto_min, st.session_state['_auto_last'].strftime('%H:%M:%S')))
+    _auto_refresh()
     with st.expander('Что если — стресс-сценарий', expanded=False):
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15)
         sc_sep_on = st.checkbox('Смоделировать протонное событие')

@@ -1,7 +1,7 @@
 {
  "schema_version": "2.1",
  "algorithm_version": "0.3.0-b3",
- "computed_utc": "2026-09-18T21:36:00+00:00",
+ "computed_utc": "2026-09-18T21:46:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -42,10 +42,12 @@
   "coverage_to_utc": "2024-05-11T05:59:00+00:00",
   "created_utc": null,
   "available_utc": null,
-  "fetched_utc": "2026-09-18T21:36:35.168162+00:00",
+  "fetched_utc": "2026-09-18T21:46:40.384179+00:00",
   "is_reconstruction": true,
   "field_model": "IGRF-14 (ppigrf)",
-  "orbit_module": "experiments.stub_orbit — временно, дипольная L, помечена в статусе точек"
+  "orbit_module": "experiments.stub_orbit — временно, дипольная L, помечена в статусе точек",
+  "tle_text": "ISS (ZARYA)             \n1 25544U 98067A   26260.49772423  .00006372  00000+0  12306-3 0  9996\n2 25544  51.6307 203.2288 0004826 149.9993 210.1273 15.49152308586062\n",
+  "tle_fetch_status": "отказ источника (ReadTimeout): снимок репозитория, давность 1586 мин"
  },
  "windows": [
   {
@@ -356,21 +358,21 @@
  "sources": {
   "celestrak_gp": {
    "role": "орбита",
-   "status": "отказ источника (ReadTimeout): снимок репозитория, давность 1576 мин",
+   "status": "отказ источника (ReadTimeout): снимок репозитория, давность 1586 мин",
    "live_ok": false,
    "from_cache": true,
    "fetched_utc": "2026-09-17T19:20:41.462844+00:00",
    "data_utc": null,
-   "age_min": 1575.8942720999999,
+   "age_min": 1585.9809644666668,
    "epoch_utc": "2026-09-17T11:56:43.373474+00:00",
-   "age_h": 33.7
+   "age_h": 33.8
   },
   "noaa_swpc_goes": {
    "role": "протоны ≥10 МэВ",
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T21:36:22.670962+00:00",
+   "fetched_utc": "2026-09-18T21:46:32.042878+00:00",
    "data_utc": null,
    "age_min": 0.0
   },
@@ -379,7 +381,7 @@
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T21:36:23.111908+00:00",
+   "fetched_utc": "2026-09-18T21:46:32.312396+00:00",
    "data_utc": null,
    "age_min": 0.0
   },

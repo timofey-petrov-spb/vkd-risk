@@ -37,7 +37,9 @@ def robustness(traj: Sequence[TrajectoryPoint], windows: Sequence[Window], run: 
     for thr in thr_grid:
         tr = resaa(traj, thr)
         for e in e_grid:
-            A, rec = run(tr, {'saa_B_threshold_nT': thr, 'e_min_MeV': e})
+            # допуск внутри сетки — ноль: предпочтение определяется ранжированием, иначе
+            # разброс зависел бы от самого допуска (дефект воспроизводимости, найден повтором примера)
+            A, rec = run(tr, {'saa_B_threshold_nT': thr, 'e_min_MeV': e, 'equiv_tol_min': 0.0})
             prefs[(thr, e)] = rec.preferred.start_utc.isoformat() if rec.preferred else None
             if rec.preferred is not None:
                 a = next(x for x in A if x.window.start_utc == rec.preferred.start_utc)
