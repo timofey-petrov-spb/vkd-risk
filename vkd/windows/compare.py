@@ -46,6 +46,7 @@ class Thresholds:
     equiv_tol_min: float = 5.0              # инженерная настройка, см. п. 5 правила
     e_min_MeV: float = 30.0                 # канал захваченных протонов для интеграла
     saa_B_threshold_nT: float = 24000.0     # инженерная оценка для ~420 км, в чувствительность
+    tle_max_age_days: float = 3.0           # A3: обе границы горизонта не дальше этого от эпохи TLE; инженерный предел, не гарантия ошибки
 
 
 def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
@@ -54,7 +55,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                   now_utc, mmod_hits: Optional[float] = None,
                   mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается',
                   events: Sequence[EventInterval] = (),
-                  catalog_coverage: Optional[tuple] = None) -> WindowAssessment:
+                  catalog_coverage: Optional[tuple] = None,
+                  forecasts: Sequence[EnvironmentSample] = (),
+                  mmod_cov_fraction: float = 1.0) -> WindowAssessment:
     """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
     спецификации A5). None — линия не подключена, покрытие NONE.
     events: события с интервалами (в т. ч. моделируемые); пересечение окна
@@ -98,6 +101,32 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         goes_note = ('наблюдений GOES нет; каталог уведомлений DONKI покрывает период %s — %s, протонных событий '
                      'не объявлено' % (catalog_coverage[0].strftime('%Y-%m-%d'), catalog_coverage[1].strftime('%Y-%m-%d')))
 
+    # --- прогнозы NOAA, выпущенные до отсечки (история): факторы-прогнозы, не наблюдения ---
+    # Исходное разрешение источника сохраняется: суточная вероятность остаётся суточной
+    # (vkd/history/README.md), прогноз Kp — по 3-часовым интервалам. Покрытие окна
+    # ячейками объявляется; отсутствие прогноза не ухудшает покрытие механизма.
+    fc_factors, fc_limit = [], []
+    if forecasts:
+        from vkd.integration.noaa_forecast import covered_fraction, in_window
+        for cid, name, unit, rule in (
+                ('kp_forecast', 'прогноз Kp NOAA, максимум в окне', '1', 'NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск до отсечки'),
+                ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA', '%', 'NOAA SWPC 3-day forecast, суточная вероятность; выпуск до отсечки'),
+                ('proton_prob_daily', 'вероятность протонного события за сутки, прогноз NOAA', '%', 'NOAA SWPC daypre, суточная вероятность; выпуск до отсечки')):
+            ss = [s for s in forecasts if s.channel_id == cid]
+            hit = in_window(ss, win.start_utc, win.duration_min)
+            frac = covered_fraction(ss, win.start_utc, win.duration_min)
+            cov = Coverage.FULL if frac >= 0.95 else (Coverage.PARTIAL if frac >= 0.5 else Coverage.NONE)
+            val = max((s.value for s in hit), default=None)
+            pub = max((s.published_utc for s in hit if s.published_utc), default=None)
+            fc_factors.append(FactorValue(
+                name, val, unit, Kind.EXTERNAL_FORECAST, Presence.UNKNOWN if val is None else Presence.DETECTED, cov,
+                tuple(sorted({s.raw_record_id for s in hit})), rule + (' %s' % pub.strftime('%m-%d %H:%MZ') if pub else ''),
+                ('суточная вероятность источника, не вероятность за окно; ' if unit == '%' else 'прогноз, не наблюдение; ')
+                + 'покрытие окна ячейками %.0f %%' % (100 * frac)))
+            if cid == 'kp_forecast' and val is not None and val >= th.kp_check:
+                fc_limit.append('прогноз NOAA: Kp %.1f ≥ %.0f в окне (выпуск %s) — триггер проверки (политика прототипа)'
+                                % (val, th.kp_check, pub.strftime('%m-%d %H:%MZ') if pub else '?'))
+
     m1 = MechanismAssessment(
         mechanism_id='spaceweather', mandatory=True,
         factors=(
@@ -110,22 +139,25 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                         'доля точек с моделью %.0f %%; статусы: %s' % (100.0 * len(fl_vals) / max(len(pts), 1), ', '.join(sorted(fl_status)))),
             FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
                         _presence(goes_val), goes_cov, (goes.raw_record_id,) if goes else (), 'NOAA SWPC, последнее значение', goes_note),
-        ),
+        ) + tuple(fc_factors),
         coverage=_min_cov(cov_traj, cov_saa, cov_fl, goes_cov),
         needs_check=False,
     )
 
-    # --- механизм 2: статистика метеороидов ECSS — ещё не подключена --------
+    # --- механизм 2: статистика метеороидов ECSS по высоте трассы (B2 по A5) --------
+    mm_cov = Coverage.NONE if mmod_hits is None else (
+        Coverage.FULL if mmod_cov_fraction >= 0.95 else (Coverage.PARTIAL if mmod_cov_fraction >= 0.5 else Coverage.NONE))
     m2 = MechanismAssessment(
         mechanism_id='mmod_stat', mandatory=True,
         factors=(FactorValue('ожидаемое число попаданий, пластина 1 м²', mmod_hits, 'шт', Kind.OWN_CALCULATION,
                              Presence.UNKNOWN if mmod_hits is None else Presence.DETECTED,
-                             Coverage.NONE if mmod_hits is None else Coverage.FULL, () if mmod_hits is None else ('ecss_grun',),
+                             mm_cov, () if mmod_hits is None else ('ecss_grun', 'trajectory'),
                              mmod_rule,
-                             'линия не подключена: расчёт невозможен' if mmod_hits is None
+                             'расчёт невозможен: нет трассы окна' if mmod_hits is None
                              else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
-                                  '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены'),),
-        coverage=Coverage.NONE if mmod_hits is None else Coverage.FULL, needs_check=False,
+                                  '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены'
+                                  + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),),
+        coverage=mm_cov, needs_check=False,
     )
 
     # --- линия 3: сближения, необязательная ----------------------------------
@@ -151,6 +183,7 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         limit.append('Kp = %.1f ≥ %.0f (G3): триггер дополнительной проверки — политика прототипа' % (kp.value, th.kp_check))
     if in_win:
         limit.append('сообщение о сближении с TCA в окне: требует ручной оценки')
+    limit.extend(fc_limit)      # прогноз NOAA Kp ≥ порога в окне — история, выпуск до отсечки
     # Условиями становятся ТОЛЬКО протонные события и бури (CONTRACT v3.1 п. 4.2);
     # вспышки, выбросы и ударные волны — информация в картине, не условие
     # (эксперимент на контрольной неделе: «любое событие → условие» давало 113 ложных пометок).

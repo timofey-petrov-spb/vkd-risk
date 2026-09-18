@@ -75,6 +75,35 @@ def factors_table_j6(alt_km: float) -> tuple[float, float, float]:
     return TABLE_J6[-1][1:]
 
 
+def meteoroid_hits_track(times_utc, alts_km, area_m2: float = 1.0, m_min_g: float = 1e-3) -> MeteoroidResult:
+    """Спецификация A5 (docs/methods/METEOROIDS_GRUN_SPEC.md, §2): поток F_LEO по
+    ФАКТИЧЕСКОЙ высоте каждой точки трассы (Table J-6 линейно между узлами), интеграл
+    трапециями по фактическим интервалам dt, начало и конец окна включены;
+    N = A·∫F dt / 31 557 600. Число точек само по себе не даёт лишней минуты."""
+    if len(times_utc) < 2 or len(times_utc) != len(alts_km):
+        raise ValueError('нужны минимум две точки трассы с высотами')
+    t = [(x - times_utc[0]).total_seconds() for x in times_utc]
+    if any(b <= a for a, b in zip(t, t[1:])):
+        raise ValueError('времена трассы должны строго возрастать')
+    F0 = grun_flux_1au(m_min_g)
+    fac = [factors_table_j6(h) for h in alts_km]
+    F = [F0 * g * s * k for g, s, k in fac]
+    integral = sum(0.5 * (F[i] + F[i + 1]) * (t[i + 1] - t[i]) for i in range(len(t) - 1))   # (1/(м²·год))·с
+    N = area_m2 * integral / SEC_PER_YEAR
+    duration_h = t[-1] / 3600.0
+    G, s_f, K = (sum(f[i] for f in fac) / len(fac) for i in range(3))
+    h_lo, h_hi = min(alts_km), max(alts_km)
+    return MeteoroidResult(
+        N=N, F0_per_m2_yr=F0, F_orbit_per_m2_yr=N * SEC_PER_YEAR / (area_m2 * t[-1]) if t[-1] > 0 else 0.0,
+        G=G, s_f=s_f, K=K, area_m2=area_m2, duration_h=duration_h, m_min_g=m_min_g,
+        p_at_least_one=1.0 - math.exp(-N), factor_uncertainty='×0,33…3 (ECSS J.2.3.2)', streams_included=False,
+        rule='ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы %.0f…%.0f км (средние G=%.2f, s_f=%.2f, '
+             'K=%.2f), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина '
+             '%g м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён'
+             % (h_lo, h_hi, G, s_f, K, area_m2),
+    )
+
+
 def meteoroid_hits(alt_km: float, area_m2: float, duration_h: float, m_min_g: float = 1e-3) -> MeteoroidResult:
     F0 = grun_flux_1au(m_min_g)
     G, s_f, K = factors_table_j6(alt_km)

@@ -53,6 +53,23 @@ def gst_kp_samples() -> tuple[list[EnvironmentSample], dict]:
     return out, raw
 
 
+_A1_PUB: Optional[dict] = None
+
+
+def _a1_published() -> dict:
+    """messageID → published_utc из реестра A1 (data/source_registry_2024/donki/records.json)."""
+    global _A1_PUB
+    if _A1_PUB is None:
+        _A1_PUB = {}
+        path = os.path.join(_ROOT, 'data', 'source_registry_2024', 'donki', 'records.json')
+        if os.path.exists(path):
+            for r in json.load(io.open(path, encoding='utf-8')).get('records', []):
+                t = _t(r.get('published_utc'))
+                if t is not None:
+                    _A1_PUB[r['release_id']] = max(t, _A1_PUB.get(r['release_id'], t))
+    return _A1_PUB
+
+
 def notifications_events() -> tuple[list[EventInterval], dict]:
     """Датированные уведомления DONKI (ALERT/WARNING/…) как события с публикацией."""
     out, raw = [], {}
@@ -62,6 +79,9 @@ def notifications_events() -> tuple[list[EventInterval], dict]:
                 mid, issued = n.get('messageID'), _t(n.get('messageIssueTime'))
                 if not mid or issued is None:
                     continue
+                # реестр A1 хранит более позднее из времени API и времени в теле сообщения
+                # (API округляет вниз до минуты; у 20240516-7D-001 разница 13 ч 56 мин) — берём его
+                issued = max(issued, _a1_published().get(mid, issued))
                 rid = 'donki_msg#' + mid
                 out.append(EventInterval(
                     event_id=rid, kind_of_event=kind.upper(), kind=Kind.EXTERNAL_FORECAST,

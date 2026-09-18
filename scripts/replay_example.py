@@ -66,7 +66,9 @@ def main(path: str):
             thresholds=th, scenario=sc, T_months=req.get('T_months', 6), tle_override_path=tle_path)
     old, new = S['recommendation'], r.S['recommendation']
     print('файл           :', path)
-    print('TLE            :', 'из сохранённого расчёта' if tle_path else 'НЕ СОХРАНЁН — орбита по текущему TLE, совпадение не гарантируется')
+    print('TLE            :', 'из сохранённого расчёта' if tle_path else (
+        'не нужен — орбита из архива OEM 2024 (A1/A3), повтор детерминирован' if mode != 'live'
+        else 'НЕ СОХРАНЁН — орбита по текущему TLE, совпадение не гарантируется'))
     print('режим          :', mode, '| t0', t0.isoformat(), '| версия алгоритма сохранённая/текущая:', S.get('algorithm_version'), '/', r.S['algorithm_version'])
     print('вердикт был    :', old['verdict'], '|', old['rule'])
     print('вердикт теперь :', new['verdict'], '|', new['rule'])

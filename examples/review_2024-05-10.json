@@ -1,7 +1,7 @@
 {
  "schema_version": "2.1",
- "algorithm_version": "0.3.0-b3",
- "computed_utc": "2026-09-18T21:46:00+00:00",
+ "algorithm_version": "0.4.0-i1",
+ "computed_utc": "2026-09-18T22:22:00+00:00",
  "mode": "Исторический разбор",
  "mode_id": "history_review",
  "request": {
@@ -23,7 +23,8 @@
    "goes_max_age_min": 60.0,
    "equiv_tol_min": 1.0,
    "e_min_MeV": 30.0,
-   "saa_B_threshold_nT": 24000.0
+   "saa_B_threshold_nT": 24000.0,
+   "tle_max_age_days": 3.0
   },
   "disabled": {
    "goes": false,
@@ -34,20 +35,72 @@
   "scenario": null
  },
  "trajectory_meta": {
-  "source_id": "celestrak_gp",
-  "method": "sgp4",
-  "frame": "TEME→WGS84",
-  "epoch_utc": "2026-09-17T11:56:43.373474+00:00",
+  "source_id": "nasa_jsc_oem",
+  "method": "oem_interp",
+  "frame": "EME2000 -> ITRS / WGS84",
+  "epoch_utc": null,
   "coverage_from_utc": "2024-05-10T12:00:00+00:00",
-  "coverage_to_utc": "2024-05-11T05:59:00+00:00",
-  "created_utc": null,
+  "coverage_to_utc": "2024-05-11T06:00:00+00:00",
+  "created_utc": "2024-05-08T16:49:32.385000+00:00",
   "available_utc": null,
-  "fetched_utc": "2026-09-18T21:47:23.836196+00:00",
+  "fetched_utc": "2026-09-18T20:39:26+00:00",
   "is_reconstruction": true,
-  "field_model": "IGRF-14 (ppigrf)",
-  "orbit_module": "experiments.stub_orbit — временно, дипольная L, помечена в статусе точек",
-  "tle_text": "ISS (ZARYA)             \n1 25544U 98067A   26260.49772423  .00006372  00000+0  12306-3 0  9996\n2 25544  51.6307 203.2288 0004826 149.9993 210.1273 15.49152308586062\n",
-  "tle_fetch_status": "отказ источника (ReadTimeout): снимок репозитория, давность 1587 мин"
+  "field_model": "IGRF-13",
+  "orbit_module": "vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; IGRF-13 для 2024 и IGRF-14 сейчас; L, B/B0 и жёсткость — центральный наклонённый диполь (приближение)",
+  "status": "OEM NASA/JSC, созданный 2024-05-08 16:49Z (реконструкция)",
+  "strictness": "declared_reconstruction",
+  "error": null,
+  "n_points": 1081,
+  "provenance": {
+   "algorithm_version": "orbit-a3-v1",
+   "mode": "history_review",
+   "cutoff_utc": null,
+   "step_seconds": 60,
+   "records": {
+    "nasa_jsc_oem:2024-05-08:a164f5909b9f": {
+     "source_id": "nasa_jsc_oem",
+     "release_id": "2024-05-08",
+     "sha256": "a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce",
+     "bytes": 718328,
+     "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-08/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+     "created_utc": "2024-05-08T16:49:32.385Z",
+     "published_utc": null,
+     "available_utc": null,
+     "fetched_utc": "2026-09-18T20:39:26Z",
+     "strict_replay_eligibility": "historical_reconstruction_only"
+    },
+    "igrf13:357536152bb6": {
+     "source_id": "igrf13",
+     "release_id": "ppigrf 2.1.0",
+     "sha256": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522",
+     "bytes": 40160,
+     "model": "IGRF13",
+     "distribution": "ppigrf 2.1.0"
+    }
+   },
+   "segments": [
+    {
+     "raw_record_id": "nasa_jsc_oem:2024-05-08:a164f5909b9f",
+     "from_utc": "2024-05-10T12:00:00Z",
+     "to_utc": "2024-05-11T06:00:00Z",
+     "frame": "EME2000",
+     "interpolation": "piecewise cubic Hermite, position and velocity"
+    }
+   ],
+   "limitations": [
+    "OEM timestamps of creation/modification do not prove historical public availability.",
+    "IGRF is the internal main field; no storm-time external field is modelled.",
+    "L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.",
+    "Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.",
+    "SAA flag is the configured |B| threshold proxy, not an official region boundary."
+   ],
+   "earth_orientation": "Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy",
+   "max_tle_age_days": null,
+   "strict_attempt_error": null,
+   "errors": null
+  },
+  "tle_text": null,
+  "tle_fetch_status": null
  },
  "windows": [
   {
@@ -74,7 +127,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 76.0,
+       "value": 72.0,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -87,17 +140,17 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 4771652.617564416,
+       "value": 0.0,
        "unit": "част./см²",
        "kind": "own_calculation",
-       "presence": "detected",
+       "presence": "not_detected",
        "coverage": "partial",
        "records": [
         "trajectory",
         "ost1044_A"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-       "limits": "доля точек с моделью 82 %; статусы: beyond_mirror, no_model_L, ok"
+       "limits": "доля точек с моделью 76 %; статусы: beyond_mirror, no_model_L"
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
@@ -109,6 +162,45 @@
        "records": [],
        "rule": "NOAA SWPC, последнее значение",
        "limits": "наблюдений GOES нет; канал частично покрыт датированными уведомлениями DONKI о протонных событиях"
+      },
+      {
+       "name": "прогноз Kp NOAA, максимум в окне",
+       "value": 3.67,
+       "unit": "1",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+       ],
+       "rule": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск до отсечки 05-10 00:30Z",
+       "limits": "прогноз, не наблюдение; покрытие окна ячейками 100 %"
+      },
+      {
+       "name": "вероятность S1 и выше за сутки, прогноз NOAA",
+       "value": 50.0,
+       "unit": "%",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+       ],
+       "rule": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск до отсечки 05-10 00:30Z",
+       "limits": "суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %"
+      },
+      {
+       "name": "вероятность протонного события за сутки, прогноз NOAA",
+       "value": 50.0,
+       "unit": "%",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_daypre:20240509daypre:22af1782371c"
+       ],
+       "rule": "NOAA SWPC daypre, суточная вероятность; выпуск до отсечки 05-09 22:12Z",
+       "limits": "суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %"
       }
      ]
     },
@@ -120,16 +212,17 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.664150725134196e-07,
+       "value": 5.62958849120024e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
        "coverage": "full",
        "records": [
-        "ecss_grun"
+        "ecss_grun",
+        "trajectory"
        ],
-       "rule": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 (G=1.99, s_f=0.64, K=1.09) × A × T; односторонняя случайно кувыркающаяся пластина; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён; h=454 км",
-       "limits": "природные метеороиды, случайно ориентированная пластина; техногенные частицы не включены"
+       "rule": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 411…433 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
+       "limits": "природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 (ECSS J.2.3.2); техногенные частицы и потоки даты не включены"
       }
      ]
     },
@@ -178,7 +271,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 64.0,
+       "value": 67.0,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -191,17 +284,17 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 4597095.036188061,
+       "value": 0.0,
        "unit": "част./см²",
        "kind": "own_calculation",
-       "presence": "detected",
+       "presence": "not_detected",
        "coverage": "partial",
        "records": [
         "trajectory",
         "ost1044_A"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-       "limits": "доля точек с моделью 86 %; статусы: beyond_mirror, no_model_L, ok"
+       "limits": "доля точек с моделью 78 %; статусы: beyond_mirror, no_model_L"
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
@@ -213,6 +306,45 @@
        "records": [],
        "rule": "NOAA SWPC, последнее значение",
        "limits": "наблюдений GOES нет; канал частично покрыт датированными уведомлениями DONKI о протонных событиях"
+      },
+      {
+       "name": "прогноз Kp NOAA, максимум в окне",
+       "value": 5.33,
+       "unit": "1",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+       ],
+       "rule": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск до отсечки 05-10 00:30Z",
+       "limits": "прогноз, не наблюдение; покрытие окна ячейками 100 %"
+      },
+      {
+       "name": "вероятность S1 и выше за сутки, прогноз NOAA",
+       "value": 50.0,
+       "unit": "%",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+       ],
+       "rule": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск до отсечки 05-10 00:30Z",
+       "limits": "суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %"
+      },
+      {
+       "name": "вероятность протонного события за сутки, прогноз NOAA",
+       "value": 50.0,
+       "unit": "%",
+       "kind": "external_forecast",
+       "presence": "detected",
+       "coverage": "full",
+       "records": [
+        "noaa_ngdc_daypre:20240509daypre:22af1782371c"
+       ],
+       "rule": "NOAA SWPC daypre, суточная вероятность; выпуск до отсечки 05-09 22:12Z",
+       "limits": "суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %"
       }
      ]
     },
@@ -224,16 +356,17 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.66387319936302e-07,
+       "value": 5.629941823373358e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
        "coverage": "full",
        "records": [
-        "ecss_grun"
+        "ecss_grun",
+        "trajectory"
        ],
-       "rule": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 (G=1.99, s_f=0.64, K=1.09) × A × T; односторонняя случайно кувыркающаяся пластина; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён; h=454 км",
-       "limits": "природные метеороиды, случайно ориентированная пластина; техногенные частицы не включены"
+       "rule": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 411…432 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
+       "limits": "природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 (ECSS J.2.3.2); техногенные частицы и потоки даты не включены"
       }
      ]
     },
@@ -297,7 +430,7 @@
    "kind": "own_calculation",
    "impact_ru": "Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше экспозиция при прочих равных. Это условие на траектории, не доза человека.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
-   "data_ru": "76 мин",
+   "data_ru": "72 мин",
    "source_ru": "trajectory",
    "rule_ru": "порог |B| 24000 нТл",
    "limits_ru": "покрытие полное; наличие воздействия: detected; дипольная L — исследовательское приближение; уверенность зависит от точности траектории и границ модели, не от статистики",
@@ -311,10 +444,10 @@
    "kind": "own_calculation",
    "impact_ru": "Интеграл потока захваченных протонов вдоль пути за окно. Показатель относительного сравнения окон между собой; в дозу не переводится без модели защиты и ткани.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
-   "data_ru": "4.772e+06 част./см²",
+   "data_ru": "0 част./см²",
    "source_ru": "trajectory; ost1044_A",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; всенаправленный поток; по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен",
-   "limits_ru": "покрытие частичное; наличие воздействия: detected; доля точек с моделью 82 %; статусы: beyond_mirror, no_model_L, ok; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "limits_ru": "покрытие частичное; наличие воздействия: not_detected; доля точек с моделью 76 %; статусы: beyond_mirror, no_model_L; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "trajectory",
     "ost1044_A"
@@ -331,6 +464,48 @@
    "rule_ru": "NOAA SWPC, последнее значение",
    "limits_ru": "покрытие частичное; наличие воздействия: unknown; наблюдений GOES нет; канал частично покрыт датированными уведомлениями DONKI о протонных событиях",
    "record_ids": [],
+   "severity": "info"
+  },
+  {
+   "title": "прогноз Kp NOAA, максимум в окне",
+   "kind": "external_forecast",
+   "impact_ru": "Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам, выпущенный до отсечки. Kp ≥ 7 (G3) — сильная геомагнитная буря: геомагнитное обрезание ослабевает и поток протонов на орбите станции растёт. Это внешний прогноз, не наблюдение.",
+   "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
+   "data_ru": "3.67 1",
+   "source_ru": "noaa_ngdc_3day_forecast, запись noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a, момент 2024-05-11 00:00Z, публикация 2024-05-10 00:30Z, получено 20:40Z, качество model",
+   "rule_ru": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск до отсечки 05-10 00:30Z",
+   "limits_ru": "покрытие полное; наличие воздействия: detected; прогноз, не наблюдение; покрытие окна ячейками 100 %",
+   "record_ids": [
+    "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+   ],
+   "severity": "info"
+  },
+  {
+   "title": "вероятность S1 и выше за сутки, прогноз NOAA",
+   "kind": "external_forecast",
+   "impact_ru": "Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.",
+   "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
+   "data_ru": "50 %",
+   "source_ru": "noaa_ngdc_3day_forecast, запись noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a, момент 2024-05-11 00:00Z, публикация 2024-05-10 00:30Z, получено 20:40Z, качество model",
+   "rule_ru": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск до отсечки 05-10 00:30Z",
+   "limits_ru": "покрытие полное; наличие воздействия: detected; суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %",
+   "record_ids": [
+    "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a"
+   ],
+   "severity": "info"
+  },
+  {
+   "title": "вероятность протонного события за сутки, прогноз NOAA",
+   "kind": "external_forecast",
+   "impact_ru": "Суточная вероятность протонного события по прогнозу NOAA daypre. Относится к суткам целиком; в вероятность за окно не пересчитывается.",
+   "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
+   "data_ru": "50 %",
+   "source_ru": "noaa_ngdc_daypre, запись noaa_ngdc_daypre:20240509daypre:22af1782371c, момент 2024-05-11 00:00Z, публикация 2024-05-09 22:12Z, получено 20:40Z, качество model",
+   "rule_ru": "NOAA SWPC daypre, суточная вероятность; выпуск до отсечки 05-09 22:12Z",
+   "limits_ru": "покрытие полное; наличие воздействия: detected; суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %",
+   "record_ids": [
+    "noaa_ngdc_daypre:20240509daypre:22af1782371c"
+   ],
    "severity": "info"
   },
   {
@@ -470,12 +645,13 @@
    "kind": "own_calculation",
    "impact_ru": "Статистика природных метеороидов на опорную площадь за окно. Не вероятность повреждения скафандра и не попадание в космонавта.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
-   "data_ru": "5.664e-07 шт",
-   "source_ru": "ecss_grun",
-   "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 (G=1.99, s_f=0.64, K=1.09) × A × T; односторонняя случайно кувыркающаяся пластина; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён; h=454 км",
-   "limits_ru": "покрытие полное; наличие воздействия: detected; природные метеороиды, случайно ориентированная пластина; техногенные частицы не включены; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "data_ru": "5.63e-07 шт",
+   "source_ru": "ecss_grun; trajectory",
+   "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 411…433 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
+   "limits_ru": "покрытие полное; наличие воздействия: detected; природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 (ECSS J.2.3.2); техногенные частицы и потоки даты не включены; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
-    "ecss_grun"
+    "ecss_grun",
+    "trajectory"
    ],
    "severity": "info"
   },
@@ -493,23 +669,23 @@
   }
  ],
  "sources": {
-  "celestrak_gp": {
+  "orbit": {
    "role": "орбита",
-   "status": "отказ источника (ReadTimeout): снимок репозитория, давность 1587 мин",
-   "live_ok": false,
-   "from_cache": true,
-   "fetched_utc": "2026-09-17T19:20:41.462844+00:00",
-   "data_utc": null,
-   "age_min": 1586.7053909833335,
-   "epoch_utc": "2026-09-17T11:56:43.373474+00:00",
-   "age_h": 33.8
+   "status": "OEM NASA/JSC, созданный 2024-05-08 16:49Z (реконструкция)",
+   "strictness": "declared_reconstruction",
+   "live_ok": null,
+   "from_cache": null,
+   "fetched_utc": "2026-09-18T20:39:26+00:00",
+   "epoch_utc": null,
+   "age_h": null,
+   "source_id": "nasa_jsc_oem"
   },
   "noaa_swpc_goes": {
    "role": "протоны ≥10 МэВ",
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T21:47:15.451215+00:00",
+   "fetched_utc": "2026-09-18T22:23:00.315439+00:00",
    "data_utc": null,
    "age_min": 0.0
   },
@@ -518,7 +694,7 @@
    "status": "получено живьём, HTTP 200",
    "live_ok": true,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T21:47:15.754330+00:00",
+   "fetched_utc": "2026-09-18T22:23:01.852491+00:00",
    "data_utc": null,
    "age_min": 0.0
   },
@@ -530,361 +706,481 @@
   },
   "ecss_grun": {
    "role": "метеороиды",
-   "status": "ECSS-E-ST-10-04C Rev.1: Grün (10-1), Table J-6, N = F·A·T; потоки даты не включены; контроль 5,61e-7 на 400 км/1 м²/6 ч воспроизведён",
+   "status": "ECSS-E-ST-10-04C Rev.1: Grün (10-1), Table J-6 по высоте трассы, интеграл по dt (спецификация A5, grun-ecss-2020-v1); потоки даты не включены; контроль 5,609728e-7 на 400 км/1 м²/6 ч воспроизведён",
    "live_ok": null,
    "from_cache": null
   },
   "_layers": {
    "role": "слои",
-   "status": "орбита: experiments.stub_orbit — временно, дипольная L, помечена в статусе точек; источники: experiments.stub_sources — временно: живой запрос, кеш, снимок; история: experiments.stub_history — временно: архив DONKI, уведомления с messageIssueTime"
+   "status": "орбита: vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; IGRF-13 для 2024 и IGRF-14 сейчас; L, B/B0 и жёсткость — центральный наклонённый диполь (приближение); источники: experiments.stub_sources — временно до A4: живой запрос, кеш, снимок; история: experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1"
+  },
+  "noaa_forecast_kp_forecast": {
+   "role": "прогноз Kp NOAA, 3-часовые интервалы",
+   "status": "полное покрытие горизонта; выпуск 202405100030three_day_forecast от 2024-05-10 00:30Z",
+   "live_ok": null,
+   "from_cache": true,
+   "coverage_fraction": 1.0
+  },
+  "noaa_forecast_s1_prob_daily": {
+   "role": "вероятность S1 и выше за сутки, прогноз NOAA",
+   "status": "полное покрытие горизонта; выпуск 202405100030three_day_forecast от 2024-05-10 00:30Z",
+   "live_ok": null,
+   "from_cache": true,
+   "coverage_fraction": 1.0
+  },
+  "noaa_forecast_proton_prob_daily": {
+   "role": "вероятность протонного события за сутки, прогноз NOAA",
+   "status": "полное покрытие горизонта; выпуск 20240509daypre от 2024-05-09 22:12Z",
+   "live_ok": null,
+   "from_cache": true,
+   "coverage_fraction": 1.0
   }
  },
+ "forecasts": [
+  {
+   "channel": "kp_forecast",
+   "label": "прогноз Kp NOAA, 3-часовые интервалы",
+   "source_id": "noaa_ngdc_3day_forecast",
+   "status": "full",
+   "status_ru": "полное покрытие горизонта",
+   "coverage_fraction": 1.0,
+   "release_id": "202405100030three_day_forecast",
+   "published_utc": "2024-05-10T00:30:00+00:00",
+   "record": "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a",
+   "reason": null,
+   "gaps": [],
+   "cells": [
+    {
+     "from": "2024-05-10T12:00:00+00:00",
+     "to": "2024-05-10T15:00:00+00:00",
+     "value": 2.67
+    },
+    {
+     "from": "2024-05-10T15:00:00+00:00",
+     "to": "2024-05-10T18:00:00+00:00",
+     "value": 3.67
+    },
+    {
+     "from": "2024-05-10T18:00:00+00:00",
+     "to": "2024-05-10T21:00:00+00:00",
+     "value": 4.33
+    },
+    {
+     "from": "2024-05-10T21:00:00+00:00",
+     "to": "2024-05-11T00:00:00+00:00",
+     "value": 5.33
+    },
+    {
+     "from": "2024-05-11T00:00:00+00:00",
+     "to": "2024-05-11T03:00:00+00:00",
+     "value": 5.33
+    },
+    {
+     "from": "2024-05-11T03:00:00+00:00",
+     "to": "2024-05-11T06:00:00+00:00",
+     "value": 7.0
+    }
+   ]
+  },
+  {
+   "channel": "s1_prob_daily",
+   "label": "вероятность S1 и выше за сутки, прогноз NOAA",
+   "source_id": "noaa_ngdc_3day_forecast",
+   "status": "full",
+   "status_ru": "полное покрытие горизонта",
+   "coverage_fraction": 1.0,
+   "release_id": "202405100030three_day_forecast",
+   "published_utc": "2024-05-10T00:30:00+00:00",
+   "record": "noaa_ngdc_3day_forecast:202405100030three_day_forecast:e60a3823263a",
+   "reason": null,
+   "gaps": [],
+   "cells": [
+    {
+     "from": "2024-05-10T00:00:00+00:00",
+     "to": "2024-05-11T00:00:00+00:00",
+     "value": 50.0
+    },
+    {
+     "from": "2024-05-11T00:00:00+00:00",
+     "to": "2024-05-12T00:00:00+00:00",
+     "value": 50.0
+    }
+   ]
+  },
+  {
+   "channel": "proton_prob_daily",
+   "label": "вероятность протонного события за сутки, прогноз NOAA",
+   "source_id": "noaa_ngdc_daypre",
+   "status": "full",
+   "status_ru": "полное покрытие горизонта",
+   "coverage_fraction": 1.0,
+   "release_id": "20240509daypre",
+   "published_utc": "2024-05-09T22:12:00+00:00",
+   "record": "noaa_ngdc_daypre:20240509daypre:22af1782371c",
+   "reason": null,
+   "gaps": [],
+   "cells": [
+    {
+     "from": "2024-05-10T00:00:00+00:00",
+     "to": "2024-05-11T00:00:00+00:00",
+     "value": 50.0
+    },
+    {
+     "from": "2024-05-11T00:00:00+00:00",
+     "to": "2024-05-12T00:00:00+00:00",
+     "value": 50.0
+    }
+   ]
+  }
+ ],
  "coverage_declared": [
-  "космическая погода на траектории"
+  "космическая погода на траектории",
+  "природные метеороиды ECSS/Grün"
  ],
  "coverage_missing": [
-  "статистика метеороидов ECSS — не подключена",
-  "сближения SOCRATES — нет данных"
+  "сближения SOCRATES — нет данных",
+  "метеорные потоки конкретной даты — не включены",
+  "техногенный мусор статистически — не включён"
  ],
- "policy_note": "Исключение окон с S1–S2, Kp ≥ 7 или сообщением о сближении из автоматического выбора — консервативная политика прототипа, не эксплуатационная норма; из индексов NOAA не следует ни прерывание, ни продолжение ВКД.",
+ "policy_note": "Исключение окон с S1–S2, Kp ≥ 7 (наблюдение или прогноз NOAA) или сообщением о сближении из автоматического выбора — консервативная политика прототипа, не эксплуатационная норма; из индексов NOAA не следует ни прерывание, ни продолжение ВКД.",
  "is_simulated": false,
  "history": {
-  "provider": "experiments.stub_history — временно: архив DONKI, уведомления с messageIssueTime",
+  "provider": "experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1",
   "excluded_by_cutoff": [],
   "events_used": [
    {
     "id": "donki_msg#20240510-AL-013",
     "kind": "GST",
-    "published_utc": "2024-05-10T18:44:00+00:00",
+    "published_utc": "2024-05-10T18:44:21+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-014",
     "kind": "GST",
-    "published_utc": "2024-05-10T19:19:00+00:00",
+    "published_utc": "2024-05-10T19:19:23+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-015",
     "kind": "GST",
-    "published_utc": "2024-05-10T21:35:00+00:00",
+    "published_utc": "2024-05-10T21:35:45+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-016",
     "kind": "GST",
-    "published_utc": "2024-05-10T22:01:00+00:00",
+    "published_utc": "2024-05-10T22:01:15+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-002",
     "kind": "GST",
-    "published_utc": "2024-05-11T00:34:00+00:00",
+    "published_utc": "2024-05-11T00:34:33+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-003",
     "kind": "GST",
-    "published_utc": "2024-05-11T00:39:00+00:00",
+    "published_utc": "2024-05-11T00:39:58+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-015",
     "kind": "GST",
-    "published_utc": "2024-05-11T15:14:00+00:00",
+    "published_utc": "2024-05-11T15:14:04+00:00",
     "start_utc": "2024-05-10T15:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-004",
     "kind": "SEP",
-    "published_utc": "2024-05-09T14:00:00+00:00",
+    "published_utc": "2024-05-09T14:00:13+00:00",
     "start_utc": "2024-05-09T13:59:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-004",
     "kind": "SEP",
-    "published_utc": "2024-05-10T13:46:00+00:00",
+    "published_utc": "2024-05-10T13:46:58+00:00",
     "start_utc": "2024-05-10T13:35:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-005",
     "kind": "SEP",
-    "published_utc": "2024-05-10T14:12:00+00:00",
+    "published_utc": "2024-05-10T14:12:13+00:00",
     "start_utc": "2024-05-10T13:35:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-008",
     "kind": "SEP",
-    "published_utc": "2024-05-10T15:03:00+00:00",
+    "published_utc": "2024-05-10T15:03:50+00:00",
     "start_utc": "2024-05-10T14:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-009",
     "kind": "SEP",
-    "published_utc": "2024-05-10T15:17:00+00:00",
+    "published_utc": "2024-05-10T15:17:04+00:00",
     "start_utc": "2024-05-10T14:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-006",
     "kind": "SEP",
-    "published_utc": "2024-05-11T02:30:00+00:00",
+    "published_utc": "2024-05-11T02:30:46+00:00",
     "start_utc": "2024-05-11T02:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-007",
     "kind": "SEP",
-    "published_utc": "2024-05-11T02:46:00+00:00",
+    "published_utc": "2024-05-11T02:46:21+00:00",
     "start_utc": "2024-05-11T02:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-008",
     "kind": "SEP",
-    "published_utc": "2024-05-11T04:13:00+00:00",
+    "published_utc": "2024-05-11T04:13:59+00:00",
     "start_utc": "2024-05-11T04:07:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-013",
     "kind": "SEP",
-    "published_utc": "2024-05-11T15:03:00+00:00",
+    "published_utc": "2024-05-11T15:03:54+00:00",
     "start_utc": "2024-05-11T04:07:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-006",
     "kind": "FLR",
-    "published_utc": "2024-05-08T13:10:00+00:00",
+    "published_utc": "2024-05-08T13:10:04+00:00",
     "start_utc": "2024-05-08T04:37:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-008",
     "kind": "FLR",
-    "published_utc": "2024-05-08T13:45:00+00:00",
+    "published_utc": "2024-05-08T13:45:34+00:00",
     "start_utc": "2024-05-08T06:44:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-007",
     "kind": "FLR",
-    "published_utc": "2024-05-08T13:36:00+00:00",
+    "published_utc": "2024-05-08T13:36:36+00:00",
     "start_utc": "2024-05-08T11:26:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-010",
     "kind": "FLR",
-    "published_utc": "2024-05-08T17:54:00+00:00",
+    "published_utc": "2024-05-08T17:54:34+00:00",
     "start_utc": "2024-05-08T17:32:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-011",
     "kind": "FLR",
-    "published_utc": "2024-05-08T18:06:00+00:00",
+    "published_utc": "2024-05-08T18:06:45+00:00",
     "start_utc": "2024-05-08T17:32:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-013",
     "kind": "FLR",
-    "published_utc": "2024-05-08T22:35:00+00:00",
+    "published_utc": "2024-05-08T22:35:15+00:00",
     "start_utc": "2024-05-08T21:08:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-014",
     "kind": "FLR",
-    "published_utc": "2024-05-08T22:38:00+00:00",
+    "published_utc": "2024-05-08T22:38:38+00:00",
     "start_utc": "2024-05-08T21:08:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-003",
     "kind": "FLR",
-    "published_utc": "2024-05-09T12:36:00+00:00",
+    "published_utc": "2024-05-09T12:36:29+00:00",
     "start_utc": "2024-05-08T22:05:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-001",
     "kind": "FLR",
-    "published_utc": "2024-05-09T09:00:00+00:00",
+    "published_utc": "2024-05-09T09:00:46+00:00",
     "start_utc": "2024-05-09T08:45:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-002",
     "kind": "FLR",
-    "published_utc": "2024-05-09T12:03:00+00:00",
+    "published_utc": "2024-05-09T12:03:16+00:00",
     "start_utc": "2024-05-09T08:45:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-007",
     "kind": "FLR",
-    "published_utc": "2024-05-09T17:42:00+00:00",
+    "published_utc": "2024-05-09T17:42:53+00:00",
     "start_utc": "2024-05-09T17:23:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-008",
     "kind": "FLR",
-    "published_utc": "2024-05-09T17:54:00+00:00",
+    "published_utc": "2024-05-09T17:54:32+00:00",
     "start_utc": "2024-05-09T17:23:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-001",
     "kind": "FLR",
-    "published_utc": "2024-05-10T06:51:00+00:00",
+    "published_utc": "2024-05-10T06:51:02+00:00",
     "start_utc": "2024-05-10T06:27:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-002",
     "kind": "FLR",
-    "published_utc": "2024-05-10T11:37:00+00:00",
+    "published_utc": "2024-05-10T11:37:53+00:00",
     "start_utc": "2024-05-10T06:27:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-006",
     "kind": "FLR",
-    "published_utc": "2024-05-10T14:15:00+00:00",
+    "published_utc": "2024-05-10T14:15:08+00:00",
     "start_utc": "2024-05-10T13:58:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-007",
     "kind": "FLR",
-    "published_utc": "2024-05-10T14:28:00+00:00",
+    "published_utc": "2024-05-10T14:28:15+00:00",
     "start_utc": "2024-05-10T13:58:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-004",
     "kind": "FLR",
-    "published_utc": "2024-05-11T01:27:00+00:00",
+    "published_utc": "2024-05-11T01:27:17+00:00",
     "start_utc": "2024-05-11T01:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-005",
     "kind": "FLR",
-    "published_utc": "2024-05-11T01:49:00+00:00",
+    "published_utc": "2024-05-11T01:49:36+00:00",
     "start_utc": "2024-05-11T01:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-012",
     "kind": "CME",
-    "published_utc": "2024-05-08T18:43:00+00:00",
+    "published_utc": "2024-05-08T18:43:52+00:00",
     "start_utc": "2024-05-08T05:36:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-010",
     "kind": "CME",
-    "published_utc": "2024-05-09T21:24:00+00:00",
+    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-08T05:36:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240508-AL-009",
     "kind": "CME",
-    "published_utc": "2024-05-08T16:50:00+00:00",
+    "published_utc": "2024-05-08T16:50:57+00:00",
     "start_utc": "2024-05-08T12:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-010",
     "kind": "CME",
-    "published_utc": "2024-05-09T21:24:00+00:00",
+    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-08T12:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-005",
     "kind": "CME",
-    "published_utc": "2024-05-09T16:39:00+00:00",
+    "published_utc": "2024-05-09T16:39:40+00:00",
     "start_utc": "2024-05-08T19:12:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-010",
     "kind": "CME",
-    "published_utc": "2024-05-09T21:24:00+00:00",
+    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-08T19:12:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-009",
     "kind": "CME",
-    "published_utc": "2024-05-09T20:03:00+00:00",
+    "published_utc": "2024-05-09T20:03:35+00:00",
     "start_utc": "2024-05-08T22:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-010",
     "kind": "CME",
-    "published_utc": "2024-05-09T21:24:00+00:00",
+    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-08T22:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-006",
     "kind": "CME",
-    "published_utc": "2024-05-09T17:04:00+00:00",
+    "published_utc": "2024-05-09T17:04:16+00:00",
     "start_utc": "2024-05-09T09:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-010",
     "kind": "CME",
-    "published_utc": "2024-05-09T21:24:00+00:00",
+    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-09T09:24:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240509-AL-011",
     "kind": "CME",
-    "published_utc": "2024-05-09T23:35:00+00:00",
+    "published_utc": "2024-05-09T23:35:58+00:00",
     "start_utc": "2024-05-09T18:23:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240510-AL-003",
     "kind": "CME",
-    "published_utc": "2024-05-10T13:38:00+00:00",
+    "published_utc": "2024-05-10T13:38:36+00:00",
     "start_utc": "2024-05-10T07:12:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-009",
     "kind": "CME",
-    "published_utc": "2024-05-11T04:50:00+00:00",
+    "published_utc": "2024-05-11T04:50:13+00:00",
     "start_utc": "2024-05-11T01:36:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_msg#20240511-AL-012",
     "kind": "CME",
-    "published_utc": "2024-05-11T14:23:00+00:00",
+    "published_utc": "2024-05-11T14:23:10+00:00",
     "start_utc": "2024-05-11T01:36:00+00:00",
     "simulated": false
    },

@@ -121,13 +121,21 @@ horizon_min = search_min + duration_min
 
 # ================================================================= траектория
 c1, c2, c3, c4 = st.columns(4)
-c1.metric('Источник орбиты', meta.source_id)
-c2.metric('Эпоха элементов', meta.epoch_utc.strftime('%m-%d %H:%MZ') if meta.epoch_utc else '—')
-c3.metric('Давность, ч', '%.1f' % S['sources']['celestrak_gp']['age_h'] if S['sources']['celestrak_gp']['age_h'] is not None else '—')
-c4.metric('Метод', meta.method + (' · реконструкция' if meta.is_reconstruction else ''))
+if meta is None:
+    st.error('**Орбита недоступна.** %s Оценка без траектории невозможна: покрытие обязательной линии отсутствует, '
+             'рекомендации нет. Заглушка не подставляется.' % S['trajectory_meta']['status'])
+c1.metric('Источник орбиты', meta.source_id if meta else 'нет')
+c2.metric('Эпоха элементов' if mode == 'live' else 'Создание OEM',
+          (meta.epoch_utc or meta.created_utc).strftime('%m-%d %H:%MZ') if meta and (meta.epoch_utc or meta.created_utc) else '—')
+c3.metric('Давность, ч', '%.1f' % S['sources']['orbit']['age_h'] if S['sources']['orbit']['age_h'] is not None else '—')
+c4.metric('Метод', (meta.method + (' · реконструкция' if meta.is_reconstruction else '')) if meta else '—')
+st.caption('Орбита: %s.' % S['trajectory_meta']['status'])
 if pro:
-    st.caption('Магнитные координаты: %s. Поле: %s. Шаг 1 мин, траектория %d ч (период поиска + длительность).'
-               % (ORBIT_SRC, meta.field_model, horizon_min // 60))
+    st.caption('%s. Поле: %s. Шаг 1 мин, траектория %d ч (период поиска + длительность), точек %d.'
+               % (ORBIT_SRC, meta.field_model if meta else '—', horizon_min // 60, S['trajectory_meta']['n_points']))
+    if S['trajectory_meta']['provenance'].get('limitations'):
+        with st.expander('Ограничения орбитального модуля (A3)', expanded=False):
+            st.write('\n'.join('- ' + x for x in S['trajectory_meta']['provenance']['limitations']))
 
 # ================================================================= баннеры режима и сценария
 if S['is_simulated']:
@@ -138,7 +146,7 @@ if S['is_simulated']:
                    ([f'Kp = {sc_kp:.1f}.'] if sc_kp_on else [])))
 if mode == 'history_forecast':
     st.info('**Строгий прогноз из прошлого.** Отсечка %s: использованы только записи, опубликованные до неё; '
-            'исключено %d записей (список в блоке «Данные»). Орбита — реконструкция по текущему TLE до подключения OEM.'
+            'исключено %d записей (список в блоке «Данные»). Прогнозы NOAA взяты из выпусков до отсечки.'
             % (t0.strftime('%Y-%m-%d %H:%MZ'), len(R.excluded)))
 elif mode == 'history_review':
     st.info('**Исторический разбор** по всему доступному сегодня архиву, без отсечки. Не является проверяемым прогнозом.')
@@ -167,6 +175,17 @@ if mode == 'live':
         st.plotly_chart(obs_fig, use_container_width=True)
         st.caption('Наблюдения источников, не расчёт. Пороги — шкалы NOAA S и G; GOES меряет на геостационарной '
                    'орбите и переносится на станцию только через геомагнитное обрезание.')
+else:
+    from app.obs import forecast_panel
+    fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min)
+    st.subheader('Прогноз NOAA, выпущенный до отсечки')
+    if fc_fig is not None:
+        st.plotly_chart(fc_fig, use_container_width=True)
+    for line in S.get('forecasts', []):
+        st.caption('%s — %s%s' % (line['label'], line['status_ru'],
+                                  '; выпуск %s от %s' % (line['release_id'], line['published_utc'][:16].replace('T', ' ')) if line['release_id'] else ''))
+    st.caption('Внешний прогноз, не наблюдение. Суточные вероятности относятся к суткам, а не к окну ВКД; '
+               'прогноз Kp — по 3-часовым интервалам. Отбор выпуска по времени публикации (A2).')
 
 # ================================================================= картина по времени
 st.subheader('Картина по времени')
@@ -202,9 +221,12 @@ st.caption('Красное — пролёты аномалии (наш расч�
            'траектория и пригодные прогнозы ведутся до конца последнего окна. Фиолетовое — события с временем публикации.')
 
 # ================================================================= карта трассы
-with st.expander('Карта трассы и область аномалии', expanded=pro):
-    with st.spinner('Область аномалии по IGRF на сетке 4°…'):
-        st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), use_container_width=True)
+with st.expander('Карта трассы и область аномалии', expanded=pro and bool(traj)):
+    if traj:
+        with st.spinner('Область аномалии по IGRF на сетке 4°…'):
+            st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), use_container_width=True)
+    else:
+        st.write('Трассы нет: орбита недоступна.')
     st.caption('Область аномалии — наш расчёт |B| по IGRF на средней высоте трассы; трасса за весь горизонт серым, '
                'окна-кандидаты цветом, точки трассы в аномалии красным. Глобус не обязателен по постановке; карта '
                'показывает, откуда берутся минуты в аномалии.')

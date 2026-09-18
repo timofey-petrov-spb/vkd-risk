@@ -10,7 +10,7 @@ from __future__ import annotations
 import io
 import json
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import plotly.graph_objects as go
@@ -66,4 +66,37 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
     fig.update_yaxes(type='log', title_text='pfu', range=[math.log10(lo) - 0.5, 4.2], row=1, col=1)
     fig.update_yaxes(range=[0, 9], title_text='Kp', row=2, col=1)
     fig.update_layout(height=420, margin=dict(l=10, r=10, t=40, b=10), showlegend=False)
+    return fig
+
+
+def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.Figure]:
+    """Прогнозы NOAA из выпусков до отсечки: Kp по 3-часовым интервалам (столбцы), суточные
+    вероятности S1+ и протонного события (ступени). Исходное разрешение сохраняется."""
+    by = {l['channel']: l for l in lines}
+    kp = by.get('kp_forecast', {}).get('cells', [])
+    probs = [(by.get(c, {}), name) for c, name in (('s1_prob_daily', 'S1+ за сутки, %'), ('proton_prob_daily', 'протонное событие за сутки, %'))]
+    if not kp and not any(p[0].get('cells') for p in probs):
+        return None
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                        subplot_titles=('Прогноз Kp NOAA (3-day forecast), 3-часовые интервалы', 'Суточные вероятности NOAA, %'))
+    if kp:
+        x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
+        w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]
+        fig.add_trace(go.Bar(x=x, y=[c['value'] for c in kp], width=w, name='Kp прогноз',
+                             marker_color=[RED if c['value'] >= 7 else GREY for c in kp]), row=1, col=1)
+        for thr, name in G_LEVELS:
+            fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
+    for line, name in probs:
+        cells = line.get('cells', [])
+        if cells:
+            xs, ys = [], []
+            for c in cells:
+                xs += [datetime.fromisoformat(c['from']), datetime.fromisoformat(c['to'])]
+                ys += [c['value'], c['value']]
+            fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name, line=dict(width=2)), row=2, col=1)
+    fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79', annotation_text='отсечка')
+    fig.add_vrect(x0=t0, x1=t0 + timedelta(minutes=horizon_min), fillcolor='steelblue', opacity=0.06, line_width=0)
+    fig.update_yaxes(range=[0, 9], title_text='Kp', row=1, col=1)
+    fig.update_yaxes(range=[0, 100], title_text='%', row=2, col=1)
+    fig.update_layout(height=400, margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation='h'))
     return fig
