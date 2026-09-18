@@ -87,8 +87,11 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
                                'запросом, ни из кеша', 'unavailable', 'TLE не получен')
         root = stage_live_root(tle_text, tle_fetched_utc, tle_available_utc, tle_url, tle_evidence)
         try:
+            # cutoff для текущего режима — момент расчёта: TLE, полученный после начала минуты t0,
+            # но до расчёта, не реконструкция (t0 округлён вниз до минуты)
             meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT, mode='live',
-                                                         repo_root=root, max_tle_age_days=max_tle_age_days)
+                                                         repo_root=root, max_tle_age_days=max_tle_age_days,
+                                                         cutoff_utc=cutoff_utc)
         except OrbitDataError as e:
             return OrbitResult(None, [], {'errors': [str(e)]}, 'орбита недоступна: %s' % e, 'unavailable', str(e))
         prov['staged_root'] = root

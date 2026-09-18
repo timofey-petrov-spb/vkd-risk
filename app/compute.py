@@ -139,7 +139,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     orb = build_orbit(mode, t0, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
                       tle_fetched_utc=f_tle.fetched_utc, tle_available_utc=f_tle.fetched_utc,
                       tle_url=(getattr(f_tle, 'url', None) or TLE_URL),
-                      tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days, cutoff_utc=cutoff_utc)
+                      tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days,
+                      cutoff_utc=(cutoff_utc if mode != 'live' else max(now, t0)))
     meta = orb.meta
     # координаты для таблиц ОСТ — эксцентричный диполь (Б): центральный диполь A3 в ядре аномалии
     # даёт L ниже сетки и нулевой поток на всей трассе (см. vkd/assess/magcoords.py); |B| — от A3

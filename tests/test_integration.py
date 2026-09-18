@@ -33,6 +33,7 @@ def test_live_orbit_through_bridge_with_pinned_tle():
     t0 = (epoch + timedelta(days=1)).replace(second=0, microsecond=0)
     r = run('live', t0, 360, 1440, [0, 480], fetched=_fetched(open(TLE, encoding='utf-8').read(), goes_at=t0), now=t0)
     assert r.meta is not None and r.meta.method == 'sgp4' and r.meta.field_model == 'IGRF-14'
+    assert not r.meta.is_reconstruction                 # TLE получен до момента расчёта — не реконструкция
     assert len(r.traj) == 1800 + 1                      # конец горизонта включён (A3)
     assert r.S['trajectory_meta']['strictness'] == 'strict'
     assert r.S['sources']['orbit']['source_id'] == 'celestrak_gp'
