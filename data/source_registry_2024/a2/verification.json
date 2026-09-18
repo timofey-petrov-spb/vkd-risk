@@ -1,0 +1,112 @@
+{
+  "adapter_version": "history-a2-v1",
+  "generated_utc": "2026-09-18T22:34:55.748463+00:00",
+  "typed_schema_version": "2.1",
+  "archive_notifications": {
+    "out_of_scope": 71,
+    "parsed": 166,
+    "context_only": 9,
+    "publication_conflict": 1
+  },
+  "control_runs": [
+    {
+      "cutoff_utc": "2024-05-01T00:00Z",
+      "horizon_h": 32,
+      "samples": 42,
+      "events": 1,
+      "raw_record_count": 2,
+      "noaa_kp": "missing",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-05-03T12:00Z",
+      "horizon_h": 32,
+      "samples": 62,
+      "events": 8,
+      "raw_record_count": 10,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-05-10T12:00Z",
+      "horizon_h": 32,
+      "samples": 59,
+      "events": 18,
+      "raw_record_count": 20,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-05-10T19:00Z",
+      "horizon_h": 32,
+      "samples": 73,
+      "events": 24,
+      "raw_record_count": 26,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-05-20T12:00Z",
+      "horizon_h": 32,
+      "samples": 42,
+      "events": 2,
+      "raw_record_count": 3,
+      "noaa_kp": "missing",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-06-25T12:00Z",
+      "horizon_h": 32,
+      "samples": 59,
+      "events": 2,
+      "raw_record_count": 4,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-06-30T12:00Z",
+      "horizon_h": 32,
+      "samples": 61,
+      "events": 5,
+      "raw_record_count": 7,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    },
+    {
+      "cutoff_utc": "2024-05-08T07:17Z",
+      "horizon_h": 32,
+      "samples": 62,
+      "events": 12,
+      "raw_record_count": 14,
+      "noaa_kp": "full",
+      "proton_daily_probability": "full",
+      "goes_observations": "missing"
+    }
+  ],
+  "example": {
+    "path": "data/source_registry_2024/a2/example_20240510_19Z.json",
+    "sha256": "6476ea8e8938741a2c4003cbc9aa77ba56616f8e222610de8801df53d08b23ac"
+  },
+  "tests": {
+    "passed": 101,
+    "subtests_passed": 670,
+    "seconds": 12.51
+  },
+  "limitations": [
+    "No numerical GOES history or A4 live sources.",
+    "Legacy B1 automatically uses audited DONKI; NOAA needs B to pass Request.",
+    "Provider-dated release evidence, not independent historical payload capture."
+  ],
+  "streamlit_mode_render_exceptions": {
+    "Текущая обстановка": [],
+    "Исторический разбор": [],
+    "Прогноз из прошлого": []
+  }
+}
