@@ -157,6 +157,16 @@ if not pro:
     st.subheader('Рекомендация')
     show_verdict()
 
+# ================================================================= наблюдения за последние дни (текущий режим)
+if mode == 'live':
+    from app.obs import observations_panel
+    obs_fig = observations_panel(R.fetch_status['goes'].raw_path, R.fetch_status['kp'].raw_path, t0)
+    if obs_fig is not None:
+        st.subheader('Наблюдения за последние дни')
+        st.plotly_chart(obs_fig, use_container_width=True)
+        st.caption('Наблюдения источников, не расчёт. Пороги — шкалы NOAA S и G; GOES меряет на геостационарной '
+                   'орбите и переносится на станцию только через геомагнитное обрезание.')
+
 # ================================================================= картина по времени
 st.subheader('Картина по времени')
 _ms = lambda t: int(t.timestamp() * 1000)          # add_vline на оси дат принимает миллисекунды эпохи
