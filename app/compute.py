@@ -82,7 +82,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     берётся из архива OEM (A1/A3) и от TLE не зависит."""
     assert mode in MODES, mode
     disabled = disabled or {'goes': False, 'kp': False}
-    th = thresholds or Thresholds()
+    th = thresholds or Thresholds.from_settings()
     scenario = scenario or Scenario('none')
     now = now or datetime.now(timezone.utc)
     cutoff_utc = t0 if mode == 'history_forecast' else None

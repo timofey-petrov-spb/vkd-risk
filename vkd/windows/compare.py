@@ -48,6 +48,17 @@ class Thresholds:
     saa_B_threshold_nT: float = 24000.0     # инженерная оценка для ~420 км, в чувствительность
     tle_max_age_days: float = 3.0           # A3: обе границы горизонта не дальше этого от эпохи TLE; инженерный предел, не гарантия ошибки
 
+    @classmethod
+    def from_settings(cls) -> 'Thresholds':
+        """Пороги из config/settings.toml [thresholds] (Т7: настройки вне кода); неизвестные
+        ключи — ошибка, чтобы опечатка в файле не превращалась в молчаливое умолчание."""
+        from vkd.config import section
+        raw = section('thresholds')
+        unknown = set(raw) - set(cls.__dataclass_fields__)
+        if unknown:
+            raise ValueError('config/settings.toml [thresholds]: неизвестные ключи %s' % sorted(unknown))
+        return cls(**{k: float(v) for k, v in raw.items()})
+
 
 def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
                   goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],

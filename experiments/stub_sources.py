@@ -29,12 +29,14 @@ from vkd.types import EnvironmentSample, Kind
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(_ROOT, 'data', 'cache')
 SNAP = os.path.join(_ROOT, 'data', 'spaceweather')
-TIMEOUT_S = 8      # CelesTrak временами не отвечает; при отказе — кеш или снимок со статусом
+from vkd.config import section as _cfg_section   # noqa: E402  (Т7: настройки вне кода)
+TIMEOUT_S = float(_cfg_section('sources').get('timeout_s', 8))   # при отказе — кеш или снимок со статусом
 
 URLS = {
     'goes': 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json',
     'tle': 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE',
 }
+URLS.update({k: str(v) for k, v in (_cfg_section('sources').get('urls') or {}).items()})   # адреса — из настроек
 
 
 @dataclass(frozen=True)

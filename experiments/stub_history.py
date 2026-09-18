@@ -135,6 +135,14 @@ def sep_events() -> tuple[list[EventInterval], dict]:
     return out, raw
 
 
+# Оценки Kp прогона ENLIL по углу IMF: kp_180 — южное поле, верхняя оценка; kp_90 — типичная.
+# Какие поля дают «Kp до …» для условия (максимум из них) — настройка [history].enlil_kp_fields;
+# выбор kp_90 обоснован в docs/EKSPERIMENTY_PROGNOZ.md: kp_180 давал 54 ложные тревоги на
+# контроле против 3 при той же полноте на буре Гэннон. Верхняя оценка остаётся в тексте.
+from vkd.config import section as _cfg_section   # noqa: E402
+ENLIL_KP_FIELDS = tuple(_cfg_section('history').get('enlil_kp_fields', ('kp_90',)))
+
+
 def enlil_arrivals() -> tuple[list[EventInterval], dict]:
     """Прогнозы прихода выбросов к Земле по WSA-ENLIL из карточек CME DONKI: датированный
     ВНЕШНИЙ прогноз. Публикация = modelCompletionTime прогона (запасной вариант —
@@ -149,12 +157,15 @@ def enlil_arrivals() -> tuple[list[EventInterval], dict]:
                     continue
                 pub = _t(e.get('modelCompletionTime')) or _t(a.get('submissionTime'))
                 dur_h = e.get('estimatedDuration')
-                kps = [e.get(k) for k in ('kp_18', 'kp_90', 'kp_135', 'kp_180') if e.get(k) is not None]
+                kps = [e.get(k) for k in ENLIL_KP_FIELDS if e.get(k) is not None]
+                upper = e.get('kp_180')
                 rid = 'donki_enlil#%s#%s' % (c.get('activityID'), (e.get('modelCompletionTime') or '?').replace(':', ''))
                 note = 'WSA-ENLIL, прогон %s: приход %s%s%s; glancing blow: %s' % (
                     e.get('modelCompletionTime'), arr.strftime('%m-%d %H:%MZ'),
                     ', длительность %s ч' % dur_h if dur_h is not None else '',
-                    ', Kp до %g' % max(kps) if kps else ', Kp не оценён', 'да' if e.get('isEarthGB') else 'нет')
+                    (', Kp до %g (типичная оценка %s%s)' % (max(kps), '/'.join(ENLIL_KP_FIELDS),
+                                                            '; верхняя при южном поле %g' % upper if upper is not None else ''))
+                    if kps else ', Kp не оценён', 'да' if e.get('isEarthGB') else 'нет')
                 out.append(EventInterval(
                     event_id=rid, kind_of_event='CME_ARRIVAL', kind=Kind.EXTERNAL_FORECAST,
                     start_utc=arr, end_utc=(arr + timedelta(hours=float(dur_h))) if dur_h is not None else None,

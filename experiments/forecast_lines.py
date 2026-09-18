@@ -25,6 +25,9 @@ examples/experiments/forecast_lines.json (сохранённые расчёты 
 (24 ч — та же конвенция, что в compare.py; архива GOES за 2024 нет — ограничение).
 Показатели: попадания, пропуски, ложные тревоги по окнам; заблаговременность — от
 публикации записи, давшей условие, до фактического начала бури (только для попаданий).
+
+Чувствительность: линия ENLIL зависит от того, какая оценка Kp прогона берётся
+(kp_180 — верхняя, южное поле; kp_135; kp_90 — типичная). Считаются три варианта.
 """
 from __future__ import annotations
 
@@ -39,6 +42,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+import experiments.stub_history as SH                                                 # noqa: E402
 from experiments.stub_history import _load, _t, history_bundle, sep_events          # noqa: E402
 from vkd.assess.cutoff import apply_cutoff                                            # noqa: E402
 from vkd.assess.trapped import BeltTable                                              # noqa: E402
@@ -50,6 +54,9 @@ UTC = timezone.utc
 PERIOD = (datetime(2024, 5, 1, tzinfo=UTC), datetime(2024, 6, 30, tzinfo=UTC))
 STEP_H, DUR_MIN, OFFSETS_H, KP_STORM = 6, 360, (0, 6, 12, 18), 7.0
 EVENT_DAYS = ('2024-05-10', '2024-05-11', '2024-05-12')     # выраженное событие: буря Гэннон
+LINES = ('baseline', 'notif', 'enlil', 'noaa', 'system')
+CONFIGURED = tuple(SH.ENLIL_KP_FIELDS)                       # как в приложении (config/settings.toml [history])
+VARIANTS = (CONFIGURED,) + tuple(v for v in (('kp_18', 'kp_90', 'kp_135', 'kp_180'), ('kp_180',), ('kp_135',), ('kp_90',)) if v != CONFIGURED)
 
 
 def kp_truth():
@@ -67,11 +74,10 @@ def sep_truth():
     return [(e.start_utc, e.event_id) for e in sep_events()[0] if e.kind.value == 'observation' and e.start_utc]
 
 
-def main():
-    sys.stdout.reconfigure(encoding='utf-8')
+def evaluate(kp_fields) -> list[dict]:
+    SH.ENLIL_KP_FIELDS = tuple(kp_fields)
     samples, events, _ = history_bundle()
-    kp_obs = kp_truth()
-    seps = sep_truth()
+    kp_obs, seps = kp_truth(), sep_truth()
     belts, th = BeltTable('min'), Thresholds()
     rows = []
     c = PERIOD[0]
@@ -81,7 +87,6 @@ def main():
         fc_lines, _ = noaa_forecasts(c, c, c + timedelta(hours=24))
         forecasts = [s for line in fc_lines for s in line.samples]
         noaa_ok = any(line.channel_id == 'kp_forecast' and line.status in ('full', 'partial') for line in fc_lines)
-        # базовая линия: последний Kp по observedTime ≤ отсечки (без отсечки по публикации)
         last = [(t1, kp) for t0_, t1, kp in kp_obs if t1 <= c]
         base_kp = max(last, key=lambda x: x[0])[1] if last else None
         for off in OFFSETS_H:
@@ -102,44 +107,49 @@ def main():
                          'truth_storm_start_utc': storm_start.isoformat() if storm_start else None,
                          'event_day': c.strftime('%Y-%m-%d') in EVENT_DAYS, 'reasons': reasons})
         c += timedelta(hours=STEP_H)
+    return rows
 
-    def score(subset, key, truth_key='truth_any'):
-        h = m = f = n = 0
-        for r in subset:
-            truth = (r['truth_storm'] or r['truth_sep']) if truth_key == 'truth_any' else r[truth_key]
-            flag = r['lines'][key]
-            if key == 'noaa' and not r['noaa_available']:
-                continue
-            h += flag and truth; m += (not flag) and truth; f += flag and (not truth); n += (not flag) and (not truth)
-        return h, m, f, n
 
-    ev_rows = [r for r in rows if r['event_day']]
-    ctl_rows = [r for r in rows if not r['event_day']]
+def score(subset, key):
+    h = m = f = n = 0
+    for r in subset:
+        truth = r['truth_storm'] or r['truth_sep']
+        if key == 'noaa' and not r['noaa_available']:
+            continue
+        flag = r['lines'][key]
+        h += flag and truth; m += (not flag) and truth; f += flag and (not truth); n += (not flag) and (not truth)
+    return h, m, f, n
+
+
+def main():
+    sys.stdout.reconfigure(encoding='utf-8')
+    default = evaluate(VARIANTS[0])
+    ev_rows = [r for r in default if r['event_day']]
+    ctl_rows = [r for r in default if not r['event_day']]
     L = ['# Эксперимент Т5: прогнозные линии строгого режима, 1 мая — 30 июня 2024', '',
          'Сгенерировано `experiments/forecast_lines.py`; сохранённые расчёты по каждому окну — '
          '`examples/experiments/forecast_lines.json`. Отсечки каждые %d ч, окна по %d мин со сдвигом %s ч; '
          'всего окон %d (событие %d, контроль %d). Условия — тот же `assess_window`, что в приложении, '
          'по записям, опубликованным до отсечки; факт — карточки GST (Kp) и SEP после события, только для проверки.'
-         % (STEP_H, DUR_MIN, '/'.join(map(str, OFFSETS_H)), len(rows), len(ev_rows), len(ctl_rows)), '',
+         % (STEP_H, DUR_MIN, '/'.join(map(str, OFFSETS_H)), len(default), len(ev_rows), len(ctl_rows)), '',
          '## Что считается', '',
          '- **факт «буря в окне»**: Kp ≥ %g в 3-часовом интервале, пересекающем окно (allKpIndex карточек GST);' % KP_STORM,
          '- **факт «протонное событие»**: SEP DONKI по наблюдательному прибору, начало в [начало окна − 24 ч, конец окна);',
          '- **попадание** — условие есть и факт есть; **пропуск** — условия нет, факт есть; **ложная тревога** — условие есть, факта нет;',
          '- линия `noaa` считается только там, где выпуск 3-day forecast есть в архиве (разрыв 15.05–16.06 исключён из её счёта);',
-         '- базовая линия получает Kp по observedTime без проверки публикации — ей дано больше, чем строгому режиму.', '',
+         '- базовая линия получает Kp по observedTime без проверки публикации — ей дано больше, чем строгому режиму;',
+         '- линия `enlil` в основных таблицах — с оценкой Kp из настроек приложения (`[history].enlil_kp_fields = %s`); '
+         'другие варианты — в таблице чувствительности ниже.' % '+'.join(CONFIGURED), '',
          '## Буря Гэннон (отсечки 10–12 мая, %d окон)' % len(ev_rows), '',
          '| линия | попадания | пропуски | ложные тревоги | верные отказы |', '|---|---:|---:|---:|---:|']
-    for key in ('baseline', 'notif', 'enlil', 'noaa', 'system'):
-        h, m, f, n = score(ev_rows, key)
-        L.append('| %s | %d | %d | %d | %d |' % (key, h, m, f, n))
+    for key in LINES:
+        L.append('| %s | %d | %d | %d | %d |' % ((key,) + score(ev_rows, key)))
     L += ['', '## Контрольный период (все остальные отсечки, %d окон)' % len(ctl_rows), '',
           '| линия | попадания | пропуски | ложные тревоги | верные отказы |', '|---|---:|---:|---:|---:|']
-    for key in ('baseline', 'notif', 'enlil', 'noaa', 'system'):
-        h, m, f, n = score(ctl_rows, key)
-        L.append('| %s | %d | %d | %d | %d |' % (key, h, m, f, n))
-    # заблаговременность: первая отсечка, на которой система пометила окно, содержащее начало бури
+    for key in LINES:
+        L.append('| %s | %d | %d | %d | %d |' % ((key,) + score(ctl_rows, key)))
     first = {}
-    for r in rows:
+    for r in default:
         if r['truth_storm'] and r['lines']['system'] and r['truth_storm_start_utc']:
             for key in ('notif', 'enlil', 'noaa'):
                 if r['lines'][key]:
@@ -153,17 +163,36 @@ def main():
     for r in fa:
         days[r['cutoff_utc'][:10]] += 1
     L += ['', '## Ложные тревоги системы на контроле по дням', '',
-          ', '.join('%s: %d' % kv for kv in sorted(days.items())) or 'нет', '',
-          '## Границы', '',
+          ', '.join('%s: %d' % kv for kv in sorted(days.items())) or 'нет', '']
+    # --- чувствительность ENLIL к выбору оценки Kp ---
+    L += ['## Чувствительность линии ENLIL к выбору оценки Kp прогона', '',
+          'Условие ставится при «Kp до …» ≥ 7; «Kp до» — максимум из выбранных полей прогона WSA-ENLIL.', '',
+          '| поля Kp | событие: попад./проп./ложн. (enlil) | событие: система | контроль: попад./проп./ложн. (enlil) | контроль: система |',
+          '|---|---|---|---|---|']
+    sens = {}
+    for fields in VARIANTS:
+        rows = default if fields == VARIANTS[0] else evaluate(fields)
+        e_, c_ = [r for r in rows if r['event_day']], [r for r in rows if not r['event_day']]
+        he, me, fe, _ = score(e_, 'enlil'); hs, ms, fs, _ = score(e_, 'system')
+        hc, mc, fc, _ = score(c_, 'enlil'); hcs, mcs, fcs, _ = score(c_, 'system')
+        sens['+'.join(fields)] = {'event_enlil': [he, me, fe], 'event_system': [hs, ms, fs],
+                                  'control_enlil': [hc, mc, fc], 'control_system': [hcs, mcs, fcs]}
+        L.append('| %s | %d / %d / %d | %d / %d / %d | %d / %d / %d | %d / %d / %d |'
+                 % ('+'.join(fields), he, me, fe, hs, ms, fs, hc, mc, fc, hcs, mcs, fcs))
+    SH.ENLIL_KP_FIELDS = CONFIGURED
+    L += ['', 'Выбор для приложения: `%s` — типичная оценка прогона; верхняя оценка при южном поле (kp_180) '
+          'остаётся в тексте условия. Основание — столбцы «контроль»: ложные тревоги линии ENLIL и системы.' % '+'.join(CONFIGURED),
+          '', '## Границы', '',
           '- Архива наблюдений GOES за 2024 нет: факт протонного события — по карточкам SEP DONKI с конвенцией 24 ч, не по потоку;',
           '- буря в окне определяется по Kp ≥ 7; бури G1–G2 не считаются событием ни для условий, ни для факта;',
           '- прогнозы ENLIL и NOAA — внешние; линия `system` показывает, что видит пользователь, и не приписывает их заблаговременность команде;',
-          '- одно выраженное событие за период: статистика по нему — разбор случая, не оценка вероятностей.', '']
+          '- одно выраженное событие за период: статистика по нему — разбор случая, не оценка вероятностей;',
+          '- ложные тревоги после начала бури (условие держится 24 ч после протонного события и на длительность прогона ENLIL) — следствие конвенций, они названы.', '']
     os.makedirs(os.path.join(ROOT, 'examples', 'experiments'), exist_ok=True)
     io.open(os.path.join(ROOT, 'examples', 'experiments', 'forecast_lines.json'), 'w', encoding='utf-8').write(
         json.dumps({'generated_utc': datetime.now(UTC).isoformat(), 'params': {'step_h': STEP_H, 'duration_min': DUR_MIN,
-                    'offsets_h': OFFSETS_H, 'kp_storm': KP_STORM, 'event_days': EVENT_DAYS}, 'rows': rows},
-                   ensure_ascii=False, indent=1))
+                    'offsets_h': OFFSETS_H, 'kp_storm': KP_STORM, 'event_days': EVENT_DAYS, 'enlil_kp_fields': VARIANTS[0]},
+                    'sensitivity': sens, 'rows': default}, ensure_ascii=False, indent=1))
     io.open(os.path.join(ROOT, 'docs', 'EKSPERIMENTY_PROGNOZ.md'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L))
     print('\n'.join(L))
 
