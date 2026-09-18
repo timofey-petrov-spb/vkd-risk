@@ -2,8 +2,10 @@
 """Извлечение дозовых таблиц приложения К ОСТ 134-1044-2007 в CSV."""
 import re, sys, io, os, json
 
-SRC = 'ost1044.txt'
-OUT = 'ost_tables'
+# Пути относительно корня репозитория — скрипт воспроизводим из любого каталога.
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(_ROOT, 'docs', 'istochniki', 'OST_134-1044-2007_tekst.txt')
+OUT = os.path.join(_ROOT, 'data', 'ost1044')
 
 # ОСТ непоследователен: в приложении К.1/К.2 разделитель запятая, в К.3 точка
 NUM = re.compile(r'^-?\d[\d ]*[.,]?\d*E[+-]\d+$|^-?\d+[.,]\d+$|^-?\d+$', re.I)

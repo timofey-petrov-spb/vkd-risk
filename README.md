@@ -73,7 +73,7 @@ cmake --preset dll    &&  cmake --build --preset dll
 
 Обе конфигурации обязаны собираться всегда.
 
-Требуется: Visual Studio 2022 или 18, Qt 6.5+, CMake 3.21+, Ninja.
+Требуется: Visual Studio 2022 или 18, Qt 6.5+, CMake 3.25+ (формат пресетов v6), Ninja.
 OpenCASCADE — опционально, флагом `VKD_WITH_OCCT`.
 
 ## Данные

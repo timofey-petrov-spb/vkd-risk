@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)  # формат пресетов v6 требует 3.25+
 project(VKDRisk LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
