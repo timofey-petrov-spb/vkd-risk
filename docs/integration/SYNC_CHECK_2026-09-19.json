@@ -88,7 +88,7 @@
   ],
   "colleague_commit": "386ed17",
   "source_commit": "d095c7a",
-  "scope": "Four offline pipeline runs and initial Streamlit AppTest render; not complete scientific acceptance or cloud deployment.",
+  "scope": "Four offline pipeline runs against 386ed17; full tests and three Streamlit mode renders after a9d464f. Not complete scientific acceptance or cloud deployment.",
   "streamlit_initial_render_exceptions": [],
   "python": "3.14.3",
   "packages": {
@@ -107,6 +107,13 @@
   "pytest": {
     "passed": 80,
     "subtests_passed": 559,
-    "seconds": 11.45
+    "seconds": 10.88
+  },
+  "latest_colleague_commit": "a9d464f",
+  "latest_merge_commit": "98f5801",
+  "streamlit_mode_render_exceptions": {
+    "Текущая обстановка": [],
+    "Исторический разбор": [],
+    "Прогноз из прошлого": []
   }
 }
