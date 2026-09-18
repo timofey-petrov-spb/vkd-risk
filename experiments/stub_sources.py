@@ -124,7 +124,7 @@ def goes_latest(disabled: bool = False) -> tuple[Optional[EnvironmentSample], di
     rid = 'goes_p10#' + last['time_tag']
     s = EnvironmentSample(t, 'goes_p_ge10MeV', float(last['flux']), 'pfu', 'noaa_swpc_goes', Kind.OBSERVATION,
                           None, None, None, f.fetched_utc or _now(), 'preliminary', rid)
-    return s, {rid: last}, f
+    return s, {rid: {**last, 'url': URLS['goes'], 'fetched_utc': (f.fetched_utc or _now()).isoformat()}}, f
 
 
 # ----------------------------------------------------------------- Kp (GFZ)
@@ -147,7 +147,8 @@ def kp_latest(disabled: bool = False) -> tuple[Optional[EnvironmentSample], dict
     q = 'final' if (status and str(status[-1]).lower().startswith('def')) else 'preliminary'
     s = EnvironmentSample(t, 'kp', float(vals[-1]), '', 'gfz_kp', Kind.OBSERVATION, None, t, t + timedelta(hours=3),
                           f.fetched_utc or _now(), q, rid)
-    return s, {rid: {'datetime': times[-1], 'Kp': vals[-1], 'status': status[-1] if status else None}}, f
+    return s, {rid: {'datetime': times[-1], 'Kp': vals[-1], 'status': status[-1] if status else None, 'url': url,
+                     'fetched_utc': (f.fetched_utc or _now()).isoformat()}}, f
 
 
 # ----------------------------------------------------------------- TLE

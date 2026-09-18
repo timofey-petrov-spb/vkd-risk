@@ -65,7 +65,11 @@ with st.sidebar:
                          min(int(_def_off[i]) if i < len(_def_off) else i * 240, search_min), step=30, key='w%d' % i)
                for i in range(n_windows)]
     st.header('Источники')
-    disabled = {s: st.checkbox('Отключить %s' % s, key='dis_' + s) for s in ('goes', 'kp')}
+    _SRC_STATE = {'включён': False, 'отказ: только кеш': 'cache', 'исключён: нет данных': 'off'}
+    disabled = {s: _SRC_STATE[st.selectbox({'goes': 'GOES, протоны ≥10 МэВ', 'kp': 'Kp (GFZ)'}[s], list(_SRC_STATE), key='dis_' + s,
+                                           help='«отказ» — живого запроса нет, берётся кеш с давностью (покрытие частичное); '
+                                                '«исключён» — данных нет, обязательная линия без покрытия → рекомендации нет')]
+                for s in ('goes', 'kp')}
     if st.button('Обновить данные сейчас'):
         st.cache_data.clear()
     auto_min = st.select_slider('Автообновление в текущем режиме, мин', [0, 5, 10, 15],
@@ -122,7 +126,7 @@ def _fetch_all(dis_goes: bool, dis_kp: bool):
     return goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False)
 
 with st.spinner('Источники: GOES, Kp, TLE — до 8 с на каждый при живом запросе…'):
-    fetched = _fetch_all(disabled['goes'], disabled['kp'])
+    fetched = _fetch_all(bool(disabled['goes']), bool(disabled['kp']))
 with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
     R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
             scenario=scenario, T_months=T_months, fetched=fetched)
@@ -290,8 +294,15 @@ for c in shown:
         st.markdown('**5. Применённое правило или модель.** ' + c.rule_ru)
         st.markdown('**6. Ограничения и уверенность.** ' + c.limits_ru)
         st.markdown('**7. Происхождение.** ' + KIND_RU[c.kind])
+        links = []
+        for rid in c.record_ids:
+            rec = R.raw_records.get(rid) or {}
+            u = rec.get('url') or rec.get('link') or rec.get('messageURL') if isinstance(rec, dict) else None
+            links.append('[%s](%s)' % (rid, u) if u else '`%s`' % rid)
+        if links:
+            st.markdown('**Первоисточник:** ' + ', '.join(links[:12]) + (' …' if len(links) > 12 else ''))
         if pro:
-            for rid in c.record_ids:
+            for rid in c.record_ids[:12]:
                 if rid in R.raw_records:
                     st.json(R.raw_records[rid], expanded=False)
 

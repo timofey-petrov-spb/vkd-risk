@@ -93,6 +93,16 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if fetched is None:
         fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
     (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched
+    # Т6: два разных состояния источника. 'cache' (или True) — имитация отказа: живого запроса нет,
+    # берётся кеш с давностью, покрытие становится частичным и объявляется. 'off' — источник
+    # исключён: данных нет, покрытие обязательной линии NONE → рекомендации нет. Ни одно из них
+    # не превращается в «благоприятно».
+    if disabled.get('goes') == 'off':
+        goes, goes_raw = None, {}
+        f_goes = replace(f_goes, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
+    if disabled.get('kp') == 'off':
+        kp, kp_raw = None, {}
+        f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts = [], {}, [], [], {}, []
     if mode != 'live':
         goes, goes_raw = None, {}          # архива наблюдений GOES за 2024 нет (A1, в работе) — линия честно без данных
@@ -100,7 +110,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
         excluded = list(cut.excluded)
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
-        kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and not disabled['kp']) else None
+        kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and disabled.get('kp') != 'off') else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
         # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
         # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну

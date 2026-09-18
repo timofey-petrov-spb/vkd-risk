@@ -109,6 +109,8 @@ def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample])
         for reason in m.needs_check_reasons:
             sev = 'critical' if 'приоритетное' in reason else 'limiting'
             sim = 'МОДЕЛИРУЕМОЕ' in reason
+            # идентификаторы записей, давших условие, — после «DONKI — » (О4: от предупреждения к первоисточнику)
+            ids = tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ()
             cards.append(Card(
                 title=('Сценарий: ' if sim else 'Условие: ') + reason.split(':')[0],
                 kind=Kind.OWN_CALCULATION if sim else (Kind.EXTERNAL_FORECAST if 'прогноз' in reason else (
@@ -125,7 +127,7 @@ def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample])
                 rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки',
                 limits_ru='порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; '
                           'при иной шкале организации порог меняется в конфигурации',
-                record_ids=(),
+                record_ids=ids,
                 severity=sev,
             ))
     return cards
