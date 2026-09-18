@@ -130,7 +130,7 @@ def verdict_panel(rec, S: dict, windows_ru: dict) -> str:
              '<div class="rule">Правило: %s</div>' % esc(rec.rule_applied)]
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (windows_ru.get(rec.preferred.start_utc, ''), esc(_win_span(rec.preferred))))
-    bullets = list(rec.reasons)
+    bullets = [_short_reason(r) if ' DONKI — ' in r else r for r in rec.reasons]
     if rec.missing:
         bullets += ['Чего не хватает: ' + x for x in rec.missing]
     if bullets:
@@ -183,7 +183,7 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
 
 def _short_reason(r: str) -> str:
     """Короткая форма условия для карточки: до двоеточия плюс первая часть после."""
-    head_, _, tail = r.partition(':')
+    head_, _, tail = r.partition(': ')
     tail = tail.split(';')[0].strip()
     return head_ + (': ' + tail if tail else '')
 
