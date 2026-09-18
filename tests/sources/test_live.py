@@ -277,3 +277,58 @@ def test_live_app_uses_real_sources_and_exports_exact_raw(tmp_path):
         record = next(json.loads(z.read(name)) for name in z.namelist()
                       if name.startswith('raw/noaa_swpc_goes-'))
     assert base64.b64decode(record['content_base64']) == goes_bytes()
+
+
+def test_external_settings_are_applied_and_recorded(tmp_path, monkeypatch):
+    import vkd.config as cfg
+    config = tmp_path/'settings.toml'
+    config.write_text('[sources]\ntimeout_s=4\ncache_ttl_s=1200\n[sources.urls]\ngoes="https://example.invalid/goes"\n')
+    monkeypatch.setenv('VKD_SETTINGS', str(config))
+    cfg.settings.cache_clear()
+    try:
+        get = Mock(return_value=Response(goes_bytes()))
+        _, _, f = get_goes(tmp_path/'cache', transport=get)
+        assert get.call_args.args[0] == 'https://example.invalid/goes'
+        assert get.call_args.kwargs['timeout'] == (3.05, 4)
+        assert f.metadata['effective_config']['poll_seconds'] == 1200
+        assert f.metadata['url'] == 'https://example.invalid/goes'
+        config.write_text('[sources]\ntimeout_s=-1\n')
+        cfg.settings.cache_clear()
+        with pytest.raises(ValueError):
+            get_goes(tmp_path/'cache', transport=get)
+    finally:
+        cfg.settings.cache_clear()
+
+
+def test_changed_endpoint_does_not_relabel_existing_cache(tmp_path, monkeypatch):
+    import vkd.config as cfg
+    get_goes(tmp_path/'cache')
+    config = tmp_path/'settings.toml'
+    config.write_text('[sources.urls]\ngoes="https://example.invalid/different-product"\n')
+    monkeypatch.setenv('VKD_SETTINGS', str(config))
+    cfg.settings.cache_clear()
+    try:
+        sample, _, f = get_goes(tmp_path/'cache', disabled=True)
+        assert sample is None and f.payload is None
+    finally:
+        cfg.settings.cache_clear()
+
+
+def test_windows_lock_uses_same_byte_and_maps_contention(tmp_path, monkeypatch):
+    import errno
+    import sys
+    from types import SimpleNamespace
+    import vkd.sources.live_cache as cache
+    lock = Mock()
+    monkeypatch.setitem(sys.modules, 'msvcrt', SimpleNamespace(locking=lock, LK_UNLCK=0, LK_NBLCK=2))
+    monkeypatch.setattr(cache, '_WINDOWS', True)
+    with (tmp_path/'lock').open('a+b') as handle:
+        handle.write(b'\0'); handle.flush()
+        cache._file_lock(handle)
+        assert handle.tell() == 0
+        lock.assert_called_with(handle.fileno(), 2, 1)
+        cache._file_lock(handle, release=True)
+        lock.assert_called_with(handle.fileno(), 0, 1)
+        lock.side_effect = OSError(errno.EACCES, 'locked')
+        with pytest.raises(BlockingIOError):
+            cache._file_lock(handle)

@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
-import fcntl
+import errno
 import hashlib
 import json
 import os
@@ -15,6 +15,7 @@ import tempfile
 import time
 from typing import Any
 from uuid import uuid4
+from urllib.parse import parse_qsl, urlsplit
 
 import requests
 
@@ -24,6 +25,30 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CACHE = ROOT / 'data/cache/sources'
 MAX_BYTES = 4 * 1024 * 1024
 PARSER_VERSION = 'live-a4-v1'
+_WINDOWS = os.name == 'nt'
+
+
+def _file_lock(handle, *, release=False):
+    if _WINDOWS:
+        import msvcrt
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK if release else msvcrt.LK_NBLCK, 1)
+        except OSError as exc:
+            if not release and exc.errno in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                raise BlockingIOError('Source lock is held by another session') from exc
+            raise
+    else:
+        import fcntl
+        fcntl.flock(handle, fcntl.LOCK_UN if release else fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def _endpoint(url, source_id):
+    parts = urlsplit(url)
+    query = parse_qsl(parts.query, keep_blank_values=True)
+    if source_id == 'gfz_kp':
+        query = [(k, v) for k, v in query if k not in ('start', 'end')]
+    return parts.scheme, parts.netloc, parts.path, tuple(sorted(query))
 
 
 @dataclass(frozen=True)
@@ -52,6 +77,8 @@ class Product:
     max_age_min: float
     poll_seconds: int
     strict_poll: bool = False
+    connect_timeout_s: float = 3.05
+    read_timeout_s: float = 6.0
 
 
 def _atomic(path: Path, raw: bytes):
@@ -74,16 +101,19 @@ def _json(path, data):
 @contextmanager
 def _gate(folder):
     folder.mkdir(parents=True, exist_ok=True)
-    with (folder / '.lock').open('a') as handle:
+    with (folder / '.lock').open('a+b') as handle:
+        if os.fstat(handle.fileno()).st_size == 0:
+            handle.write(b'\0')
+            handle.flush()
         try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            _file_lock(handle)
         except BlockingIOError:
             yield False
             return
         try:
             yield True
         finally:
-            fcntl.flock(handle, fcntl.LOCK_UN)
+            _file_lock(handle, release=True)
 
 
 def _record(product, raw, parsed, fetched, headers, raw_path):
@@ -95,6 +125,10 @@ def _record(product, raw, parsed, fetched, headers, raw_path):
                 data_utc=iso_utc(parsed['data_utc']), quality=parsed['quality'],
                 availability_proof='Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence',
                 raw_path=str(raw_path) if raw_path else None, parser_version=PARSER_VERSION,
+                effective_config={'max_age_min': product.max_age_min, 'poll_seconds': product.poll_seconds,
+                                  'connect_timeout_s': product.connect_timeout_s,
+                                  'read_timeout_s': product.read_timeout_s,
+                                  'max_attempts': 1 if product.strict_poll else 2, 'max_response_bytes': MAX_BYTES},
                 http_headers={k: headers[k] for k in ('ETag', 'Last-Modified', 'Date') if k in headers},
                 limitations=['Observation/epoch time is not publication time.',
                              'Retrieval date is not inferred from filesystem mtime.'])
@@ -123,6 +157,8 @@ def _read_receipt(folder, product, now):
             if (rec['source_id'] != product.source_id or rec['version'] != sha
                     or rec['raw_record_id'] != f'{product.source_id}:{sha}'):
                 raise ValueError('Receipt identity mismatch')
+            if _endpoint(rec['url'], product.source_id) != _endpoint(product.url, product.source_id):
+                continue  # a configured different endpoint must not inherit these data
             fetched = utc(rec['fetched_utc'])
             if fetched > now or utc(rec['available_utc']) != fetched:
                 raise ValueError('Invalid receipt time')
@@ -151,6 +187,8 @@ def _bundled_tle(product, now):
     try:
         records = json.loads((ROOT / 'data/orbit/manifest.json').read_bytes())['records']
         original = next(r for r in records if r['file'] == 'iss.tle')
+        if _endpoint(original['url'], product.source_id) != _endpoint(product.url, product.source_id):
+            return None
         path = ROOT / 'data/orbit/iss.tle'
         raw = path.read_bytes()
         if len(raw) != original['bytes'] or hashlib.sha256(raw).hexdigest() != original['sha256']:
@@ -258,7 +296,7 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                 retry = False
                 try:
                     started = time.monotonic()
-                    response = get(product.url, timeout=(3.05, 6), allow_redirects=False, stream=True,
+                    response = get(product.url, timeout=(product.connect_timeout_s, product.read_timeout_s), allow_redirects=False, stream=True,
                                    headers={'User-Agent': 'vkd-risk/0.4 scientific prototype'})
                     try:
                         status = response.status_code

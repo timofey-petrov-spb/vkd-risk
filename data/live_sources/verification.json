@@ -1,0 +1,211 @@
+{
+  "checked_utc": "2026-09-18T22:51:27.324587+00:00",
+  "platform": "macOS / Python 3.14.3",
+  "sources": {
+    "goes": {
+      "status": "live",
+      "error": null,
+      "ok": true,
+      "from_cache": false,
+      "data_age_min": 11.46129255,
+      "status_ru": "получено по сети, давность данных 11.5 мин",
+      "sample_count": 1,
+      "metadata": {
+        "source_id": "noaa_swpc_goes",
+        "raw_record_id": "noaa_swpc_goes:763f3fb4d1a6bc8b033d81133d5646e3323f310ca1d53dde0fb1c0bab9e7ea52",
+        "url": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json",
+        "version": "763f3fb4d1a6bc8b033d81133d5646e3323f310ca1d53dde0fb1c0bab9e7ea52",
+        "sha256": "763f3fb4d1a6bc8b033d81133d5646e3323f310ca1d53dde0fb1c0bab9e7ea52",
+        "bytes": 725775,
+        "published_utc": null,
+        "available_utc": "2026-09-18T22:51:27.677553Z",
+        "fetched_utc": "2026-09-18T22:51:27.677553Z",
+        "data_utc": "2026-09-18T22:40:00Z",
+        "quality": "preliminary",
+        "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
+        "raw_path": "data/cache/sources/noaa_swpc_goes/raw/763f3fb4d1a6bc8b033d81133d5646e3323f310ca1d53dde0fb1c0bab9e7ea52.bin",
+        "parser_version": "live-a4-v1",
+        "http_headers": {
+          "ETag": "W/\"b130f-65bc9b6002abd\"",
+          "Last-Modified": "Fri, 18 Sep 2026 22:49:20 GMT",
+          "Date": "Fri, 18 Sep 2026 22:50:58 GMT"
+        },
+        "limitations": [
+          "Observation/epoch time is not publication time.",
+          "Retrieval date is not inferred from filesystem mtime."
+        ],
+        "admissibility": {
+          "max_age_min": 60.0,
+          "data_age_min": 11.46129255,
+          "usable": true
+        },
+        "parser_audit": {
+          "rejected_rows": 0,
+          "sampling_note": "5-minute averaged flux; timestamp convention is not used to invent interval bounds"
+        }
+      },
+      "selected": {
+        "time_tag": "2026-09-18T22:40:00Z",
+        "satellite": 18,
+        "flux": 0.2139388471841812,
+        "energy": ">=10 MeV"
+      }
+    },
+    "kp": {
+      "status": "live",
+      "error": null,
+      "ok": true,
+      "from_cache": false,
+      "data_age_min": 111.45923183333333,
+      "status_ru": "получено по сети, давность данных 111.5 мин; незавершённый Kp-nowcast исключён",
+      "sample_count": 1,
+      "metadata": {
+        "source_id": "gfz_kp",
+        "raw_record_id": "gfz_kp:9878e870003956658c504070b0c93589273058807410f3e862aae5e378e08822",
+        "url": "https://kp.gfz.de/app/json/?start=2026-09-16T22:51:27Z&end=2026-09-18T22:51:27Z&index=Kp",
+        "version": "9878e870003956658c504070b0c93589273058807410f3e862aae5e378e08822",
+        "sha256": "9878e870003956658c504070b0c93589273058807410f3e862aae5e378e08822",
+        "bytes": 639,
+        "published_utc": null,
+        "available_utc": "2026-09-18T22:51:27.553910Z",
+        "fetched_utc": "2026-09-18T22:51:27.553910Z",
+        "data_utc": "2026-09-18T21:00:00Z",
+        "quality": "preliminary",
+        "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
+        "raw_path": "data/cache/sources/gfz_kp/raw/9878e870003956658c504070b0c93589273058807410f3e862aae5e378e08822.bin",
+        "parser_version": "live-a4-v1",
+        "http_headers": {
+          "Date": "Fri, 18 Sep 2026 22:51:26 GMT"
+        },
+        "limitations": [
+          "Observation/epoch time is not publication time.",
+          "Retrieval date is not inferred from filesystem mtime."
+        ],
+        "admissibility": {
+          "max_age_min": 360.0,
+          "data_age_min": 111.45923183333333,
+          "usable": true
+        },
+        "parser_audit": {
+          "rejected_rows": 0,
+          "ongoing_rows": 1,
+          "attribution": {
+            "license": "CC BY 4.0",
+            "source": "GFZ Potsdam"
+          }
+        }
+      },
+      "selected": {
+        "datetime": "2026-09-18T18:00:00Z",
+        "Kp": 1.0,
+        "status": "pre"
+      }
+    },
+    "noaa": {
+      "status": "live",
+      "error": null,
+      "ok": true,
+      "from_cache": false,
+      "data_age_min": 621.4593535166666,
+      "status_ru": "получено по сети, давность данных 621.5 мин",
+      "sample_count": 27,
+      "metadata": {
+        "source_id": "noaa_swpc_3day_forecast",
+        "raw_record_id": "noaa_swpc_3day_forecast:62f5972517172232b66b10f50274d0f3d52b235ac4e2a4f033b0ecedbd9b38c7",
+        "url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+        "version": "62f5972517172232b66b10f50274d0f3d52b235ac4e2a4f033b0ecedbd9b38c7",
+        "sha256": "62f5972517172232b66b10f50274d0f3d52b235ac4e2a4f033b0ecedbd9b38c7",
+        "bytes": 1986,
+        "published_utc": "2026-09-18T12:30:00Z",
+        "available_utc": "2026-09-18T22:51:27.561211Z",
+        "fetched_utc": "2026-09-18T22:51:27.561211Z",
+        "data_utc": "2026-09-18T12:30:00Z",
+        "quality": "model",
+        "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
+        "raw_path": "data/cache/sources/noaa_swpc_3day_forecast/raw/62f5972517172232b66b10f50274d0f3d52b235ac4e2a4f033b0ecedbd9b38c7.bin",
+        "parser_version": "live-a4-v1",
+        "http_headers": {
+          "ETag": "\"7c2-65bc9bab4cddd-gzip\"",
+          "Last-Modified": "Fri, 18 Sep 2026 22:50:39 GMT",
+          "Date": "Fri, 18 Sep 2026 22:51:02 GMT"
+        },
+        "limitations": [
+          "Observation/epoch time is not publication time.",
+          "Retrieval date is not inferred from filesystem mtime."
+        ],
+        "admissibility": {
+          "max_age_min": 2160.0,
+          "data_age_min": 621.4593535166666,
+          "usable": true
+        },
+        "parser_audit": {}
+      },
+      "selected": {
+        "issued_utc": "2026-09-18T12:30:00Z"
+      }
+    },
+    "tle": {
+      "status": "cooldown",
+      "error": "http_403",
+      "ok": false,
+      "from_cache": true,
+      "data_age_min": 1165.8149885999999,
+      "status_ru": "пауза запросов, давность данных 1165.8 мин; http_403",
+      "sample_count": 1,
+      "metadata": {
+        "source_id": "celestrak_gp",
+        "raw_record_id": "celestrak_gp:9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+        "url": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
+        "version": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+        "sha256": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+        "bytes": 168,
+        "published_utc": null,
+        "available_utc": "2026-09-18T21:08:13.248299Z",
+        "fetched_utc": "2026-09-18T21:08:13.248299Z",
+        "data_utc": "2026-09-18T03:25:38.782288Z",
+        "quality": "model",
+        "availability_proof": "Direct HTTP retrieval of these bytes; epoch is separate from publication.",
+        "raw_path": "data/orbit/iss.tle",
+        "parser_version": "live-a4-v1",
+        "http_headers": {},
+        "limitations": [
+          "Observation/epoch time is not publication time.",
+          "Retrieval date is not inferred from filesystem mtime."
+        ],
+        "cache_origin": "bundled_verified_A3_receipt",
+        "admissibility": {
+          "max_age_min": 4320.0,
+          "data_age_min": 1165.8149885999999,
+          "usable": true
+        },
+        "parser_audit": {}
+      },
+      "selected": {
+        "epoch_utc": "2026-09-18T03:25:38.782288Z",
+        "norad_id": 25544
+      }
+    }
+  },
+  "integration_base": "73a2ec8",
+  "source_module_version": "live-a4-v1",
+  "typed_schema": "2.1",
+  "tests": {
+    "passed": 158,
+    "subtests_passed": 670,
+    "seconds": 10.24,
+    "mode": "Full suite, app.compute network entry points pinned; source tests cover injected transports independently.",
+    "command": "python tests/sources/run_pinned_suite.py"
+  },
+  "ui": {
+    "current": "no exceptions",
+    "historical_review": "no exceptions",
+    "historical_forecast": "no exceptions"
+  },
+  "limitations": [
+    "Native Windows and cloud deployment checks pending B. Windows locking branch tested with a mock on macOS.",
+    "Current CelesTrak retrieval returned 403; bundled TLE verified and used without another blocked request.",
+    "Unpinned full test run on 73a2ec8 had 153 passes and one historical snapshot failure from current network diagnostics.",
+    "No numerical GOES 2024 archive or complete seasonal meteoroid model.",
+    "Receipt raw paths are local ignored cache artifacts; network check reports their hashes, not portable raw files."
+  ]
+}

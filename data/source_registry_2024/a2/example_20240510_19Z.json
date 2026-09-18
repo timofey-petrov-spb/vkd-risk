@@ -1,5 +1,5 @@
 {
-  "adapter_version": "history-a2-v1",
+  "adapter_version": "history-a2-v2",
   "schema_version": "2.1",
   "samples": [
     {
@@ -1244,8 +1244,8 @@
       "note": "Информация о вспышке; не измерение протонов у МКС; исходное сообщение 20240510-AL-001"
     },
     {
-      "event_id": "nasa_donki_notification:20240508-AL-012:00f500121857:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240508-AL-012:00f500121857:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-10T12:14:00Z",
       "end_utc": null,
@@ -1257,11 +1257,11 @@
       "published_utc": "2024-05-08T18:43:52Z",
       "raw_record_id": "nasa_donki_notification:20240508-AL-012:00f500121857",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240508-AL-012"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не kp_90); исходное сообщение 20240508-AL-012"
     },
     {
-      "event_id": "nasa_donki_notification:20240509-AL-010:48845db3a98b:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240509-AL-010:48845db3a98b:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-10T13:03:00Z",
       "end_utc": null,
@@ -1273,7 +1273,7 @@
       "published_utc": "2024-05-09T21:24:51Z",
       "raw_record_id": "nasa_donki_notification:20240509-AL-010:48845db3a98b",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240509-AL-010"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 9 (диапазон 8–9, верхняя граница, не kp_90); исходное сообщение 20240509-AL-010"
     },
     {
       "event_id": "nasa_donki_notification:20240510-AL-004:c3955880cb5f:SEP",
@@ -1404,8 +1404,8 @@
       "note": "Внешнее моделирование магнитопаузы около GEO; не наблюдение и не положение МКС; исходное сообщение 20240510-AL-012"
     },
     {
-      "event_id": "nasa_donki_notification:20240509-AL-009:00b7484fe27a:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240509-AL-009:00b7484fe27a:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-10T23:46:00Z",
       "end_utc": null,
@@ -1417,11 +1417,11 @@
       "published_utc": "2024-05-09T20:03:35Z",
       "raw_record_id": "nasa_donki_notification:20240509-AL-009:00b7484fe27a",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240509-AL-009"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не kp_90); исходное сообщение 20240509-AL-009"
     },
     {
-      "event_id": "nasa_donki_notification:20240508-AL-009:0cb007c3d2d0:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240508-AL-009:0cb007c3d2d0:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-11T01:39:00Z",
       "end_utc": null,
@@ -1433,11 +1433,11 @@
       "published_utc": "2024-05-08T16:50:57Z",
       "raw_record_id": "nasa_donki_notification:20240508-AL-009:0cb007c3d2d0",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240508-AL-009"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 7 (диапазон 5–7, верхняя граница, не kp_90); исходное сообщение 20240508-AL-009"
     },
     {
-      "event_id": "nasa_donki_notification:20240509-AL-006:cc5e6d6ee3f0:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240509-AL-006:cc5e6d6ee3f0:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-11T05:02:00Z",
       "end_utc": null,
@@ -1449,11 +1449,11 @@
       "published_utc": "2024-05-09T17:04:16Z",
       "raw_record_id": "nasa_donki_notification:20240509-AL-006:cc5e6d6ee3f0",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240509-AL-006"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не kp_90); исходное сообщение 20240509-AL-006"
     },
     {
-      "event_id": "nasa_donki_notification:20240509-AL-005:52705644d239:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240509-AL-005:52705644d239:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-11T06:42:00Z",
       "end_utc": null,
@@ -1465,11 +1465,11 @@
       "published_utc": "2024-05-09T16:39:40Z",
       "raw_record_id": "nasa_donki_notification:20240509-AL-005:52705644d239",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240509-AL-005"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 7 (диапазон 5–7, верхняя граница, не kp_90); исходное сообщение 20240509-AL-005"
     },
     {
-      "event_id": "nasa_donki_notification:20240509-AL-011:47b5baacfa28:CME_arrival",
-      "kind_of_event": "CME_arrival",
+      "event_id": "nasa_donki_notification:20240509-AL-011:47b5baacfa28:CME_ARRIVAL",
+      "kind_of_event": "CME_ARRIVAL",
       "kind": "external_forecast",
       "start_utc": "2024-05-11T07:55:00Z",
       "end_utc": null,
@@ -1481,7 +1481,7 @@
       "published_utc": "2024-05-09T23:35:58Z",
       "raw_record_id": "nasa_donki_notification:20240509-AL-011:47b5baacfa28",
       "is_simulated": false,
-      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; исходное сообщение 20240509-AL-011"
+      "note": "Модельный приход CME к Земле; неопределённость времени не является длительностью бури; опубликованный прогноз: Kp до 7 (диапазон 5–7, верхняя граница, не kp_90); исходное сообщение 20240509-AL-011"
     }
   ],
   "raw_records": {
@@ -3260,7 +3260,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3268,7 +3268,10 @@
             "arrival_utc": "2024-05-11T01:39:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T18:39:00Z",
-            "arrival_latest_utc": "2024-05-11T08:39:00Z"
+            "arrival_latest_utc": "2024-05-11T08:39:00Z",
+            "kp_range_min": 5.0,
+            "kp_range_max": 7.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3316,7 +3319,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3324,7 +3327,10 @@
             "arrival_utc": "2024-05-10T12:14:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T05:14:00Z",
-            "arrival_latest_utc": "2024-05-10T19:14:00Z"
+            "arrival_latest_utc": "2024-05-10T19:14:00Z",
+            "kp_range_min": 6.0,
+            "kp_range_max": 8.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3372,7 +3378,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3425,7 +3431,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3478,7 +3484,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3531,7 +3537,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3584,7 +3590,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3637,7 +3643,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3645,7 +3651,10 @@
             "arrival_utc": "2024-05-11T06:42:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T23:42:00Z",
-            "arrival_latest_utc": "2024-05-11T13:42:00Z"
+            "arrival_latest_utc": "2024-05-11T13:42:00Z",
+            "kp_range_min": 5.0,
+            "kp_range_max": 7.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3693,7 +3702,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3701,7 +3710,10 @@
             "arrival_utc": "2024-05-11T05:02:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T22:02:00Z",
-            "arrival_latest_utc": "2024-05-11T12:02:00Z"
+            "arrival_latest_utc": "2024-05-11T12:02:00Z",
+            "kp_range_min": 6.0,
+            "kp_range_max": 8.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3749,7 +3761,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3802,7 +3814,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3855,7 +3867,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3863,7 +3875,10 @@
             "arrival_utc": "2024-05-10T23:46:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T16:46:00Z",
-            "arrival_latest_utc": "2024-05-11T06:46:00Z"
+            "arrival_latest_utc": "2024-05-11T06:46:00Z",
+            "kp_range_min": 6.0,
+            "kp_range_max": 8.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3911,7 +3926,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3919,7 +3934,10 @@
             "arrival_utc": "2024-05-10T13:03:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-10T06:03:00Z",
-            "arrival_latest_utc": "2024-05-10T20:03:00Z"
+            "arrival_latest_utc": "2024-05-10T20:03:00Z",
+            "kp_range_min": 8.0,
+            "kp_range_max": 9.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -3967,7 +3985,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -3975,7 +3993,10 @@
             "arrival_utc": "2024-05-11T07:55:00Z",
             "arrival_uncertainty_h": 7.0,
             "arrival_earliest_utc": "2024-05-11T00:55:00Z",
-            "arrival_latest_utc": "2024-05-11T14:55:00Z"
+            "arrival_latest_utc": "2024-05-11T14:55:00Z",
+            "kp_range_min": 5.0,
+            "kp_range_max": 7.0,
+            "kp_basis": "published_notification_range"
           }
         }
       },
@@ -4023,7 +4044,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4076,7 +4097,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4129,7 +4150,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4188,7 +4209,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4247,7 +4268,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4300,7 +4321,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "solar_observed_by_goes",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4353,7 +4374,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth_l1",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4404,7 +4425,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth_geo",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4455,7 +4476,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth_geo",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -4506,7 +4527,7 @@
         "availability_proof": "provider message issue timestamp; not independent proof of historical unchanged payload",
         "quality": "preliminary",
         "content_audit": {
-          "parser_version": "donki-body-v1",
+          "parser_version": "donki-body-v2",
           "target_scope": "earth",
           "eligibility": "audited_dated_notification",
           "policy": "dated_provider_message; content-audited, not independent archive capture",
@@ -5801,7 +5822,7 @@
   ],
   "notification_audit": [
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240430-AL-001",
       "raw_record_id": "nasa_donki_notification:20240430-AL-001:02e36900035e",
       "message_type": "CME",
@@ -5818,7 +5839,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240430-AL-002",
       "raw_record_id": "nasa_donki_notification:20240430-AL-002:4ab2ba02b180",
       "message_type": "FLR",
@@ -5837,7 +5858,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240501-7D-001",
       "raw_record_id": "nasa_donki_notification:20240501-7D-001:20932dd64e28",
       "message_type": "Report",
@@ -5854,7 +5875,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240501-AL-001",
       "raw_record_id": "nasa_donki_notification:20240501-AL-001:4d130fe06fc8",
       "message_type": "FLR",
@@ -5873,7 +5894,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240501-AL-002",
       "raw_record_id": "nasa_donki_notification:20240501-AL-002:9414ad07c2ef",
       "message_type": "CME",
@@ -5890,7 +5911,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-001",
       "raw_record_id": "nasa_donki_notification:20240502-AL-001:a1e858ee53d6",
       "message_type": "IPS",
@@ -5907,7 +5928,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-002",
       "raw_record_id": "nasa_donki_notification:20240502-AL-002:7234f6a6d090",
       "message_type": "MPC",
@@ -5924,7 +5945,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-003",
       "raw_record_id": "nasa_donki_notification:20240502-AL-003:8222296c9b61",
       "message_type": "MPC",
@@ -5941,7 +5962,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-004",
       "raw_record_id": "nasa_donki_notification:20240502-AL-004:085a6d789233",
       "message_type": "GST",
@@ -5963,7 +5984,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-005",
       "raw_record_id": "nasa_donki_notification:20240502-AL-005:4ebfb9e25e03",
       "message_type": "GST",
@@ -5985,7 +6006,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240502-AL-006",
       "raw_record_id": "nasa_donki_notification:20240502-AL-006:526dc2f2b6ee",
       "message_type": "GST",
@@ -6007,7 +6028,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240503-AL-001",
       "raw_record_id": "nasa_donki_notification:20240503-AL-001:82759bd8ef2d",
       "message_type": "FLR",
@@ -6026,7 +6047,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240503-AL-002",
       "raw_record_id": "nasa_donki_notification:20240503-AL-002:c1860613cccd",
       "message_type": "FLR",
@@ -6045,7 +6066,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240503-AL-003",
       "raw_record_id": "nasa_donki_notification:20240503-AL-003:8be074c4aadd",
       "message_type": "CME",
@@ -6057,7 +6078,10 @@
         "arrival_utc": "2024-05-06T06:00:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-05T23:00:00Z",
-        "arrival_latest_utc": "2024-05-06T13:00:00Z"
+        "arrival_latest_utc": "2024-05-06T13:00:00Z",
+        "kp_range_min": 2.0,
+        "kp_range_max": 4.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6067,7 +6091,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240504-AL-001",
       "raw_record_id": "nasa_donki_notification:20240504-AL-001:d1b7c4eb2a19",
       "message_type": "FLR",
@@ -6086,7 +6110,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240504-AL-002",
       "raw_record_id": "nasa_donki_notification:20240504-AL-002:bdce5883c654",
       "message_type": "FLR",
@@ -6105,7 +6129,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240504-AL-003",
       "raw_record_id": "nasa_donki_notification:20240504-AL-003:1b5119031f3a",
       "message_type": "CME",
@@ -6117,7 +6141,10 @@
         "arrival_utc": "2024-05-07T01:00:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-06T18:00:00Z",
-        "arrival_latest_utc": "2024-05-07T08:00:00Z"
+        "arrival_latest_utc": "2024-05-07T08:00:00Z",
+        "kp_range_min": 3.0,
+        "kp_range_max": 4.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6127,7 +6154,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240504-AL-004",
       "raw_record_id": "nasa_donki_notification:20240504-AL-004:1784a77dfff5",
       "message_type": "CME",
@@ -6139,7 +6166,10 @@
         "arrival_utc": "2024-05-06T19:00:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-06T12:00:00Z",
-        "arrival_latest_utc": "2024-05-07T02:00:00Z"
+        "arrival_latest_utc": "2024-05-07T02:00:00Z",
+        "kp_range_min": 3.0,
+        "kp_range_max": 5.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6149,7 +6179,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240504-AL-005",
       "raw_record_id": "nasa_donki_notification:20240504-AL-005:f85bd3fa3ae2",
       "message_type": "FLR",
@@ -6168,7 +6198,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-001",
       "raw_record_id": "nasa_donki_notification:20240505-AL-001:0ad09b1f12d3",
       "message_type": "FLR",
@@ -6187,7 +6217,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-002",
       "raw_record_id": "nasa_donki_notification:20240505-AL-002:b0c422b0339f",
       "message_type": "FLR",
@@ -6206,7 +6236,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-003",
       "raw_record_id": "nasa_donki_notification:20240505-AL-003:12af4696c969",
       "message_type": "FLR",
@@ -6225,7 +6255,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-004",
       "raw_record_id": "nasa_donki_notification:20240505-AL-004:2014584c57af",
       "message_type": "FLR",
@@ -6244,7 +6274,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-005",
       "raw_record_id": "nasa_donki_notification:20240505-AL-005:567d88d1af4d",
       "message_type": "FLR",
@@ -6263,7 +6293,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-006",
       "raw_record_id": "nasa_donki_notification:20240505-AL-006:ca617887c0b8",
       "message_type": "FLR",
@@ -6282,7 +6312,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-007",
       "raw_record_id": "nasa_donki_notification:20240505-AL-007:db1a2dc53b13",
       "message_type": "FLR",
@@ -6301,7 +6331,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-008",
       "raw_record_id": "nasa_donki_notification:20240505-AL-008:8a09b9a17d6c",
       "message_type": "FLR",
@@ -6320,7 +6350,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-009",
       "raw_record_id": "nasa_donki_notification:20240505-AL-009:327085ecd190",
       "message_type": "FLR",
@@ -6339,7 +6369,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240505-AL-010",
       "raw_record_id": "nasa_donki_notification:20240505-AL-010:f1bd78bf3202",
       "message_type": "CME",
@@ -6351,7 +6381,10 @@
         "arrival_utc": "2024-05-07T23:00:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-07T16:00:00Z",
-        "arrival_latest_utc": "2024-05-08T06:00:00Z"
+        "arrival_latest_utc": "2024-05-08T06:00:00Z",
+        "kp_range_min": 3.0,
+        "kp_range_max": 5.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6361,7 +6394,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240506-AL-001",
       "raw_record_id": "nasa_donki_notification:20240506-AL-001:f6c066c297f6",
       "message_type": "FLR",
@@ -6380,7 +6413,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240506-AL-002",
       "raw_record_id": "nasa_donki_notification:20240506-AL-002:08292f3cdd26",
       "message_type": "FLR",
@@ -6399,7 +6432,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240507-AL-001",
       "raw_record_id": "nasa_donki_notification:20240507-AL-001:7a7c053277dd",
       "message_type": "FLR",
@@ -6418,7 +6451,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240507-AL-002",
       "raw_record_id": "nasa_donki_notification:20240507-AL-002:de8e01121bc4",
       "message_type": "FLR",
@@ -6437,7 +6470,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240507-AL-003",
       "raw_record_id": "nasa_donki_notification:20240507-AL-003:b39eaa543feb",
       "message_type": "FLR",
@@ -6456,7 +6489,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240507-AL-004",
       "raw_record_id": "nasa_donki_notification:20240507-AL-004:2b6a566ab145",
       "message_type": "FLR",
@@ -6475,7 +6508,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-7D-001",
       "raw_record_id": "nasa_donki_notification:20240508-7D-001:7afdb22d7c60",
       "message_type": "Report",
@@ -6492,7 +6525,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-001",
       "raw_record_id": "nasa_donki_notification:20240508-AL-001:ccc81e6ee669",
       "message_type": "FLR",
@@ -6511,7 +6544,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-002",
       "raw_record_id": "nasa_donki_notification:20240508-AL-002:efa52158a980",
       "message_type": "FLR",
@@ -6530,7 +6563,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-003",
       "raw_record_id": "nasa_donki_notification:20240508-AL-003:5785b8cc4e47",
       "message_type": "FLR",
@@ -6549,7 +6582,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-004",
       "raw_record_id": "nasa_donki_notification:20240508-AL-004:eccd8d6d272d",
       "message_type": "FLR",
@@ -6568,7 +6601,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-005",
       "raw_record_id": "nasa_donki_notification:20240508-AL-005:2f7898d33675",
       "message_type": "FLR",
@@ -6587,7 +6620,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-006",
       "raw_record_id": "nasa_donki_notification:20240508-AL-006:988ffe5a5880",
       "message_type": "FLR",
@@ -6606,7 +6639,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-007",
       "raw_record_id": "nasa_donki_notification:20240508-AL-007:c27cdd015f82",
       "message_type": "FLR",
@@ -6625,7 +6658,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-008",
       "raw_record_id": "nasa_donki_notification:20240508-AL-008:a62f3e9f97d8",
       "message_type": "FLR",
@@ -6644,7 +6677,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-009",
       "raw_record_id": "nasa_donki_notification:20240508-AL-009:0cb007c3d2d0",
       "message_type": "CME",
@@ -6656,7 +6689,10 @@
         "arrival_utc": "2024-05-11T01:39:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T18:39:00Z",
-        "arrival_latest_utc": "2024-05-11T08:39:00Z"
+        "arrival_latest_utc": "2024-05-11T08:39:00Z",
+        "kp_range_min": 5.0,
+        "kp_range_max": 7.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6666,7 +6702,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-010",
       "raw_record_id": "nasa_donki_notification:20240508-AL-010:bb2a311707ec",
       "message_type": "FLR",
@@ -6685,7 +6721,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-011",
       "raw_record_id": "nasa_donki_notification:20240508-AL-011:90a872ba837f",
       "message_type": "FLR",
@@ -6704,7 +6740,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-012",
       "raw_record_id": "nasa_donki_notification:20240508-AL-012:00f500121857",
       "message_type": "CME",
@@ -6716,7 +6752,10 @@
         "arrival_utc": "2024-05-10T12:14:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T05:14:00Z",
-        "arrival_latest_utc": "2024-05-10T19:14:00Z"
+        "arrival_latest_utc": "2024-05-10T19:14:00Z",
+        "kp_range_min": 6.0,
+        "kp_range_max": 8.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6726,7 +6765,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-013",
       "raw_record_id": "nasa_donki_notification:20240508-AL-013:3754e8e75832",
       "message_type": "FLR",
@@ -6745,7 +6784,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240508-AL-014",
       "raw_record_id": "nasa_donki_notification:20240508-AL-014:7b1b26be41cb",
       "message_type": "FLR",
@@ -6764,7 +6803,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-001",
       "raw_record_id": "nasa_donki_notification:20240509-AL-001:7e52bd88c3d8",
       "message_type": "FLR",
@@ -6783,7 +6822,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-002",
       "raw_record_id": "nasa_donki_notification:20240509-AL-002:9f24c0f733af",
       "message_type": "FLR",
@@ -6802,7 +6841,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-003",
       "raw_record_id": "nasa_donki_notification:20240509-AL-003:718197e41ad8",
       "message_type": "FLR",
@@ -6821,7 +6860,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-004",
       "raw_record_id": "nasa_donki_notification:20240509-AL-004:26d669747c68",
       "message_type": "SEP",
@@ -6841,7 +6880,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-005",
       "raw_record_id": "nasa_donki_notification:20240509-AL-005:52705644d239",
       "message_type": "CME",
@@ -6853,7 +6892,10 @@
         "arrival_utc": "2024-05-11T06:42:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T23:42:00Z",
-        "arrival_latest_utc": "2024-05-11T13:42:00Z"
+        "arrival_latest_utc": "2024-05-11T13:42:00Z",
+        "kp_range_min": 5.0,
+        "kp_range_max": 7.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6863,7 +6905,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-006",
       "raw_record_id": "nasa_donki_notification:20240509-AL-006:cc5e6d6ee3f0",
       "message_type": "CME",
@@ -6875,7 +6917,10 @@
         "arrival_utc": "2024-05-11T05:02:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T22:02:00Z",
-        "arrival_latest_utc": "2024-05-11T12:02:00Z"
+        "arrival_latest_utc": "2024-05-11T12:02:00Z",
+        "kp_range_min": 6.0,
+        "kp_range_max": 8.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6885,7 +6930,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-007",
       "raw_record_id": "nasa_donki_notification:20240509-AL-007:7e5202b7d244",
       "message_type": "FLR",
@@ -6904,7 +6949,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-008",
       "raw_record_id": "nasa_donki_notification:20240509-AL-008:3b32b722a466",
       "message_type": "FLR",
@@ -6923,7 +6968,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-009",
       "raw_record_id": "nasa_donki_notification:20240509-AL-009:00b7484fe27a",
       "message_type": "CME",
@@ -6935,7 +6980,10 @@
         "arrival_utc": "2024-05-10T23:46:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T16:46:00Z",
-        "arrival_latest_utc": "2024-05-11T06:46:00Z"
+        "arrival_latest_utc": "2024-05-11T06:46:00Z",
+        "kp_range_min": 6.0,
+        "kp_range_max": 8.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6945,7 +6993,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-010",
       "raw_record_id": "nasa_donki_notification:20240509-AL-010:48845db3a98b",
       "message_type": "CME",
@@ -6957,7 +7005,10 @@
         "arrival_utc": "2024-05-10T13:03:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-10T06:03:00Z",
-        "arrival_latest_utc": "2024-05-10T20:03:00Z"
+        "arrival_latest_utc": "2024-05-10T20:03:00Z",
+        "kp_range_min": 8.0,
+        "kp_range_max": 9.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6967,7 +7018,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240509-AL-011",
       "raw_record_id": "nasa_donki_notification:20240509-AL-011:47b5baacfa28",
       "message_type": "CME",
@@ -6979,7 +7030,10 @@
         "arrival_utc": "2024-05-11T07:55:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-11T00:55:00Z",
-        "arrival_latest_utc": "2024-05-11T14:55:00Z"
+        "arrival_latest_utc": "2024-05-11T14:55:00Z",
+        "kp_range_min": 5.0,
+        "kp_range_max": 7.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -6989,7 +7043,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-001",
       "raw_record_id": "nasa_donki_notification:20240510-AL-001:579bd22b7ed5",
       "message_type": "FLR",
@@ -7008,7 +7062,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-002",
       "raw_record_id": "nasa_donki_notification:20240510-AL-002:167b50e605c2",
       "message_type": "FLR",
@@ -7027,7 +7081,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-003",
       "raw_record_id": "nasa_donki_notification:20240510-AL-003:6630a02f98ab",
       "message_type": "CME",
@@ -7039,7 +7093,10 @@
         "arrival_utc": "2024-05-12T14:00:00Z",
         "arrival_uncertainty_h": 7.0,
         "arrival_earliest_utc": "2024-05-12T07:00:00Z",
-        "arrival_latest_utc": "2024-05-12T21:00:00Z"
+        "arrival_latest_utc": "2024-05-12T21:00:00Z",
+        "kp_range_min": 5.0,
+        "kp_range_max": 7.0,
+        "kp_basis": "published_notification_range"
       },
       "availability_policy": "dated_provider_message; content-audited, not independent archive capture",
       "limitations": [
@@ -7049,7 +7106,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-004",
       "raw_record_id": "nasa_donki_notification:20240510-AL-004:c3955880cb5f",
       "message_type": "SEP",
@@ -7074,7 +7131,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-005",
       "raw_record_id": "nasa_donki_notification:20240510-AL-005:c306c7374c0f",
       "message_type": "SEP",
@@ -7099,7 +7156,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-006",
       "raw_record_id": "nasa_donki_notification:20240510-AL-006:8e1b80b910d7",
       "message_type": "FLR",
@@ -7118,7 +7175,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-007",
       "raw_record_id": "nasa_donki_notification:20240510-AL-007:bc8c1c5ce966",
       "message_type": "FLR",
@@ -7137,7 +7194,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-008",
       "raw_record_id": "nasa_donki_notification:20240510-AL-008:2af002bf5038",
       "message_type": "SEP",
@@ -7157,7 +7214,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-009",
       "raw_record_id": "nasa_donki_notification:20240510-AL-009:c4143eb25702",
       "message_type": "SEP",
@@ -7177,7 +7234,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-010",
       "raw_record_id": "nasa_donki_notification:20240510-AL-010:3fa0f05d9c1d",
       "message_type": "IPS",
@@ -7194,7 +7251,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-011",
       "raw_record_id": "nasa_donki_notification:20240510-AL-011:879f5537b6c6",
       "message_type": "MPC",
@@ -7211,7 +7268,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-012",
       "raw_record_id": "nasa_donki_notification:20240510-AL-012:eb81004eeab1",
       "message_type": "MPC",
@@ -7228,7 +7285,7 @@
       ]
     },
     {
-      "parser_version": "donki-body-v1",
+      "parser_version": "donki-body-v2",
       "message_id": "20240510-AL-013",
       "raw_record_id": "nasa_donki_notification:20240510-AL-013:16a20180ac73",
       "message_type": "GST",

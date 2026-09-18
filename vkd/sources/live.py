@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from dataclasses import replace
 import math
+from urllib.parse import urlsplit
 
 from vkd.types import EnvironmentSample, Kind
 from .live_cache import Fetch, Product, acquire, raw_record
@@ -20,6 +22,24 @@ def _age(value):
     return float(value)
 
 
+def _configured(product, key):
+    # Import at call time; module import must not freeze deployment settings.
+    from vkd.config import section
+    cfg = section('sources')
+    urls = cfg.get('urls', {})
+    if not isinstance(urls, dict):
+        raise ValueError('sources.urls must be a table')
+    url = urls.get(key, product.url)
+    if not isinstance(url, str) or urlsplit(url).scheme != 'https' or not urlsplit(url).hostname:
+        raise ValueError(f'sources.urls.{key} must be an absolute HTTPS URL')
+    timeout = _age(cfg.get('timeout_s', product.read_timeout_s))
+    if timeout > 30:
+        raise ValueError('sources.timeout_s must not exceed 30 seconds')
+    ttl = _age(cfg.get('cache_ttl_s', product.poll_seconds))
+    return replace(product, url=url, read_timeout_s=timeout,
+                   poll_seconds=max(product.poll_seconds, math.ceil(ttl)))
+
+
 def _observation(product, disabled, kwargs):
     fetched = acquire(product, disabled=disabled, **kwargs)
     if fetched.payload is None:
@@ -34,7 +54,7 @@ def _observation(product, disabled, kwargs):
 def goes_latest(disabled: bool = False, *, max_age_min=60, **kwargs):
     """GOES >=10 MeV, pfu; stale/invalid means None, never zero."""
     product = Product('noaa_swpc_goes', GOES_URL, parse_goes, _age(max_age_min), 300)
-    return _observation(product, disabled, kwargs)
+    return _observation(_configured(product, 'goes'), disabled, kwargs)
 
 
 def kp_latest(disabled: bool = False, *, max_age_min=360, **kwargs):
@@ -43,13 +63,13 @@ def kp_latest(disabled: bool = False, *, max_age_min=360, **kwargs):
     fmt = '%Y-%m-%dT%H:%M:%SZ'
     url = f'https://kp.gfz.de/app/json/?start={(now-timedelta(days=2)).strftime(fmt)}&end={now.strftime(fmt)}&index=Kp'
     product = Product('gfz_kp', url, parse_kp, _age(max_age_min), 900)
-    return _observation(product, disabled, {**kwargs, 'now': now})
+    return _observation(_configured(product, 'kp'), disabled, {**kwargs, 'now': now})
 
 
 def tle_latest(disabled: bool = False, *, max_age_min=3*24*60, **kwargs):
     """Two-value B interface; NORAD 25544, checksum, SGP4 and epoch checks."""
     product = Product('celestrak_gp', TLE_URL, parse_tle, _age(max_age_min), 7200, strict_poll=True)
-    fetched = acquire(product, disabled=disabled, **kwargs)
+    fetched = acquire(_configured(product, 'tle'), disabled=disabled, **kwargs)
     return fetched.payload, fetched
 
 
@@ -61,7 +81,7 @@ def noaa_latest(disabled: bool = False, *, max_age_min=36*60, **kwargs):
     window and calculate coverage in B. No daily-to-window probability scaling.
     """
     product = Product('noaa_swpc_3day_forecast', NOAA_URL, parse_noaa_live, _age(max_age_min), 3600)
-    fetched = acquire(product, disabled=disabled, **kwargs)
+    fetched = acquire(_configured(product, 'noaa'), disabled=disabled, **kwargs)
     raw = raw_record(fetched)
     if fetched.payload is None:
         return (), raw, fetched

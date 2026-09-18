@@ -13,7 +13,7 @@ from datetime import timedelta
 from vkd.types import EnvironmentSample, EventInterval, Kind
 from .registry import iso_utc, utc
 
-PARSER_VERSION = 'donki-body-v1'
+PARSER_VERSION = 'donki-body-v2'
 SOURCE_ID = 'nasa_donki_notification'
 STAMP = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z'
 
@@ -116,16 +116,26 @@ def parse_notification(raw: bytes, record: dict) -> dict:
                                    'noaa_s_scale': None}
         elif kind == 'CME':
             # "Heliocentric Earth Equatorial coordinates" is not an Earth impact.
-            arrivals = re.findall(r'(?:may|might|will)\s+reach\s+(?:NASA missions near Earth|Earth)\s+at\s+(?:about\s+)?('
-                                  + STAMP + r')(?:\s*\(plus minus ([\d.]+) hours\))?', summary, re.I)
+            arrivals = list(re.finditer(r'(?:may|might|will)\s+reach\s+(?:NASA missions near Earth|Earth)\s+at\s+(?:about\s+)?('
+                                  + STAMP + r')(?:\s*\(plus minus ([\d.]+) hours\))?', summary, re.I))
             if len(arrivals) == 1:
-                start, uncertainty = utc(arrivals[0][0]), arrivals[0][1]
+                arrival = arrivals[0]
+                start, uncertainty = utc(arrival[1]), arrival[2]
                 hours = float(uncertainty) if uncertainty else None
-                event('CME_arrival', start, origin=Kind.EXTERNAL_FORECAST, uncertain=True,
-                      note='Модельный приход CME к Земле; неопределённость времени не является длительностью бури')
+                tail = re.split(r'\n\s*\n', summary[arrival.end():], maxsplit=1)[0]
+                kp = re.search(r'expected range of the maximum Kp index is ([\d.]+)\s*[-–]\s*([\d.]+)', tail, re.I)
+                lo, hi = (float(kp[1]), float(kp[2])) if kp else (None, None)
+                if kp and not 0 <= lo <= hi <= 9:
+                    raise NotificationParseError('Invalid forecast Kp range')
+                kp_note = (f'; опубликованный прогноз: Kp до {hi:g} (диапазон {lo:g}–{hi:g}, верхняя граница, не kp_90)'
+                           if kp else '; ожидаемый Kp не указан')
+                event('CME_ARRIVAL', start, origin=Kind.EXTERNAL_FORECAST, uncertain=True,
+                      note='Модельный приход CME к Земле; неопределённость времени не является длительностью бури' + kp_note)
                 result['facts'] = {'arrival_utc': iso_utc(start), 'arrival_uncertainty_h': hours,
                                    'arrival_earliest_utc': iso_utc(start-timedelta(hours=hours)) if hours is not None else None,
-                                   'arrival_latest_utc': iso_utc(start+timedelta(hours=hours)) if hours is not None else None}
+                                   'arrival_latest_utc': iso_utc(start+timedelta(hours=hours)) if hours is not None else None,
+                                   'kp_range_min': lo, 'kp_range_max': hi,
+                                   'kp_basis': 'published_notification_range' if kp else None}
             elif not re.search(r'(?<![A-Za-z])(?:missions near Earth|impact Earth|reach Earth)(?![A-Za-z])', summary, re.I):
                 result.update(status='out_of_scope', reason='no explicit Earth arrival in primary summary', target_scope='other_targets')
         elif kind == 'FLR' and 'detected by GOES' in summary:

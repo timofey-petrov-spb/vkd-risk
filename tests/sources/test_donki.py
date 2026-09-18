@@ -45,6 +45,23 @@ class DonkiTests(unittest.TestCase):
         self.assertEqual(event.kind, Kind.OBSERVATION)
         self.assertIsNone(event.valid_to_utc)
 
+    def test_cme_kp_range_is_from_the_earth_arrival_paragraph(self):
+        result = self.parse('20240508-AL-012')
+        self.assertEqual(result['facts']['kp_range_min'], 6)
+        self.assertEqual(result['facts']['kp_range_max'], 8)
+        event, = result['events']
+        self.assertEqual(event.kind_of_event, 'CME_ARRIVAL')
+        self.assertIn('Kp до 8', event.note)
+        self.assertIn('не kp_90', event.note)
+        self.assertIsNone(event.end_utc)
+        self.assertIsNone(event.valid_to_utc)
+        changed = self.changed('20240508-AL-012', lambda m: m.update(
+            messageBody=m['messageBody'].replace('## Notes:',
+                '## Notes: The expected range of the maximum Kp index is 8-9.')))
+        self.assertEqual(changed['facts']['kp_range_max'], 8)
+        with self.assertRaises(NotificationParseError):
+            self.changed('20240508-AL-012', lambda m: m.update(messageBody=m['messageBody'].replace('is 6-8', 'is 6-12')))
+
     def test_goes_threshold_is_not_a_measured_flux_or_s_level(self):
         result = self.parse('20240510-AL-004')
         self.assertEqual(result['facts']['energy_lower_bound_MeV'], 10)
@@ -79,7 +96,7 @@ class DonkiTests(unittest.TestCase):
     def test_cme_arrival_not_launch_time_and_uncertainty_not_duration(self):
         result = self.parse('20240509-AL-010')
         event, = result['events']
-        self.assertEqual(event.kind_of_event, 'CME_arrival')
+        self.assertEqual(event.kind_of_event, 'CME_ARRIVAL')
         self.assertEqual(event.kind, Kind.EXTERNAL_FORECAST)
         self.assertEqual(event.start_utc, utc('2024-05-10T13:03Z'))
         self.assertGreater(event.start_utc, event.published_utc)
@@ -109,4 +126,3 @@ class DonkiTests(unittest.TestCase):
         result = self.parse('20240516-7D-001')
         self.assertEqual(result['status'], 'publication_conflict')
         self.assertEqual(result['events'], [])
-

@@ -18,7 +18,7 @@ from vkd.types import EnvironmentSample, Kind, Request
 from .replay import replay_forecast
 
 ROOT = Path(__file__).resolve().parents[2]
-ADAPTER_VERSION = 'history-a2-v1'
+ADAPTER_VERSION = 'history-a2-v2'
 
 
 class HistoryDataError(ValueError):
