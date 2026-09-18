@@ -203,7 +203,7 @@ python -m pytest
 
 ## 5. Методы кратко
 
-Траектория (`experiments/stub_orbit.py`, временно вместо `vkd/orbit`).
+Траектория (`vkd/orbit`, A3: SGP4 по TLE сейчас, NASA/JSC OEM в 2024, IGRF-13/14; подключена через `vkd/integration/orbit_bridge.py`).
 TLE CelesTrak GP, NORAD 25544 → SGP4 через `skyfield.EarthSatellite`;
 подспутниковая точка `wgs84.geographic_position_of` (в метаданных система
 `TEME→WGS84`). Шаг 1 мин, число точек = период поиска + длительность,
@@ -541,7 +541,8 @@ DONKI, истина по протонным событиям из архива �
 | `vkd/sources/`, `vkd/orbit/`, `vkd/history/`, `vkd/conjunctions/` | А | пакеты созданы, кода пока нет; конвейер подключает их при появлении и до тех пор использует заглушки из `experiments/` |
 | `vkd/suit/` | — | пустой пакет (зонная модель скафандра — возможное развитие) |
 | `experiments/stub_sources.py` | Б, временно | живые запросы GOES, Kp, TLE с кешем и снимками |
-| `experiments/stub_orbit.py` | Б, временно | SGP4 через skyfield, IGRF через ppigrf, эксцентричная дипольная L |
+| `vkd/integration/orbit_bridge.py` | Б | мост к орбите A3: TLE-снимок с манифестом, строгий OEM → объявленная реконструкция, отказ без заглушки |
+| `vkd/integration/noaa_forecast.py` | Б | прогнозы NOAA из выпусков до отсечки (A2 replay) → EnvironmentSample |
 | `experiments/stub_history.py` | Б, временно | разбор архива DONKI в события и образцы |
 | `experiments/gannon.py` | Б | эксперименты Т5, пишет `docs/EKSPERIMENTY.md` |
 | `experiments/demo_pipeline.py` | Б | ранняя демонстрация связности звеньев; помечена «не эталон», содержит известные и неисправленные упрощения |
@@ -589,7 +590,7 @@ DONKI, истина по протонным событиям из архива �
 
 - Временные заглушки. `app/compute.py` импортирует `vkd.orbit`,
   `vkd.sources`, `vkd.history` и при `ImportError` берёт
-  `experiments/stub_orbit.py`, `experiments/stub_sources.py`,
+  `experiments/stub_sources.py`,
   `experiments/stub_history.py`. Сейчас пакеты области А пусты, поэтому
   работают заглушки; их имена печатаются в таблице источников (`_layers`)
   и в `trajectory_meta.orbit_module`.

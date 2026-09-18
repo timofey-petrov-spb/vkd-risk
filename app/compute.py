@@ -6,8 +6,9 @@ run(params) собирает один снимок расчёта. Его исп
   * scripts/make_examples.py — сохранённые примеры расчётов для сдачи (Т8);
   * эксперименты — прогоны без Streamlit.
 
-Подмена слоёв: vkd.orbit / vkd.sources / vkd.history подхватываются
-автоматически, иначе работают временные заглушки из experiments/.
+Слои А: орбита — vkd.orbit (A3) через vkd.integration.orbit_bridge, без заглушки;
+прогнозы NOAA до отсечки — vkd.history.replay (A2) через vkd.integration.noaa_forecast;
+живые источники (A4) и разбор DONKI (A2) — пока временные модули experiments/.
 """
 from __future__ import annotations
 
@@ -16,40 +17,37 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from vkd.assess.cutoff import apply_cutoff
-from vkd.assess.meteoroids import meteoroid_hits
+from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.explain.cards import cards_for_window
+from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts
+from vkd.integration.orbit_bridge import ORBIT_SRC, build_orbit, provenance_summary
 from vkd.types import Window
 from vkd.windows.compare import Thresholds, assess_window, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
 try:
-    from vkd.orbit import trajectory          # type: ignore
-    ORBIT_SRC = 'vkd.orbit'
-except ImportError:
-    from experiments.stub_orbit import trajectory
-    ORBIT_SRC = 'experiments.stub_orbit — временно, дипольная L, помечена в статусе точек'
-try:
-    from vkd.sources import goes_latest, kp_latest, tle_latest   # type: ignore
+    from vkd.sources import goes_latest, kp_latest, tle_latest   # type: ignore  # A4 — когда появится
     SRC_LAYER = 'vkd.sources'
 except ImportError:
     from experiments.stub_sources import goes_latest, kp_latest, tle_latest
-    SRC_LAYER = 'experiments.stub_sources — временно: живой запрос, кеш, снимок'
+    SRC_LAYER = 'experiments.stub_sources — временно до A4: живой запрос, кеш, снимок'
 try:
-    from vkd.history import history_bundle    # type: ignore
+    from vkd.history import history_bundle    # type: ignore  # A2 — разбор содержания DONKI
     HIST_SRC = 'vkd.history'
 except ImportError:
     from experiments.stub_history import history_bundle
-    HIST_SRC = 'experiments.stub_history — временно: архив DONKI, уведомления с messageIssueTime'
+    HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
 
-ALGO_VERSION = '0.3.0-b3'
+ALGO_VERSION = '0.4.0-i1'
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
+TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
 
-POLICY_NOTE = ('Исключение окон с S1–S2, Kp ≥ 7 или сообщением о сближении из автоматического выбора — '
-               'консервативная политика прототипа, не эксплуатационная норма; из индексов NOAA не следует '
-               'ни прерывание, ни продолжение ВКД.')
+POLICY_NOTE = ('Исключение окон с S1–S2, Kp ≥ 7 (наблюдение или прогноз NOAA) или сообщением о сближении из '
+               'автоматического выбора — консервативная политика прототипа, не эксплуатационная норма; из индексов '
+               'NOAA не следует ни прерывание, ни продолжение ВКД.')
 
 
 @dataclass
@@ -67,6 +65,8 @@ class Result:
     kp: Any
     excluded: list
     fetch_status: dict
+    forecasts: list = None     # линии прогнозов NOAA (история)
+    orbit: Any = None          # OrbitResult
 
 
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
@@ -74,9 +74,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         scenario: Optional[Scenario] = None, T_months: int = 6,
         fetched: Optional[tuple] = None, now: Optional[datetime] = None,
         tle_override_path: Optional[str] = None) -> Result:
-    """tle_override_path — воспроизведение сохранённого расчёта: орбита строится по
-    сохранённому TLE, а не по текущему (Т8). До подключения OEM (A3) орбита
-    исторических режимов зависит от текущего TLE, поэтому снимок хранит его текст."""
+    """tle_override_path — воспроизведение сохранённого расчёта текущего режима: орбита
+    строится по сохранённому TLE, а не по текущему (Т8). В исторических режимах орбита
+    берётся из архива OEM (A1/A3) и от TLE не зависит."""
     assert mode in MODES, mode
     disabled = disabled or {'goes': False, 'kp': False}
     th = thresholds or Thresholds()
@@ -90,9 +90,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if fetched is None:
         fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
     (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched
-    events, hist_raw, excluded = [], {}, []
+    events, hist_raw, excluded, fc_lines, fc_raw, forecasts = [], {}, [], [], {}, []
     if mode != 'live':
-        goes, goes_raw = None, {}          # архива GOES за 2024 нет (A2) — линия честно без данных
+        goes, goes_raw = None, {}          # архива наблюдений GOES за 2024 нет (A1, в работе) — линия честно без данных
         h_samples, h_events, hist_raw = history_bundle()
         cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
         excluded = list(cut.excluded)
@@ -101,77 +101,108 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
         events = [e for e in cut.events if e.start_utc is None or (
             e.start_utc <= t0 + timedelta(minutes=horizon_min) and (e.published_utc or e.start_utc) >= t0 - timedelta(hours=48))]
+        # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
+        fc_lines, fc_raw = noaa_forecasts(t0, t0, t0 + timedelta(minutes=horizon_min))
+        forecasts = [s for line in fc_lines for s in line.samples]
     kp = simulated_kp(kp, t0, scenario)
     events = events + simulated_events(t0, scenario)
 
-    # ------------------------------------------------------------ траектория
-    tle_path = tle_override_path or f_tle.raw_path
+    # ------------------------------------------------------------ траектория (A3 через мост Б)
     if tle_override_path:
         tle_text = open(tle_override_path, encoding='utf-8').read()
         f_tle = replace(f_tle, status_ru='TLE из сохранённого расчёта (воспроизведение)', ok=False, from_cache=True)
-    meta, traj = trajectory(t0, horizon_min, th.saa_B_threshold_nT, tle_path=tle_path)
-    if mode != 'live':
-        meta = replace(meta, is_reconstruction=True)
+    orb = build_orbit(mode, t0, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
+                      tle_fetched_utc=f_tle.fetched_utc, tle_available_utc=f_tle.fetched_utc, tle_url=TLE_URL,
+                      tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days, cutoff_utc=cutoff_utc)
+    meta, traj = orb.meta, orb.points
 
     # ------------------------------------------------------------ окна, устойчивость, оценка
     belts = BeltTable('min')
     windows = apply_to_windows([Window(t0 + timedelta(minutes=o), duration_min) for o in window_offsets_min], scenario)
 
-    # метеороиды по ECSS (B2 по спецификации A5): высота — средняя по окну, пластина 1 м²
+    # метеороиды по ECSS (B2 по спецификации A5): по фактической высоте трассы, концы окна включены
     def _mmod(w: Window):
-        pts = [p for p in traj if w.start_utc <= p.t_utc < w.start_utc + timedelta(minutes=w.duration_min)]
-        alt = sum(p.alt_km for p in pts) / len(pts) if pts else 420.0
+        end = w.start_utc + timedelta(minutes=w.duration_min)
+        pts = [p for p in traj if w.start_utc <= p.t_utc <= end]
+        if len(pts) < 2:
+            return None, 'расчёт невозможен: нет трассы окна', 0.0
+        frac = (pts[-1].t_utc - pts[0].t_utc).total_seconds() / (60.0 * w.duration_min)
         try:
-            r = meteoroid_hits(alt, 1.0, w.duration_min / 60.0, m_min_g=1e-3)
-            return r.N, r.rule + '; h=%.0f км' % alt
+            r = meteoroid_hits_track([p.t_utc for p in pts], [p.alt_km for p in pts], 1.0, 1e-3)
+            return r.N, r.rule, frac
         except ValueError as e:
-            return None, 'вне области применимости ECSS: %s' % e
+            return None, 'вне области применимости ECSS: %s' % e, frac
 
     mmod = {w.start_utc: _mmod(w) for w in windows}      # один раз на окно
     # покрытие каталога уведомлений DONKI в репозитории: архив выгружен за 1 мая — 30 июня 2024
     catalog = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc)) if mode != 'live' else None
 
+    def _assess(w, tr, th_i):
+        return assess_window(w, tr, belts, goes, kp, [], th_i, now, events=events, catalog_coverage=catalog,
+                             mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1],
+                             mmod_cov_fraction=mmod[w.start_utc][2], forecasts=forecasts)
+
     def _run(tr, kw):
         th_i = replace(th, **kw)
-        A_i = [assess_window(w, tr, belts, goes, kp, [], th_i, now, events=events, catalog_coverage=catalog,
-                             mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1]) for w in windows]
+        A_i = [_assess(w, tr, th_i) for w in windows]
         return A_i, recommend(A_i, th_i)
 
     rob = robustness(traj, windows, _run,
                      thr_grid=[th.saa_B_threshold_nT - 2000, th.saa_B_threshold_nT, th.saa_B_threshold_nT + 2000],
                      e_grid=[12.5, 30.0, 50.0])
     th = replace(th, equiv_tol_min=max(1.0, rob.saa_spread_min))
-    assessments = [assess_window(w, traj, belts, goes, kp, [], th, now, events=events, catalog_coverage=catalog,
-                                 mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1]) for w in windows]
+    assessments = [_assess(w, traj, th) for w in windows]
     rec = recommend(assessments, th)
     rec = replace(rec, is_simulated=is_sim,
+                  missing=rec.missing + (('орбита недоступна: %s' % orb.error,) if orb.error else ()),
                   tolerance_basis='допуск %.0f мин — разброс минут в аномалии у лучшего окна при порогах %s нТл' % (
                       th.equiv_tol_min, '/'.join('%.0f' % x for x in rob.grid[0])) + ('; выбор устойчив' if rob.stable else '; ВЫБОР МЕНЯЕТСЯ на сетке'))
-    samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {})}
+    samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
+               **{s.raw_record_id: s for s in forecasts}}
     cards = cards_for_window(assessments[0], samples)
 
     # ------------------------------------------------------------ снимок
+    iso = lambda v: v.isoformat() if hasattr(v, 'isoformat') else v
     ev_raw = {e.raw_record_id: hist_raw[e.raw_record_id] for e in events if e.raw_record_id in hist_raw}
-    raw_records = {**(goes_raw or {}), **(kp_raw or {}), **ev_raw,
-                   'iss.tle': {'text': tle_text, 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None, 'fetch': f_tle.status_ru}}
+    raw_records = {**(goes_raw or {}), **(kp_raw or {}), **ev_raw, **fc_raw,
+                   'orbit_provenance': orb.provenance}
+    if mode == 'live':
+        raw_records['iss.tle'] = {'text': tle_text, 'epoch_utc': iso(meta.epoch_utc) if meta and meta.epoch_utc else None,
+                                  'fetch': f_tle.status_ru}
 
     def _src(f, role, sample=None):
         return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
-                'fetched_utc': f.fetched_utc.isoformat() if f.fetched_utc else None,
-                'data_utc': sample.t_utc.isoformat() if sample else None,
+                'fetched_utc': iso(f.fetched_utc) if f.fetched_utc else None,
+                'data_utc': iso(sample.t_utc) if sample else None,
                 'age_min': round((now - sample.t_utc).total_seconds() / 60) if sample else f.age_min}
 
+    orbit_src = {'role': 'орбита', 'status': orb.status_ru, 'strictness': orb.strictness,
+                 'live_ok': f_tle.ok if mode == 'live' else None, 'from_cache': f_tle.from_cache if mode == 'live' else None,
+                 'fetched_utc': iso(meta.fetched_utc) if meta else None,
+                 'epoch_utc': iso(meta.epoch_utc) if meta and meta.epoch_utc else None,
+                 'age_h': round((now - meta.epoch_utc).total_seconds() / 3600, 1) if meta and meta.epoch_utc else None,
+                 'source_id': meta.source_id if meta else None}
     sources = {
-        'celestrak_gp': {**_src(f_tle, 'орбита'), 'epoch_utc': meta.epoch_utc.isoformat() if meta.epoch_utc else None,
-                         'age_h': round((now - meta.epoch_utc).total_seconds() / 3600, 1) if meta.epoch_utc else None},
+        'orbit': orbit_src,
         'noaa_swpc_goes': _src(f_goes, 'протоны ≥10 МэВ', goes if mode == 'live' else None),
         'gfz_kp': _src(f_kp, 'Kp', kp if mode == 'live' else None),
         'ost1044_belts': {'role': 'захваченные протоны', 'status': belts.source, 'live_ok': None, 'from_cache': None},
-        'ecss_grun': {'role': 'метеороиды', 'status': 'ECSS-E-ST-10-04C Rev.1: Grün (10-1), Table J-6, N = F·A·T; потоки даты не включены; '
-                                                      'контроль 5,61e-7 на 400 км/1 м²/6 ч воспроизведён', 'live_ok': None, 'from_cache': None},
+        'ecss_grun': {'role': 'метеороиды', 'status': 'ECSS-E-ST-10-04C Rev.1: Grün (10-1), Table J-6 по высоте трассы, '
+                                                      'интеграл по dt (спецификация A5, grun-ecss-2020-v1); потоки даты не включены; '
+                                                      'контроль 5,609728e-7 на 400 км/1 м²/6 ч воспроизведён', 'live_ok': None, 'from_cache': None},
         '_layers': {'role': 'слои', 'status': 'орбита: %s; источники: %s; история: %s' % (ORBIT_SRC, SRC_LAYER, HIST_SRC)},
     }
-    iso = lambda v: v.isoformat() if hasattr(v, 'isoformat') else v
+    if mode != 'live':
+        for line in fc_lines:
+            sources['noaa_forecast_' + line.channel_id] = {
+                'role': line.label_ru, 'status': FC_STATUS_RU.get(line.status, line.status) + (
+                    '; выпуск %s от %s' % (line.release_id, line.published_utc.strftime('%Y-%m-%d %H:%MZ')) if line.record_id_ok() else ''),
+                'live_ok': None, 'from_cache': True, 'coverage_fraction': line.coverage_fraction}
+
+    meta_dict = ({**{k: iso(v) for k, v in meta.__dict__.items()}} if meta else
+                 {'source_id': None, 'method': None, 'frame': None, 'epoch_utc': None, 'coverage_from_utc': None,
+                  'coverage_to_utc': None, 'created_utc': None, 'available_utc': None, 'fetched_utc': None,
+                  'is_reconstruction': None, 'field_model': None})
     S = {
         'schema_version': '2.1', 'algorithm_version': ALGO_VERSION, 'computed_utc': now.isoformat(),
         'mode': MODE_RU[mode], 'mode_id': mode,
@@ -179,8 +210,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                     'windows': [w.start_utc.isoformat() for w in windows], 'window_offsets_min': list(window_offsets_min),
                     'thresholds': th.__dict__, 'disabled': disabled, 'cutoff_utc': cutoff_utc.isoformat() if cutoff_utc else None,
                     'T_months': T_months, 'scenario': scenario.__dict__ if is_sim else None},
-        'trajectory_meta': {**{k: iso(v) for k, v in meta.__dict__.items()}, 'orbit_module': ORBIT_SRC,
-                            'tle_text': tle_text, 'tle_fetch_status': f_tle.status_ru},
+        'trajectory_meta': {**meta_dict, 'orbit_module': ORBIT_SRC, 'status': orb.status_ru, 'strictness': orb.strictness,
+                            'error': orb.error, 'n_points': len(traj), 'provenance': provenance_summary(orb.provenance),
+                            'tle_text': tle_text if mode == 'live' else None, 'tle_fetch_status': f_tle.status_ru if mode == 'live' else None},
         'windows': [{'start_utc': a.window.start_utc.isoformat(), 'duration_min': a.window.duration_min, 'mechanisms': [
             {'id': m.mechanism_id, 'mandatory': m.mandatory, 'coverage': m.coverage.value, 'needs_check': list(m.needs_check_reasons),
              'factors': [{'name': f.name, 'value': f.value, 'unit': f.unit, 'kind': f.kind.value, 'presence': f.presence.value,
@@ -191,6 +223,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                            'per_mechanism': rec.per_mechanism_comparison, 'tolerance_basis': rec.tolerance_basis},
         'cards': [{k: (v.value if hasattr(v, 'value') else v) for k, v in c.__dict__.items()} for c in cards],
         'sources': sources,
+        'forecasts': [{'channel': line.channel_id, 'label': line.label_ru, 'source_id': line.source_id, 'status': line.status,
+                       'status_ru': FC_STATUS_RU.get(line.status, line.status), 'coverage_fraction': line.coverage_fraction,
+                       'release_id': line.release_id, 'published_utc': iso(line.published_utc), 'record': line.raw_record_id,
+                       'reason': line.reason, 'gaps': list(line.gaps),
+                       'cells': [{'from': iso(s.valid_from_utc), 'to': iso(s.valid_to_utc), 'value': s.value} for s in line.samples]}
+                      for line in fc_lines],
         'coverage_declared': list(assessments[0].coverage_declared), 'coverage_missing': list(assessments[0].coverage_missing),
         'policy_note': POLICY_NOTE,
         'is_simulated': is_sim,
@@ -201,4 +239,4 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
-                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle})
+                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb)
