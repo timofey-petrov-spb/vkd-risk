@@ -123,7 +123,8 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                              Coverage.NONE if mmod_hits is None else Coverage.FULL, () if mmod_hits is None else ('ecss_grun',),
                              mmod_rule,
                              'линия не подключена: расчёт невозможен' if mmod_hits is None
-                             else 'природные метеороиды, случайно ориентированная пластина; техногенные частицы не включены'),),
+                             else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
+                                  '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены'),),
         coverage=Coverage.NONE if mmod_hits is None else Coverage.FULL, needs_check=False,
     )
 
@@ -173,8 +174,11 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
 
     return WindowAssessment(
         window=win, mechanisms=(m1, m2, m3),
-        coverage_declared=('космическая погода на траектории',) + (('сближения SOCRATES',) if conj else ()),
-        coverage_missing=('статистика метеороидов ECSS — не подключена',) + (() if conj else ('сближения SOCRATES — нет данных',)),
+        coverage_declared=('космическая погода на траектории',) + (('природные метеороиды ECSS/Grün',) if mmod_hits is not None else ())
+                          + (('сближения SOCRATES',) if conj else ()),
+        coverage_missing=(('статистика метеороидов — не подключена',) if mmod_hits is None else ())
+                         + (() if conj else ('сближения SOCRATES — нет данных',))
+                         + ('метеорные потоки конкретной даты — не включены', 'техногенный мусор статистически — не включён'),
     )
 
 
@@ -213,7 +217,7 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
             best_mm = min(candidates, key=key_mm)
             rel = (max(mm_vals) - min(mm_vals)) / max(min(mm_vals), 1e-30)
             per['mmod_stat'] = ('%s: %.3g попаданий против %.3g' % (best_mm.window.start_utc.strftime('%H:%MZ'), min(mm_vals), max(mm_vals))
-                                if rel > 0.05 else 'окна не различаются (разница < 5 %%; модель зависит от высоты и длительности)')
+                                if rel > 0.05 else 'окна не различаются (разница меньше 5 %; модель зависит от высоты и длительности)')
             # 4. сведение: противоречие механизмов вне допуска → компромисс
             conflict = rel > 0.05 and best_mm.window.start_utc != best.window.start_utc and d_saa >= th.equiv_tol_min
     tol = 'допуск %.0f мин — инженерная настройка, до анализа чувствительности' % th.equiv_tol_min
