@@ -39,7 +39,10 @@ class Thresholds:
 def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
                   goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],
                   conj: Sequence[Conjunction], th: Thresholds,
-                  now_utc) -> WindowAssessment:
+                  now_utc, mmod_hits: Optional[float] = None,
+                  mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается') -> WindowAssessment:
+    """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
+    спецификации A5). None — линия не подключена, покрытие NONE."""
     end = win.start_utc + timedelta(minutes=win.duration_min)
     pts = [p for p in traj if win.start_utc <= p.t_utc < end]
     step_min = 1.0
@@ -89,10 +92,13 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     # --- механизм 2: статистика метеороидов ECSS — ещё не подключена --------
     m2 = MechanismAssessment(
         mechanism_id='mmod_stat', mandatory=True,
-        factors=(FactorValue('ожидаемое число попаданий, пластина 1 м²', None, 'шт', Kind.OWN_CALCULATION,
-                             Presence.UNKNOWN, Coverage.NONE, (), 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается',
-                             'линия не подключена: расчёт невозможен'),),
-        coverage=Coverage.NONE, needs_check=False,
+        factors=(FactorValue('ожидаемое число попаданий, пластина 1 м²', mmod_hits, 'шт', Kind.OWN_CALCULATION,
+                             Presence.UNKNOWN if mmod_hits is None else Presence.DETECTED,
+                             Coverage.NONE if mmod_hits is None else Coverage.FULL, () if mmod_hits is None else ('ecss_grun',),
+                             mmod_rule,
+                             'линия не подключена: расчёт невозможен' if mmod_hits is None
+                             else 'природные метеороиды, случайно ориентированная пластина; техногенные частицы не включены'),),
+        coverage=Coverage.NONE if mmod_hits is None else Coverage.FULL, needs_check=False,
     )
 
     # --- линия 3: сближения, необязательная ----------------------------------
