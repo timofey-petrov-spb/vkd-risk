@@ -12,11 +12,13 @@ run(params) собирает один снимок расчёта. Его исп
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from vkd.assess.cutoff import apply_cutoff
+from vkd.assess.magcoords import belt_coordinates
 from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.explain.cards import cards_for_window
@@ -40,7 +42,8 @@ except ImportError:
     from experiments.stub_history import history_bundle
     HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
 
-ALGO_VERSION = '0.4.0-i1'
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ALGO_VERSION = '0.4.1-i1'
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
@@ -79,7 +82,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     берётся из архива OEM (A1/A3) и от TLE не зависит."""
     assert mode in MODES, mode
     disabled = disabled or {'goes': False, 'kp': False}
-    th = thresholds or Thresholds()
+    th = thresholds or Thresholds.from_settings()
     scenario = scenario or Scenario('none')
     now = now or datetime.now(timezone.utc)
     cutoff_utc = t0 if mode == 'history_forecast' else None
@@ -99,8 +102,15 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
         kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and not disabled['kp']) else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
-        events = [e for e in cut.events if e.start_utc is None or (
-            e.start_utc <= t0 + timedelta(minutes=horizon_min) and (e.published_utc or e.start_utc) >= t0 - timedelta(hours=48))]
+        # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
+        # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
+        def _touches(e):
+            a0 = e.valid_from_utc or e.start_utc
+            if a0 is None:
+                return True
+            a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=24))
+            return a0 <= t0 + timedelta(minutes=horizon_min) and a1 >= t0 - timedelta(hours=6)
+        events = [e for e in cut.events if _touches(e)]
         # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
         fc_lines, fc_raw = noaa_forecasts(t0, t0, t0 + timedelta(minutes=horizon_min))
         forecasts = [s for line in fc_lines for s in line.samples]
@@ -114,7 +124,16 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     orb = build_orbit(mode, t0, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
                       tle_fetched_utc=f_tle.fetched_utc, tle_available_utc=f_tle.fetched_utc, tle_url=TLE_URL,
                       tle_evidence=f_tle.status_ru, max_tle_age_days=th.tle_max_age_days, cutoff_utc=cutoff_utc)
-    meta, traj = orb.meta, orb.points
+    meta = orb.meta
+    # координаты для таблиц ОСТ — эксцентричный диполь (Б): центральный диполь A3 в ядре аномалии
+    # даёт L ниже сетки и нулевой поток на всей трассе (см. vkd/assess/magcoords.py); |B| — от A3
+    coeff_path = os.path.join(ROOT, 'data', 'orbit', 'IGRF13.shc' if t0.year < 2025 else 'IGRF14.shc')
+    traj, belt_coords = belt_coordinates(orb.points, coeff_path)
+    if traj:
+        orb.provenance.setdefault('limitations', []).append(
+            'Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), '
+            'не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; %d из %d точек с B/B0 < 1 помечены.'
+            % (belt_coords['n_inconsistent_BB0'], belt_coords['n']))
 
     # ------------------------------------------------------------ окна, устойчивость, оценка
     belts = BeltTable('min')
@@ -212,6 +231,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                     'T_months': T_months, 'scenario': scenario.__dict__ if is_sim else None},
         'trajectory_meta': {**meta_dict, 'orbit_module': ORBIT_SRC, 'status': orb.status_ru, 'strictness': orb.strictness,
                             'error': orb.error, 'n_points': len(traj), 'provenance': provenance_summary(orb.provenance),
+                            'belt_coordinates': belt_coords,
                             'tle_text': tle_text if mode == 'live' else None, 'tle_fetch_status': f_tle.status_ru if mode == 'live' else None},
         'windows': [{'start_utc': a.window.start_utc.isoformat(), 'duration_min': a.window.duration_min, 'mechanisms': [
             {'id': m.mechanism_id, 'mandatory': m.mandatory, 'coverage': m.coverage.value, 'needs_check': list(m.needs_check_reasons),

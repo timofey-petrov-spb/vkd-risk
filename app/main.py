@@ -9,12 +9,16 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import plotly.graph_objects as go
 import streamlit as st
 
 from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_latest, kp_latest, run, tle_latest
+from vkd.config import section as _settings_section
+
+UI = _settings_section('ui')          # умолчания элементов управления — config/settings.toml (Т7)
 from app.export import build_zip
 from app.norms import norms_rows, s_level
 from app.viz import ground_track, window_bars
@@ -50,18 +54,22 @@ with st.sidebar:
         t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
         if mode == 'history_forecast':
             st.write('Отсечка публикации: **%s**' % t0.strftime('%Y-%m-%d %H:%M UTC'))
-        st.warning('Исторические источники подключены частично: события DONKI с временем публикации есть, '
-                   'архива GOES за 2024 нет, орбита — реконструкция по текущему TLE до подключения OEM.')
-    duration_min = st.slider('Длительность ВКД, мин', 60, 480, 360, step=30)
-    search_min = st.slider('Период поиска начала, мин', 0, 1440, 720, step=60)
+        st.caption('Архив 2024: выпуски NOAA (3-day forecast, daypre), уведомления и прогнозы ENLIL DONKI с временем '
+                   'публикации, орбита — OEM NASA/JSC (реконструкция: доступность версии в 2024 не доказана). '
+                   'Наблюдений GOES за 2024 в архиве нет — канал объявляется частичным.')
+    duration_min = st.slider('Длительность ВКД, мин', 60, 480, int(UI.get('duration_min', 360)), step=30)
+    search_min = st.slider('Период поиска начала, мин', 0, 1440, int(UI.get('search_min', 720)), step=60)
     n_windows = st.slider('Окон для сравнения', 2, 3, 2)
-    offsets = [st.slider('Сдвиг начала окна %d, мин' % (i + 1), 0, search_min, min(i * 240, search_min), step=30, key='w%d' % i)
+    _def_off = list(UI.get('window_offsets_min', [0, 240]))
+    offsets = [st.slider('Сдвиг начала окна %d, мин' % (i + 1), 0, search_min,
+                         min(int(_def_off[i]) if i < len(_def_off) else i * 240, search_min), step=30, key='w%d' % i)
                for i in range(n_windows)]
     st.header('Источники')
     disabled = {s: st.checkbox('Отключить %s' % s, key='dis_' + s) for s in ('goes', 'kp')}
     if st.button('Обновить данные сейчас'):
         st.cache_data.clear()
-    auto_min = st.select_slider('Автообновление в текущем режиме, мин', [0, 5, 10, 15], value=5,
+    auto_min = st.select_slider('Автообновление в текущем режиме, мин', [0, 5, 10, 15],
+                                value=int(UI.get('auto_refresh_min', 5)) if int(UI.get('auto_refresh_min', 5)) in (0, 5, 10, 15) else 5,
                                 help='0 — выключено. Частота публикации: GOES 5 мин, Kp 3 ч, TLE по мере выпуска.')
     with st.expander('Что если — стресс-сценарий', expanded=False):
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15)
@@ -72,16 +80,20 @@ with st.sidebar:
         sc_kp = st.slider('… Kp', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on)
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
+    TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
     if pro:
         st.header('Пороги и настройки')
-        th = Thresholds(
-            saa_B_threshold_nT=st.number_input('Порог аномалии |B|, нТл', 18000.0, 30000.0, 24000.0, 500.0),
-            e_min_MeV=st.selectbox('Канал захваченных протонов, МэВ от', [12.5, 30.0, 50.0], index=1),
-            goes_max_age_min=st.number_input('Свежесть GOES для будущих участков, мин', 10.0, 360.0, 60.0, 10.0),
-        )
+        st.caption('Умолчания — из config/settings.toml; всё применённое попадает в снимок и выгрузку.')
+        th = replace(TH0,
+                     saa_B_threshold_nT=st.number_input('Порог аномалии |B|, нТл', 18000.0, 30000.0, TH0.saa_B_threshold_nT, 500.0),
+                     e_min_MeV=st.selectbox('Канал захваченных протонов, МэВ от', [12.5, 30.0, 50.0],
+                                            index=[12.5, 30.0, 50.0].index(TH0.e_min_MeV) if TH0.e_min_MeV in (12.5, 30.0, 50.0) else 1),
+                     goes_max_age_min=st.number_input('Свежесть GOES для будущих участков, мин', 10.0, 360.0, TH0.goes_max_age_min, 10.0),
+                     kp_check=st.number_input('Kp — триггер проверки (наблюдение, уведомление, прогнозы)', 5.0, 9.0, TH0.kp_check, 0.5),
+                     tle_max_age_days=st.number_input('Допустимый возраст TLE, сут', 1.0, 14.0, TH0.tle_max_age_days, 1.0))
         T_months = st.slider('Длительность экспедиции для норм, мес', 1, 12, 6)
     else:
-        th, T_months = Thresholds(), 6
+        th, T_months = TH0, 6
 
 # автообновление: фрагмент перезапускает расчёт с очисткой кеша по таймеру (Т1: «данные обновляются
 # автоматически с учётом частоты публикации»; кнопка выше — принудительное обновление).

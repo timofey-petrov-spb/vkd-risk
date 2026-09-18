@@ -48,6 +48,17 @@ class Thresholds:
     saa_B_threshold_nT: float = 24000.0     # инженерная оценка для ~420 км, в чувствительность
     tle_max_age_days: float = 3.0           # A3: обе границы горизонта не дальше этого от эпохи TLE; инженерный предел, не гарантия ошибки
 
+    @classmethod
+    def from_settings(cls) -> 'Thresholds':
+        """Пороги из config/settings.toml [thresholds] (Т7: настройки вне кода); неизвестные
+        ключи — ошибка, чтобы опечатка в файле не превращалась в молчаливое умолчание."""
+        from vkd.config import section
+        raw = section('thresholds')
+        unknown = set(raw) - set(cls.__dataclass_fields__)
+        if unknown:
+            raise ValueError('config/settings.toml [thresholds]: неизвестные ключи %s' % sorted(unknown))
+        return cls(**{k: float(v) for k, v in raw.items()})
+
 
 def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
                   goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],
@@ -184,24 +195,46 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     if in_win:
         limit.append('сообщение о сближении с TCA в окне: требует ручной оценки')
     limit.extend(fc_limit)      # прогноз NOAA Kp ≥ порога в окне — история, выпуск до отсечки
-    # Условиями становятся ТОЛЬКО протонные события и бури (CONTRACT v3.1 п. 4.2);
-    # вспышки, выбросы и ударные волны — информация в картине, не условие
+    # Условиями становятся ТОЛЬКО протонные события, бури и прогноз прихода выброса
+    # (CONTRACT v3.1 п. 4.2, предложение R10); вспышки и сами выбросы — информация в картине
     # (эксперимент на контрольной неделе: «любое событие → условие» давало 113 ложных пометок).
+    # Связанные записи одного события — уведомление + карточки по приборам, несколько прогонов
+    # модели — сводятся в ОДНО условие: Т3, связанные сигналы не увеличивают риск несколько раз.
+    hits = {'SEP': [], 'GST': [], 'CME_ARRIVAL': []}
     for e in events:
-        if e.kind_of_event not in ('SEP', 'GST'):
+        if e.kind_of_event not in hits:
             continue
         a0 = e.valid_from_utc or e.start_utc
         a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=24) if a0 else None)   # конец неизвестен: сутки — конвенция прототипа
         if a0 is None or not (a0 < end and (a1 is None or a1 > win.start_utc)):
             continue
-        tag = 'МОДЕЛИРУЕМОЕ ' if e.is_simulated else ''
-        if e.kind_of_event == 'SEP':
-            (crit if 'приоритет' in e.note else limit).append(
-                '%sпротонное событие %s с %s пересекает окно (%s): исключено из автовыбора' % (
-                    tag, e.event_id, a0.strftime('%m-%d %H:%MZ'), e.note or e.source_id))
-        else:
-            limit.append('%sгеомагнитная буря %s с %s пересекает окно: триггер проверки (политика прототипа)' % (
-                tag, e.event_id, a0.strftime('%m-%d %H:%MZ')))
+        hits[e.kind_of_event].append((a0, e))
+    for kind_ev, lst in hits.items():
+        for cluster in _clusters(lst, gap_h=6.0 if kind_ev == 'CME_ARRIVAL' else 12.0):
+            a0, evs = cluster[0][0], [e for _, e in cluster]
+            tag = 'МОДЕЛИРУЕМОЕ ' if any(e.is_simulated for e in evs) else ''
+            ids = ', '.join(sorted({e.event_id for e in evs}))
+            n = len(evs)
+            rec_txt = '%d %s DONKI — %s' % (n, _plural(n, 'запись', 'записи', 'записей'), ids)
+            if kind_ev == 'SEP':
+                (crit if any('приоритет' in (e.note or '') for e in evs) else limit).append(
+                    '%sпротонное событие с %s пересекает окно: исключено из автовыбора; %s' % (tag, a0.strftime('%m-%d %H:%MZ'), rec_txt))
+            else:
+                # уровень бури — из уведомления (Kp в теле) или из прогноза модели; порог тот же, что для
+                # наблюдения Kp (kp_check): буря G2 не помечает окно наравне с G3+. Уровень не назван →
+                # условие ставится (консервативно), с пометкой
+                kps = [_kp_from_note(e.note) for e in evs]
+                known = [k for k in kps if k is not None]
+                kp_max = max(known) if known else None
+                if kp_max is not None and kp_max < th.kp_check:
+                    continue          # информация в картине, не условие
+                kp_txt = (', Kp до %g' % kp_max) if kp_max is not None else ', уровень Kp не назван'
+                if kind_ev == 'GST':
+                    limit.append('%sгеомагнитная буря с %s пересекает окно%s: триггер проверки (политика прототипа); %s'
+                                 % (tag, a0.strftime('%m-%d %H:%MZ'), kp_txt, rec_txt))
+                else:
+                    limit.append('%sпрогноз прихода выброса %s (WSA-ENLIL, DONKI)%s: триггер проверки (политика прототипа); %s'
+                                 % (tag, a0.strftime('%m-%d %H:%MZ'), kp_txt.replace('Kp до', 'ожидаемый Kp до'), rec_txt))
     m1 = MechanismAssessment(m1.mechanism_id, m1.mandatory, m1.factors, m1.coverage,
                              needs_check=bool(crit or limit), needs_check_reasons=tuple(crit + limit))
 
@@ -279,6 +312,31 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
     return Recommendation(preferred=best.window, verdict='preferred',
                           rule_applied='п.3–4: лучше по космопогоде, линия метеороидов не противоречит' + ('; покрытие частичное — объявлено' if partial else ''),
                           per_mechanism_comparison=per, reasons=tuple(per.values()) + note_partial, tolerance_basis=tol)
+
+
+def _clusters(items, gap_h: float):
+    """Группы (a0, event) по близости начала: новый кластер, когда разрыв больше gap_h часов."""
+    out, cur = [], []
+    for a0, e in sorted(items, key=lambda x: x[0]):
+        if cur and (a0 - cur[-1][0]) > timedelta(hours=gap_h):
+            out.append(cur)
+            cur = []
+        cur.append((a0, e))
+    if cur:
+        out.append(cur)
+    return out
+
+
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    if 11 <= n % 100 <= 19:
+        return many
+    return one if n % 10 == 1 else (few if 2 <= n % 10 <= 4 else many)
+
+
+def _kp_from_note(note: Optional[str]) -> Optional[float]:
+    import re
+    m = re.search(r'Kp до (\d+(?:[.,]\d+)?)', note or '')
+    return float(m.group(1).replace(',', '.')) if m else None
 
 
 def _cov(n_ok: int, n_all: int) -> Coverage:
