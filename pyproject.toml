@@ -13,7 +13,6 @@ dependencies = [
     "requests>=2.32",
     "plotly>=5.24",
     "streamlit>=1.38",
-    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
