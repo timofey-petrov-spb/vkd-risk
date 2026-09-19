@@ -33,10 +33,10 @@ def test_eccentric_dipole_offset_is_physical():
 def test_belt_coordinates_give_nonzero_flux_where_a3_dipole_gives_none():
     pts = _traj()
     belts = BeltTable('min')
-    a3 = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s_sr for p in pts]
+    a3 = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s for p in pts]
     assert not any(v for v in a3 if v)                          # центральный диполь: нуль/нет модели везде
     ecc, info = belt_coordinates(pts, IGRF13)
-    vals = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s_sr for p in ecc]
+    vals = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s for p in ecc]
     nonzero = [v for v in vals if v]
     assert len(nonzero) > 20 and max(nonzero) > 0
     assert info['n_inconsistent_BB0'] < 0.3 * info['n']         # помечены, не обрезаны
@@ -64,7 +64,7 @@ def test_linked_sep_records_become_one_condition_and_enlil_arrival_is_a_conditio
     reasons = a.mechanisms[0].needs_check_reasons
     assert len(reasons) == 2, reasons
     sep = [r for r in reasons if 'протонное событие' in r][0]
-    assert '3 записи' in sep and 'donki_sep#B' in sep and 'исключено из автовыбора' in sep
+    assert '3 записи' in sep and 'donki_sep#B' in sep and 'не выбирается автоматически' in sep and 'уровень потока в записи не указан' in sep
     cme = [r for r in reasons if 'прихода выброса' in r][0]
     assert 'Kp до 8' in cme and '2 записи' in cme and 'WSA-ENLIL' in cme
     # вспышка — не условие
