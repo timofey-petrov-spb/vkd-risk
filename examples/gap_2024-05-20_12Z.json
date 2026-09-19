@@ -1,7 +1,7 @@
 {
  "schema_version": "2.2",
- "algorithm_version": "0.7.0",
- "computed_utc": "2026-09-19T07:42:00+00:00",
+ "algorithm_version": "0.8.0",
+ "computed_utc": "2026-09-19T08:25:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -37,10 +37,12 @@
    "kp": false
   },
   "cutoff_utc": "2024-05-20T12:00:00+00:00",
+  "refinement_policy": null,
   "T_months": 6,
   "scenario": null
  },
  "effective_config": {
+  "orbit_refinement": null,
   "thresholds": {
    "goes_p10_warning_pfu": 10.0,
    "goes_p10_priority_pfu": 1000.0,
@@ -119,6 +121,10 @@
     50.0
    ]
   }
+ },
+ "grid_refinement": {
+  "status": "not_requested",
+  "selected_step_seconds": 60
  },
  "source_versions": {
   "noaa_ngdc_daypre": {
@@ -30438,5 +30444,5 @@
    "26000 nT / 50 MeV": null
   }
  },
- "git_commit": "6672e63414c89d68f5da994835584bf18f4ea1f2"
+ "git_commit": "6d7a1f1cdad950ea8478f0724b18032568b5ec97"
 }
