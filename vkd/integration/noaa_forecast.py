@@ -128,6 +128,44 @@ def noaa_forecasts(cutoff_utc: datetime, valid_from_utc: datetime, valid_to_utc:
     return lines, raw
 
 
+def live_forecast_lines(samples, raw: dict, fetch, valid_from_utc: datetime, valid_to_utc: datetime) -> tuple[list[ForecastLine], dict]:
+    """Те же линии по тем же каналам для ТЕКУЩЕГО режима — из живого бюллетеня NOAA (A4, noaa_latest).
+
+    Ячейки не пересчитываются: 3-часовой прогноз Kp остаётся 3-часовым, суточная
+    вероятность — суточной. Канал daypre (proton_prob_daily) у живого бюллетеня
+    отсутствует: это отдельный продукт NGDC, он объявляется как «нет выпуска»,
+    а не подменяется 3-суточным. Покрытие считается по фактическим ячейкам.
+    """
+    by_channel: dict[str, list] = {cid: [] for _, _, cid, _, _ in CHANNELS}
+    for s in samples or ():
+        if s.channel_id in by_channel:
+            by_channel[s.channel_id].append(s)
+    lines = []
+    for src, _ch, cid, _unit, label in CHANNELS:
+        ss = sorted(by_channel[cid], key=lambda s: s.valid_from_utc)
+        if not ss:
+            reason = ('живой бюллетень NOAA 3-day не содержит этого канала: суточная вероятность протонного события '
+                      'публикуется отдельным выпуском NGDC daypre, которого в текущем режиме нет'
+                      if cid == 'proton_prob_daily'
+                      else 'живой прогноз NOAA не получен: %s' % (getattr(fetch, 'status_ru', None) or 'нет данных'))
+            status = 'missing' if getattr(fetch, 'payload', None) is not None else 'unavailable'
+            lines.append(ForecastLine(cid, 'noaa_swpc_3day_forecast', label, status, 0.0, None, None, None, (),
+                                      ((valid_from_utc.isoformat(), valid_to_utc.isoformat()),), reason,
+                                      ('живой выпуск: историческая неизменность байтов не доказывается',)))
+            continue
+        total = (valid_to_utc - valid_from_utc).total_seconds()
+        covered = sum(max(0.0, (min(valid_to_utc, s.valid_to_utc) - max(valid_from_utc, s.valid_from_utc)).total_seconds())
+                      for s in ss)
+        frac = covered_fraction(ss, valid_from_utc, total / 60.0)
+        rid = ss[0].raw_record_id
+        lines.append(ForecastLine(
+            cid, ss[0].source_id, label, 'full' if frac == 1 else ('partial' if frac > 0 else 'missing'), frac,
+            (getattr(fetch, 'metadata', None) or {}).get('release_id') or rid, ss[0].published_utc, rid, tuple(ss), (),
+            None if frac > 0 else 'ячейки выпуска не пересекают горизонт запроса',
+            ('живой выпуск NOAA SWPC: доступность подтверждена самим запросом, историческая неизменность байтов не доказывается',)))
+    return lines, dict(raw or {})
+
+
 def in_window(samples, start_utc: datetime, duration_min: int):
     """Ячейки, пересекающие окно [start, start+duration)."""
     end = start_utc + timedelta(minutes=duration_min)
@@ -137,25 +175,20 @@ def in_window(samples, start_utc: datetime, duration_min: int):
 def covered_fraction(samples, start_utc: datetime, duration_min: int) -> float:
     end = start_utc + timedelta(minutes=duration_min)
     total = (end - start_utc).total_seconds()
-    cov = 0.0
-    for s in in_window(samples, start_utc, duration_min):
-        cov += (min(end, s.valid_to_utc) - max(start_utc, s.valid_from_utc)).total_seconds()
-    return min(1.0, cov / total) if total > 0 else 0.0
+    if total <= 0:
+        return 0.0
+    intervals = sorted((max(start_utc, s.valid_from_utc), min(end, s.valid_to_utc))
+                       for s in in_window(samples, start_utc, duration_min))
+    cov, cursor = 0.0, start_utc
+    for lo, hi in intervals:
+        lo = max(lo, cursor)
+        if hi > lo:
+            cov += (hi-lo).total_seconds()
+            cursor = hi
+    return cov / total
 
 
-def live_forecasts(bundle, start_utc: datetime, end_utc: datetime):
-    """A4 bulletin -> same forecast lines as history, without a second download."""
-    samples, raw, fetch = bundle
-    lines = []
-    for channel, label in [('kp_forecast', 'прогноз Kp NOAA, 3-часовые интервалы'),
-                           ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA')]:
-        cells = tuple(s for s in samples if s.channel_id == channel and
-                      s.valid_from_utc < end_utc and s.valid_to_utc > start_utc)
-        fraction = covered_fraction(cells, start_utc, (end_utc-start_utc).total_seconds()/60)
-        meta = getattr(fetch, 'metadata', {}) or {}
-        lines.append(ForecastLine(channel, 'noaa_swpc_3day_forecast', label,
-            'full' if fraction == 1 else ('partial' if fraction else 'missing'), fraction,
-            (meta.get('release_id') or cells[0].published_utc.isoformat()) if cells else None, cells[0].published_utc if cells else None,
-            cells[0].raw_record_id if cells else None, cells, (),
-            None if cells else fetch.status_ru, ('исходные интервалы; суточная вероятность не пересчитывается на окно',)))
-    return lines, raw
+
+def live_forecasts(bundle, valid_from_utc, valid_to_utc):
+    """Compatibility entry point; one live forecast adapter for both consumers."""
+    return live_forecast_lines(*bundle, valid_from_utc, valid_to_utc)

@@ -1,4 +1,4 @@
-"""Numerical grid diagnostics, not physical validation or an operational estimator.
+"""Numerical grid diagnostics, not physical validation; retained as an independent numerical cross-check.
 
 No extrapolation, no gap filling. Intervals with an unknown endpoint remain
 uncovered; a partial integral is explicitly a known contribution, not a total.
@@ -28,7 +28,7 @@ def interval_diagnostics(times: Sequence[datetime], values: Sequence[float | Non
             raise ValueError('Times must strictly increase')
         if dt > max_gap_seconds:
             continue
-        # Left rectangles reproduce the production one-minute sampling convention.
+        # Left rectangles reproduce the legacy 0.6.1 one-minute convention.
         if v0 is not None:
             left += v0*dt
             left_covered += dt

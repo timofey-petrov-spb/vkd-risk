@@ -22,7 +22,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
-from vkd.explain.format import fmt_ru
+from vkd.explain.format import (EVENT_KIND_RU, SOURCE_ID_RU, fmt_ru, record_ru, source_ru,
+                                storm_signal_kinds)
 from vkd.types import (Condition, Coverage, EnvironmentSample, EventInterval, FactorValue, Kind, Presence,
                        WindowAssessment)
 
@@ -37,36 +38,51 @@ SOURCE_RU = {
                                    'спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md)',
     'imo_calendar': 'календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR',
 }
-# Имена источников по-русски: на оперативном уровне не должно быть идентификаторов кода
-# (О5). Дублируется в app/ui.py — vkd из app не импортируется и наоборот.
-SOURCE_ID_RU = {
-    'nasa_donki_notification': 'уведомление NASA DONKI',
-    'nasa_donki_sep_card': 'карточка протонного события NASA DONKI',
-    'nasa_donki_wsa_enlil': 'прогон модели WSA-ENLIL (NASA DONKI)',
-    'nasa_donki_gst': 'карточка геомагнитной бури NASA DONKI',
-    'noaa_swpc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)',
-    'noaa_ngdc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC',
-    'noaa_ngdc_daypre': 'суточный прогноз протонного события NOAA SWPC',
-    'gfz_kp': 'Kp (GFZ)',
-    'gfz_kp_archive': 'Kp, окончательный ряд GFZ',
-    'scenario': 'сценарий «что если»',
-}
 NOTE_LIMIT = 160          # заметку источника не режем по символам: либо целиком, либо по границе слова
 HOURS_PER_YEAR = 8766.0
 
 
-def source_ru(source_id: str) -> str:
-    return SOURCE_ID_RU.get(source_id, source_id)
+def _clause_cut(head: str) -> Optional[int]:
+    """Последняя граница пункта («;», «.», «!», «?») ВНЕ скобок, или None, если её нет."""
+    depth = last = 0
+    for i, ch in enumerate(head):
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth = max(0, depth - 1)
+        elif ch in ';.!?' and depth == 0 and (i + 1 == len(head) or head[i + 1] == ' '):
+            last = i
+    return last or None
+
+
+def _word_cut(head: str) -> int:
+    """Граница слова, но не внутри незакрытой скобки: обрывок «(диапазон 6–8, верхняя граница, не»
+    читается как отрицание того, что стоит перед скобкой."""
+    opened = [i for i, ch in enumerate(head) if ch == '(']
+    closed = head.count(')')
+    if len(opened) > closed:
+        return opened[closed]                       # до первой скобки, которая в head не закрылась
+    return len(head.rsplit(' ', 1)[0]) if ' ' in head else len(head)
 
 
 def short_note(note: str, limit: int = NOTE_LIMIT) -> str:
-    """Заметка записи целиком, а при длине больше limit — до границы слова с многоточием.
-    Обрезка по символам давала на экране обрывки «тип сообщения: Space Wea» и «(по»."""
+    """Заметка записи целиком, а при длине больше limit — до ближайшей границы пункта, и только
+    если её нет — до границы слова, с многоточием.
+
+    Обрезка по символам давала на экране обрывки «тип сообщения: Space Wea» и «(по». Обрезка по
+    границе слова оставляла оборванную фразу внутри скобки: у уведомления DONKI о приходе выброса
+    заметка длиной 161 символ печаталась как «…опубликованный прогноз: Kp до 8 (диапазон 6–8,
+    верхняя граница, не…» — открытая скобка и отрицание без продолжения. Диапазон Kp при этом
+    не теряется: он стоит в той же карточке рядом с номером уведомления, откуда он взят.
+    """
     n = ' '.join((note or '').split())
     if len(n) <= limit:
         return n
-    cut = n[:limit].rsplit(' ', 1)[0] if ' ' in n[:limit] else n[:limit]
-    return cut.rstrip(' ,;.:—-') + '…'
+    head = n[:limit]
+    cut = _clause_cut(head)
+    if cut is None or cut < limit // 2:            # слишком ранняя граница — заметка стала бы бессодержательной
+        cut = _word_cut(head)
+    return n[:cut].rstrip(' ,;.:—-') + '…'
 
 
 @dataclass(frozen=True)
@@ -103,13 +119,16 @@ _IMPACT = {
     'Kp, последнее наблюдение': 'Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий '
                                 'модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.',
     'ожидаемое число попаданий, пластина 1 м²': 'Статистика природных метеороидов на опорную площадь за окно. '
-                                                'Не вероятность повреждения скафандра и не попадание в космонавта.',
+                                                'Не вероятность повреждения скафандра и не попадание в космонавта. '
+                                                'Эта линия даёт АБСОЛЮТНУЮ оценку и охват механизма; выбор между окнами '
+                                                'она не определяет — при равной длительности окна различаются по ней '
+                                                'меньше порога различимости, и окно выбирается по космопогоде.',
     'активных метеорных потоков': 'Признак активности главного метеорного потока на дату окна. Поток добавляет частицы '
                                   'к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).',
     'сближений с TCA в окне': 'Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; '
                               'вероятность попадания фрагмента в космонавта отсюда не следует.',
-    'прогноз Kp NOAA': 'Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам, выпущенный до '
-                       'отсечки. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное '
+    'прогноз Kp NOAA': 'Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам; у выпуска указано '
+                       'время публикации. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное '
                        'событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — '
                        'триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.',
     'вероятность S1 и выше': 'Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам '
@@ -126,17 +145,42 @@ _COND_IMPACT = {
 }
 _COND_LIMITS = {
     'SEP': ('Уверенность: конец события не объявляется — принятая длительность действия задана настройкой '
-            'sep_valid_hours, поэтому пересечение с окном условно. Уровень S — из текста записи, если он там есть.'),
-    'GST': ('Уверенность: конец действия записи без объявленного конца — принятая длительность, настройка '
-            'event_valid_hours. Kp измеряется по 3-часовым интервалам; уровень уведомления — из тела сообщения; прогноз '
-            'WSA-ENLIL имеет типичный разброс времени прихода порядка ±6–12 ч (оценка CCMC, не наша), «Kp до N» — '
-            'диапазон из датированного уведомления (его верхняя граница не kp_90); прогноз NOAA — по 3-часовым ячейкам выпуска. Наблюдение '
-            'сейчас распространено на окно как условие проверки объявленно, не молча.'),
+            'sep_valid_hours, поэтому пересечение с окном условно. Уведомление DONKI сообщает ПОРОГ («поток > 10 pfu»), '
+            'а не измеренное значение: уровень S здесь — нижняя граница, если в записи нет измеренного потока. '
+            'Каналы > 10 МэВ и > 100 МэВ различны; шкала S определена по каналу ≥10 МэВ.'),
+    # 'GST' собирается по сигналам условия (_gst_limits): условие «буря в окне» сводит
+    # до четырёх разных сигналов, и оговорка про наблюдение не должна стоять в карточке,
+    # где никакого наблюдения нет (находка третьего круга).
+    'GST': '',
     'GOES': ('Уверенность: последнее наблюдение GOES с давностью; на будущие участки окна не распространяется; '
              'геомагнитное обрезание — отдельный показатель; локальный поток на МКС не рассчитан.'),
     'CONJ': 'Уверенность: качественное сообщение SOCRATES; усечённая выдача не означает отсутствия других сближений.',
 }
 _COND_TAIL = 'Пороги S1/S3 и G3 — шкалы NOAA SWPC; отнесение к условиям проверки — правило команды, меняется в config/settings.toml.'
+
+# Оговорки к условию «буря в окне» — по одной на КАЖДЫЙ сигнал, который в это условие вошёл.
+# Раньше здесь стоял один текст на все случаи, и в карточке прогноза прихода выброса
+# (происхождение — внешний прогноз) печаталась фраза про наблюдение, которого в записи нет.
+_GST_SIGNAL_LIMITS = {
+    'kp_obs': ('Kp измеряется по 3-часовым интервалам; распространение последнего наблюдения на окно объявлено, '
+               'не молчаливо: прогноза Kp на само окно здесь нет.'),
+    'noaa_kp_forecast': 'Прогноз Kp NOAA — по 3-часовым ячейкам выпуска, как опубликован; в вероятность за окно не пересчитывается.',
+    'donki_storm': 'Уровень уведомления о буре — наблюдённый Kp из тела сообщения, а не прогноз.',
+    'cme_arrival': ('«Kp до N» — граница ОПУБЛИКОВАННОГО в самом уведомлении диапазона максимума Kp, а не поле прогона '
+                    'модели из поздней карточки; объявленная неопределённость времени прихода не является '
+                    'длительностью бури. Это внешний прогноз, не наблюдение.'),
+    'unknown': 'Часть сигналов условия не отнесена к известному виду — их ограничения здесь не объявляются.',
+}
+_GST_LIMITS_HEAD = ('Уверенность: конец действия записи без объявленного конца — принятая длительность, настройка '
+                    'event_valid_hours.')
+
+
+def _gst_limits(c: Condition) -> str:
+    """Ограничения условия «буря в окне» — только по тем сигналам, которые в нём есть."""
+    kinds = storm_signal_kinds(c.sources_ru)
+    parts = [_GST_SIGNAL_LIMITS[k] for k in ('kp_obs', 'donki_storm', 'cme_arrival', 'noaa_kp_forecast', 'unknown')
+             if k in kinds]
+    return ' '.join([_GST_LIMITS_HEAD] + parts)
 
 
 def _period(a: WindowAssessment) -> str:
@@ -166,8 +210,8 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
             parts.append('значение задано пользователем в сценарии «что если», не наблюдение (запись %s)' % s.raw_record_id)
         elif s is not None:
             pub = s.published_utc.strftime('%Y-%m-%d %H:%MZ') if s.published_utc else 'время публикации неизвестно'
-            parts.append('%s, запись %s, момент %s, публикация %s, получено %s, %s' % (
-                source_ru(s.source_id), s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
+            parts.append('%s, %s, момент %s, публикация %s, получено %s, %s' % (
+                source_ru(s.source_id), record_ru(s.raw_record_id), s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
                 s.fetched_utc.strftime('%Y-%m-%d %H:%MZ'), QUALITY_RU.get(s.quality, s.quality)))
         elif rid in traj_ids or rid == 'trajectory':
             parts.append('%s (запись %s)' % (_traj_line(meta), rid))
@@ -176,7 +220,7 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
         elif rid in SOURCE_RU:
             parts.append(SOURCE_RU[rid])
         else:
-            parts.append('запись %s' % rid)
+            parts.append(record_ru(rid))
     if parts:
         return '; '.join(dict.fromkeys(parts))
     # записи нет: подпись по происхождению, а не «собственный расчёт» для наблюдения
@@ -184,7 +228,9 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
     if f.kind == Kind.OBSERVATION:
         return 'наблюдения нет: %s' % (first or 'записи источника за период нет')
     if f.kind == Kind.EXTERNAL_FORECAST:
-        return 'выпуска прогноза нет: %s' % (first or 'источник не подключён или выпуска до отсечки нет')
+        # режим здесь не известен, поэтому запасная подпись не называет отсечку:
+        # в текущем режиме отсечки нет, и слово «отсечка» было бы неправдой (О2).
+        return 'выпуска прогноза нет: %s' % (first or 'источник не подключён или выпуска за период нет')
     return 'наш расчёт по траектории: %s' % (first or 'расчёт невозможен')
 
 
@@ -278,14 +324,14 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
             pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение%s'
                         % (event_label(e), ('; ' + short_note(e.note)) if e.note else ''))
         elif e is not None:
-            pubs.append('%s %s (%s%s)' % (
-                event_label(e), 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
-                source_ru(e.source_id), ('; ' + short_note(e.note)) if e.note else ''))
+            pubs.append('%s, %s%s' % (
+                record_ru(e.event_id), 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
+                ('; ' + short_note(e.note)) if e.note else ''))
         elif s is not None and s.source_id == 'scenario':
             pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение' % s.raw_record_id)
         elif s is not None:
             pubs.append('%s, момент %s, публикация %s, получено %s' % (
-                s.raw_record_id, s.t_utc.strftime('%d.%m %H:%MZ'),
+                record_ru(s.raw_record_id), s.t_utc.strftime('%d.%m %H:%MZ'),
                 s.published_utc.strftime('%d.%m %H:%MZ') if s.published_utc else 'в реальном времени (NOAA/GFZ)',
                 s.fetched_utc.strftime('%d.%m %H:%MZ')))
     if pubs:
@@ -314,9 +360,10 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
             origin_note = ' Происхождение: событие наблюдено (уведомление DONKI или карточка по прибору).'
     if c.kind == 'GST' and not c.is_simulated and any('наблюдение Kp' in s for s in c.sources_ru) and len(c.sources_ru) == 1:
         kind = Kind.OBSERVATION
-    limits = _COND_LIMITS.get(c.kind, '') + origin_note
+    base_limits = _gst_limits(c) if c.kind == 'GST' else _COND_LIMITS.get(c.kind, '')
+    limits = base_limits + origin_note
     if c.is_simulated:
-        limits = ((_COND_LIMITS.get(c.kind, '') if c.kind != 'SEP' else
+        limits = ((base_limits if c.kind != 'SEP' else
                    'Уверенность: конец действия не объявлен — принятая длительность действия задана настройкой sep_valid_hours.')
                   + ' Сценарий «что если»: значение задано пользователем в сценарии, не наблюдение; '
                     'в живой кеш не попадают; в выгрузке и повторе сохраняются как синтетические входы.')

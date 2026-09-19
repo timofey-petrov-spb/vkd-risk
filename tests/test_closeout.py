@@ -148,7 +148,8 @@ def test_live_noaa_forecast_flows_to_windows_zip_and_offline_replay(tmp_path, mo
     off=Fetch('off',False,False,None,None,'нет данных',None,None)
     fetched=((None,{},off),(None,{},off),(None,off),forecast)
     a=run('live',now,60,60,[0,60],now=now,fetched=fetched)
-    assert {line['channel'] for line in a.S['forecasts']}=={'kp_forecast','s1_prob_daily'}
+    assert {line['channel'] for line in a.S['forecasts'] if line['cells']}=={'kp_forecast','s1_prob_daily'}
+    assert next(line for line in a.S['forecasts'] if line['channel']=='proton_prob_daily')['status'] in ('missing','unavailable')
     assert 'noaa_swpc_3day_forecast' in a.S['source_versions']
     assert any(f.name.startswith('прогноз Kp') and f.value is not None for m in a.assessments[0].mechanisms for f in m.factors)
     rid=forecast[0][0].raw_record_id
@@ -163,3 +164,28 @@ def test_live_noaa_forecast_flows_to_windows_zip_and_offline_replay(tmp_path, mo
     assert all(not line['cells'] for line in excluded.S['forecasts'])
     assert excluded.rec.verdict=='insufficient'
     never.assert_not_called()
+
+
+def test_noaa_coverage_is_union_not_sum_of_duplicate_cells():
+    from vkd.integration.noaa_forecast import covered_fraction
+    from tests.test_compare import goes
+    cell = replace(goes(1), valid_from_utc=T0, valid_to_utc=T0+timedelta(minutes=30))
+    assert covered_fraction([cell, cell], T0, 60) == .5
+
+
+def test_off_noaa_history_is_not_reintroduced_by_consumer():
+    r = run('history_forecast', T0, 60, 60, [0,60], now=T0,
+            disabled={'goes':False,'kp':False,'noaa':'off'})
+    assert not any(line['cells'] for line in r.S['forecasts'])
+    assert not any(sid.startswith('noaa_ngdc') for sid in r.S['source_versions'])
+    assert all(v['status'] == 'disabled' for k,v in r.S['coverage_map'].items() if k.startswith('noaa_'))
+
+
+def test_mixed_sep_energy_channels_cannot_escalate_s_level():
+    from tests.test_models_wf2 import sep_event
+    from vkd.windows.compare import _sep_level
+    a = sep_event(T0, note='pfu=10')
+    a = replace(a, raw_record_id='p10')
+    b = replace(a, raw_record_id='p100', event_id='p100')
+    assert _sep_level([a,b], {'p10':{'energy_lower_bound_MeV':10,'flux_lower_bound_pfu':10},
+                             'p100':{'energy_lower_bound_MeV':100,'flux_lower_bound_pfu':10000}}) == (10.,False,True)

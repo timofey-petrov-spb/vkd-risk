@@ -23,11 +23,21 @@ def main():
         tle, fetch = tle_latest(disabled=True, now=now, cache_dir=folder)
         if tle is None:
             raise RuntimeError('Pinned TLE fixture has changed or failed validation')
-        with patch('app.compute.goes_latest', return_value=(None, {}, off)), \
-             patch('app.compute.kp_latest', return_value=(None, {}, off)), \
-             patch('app.compute.noaa_latest', return_value=((), {}, off)), \
-             patch('app.compute.tle_latest', return_value=(tle, fetch)):
-            return pytest.main(['-q', *sys.argv[1:]])
+        class PinAppInputs:
+            @pytest.fixture(autouse=True)
+            def stable_app_inputs(self, request):
+                # Deployment tests exercise the real guard with their own hanging
+                # transport/DNS. A global patch would bypass exactly that code.
+                if request.node.path.name == 'test_deploy_fetch_guard.py':
+                    yield
+                    return
+                with patch('app.fetch_guard.goes_latest', return_value=(None, {}, off)), \
+                     patch('app.fetch_guard.kp_latest', return_value=(None, {}, off)), \
+                     patch('app.fetch_guard.noaa_latest', return_value=((), {}, off)), \
+                     patch('app.fetch_guard.tle_latest', return_value=(tle, fetch)):
+                    yield
+        return pytest.main(['-q', *sys.argv[1:]], plugins=[PinAppInputs()])
+
 
 
 if __name__ == '__main__':

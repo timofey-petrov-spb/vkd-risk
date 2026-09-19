@@ -78,8 +78,87 @@ def test_future_archive_records_do_not_change_strict_snapshot(monkeypatch):
     after = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
     assert before.S['windows'] == after.S['windows']
     assert before.S['recommendation'] == after.S['recommendation']
-    assert any(late['raw_record_id'] in s and 'not_available_at_cutoff' in s for s in after.excluded)
+    assert any(late['raw_record_id'] in s and 'опубликовано или доступно позже отсечки' in s for s in after.excluded)
     assert not any(e.raw_record_id == late['raw_record_id'] for e in after.events)
     assert late['raw_record_id'] not in after.raw_records
     review = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
     assert any(e.raw_record_id == late['raw_record_id'] for e in review.events)
+def test_future_archive_records_do_not_enter_the_strict_snapshot():
+    """CONTRACT §8, строки 1–2, на уровне app.compute.run и НА РЕАЛЬНОМ поставщике (vkd.history).
+
+    Прежняя версия теста дописывала записи в заглушку experiments.stub_history, которой
+    в конвейере больше нет (разбор Codex, docs/integration/A2_SYNC_2026-09-19.md).
+    Выдумывать записи и не нужно: в архиве уведомлений DONKI за 10–11 мая 2024 лежат
+    реальные выпуски ПОЗЖЕ отсечки 19:00 — уведомления о буре Kp 7,67 (20240510-AL-014,
+    19:19Z), Kp 8,67 (20240510-AL-015, 21:35Z) и Kp 9 (20240511-AL-002, 00:34Z),
+    а также численный архив наблюдений GOES без доказанной публикации. Проверяется,
+    что ни одна из них не попала в строгий снимок, что причина исключения названа
+    и что в разборе те же записи, напротив, видны — режимы различимы.
+    """
+    from tests.test_integration import _fetched
+    t0 = datetime(2024, 5, 10, 19, 0, tzinfo=timezone.utc)
+    strict = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+    review = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+
+    # 1) инвариант строгого режима: у каждой использованной записи есть публикация и она до отсечки
+    assert strict.events
+    assert all(e.published_utc is not None and e.published_utc <= t0 for e in strict.events)
+    assert strict.kp is not None and strict.kp.published_utc is not None and strict.kp.published_utc <= t0
+    assert strict.kp.value == 3.67 or strict.kp.value == 7.67        # наблюдение из уведомления, не из будущего
+
+    # 2) реальные более поздние выпуски названы в списке исключённых с причиной
+    ex = ' '.join(strict.excluded)
+    for mid in ('20240510-AL-014', '20240510-AL-015', '20240511-AL-002'):
+        assert mid in ex, mid
+        assert not any(mid in e.event_id for e in strict.events), mid
+    assert 'позже отсечки' in ex
+    assert 'не доказаны' in ex                                       # архив наблюдений GOES 2024
+
+    # 3) в разборе (без отсечки) те же записи видны
+    assert any('20240510-AL-015' in e.event_id for e in review.events)
+    assert review.goes is not None and strict.goes is None
+
+    # 4) повтор строгого расчёта даёт тот же снимок
+    again = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+    assert _strip(strict.S)['windows'] == _strip(again.S)['windows']
+    assert strict.S['recommendation'] == again.S['recommendation']
+
+
+def test_replay_parses_saved_records_at_their_fetch_time_not_at_calculation_time():
+    """Т8: повтор текущего режима разбирает сохранённые байты на момент ПОЛУЧЕНИЯ записи.
+
+    Разборщик Kp отбрасывает незавершённый 3-часовой интервал по правилу «конец
+    интервала позже now» (`vkd/sources/live_parsers.parse_kp`). Если повторять разбор
+    на момент расчёта, интервал, который в живом запросе был ещё незавершённым, к
+    моменту расчёта оказывается завершённым, и повтор берёт ДРУГОЕ значение Kp —
+    расчёт перестаёт воспроизводиться. Найдено на `examples/live_now.zip` 19.09.2026:
+    живой запрос в 02:55 дал Kp интервала, закончившегося в 00:00, а повтор на момент
+    расчёта 03:07 — интервала, закончившегося в 03:00.
+    """
+    import base64
+    import json as _json
+    from vkd.integration.replay_live import from_saved_records
+
+    fetched = datetime(2026, 9, 19, 2, 55, tzinfo=timezone.utc)
+    computed = datetime(2026, 9, 19, 3, 7, tzinfo=timezone.utc)
+    payload = _json.dumps({'Kp': [1.667, 2.0], 'status': ['def', 'pre'],
+                           'datetime': ['2026-09-18T21:00:00Z', '2026-09-19T00:00:00Z']}).encode()
+    records = {
+        'gfz_kp:sha': {'metadata': {'source_id': 'gfz_kp', 'raw_record_id': 'gfz_kp:sha', 'version': 'v1',
+                                    'fetched_utc': fetched.isoformat()},
+                       'encoding': 'base64', 'content_base64': base64.b64encode(payload).decode()},
+        'noaa_swpc_goes:sha': {'metadata': {'source_id': 'noaa_swpc_goes', 'raw_record_id': 'noaa_swpc_goes:sha',
+                                            'version': 'v1', 'fetched_utc': fetched.isoformat()},
+                               'encoding': 'base64',
+                               'content_base64': base64.b64encode(_json.dumps(
+                                   [{'time_tag': '2026-09-19T02:55:00Z', 'satellite': 18, 'flux': 0.21,
+                                     'energy': '>=10 MeV'}]).encode()).decode()},
+    }
+    tle = open(TLE, encoding='utf-8').read()
+    (_g, _gr, _fg), (kp, _kr, f_kp), _tle, _noaa = from_saved_records(records, computed, tle_text=tle)
+    assert kp is not None, f_kp.status_ru
+    # интервал 21:00–00:00 завершён к 02:55; интервал 00:00–03:00 на 02:55 ещё шёл
+    assert kp.t_utc == datetime(2026, 9, 19, 0, 0, tzinfo=timezone.utc), kp.t_utc
+    assert kp.value == 1.667
+    # давность по-прежнему считается от момента РАСЧЁТА, а не от момента получения
+    assert abs(f_kp.age_min - 187.0) < 0.001, f_kp.age_min

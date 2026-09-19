@@ -9,7 +9,7 @@ import pytest
 
 from app.compute import run, validate_request
 from app.export import build_zip, report_md
-from experiments.stub_sources import Fetch
+from vkd.sources import Fetch
 from tests.test_integration import _fetched
 from vkd.orbit.trajectory import satellite_from_tle
 
@@ -50,9 +50,11 @@ def test_request_validation_accepts_bounds():
 def test_history_sources_never_claim_live_requests(gannon, monkeypatch):
     src = gannon.S['sources']
     assert not any('живьём' in (v.get('status') or '') for v in src.values())
-    assert src['noaa_swpc_goes']['live_ok'] is None and 'архива' in src['noaa_swpc_goes']['status']
+    assert src['noaa_swpc_goes']['live_ok'] is None and 'архив наблюдений GOES' in src['noaa_swpc_goes']['status']
     assert src['gfz_kp']['live_ok'] is None and 'строгий режим' in src['gfz_kp']['status']
-    assert 'donki_archive' in src and 'архив DONKI' in src['donki_archive']['status'] and src['donki_archive']['events_used'] == len(gannon.events)
+    # C3: численный архив GOES в строгом режиме исключён — причина названа, а не «архива нет»
+    assert 'не доказаны' in src['noaa_swpc_goes']['status'] and src['noaa_swpc_goes']['data_utc'] is None
+    assert 'donki_archive' in src and 'архив уведомлений DONKI' in src['donki_archive']['status'] and src['donki_archive']['events_used'] == len(gannon.events)
     assert src['noaa_forecast_kp_forecast']['from_cache'] is None and 'архив A1' in src['noaa_forecast_kp_forecast']['origin']
     # исторический режим без переданного fetched не обращается к живым источникам вовсе (Т1-15)
     import app.compute as ac
@@ -63,8 +65,12 @@ def test_history_sources_never_claim_live_requests(gannon, monkeypatch):
     monkeypatch.setattr(ac, 'kp_latest', boom)
     monkeypatch.setattr(ac, 'tle_latest', boom)
     r = run('history_review', T_GANNON, 360, 720, [0, 240], now=T_GANNON)
+    monkeypatch.setattr(ac, 'noaa_latest', boom)
+    r = run('history_review', T_GANNON, 360, 720, [0, 240], now=T_GANNON)
     assert r.meta is not None and r.S['sources']['gfz_kp']['origin'].startswith('архив GFZ')
     assert r.S['sources']['gfz_kp']['data_utc'] and r.S['sources']['gfz_kp']['age_min'] is not None
+    # C3: в разборе канал GOES — численное наблюдение архива, а не «данных нет»
+    assert r.S['sources']['noaa_swpc_goes']['data_utc'] and r.goes is not None and r.goes.unit == 'pfu'
 
 
 def test_review_kp_age_is_measured_from_t0_not_now():
@@ -77,14 +83,19 @@ def test_review_kp_age_is_measured_from_t0_not_now():
     r = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=now)
     kpf = next(f for f in r.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
     assert kpf.value == 4.0 and kpf.coverage.value == 'full' and 'устарело' not in kpf.limits_note
-    assert r.kp.source_id == 'gfz_kp_archive' and r.kp.valid_from_utc == datetime(2024, 5, 12, 18, tzinfo=UTC)
-    assert kpf.record_ids[0] in r.S['source_versions']['gfz_kp_archive']
+    assert kpf.record_ids and kpf.record_ids[0].startswith('gfz_kp_archive:')
     assert not any('наблюдение Kp' in c.text for m in r.assessments[0].mechanisms for c in m.conditions)
     assert r.S['sources']['gfz_kp']['age_min'] == 120
-    # за концом архива GFZ (последний интервал 30.06 21:00–24:00Z) — устарело по давности от t0
-    t1 = datetime(2024, 7, 1, 12, 0, tzinfo=UTC)
-    with pytest.raises(ValueError, match='May–June'):
-        run('history_review', t1, 360, 720, [0, 240], fetched=_fetched(), now=now)
+    # в самом начале архива наблюдения Kp до t0 ещё нет: причина называется, «нет данных» не выдаётся
+    # за спокойную обстановку, а давность считается от t0
+    t1 = datetime(2024, 5, 1, 0, 0, tzinfo=UTC)
+    r1 = run('history_review', t1, 360, 720, [0, 240], fetched=_fetched(), now=now)
+    kpf1 = next(f for f in r1.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
+    assert kpf1.value is None and kpf1.coverage.value == 'none'
+    assert 'наблюдений Kp в архиве' in r1.S['sources']['gfz_kp']['status']
+    # дата вне архива 2024 года отклоняется русским сообщением, а не исключением адаптера
+    with pytest.raises(ValueError, match='вне архива исторических режимов'):
+        run('history_review', datetime(2024, 7, 1, 12, 0, tzinfo=UTC), 360, 720, [0, 240], fetched=_fetched(), now=now)
 
 
 # ----------------------------------------------------------------------------- О4/О5: объяснения для каждого окна
@@ -100,7 +111,8 @@ def test_cards_exist_for_every_window_with_conditions(gannon):
     assert 'пересекает окно' in c.period_ru and 'событие/действие' in c.period_ru
     assert 'опубликовано' in c.source_ru and 'до отсечки' in c.source_ru
     assert 'NOAA Space Weather Scales' not in c.source_ru and 'правило команды' in c.rule_ru
-    assert c.limits_ru and 'kp_90' in c.limits_ru or 'sep_valid_hours' in c.limits_ru
+    assert c.limits_ru and ('event_valid_hours' in c.limits_ru or 'sep_valid_hours' in c.limits_ru)
+    assert 'kp_90' not in c.limits_ru          # R10: поля прогона поздних карточек больше не используются
     S_cards = gannon.S['cards']
     assert all('window_index' in x for x in S_cards) and {x['window_index'] for x in S_cards} == {1, 2}
 
@@ -141,9 +153,12 @@ def test_live_tle_fetched_after_now_is_not_strict_reconstruction():
     t0 = (epoch + timedelta(days=1)).replace(second=0, microsecond=0)
     txt = open(TLE, encoding='utf-8').read()
     late = t0 + timedelta(seconds=7)          # TLE получен через 7 с после зафиксированного «сейчас»
-    f_tle = Fetch('celestrak_gp', True, False, late, 0.0, 'получено живьём с api.wheretheiss.at', txt, TLE, url='https://api.wheretheiss.at/v1/satellites/25544/tles')
+    # адрес фактически полученных байтов у A4 — в metadata (Fetch.url читает именно его)
+    f_tle = Fetch('celestrak_gp', True, False, late, 0.0, 'получено живьём с api.wheretheiss.at', txt, TLE,
+                  metadata={'url': 'https://api.wheretheiss.at/v1/satellites/25544/tles'})
     fetched = ((None, {}, Fetch('noaa_swpc_goes', False, False, None, None, 'откл', None, None)),
-               (None, {}, Fetch('gfz_kp', False, False, None, None, 'откл', None, None)), (txt, f_tle))
+               (None, {}, Fetch('gfz_kp', False, False, None, None, 'откл', None, None)), (txt, f_tle),
+               _fetched()[3])
     r = run('live', t0, 360, 720, [0, 240], fetched=fetched, now=t0)
     tm = r.S['trajectory_meta']
     assert not (tm['strictness'] == 'strict' and tm['is_reconstruction'])
@@ -225,9 +240,20 @@ def test_sep_level_from_donki_body_and_storm_signals_grouped():
     r = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
     conds = [c for m in r.assessments[0].mechanisms for c in m.conditions]
     sep = [c for c in conds if c.kind == 'SEP']
-    assert sep and all('S1 (10 pfu)' in c.text for c in sep) and all(c.severity == 'limiting' for c in sep)
+    # уведомление DONKI публикует ПОРОГ канала, а не измеренный поток: это сказано прямо
+    assert sep and all('S1 (10 pfu, нижняя граница по тексту уведомления)' in c.text for c in sep)
+    assert all(c.severity == 'limiting' for c in sep)
     storm = [c for c in conds if c.kind == 'GST']
-    assert len(storm) == 1 and len(storm[0].sources_ru) >= 2 and 'наблюдение Kp' in storm[0].text and 'DONKI' in storm[0].text
+    assert len(storm) == 1 and len(storm[0].sources_ru) >= 2
+    # три сигнала об одной буре сведены в одно условие: наблюдение Kp из уведомления
+    # и два ОПУБЛИКОВАННЫХ прогноза прихода выброса с диапазоном Kp
+    assert 'наблюдение Kp 7,67' in storm[0].text
+    assert 'опубликованный прогноз прихода выброса' in storm[0].text
+    assert 'верхняя граница опубликованного диапазона' in storm[0].text
+    assert 'ENLIL' not in storm[0].text and 'kp_90' not in storm[0].text
+    # идентификаторов кода в тексте условия нет — записи названы номером выпуска источника
+    assert 'nasa_donki_notification:' not in storm[0].text
+    assert 'уведомление NASA DONKI 20240509-AL-010, приход выброса' in storm[0].text
     assert not any('политика прототипа' in c.text for c in conds)
     assert r.rec.verdict == 'insufficient' and storm and sep
     assert all(x.startswith('окн') for x in r.rec.reasons if 'условие' in x or 'протонное' in x)
@@ -238,10 +264,15 @@ def test_sep_level_from_donki_body_and_storm_signals_grouped():
 def test_report_is_a_readable_document(gannon):
     md = report_md(gannon.S)
     for section in ('## Вывод', '## Окна и величины', '## Почему такой вывод', '## Источники и публикация',
-                    '## Условия по окнам', '## Проверка после отсечки', 'Окно 1 — 10.05 12:00–18:00 UTC (360 мин)'):
+                    '## Условия по окнам', '## Проверка после отсечки', 'Окно 1 — 10.05 12:00 — 18:00 UTC (360 мин)'):
         assert section in md, section
     assert 'own_calculation' not in md and 'external_forecast' not in md
     assert 'Kp 3,67' in md and '3.67 1' not in md and '1654378.43' not in md
+    from app.export import _fold_records
+    assert _fold_records(['a', 'b', 'c', 'd']).endswith('всего 4 (полный список — cards.json, raw/)')
+    # записи называются номером выпуска источника, как на экране, а не машинным ключом
+    assert _fold_records(['nasa_donki_notification:20240508-AL-012:00f5:CME_ARRIVAL']) == \
+        'уведомление NASA DONKI 20240508-AL-012, приход выброса'
     z = build_zip(gannon.S, gannon.raw_records)
     import io as _io
     import zipfile

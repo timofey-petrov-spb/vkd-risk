@@ -41,6 +41,10 @@ import numpy as np
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DATA = os.path.join(_ROOT, 'data', 'ost1044_belts')
 FLUX_UNIT_RU = 'см⁻²·с⁻¹, всенаправленный (ОСТ 134-1044-2007, прил. А, вводный текст)'
+# та же единица там, где стандарт уже назван в той же фразе: иначе «ОСТ 134-1044-2007» стоит
+# в одном предложении дважды (карточка флюенса, пятый круг). Без стандарта рядом печатать нельзя —
+# происхождение единицы должно оставаться прослеживаемым.
+FLUX_UNIT_SHORT_RU = 'см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст)'
 
 
 @dataclass(frozen=True)
@@ -81,6 +85,7 @@ class BeltTable:
         self.raw_record_id = 'ost1044_A_%s:%s' % (self.table_name.replace('.', '_'), self.sha256[:12])
         self.source = 'ОСТ 134-1044-2007, прил. А, табл. %s' % self.table_name
         self.flux_unit_ru = FLUX_UNIT_RU
+        self.flux_unit_short_ru = FLUX_UNIT_SHORT_RU
         self.interpolation_ru = ('по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); '
                                  'по энергии — степенной закон между узлами, хвост выше %g МэВ отброшен' % self.energies_MeV[-1])
 

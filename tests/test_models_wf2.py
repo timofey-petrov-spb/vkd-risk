@@ -5,6 +5,7 @@
 
 Каждый тест закрепляет один найденный дефект, а не «работает вообще».
 """
+import re
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -198,9 +199,14 @@ def test_stability_true_when_verdict_and_window_agree_on_grid():
 
 
 def test_tolerance_basis_text_names_verdict_and_window():
+    """Подпись говорит и про вердикт, и про сетку. С третьего круга «предпочтительное окно»
+    называется только там, где оно есть: на «Гэнноне» его нет ни здесь, ни в ячейках сетки,
+    и подпись обязана сказать именно это (ветки — tests/test_models_round3.py)."""
     r = run('history_forecast', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
     t = r.rec.tolerance_basis
-    assert ('вердикт, и предпочтительное окно' in t) or ('вердикт или предпочтительное окно' in t)
+    assert r.rec.preferred is None and all(v is None for v in r.rob.preferred_starts.values())
+    assert 'предпочтительного окна нет ни в одной ячейке сетки' in t
+    assert 'вердикт' in t and 'выбор устойчив' not in t
     assert 'verdict_by_grid' in r.S['robustness'] and r.S['robustness']['verdict_by_grid']
 
 
@@ -209,7 +215,7 @@ def test_kp_age_in_sources_table_equals_age_in_factor():
     """M6: таблица источников считала давность от начала 3-часового интервала GFZ, а фактор —
     от его конца; расхождение ровно 3 ч на одном экране."""
     import os
-    from experiments.stub_sources import Fetch
+    from vkd.sources import Fetch
     from vkd.orbit.trajectory import satellite_from_tle
     ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     tle_path = os.path.join(ROOT, 'data', 'orbit', 'iss.tle')
@@ -220,9 +226,10 @@ def test_kp_age_in_sources_table_equals_age_in_factor():
     vf = t0 - timedelta(hours=4)
     kp = EnvironmentSample(vf, 'kp', 3.0, '', 'gfz_kp', Kind.OBSERVATION, None, vf, vf + timedelta(hours=3),
                            t0, 'final', 'gfz_kp#test')
-    (g, g_raw, f_goes), _, (txt, f_tle) = _fetched(tle_text, goes_at=t0)
+    (g, g_raw, f_goes), _, (txt, f_tle), noaa = _fetched(tle_text, goes_at=t0)
     f_kp = Fetch('gfz_kp', True, False, t0, 60.0, 'тестовое наблюдение', None, None)
-    r = run('live', t0, 360, 720, [0, 240], fetched=((g, g_raw, f_goes), (kp, {'gfz_kp#test': {}}, f_kp), (txt, f_tle)), now=t0)
+    r = run('live', t0, 360, 720, [0, 240],
+            fetched=((g, g_raw, f_goes), (kp, {'gfz_kp#test': {}}, f_kp), (txt, f_tle), noaa), now=t0)
     age_table = r.S['sources']['gfz_kp']['age_min']
     kpf = next(f for f in r.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
     age_factor = float(kpf.limits_note.split('давность ')[1].split(' мин')[0])
@@ -281,17 +288,32 @@ def test_sep_condition_kind_follows_record_kind_not_event_type(belts):
 
 # ------------------------------------------------------- M9: год публикации, если он не совпадает с годом окна
 def test_publication_range_shows_year_when_it_differs_from_window_year():
-    """Переанализы ENLIL поданы в 2025: «05-07 14:21Z — 03-12 16:52Z» читалось как ход назад."""
-    e = sep_event(T0, published=datetime(2025,3,12,tzinfo=UTC), note='late review publication')
-    a = assess(Window(T0,60), events=[e], belts_=__import__('vkd.assess.trapped',fromlist=['BeltTable']).BeltTable('min'))
-    texts = [s for m in a.mechanisms for c in m.conditions for s in c.sources_ru if 'публикация' in s]
+    """M9: год печатается, если он отличается от года окна («05-07 — 03-12» читалось как ход назад).
+
+    После стыка A2 все записи конвейера — уведомления 2024 года (переанализы поздних карточек
+    ENLIL сняты по R10), поэтому правило проверяется на самой функции формата и на том,
+    что реальные диапазоны публикации читаются вперёд."""
+    from vkd.windows.compare import _pub_time
+    assert _pub_time(datetime(2025, 3, 12, 16, 52, tzinfo=UTC), 2024) == '2025-03-12 16:52Z'
+    assert _pub_time(datetime(2024, 5, 7, 14, 21, tzinfo=UTC), 2024) == '05-07 14:21Z'
+    r = run('history_review', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
+    # Условие бури печатает публикацию ПОКАЗАПИСНО — одним временем рядом с номером выпуска,
+    # из тела которого взято число (четвёртый круг: связка «приход — Kp» только внутри записи).
+    # Диапазон публикации остаётся у кластера протонного события, в перечне источников условия.
+    texts = [t for a in r.assessments for m in a.mechanisms for c in m.conditions
+             for t in (c.text,) + tuple(c.sources_ru) if 'публикация ' in t]
     assert texts
-    ranges = [t.split('публикация ')[1].split(')')[0] for t in texts if 'публикация ' in t]
-    assert any('2025-' in x for x in ranges), ranges
+    parts = [t.split('публикация ')[i + 1].split(')')[0] for t in texts
+             for i in range(t.count('публикация '))]
+    ranges = [x for x in parts if ' — ' in x]
+    assert ranges, parts
     for x in ranges:                     # диапазон читается вперёд: конец не раньше начала
         lo, hi = [p.strip() for p in x.split(' — ')]
         norm = lambda s: s if s.startswith('20') else '2024-' + s
         assert norm(lo) <= norm(hi), x
+    # одиночные времена публикации тоже читаются в едином виде: «05-08 18:43Z» или с годом
+    for x in (p for p in parts if ' — ' not in p):
+        assert re.fullmatch(r'(?:\d{4}-)?\d{2}-\d{2} \d{2}:\d{2}Z', x.strip()), x
 
 
 # ------------------------------------------------------- M10: карточка сценария
@@ -318,9 +340,13 @@ def test_condition_sources_have_no_chopped_notes_or_code_identifiers():
     conds = [c for c in r.cards if c.title.startswith(('Окно 1 · Условие', 'Окно 2 · Условие'))]
     assert conds
     joined = ' '.join(c.source_ru for c in conds)
-    for sid in ('nasa_donki_notification', 'nasa_donki_wsa_enlil', 'nasa_donki_sep_card'):
+    for sid in ('nasa_donki_notification', 'nasa_donki_wsa_enlil', 'nasa_donki_sep_card',
+                'nasa_iswa_goes_primary_p5m', 'gfz_kp_archive'):
         assert sid not in joined, sid                    # идентификаторов кода на экране нет
     assert 'уведомление NASA DONKI' in joined
+    # номер выпуска источника остаётся виден: запись должна оставаться находимой
+    from vkd.explain.cards import record_ru
+    assert 'уведомление NASA DONKI 20240510-AL-004, протонное событие' in joined
     # заметка записи не режется по символам: либо целиком, либо по границе слова с многоточием
     shown = {e.event_id for c in conds for e in r.events if e.raw_record_id in c.record_ids}
     assert all(rid in r.raw_records for c in conds for rid in c.record_ids)
@@ -338,6 +364,24 @@ def test_short_note_cuts_on_word_boundary_and_keeps_short_notes_whole():
     out = short_note(long)
     assert out.endswith('…') and len(out) <= 161 and out[:-1].strip().endswith('слово')
     assert short_note('a' * 300).endswith('…')
+
+
+def test_short_note_ne_rezhet_frazu_vnutri_skobki():
+    """Заметка уведомления DONKI о приходе выброса длиннее предела на один символ, и обрез по
+    границе слова приходился внутрь скобки: «…(диапазон 6–8, верхняя граница, не…» — открытая
+    скобка и отрицание без продолжения в самой читаемой карточке «Гэннон». Режем по границе
+    пункта: остаётся целая фраза. Сам диапазон Kp не теряется — он стоит в той же карточке
+    рядом с номером уведомления, из которого взят."""
+    note = ('Модельный приход CME к Земле; неопределённость времени не является длительностью бури; '
+            'опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не kp_90) ')
+    out = short_note(note.strip() + ' хвост')
+    assert out == 'Модельный приход CME к Земле; неопределённость времени не является длительностью бури…', out
+    assert out.count('(') == out.count(')')
+    # границы пункта нет вовсе — режем по слову, но не внутрь незакрытой скобки
+    no_clause = 'приход выброса (модель WSA-ENLIL, ' + 'очень длинное слово ' * 12
+    out2 = short_note(no_clause)
+    assert out2.count('(') == out2.count(')'), out2
+    assert out2.endswith('…') and 'приход выброса' in out2, out2
 
 
 def test_source_id_translation_covers_used_sources():

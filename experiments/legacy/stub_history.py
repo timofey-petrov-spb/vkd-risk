@@ -39,7 +39,9 @@ from typing import Optional
 from vkd.config import section as _cfg_section   # Т7: настройки вне кода
 from vkd.types import EnvironmentSample, EventInterval, Kind
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# модуль перенесён в experiments/legacy/ (архив, в конвейере не используется с 0.6.0):
+# корень репозитория теперь на уровень выше
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCH = os.path.join(_ROOT, 'data', 'archive_2024')
 GFZ_FILE = os.path.join(_ROOT, 'data', 'spaceweather', 'kp_ap_sn_f107.txt')
 ARCHIVE_PERIOD = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -52,10 +54,15 @@ GFZ_SNAPSHOT_UTC = datetime(2026, 9, 17, tzinfo=timezone.utc)
 GFZ_SOURCE = 'GFZ Potsdam, kp.gfz.de, файл Kp_ap_Ap_SN_F107_since_1932.txt (CC BY 4.0)'
 
 _HIST = _cfg_section('history')
-# Оценки Kp прогона ENLIL по углу IMF: kp_180 — южное поле, верхняя оценка; kp_90 — типичная.
-# Какие поля дают «Kp до …» для условия (максимум из них) — настройка [history].enlil_kp_fields;
-# выбор kp_90 обоснован в docs/EKSPERIMENTY_PROGNOZ.md: kp_180 давал 54 ложные тревоги на
-# контроле против 3 при той же полноте на буре Гэннон. Верхняя оценка остаётся в тексте.
+# Оценки Kp прогона ENLIL по углу межпланетного магнитного поля: kp_180 — при южном направлении
+# поля (верхняя оценка), kp_90 — при повороте поля на 90°. Это СЦЕНАРИИ прогона, а не медиана и
+# не «типичная» оценка: такой подписи здесь больше нет (возражение А по R10, CONTRACT §12).
+# Числа сравнения линий не дублируются в комментарии — они устаревали дважды; действующие
+# показатели берутся из examples/experiments/forecast_lines.json и отчёта
+# docs/EKSPERIMENTY_PROGNOZ.md, пересчитываемых experiments/forecast_lines.py.
+# Ключ [history].enlil_kp_fields из config/settings.toml удалён вместе с самой линией
+# (R10: время размещения конкретной версии карточки CME не доказано), поэтому здесь
+# остаётся умолчание архивного модуля — в конвейере он не используется с 0.6.0.
 ENLIL_KP_FIELDS = tuple(_HIST.get('enlil_kp_fields', ('kp_90',)))
 # Запас между завершением прогона ENLIL и принятой публикацией, мин (политика прототипа R10;
 # ключ [history].enlil_publication_lag_min, умолчание 60 — на случай отсутствия ключа в файле).

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Визуализации: карта трассы с аномалией, лента времени, сравнение окон. Только Plotly.
+"""Визуализации: карта трассы с аномалией и лента времени. Только Plotly.
 
-Правила оформления (docs/ZAMYSEL.md 5.2): три цвета — синий (наш расчёт),
-красный (аномалия/условия), серый; окна — голубые. Всё, что нарисовано,
-имеет происхождение: аномалия — наш расчёт по IGRF, окна — запрос.
-Единый стиль всех графиков — style(): шаблон plotly_white, легенда сверху,
-подписи осей с единицами.
+Цвет означает происхождение величины, как и на всём экране: синий — наш расчёт,
+зелёный — наблюдение, янтарный — внешний прогноз, красный — условие или аномалия,
+серый — вспомогательные линии. Единый стиль всех графиков — style(): шаблон
+plotly_white, легенда сверху не длиннее четырёх строк, подписи осей с единицами,
+заголовок говорит, ЧТО показано и ОТКУДА.
+
+Панель инструментов Plotly скрыта (PLOTLY_CONFIG): на защите она только мешает,
+а всё, что из неё нужно, есть в выгрузке.
 """
 from __future__ import annotations
 
@@ -14,24 +17,40 @@ from datetime import datetime, timedelta
 import numpy as np
 import plotly.graph_objects as go
 
-from app.ui import fmt
-
 BLUE, RED, GREY, WIN = '#1f4e79', '#c0392b', '#7f8c8d', '#5dade2'
-GREEN = '#1e8449'
-EVENT_SYM = {'SEP': ('triangle-up', RED, 'протонное событие'), 'GST': ('diamond', '#b9770e', 'геомагнитная буря'),
-             'CME_ARRIVAL': ('star', '#8e44ad', 'прогноз прихода выброса'), 'FLR': ('circle', GREY, 'вспышка'),
+GREEN, AMBER = '#1e8449', '#b9770e'
+# панель инструментов скрыта, график не масштабируется мышью: экран читают, а не крутят
+PLOTLY_CONFIG = {'displayModeBar': False, 'scrollZoom': False, 'staticPlot': False, 'displaylogo': False}
+EVENT_SYM = {'SEP': ('triangle-up', RED, 'протонное событие'), 'GST': ('diamond', RED, 'геомагнитная буря'),
+             'CME_ARRIVAL': ('star', AMBER, 'прогноз прихода выброса'), 'FLR': ('circle', GREY, 'вспышка'),
              'CME': ('circle-open', GREY, 'выброс')}
 EVENT_ORDER = ['SEP', 'GST', 'CME_ARRIVAL', 'FLR', 'CME']
 # правая ось GOES — логарифмическая: метки задаём сами, по-русски, без «192,3432» (U4)
 GOES_TICKVALS = [0.1, 1, 10, 100, 1000]
 GOES_TICKTEXT = ['0,1', '1', '10', '100', '1000']
+# Разделители чисел Plotly: запятая в дробной части и узкий неразрывный пробел в разрядах тысяч.
+# Своими подписями закрыты только логарифмические оси; всё остальное — деления осей и всплывающие
+# подписи (`hovertemplate`) — рисует Plotly, и по умолчанию это «7.67» и «24000» рядом с «7,67»
+# и «24 000» в тексте того же экрана (бриф §9.8: дроби с запятой). Первый знак — десятичный,
+# второй — разряды тысяч.
+SEPARATORS = ', '
+# заголовок ленты говорит, ЧТО показано и ОТКУДА — по режиму, одной строкой
+TIMELINE_TITLE = {
+    'live': 'Поле на трассе МКС по IGRF — наш расчёт; Kp и поток GOES ≥10 МэВ — наблюдения NOAA SWPC и GFZ',
+    'history_review': 'Поле на трассе МКС по IGRF — наш расчёт; Kp — наблюдения окончательного ряда GFZ (разбор после факта)',
+    'history_forecast': 'Поле на трассе МКС по IGRF — наш расчёт; Kp — внешний прогноз NOAA из выпуска до отсечки',
+}
 
 
-def style(fig: go.Figure, height: int, legend_top: bool = True) -> go.Figure:
-    """Единый стиль: plotly_white, легенда сверху, сетка светлая, шрифт экрана."""
+def style(fig: go.Figure, height: int, legend_top: bool = True, title: str | None = None) -> go.Figure:
+    """Единый стиль: plotly_white, заголовок «что и откуда», легенда сверху, сетка светлая, шрифт экрана."""
     fig.update_layout(template='plotly_white', height=height, margin=dict(l=10, r=10, t=36, b=10),
                       font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
-                      hovermode='x unified', paper_bgcolor='white', plot_bgcolor='white')
+                      hovermode='x unified', paper_bgcolor='white', plot_bgcolor='white',
+                      separators=SEPARATORS)
+    if title:
+        fig.update_layout(title=dict(text=title, x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
+                          margin=dict(l=10, r=10, t=76, b=10))
     if legend_top:
         fig.update_layout(legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0, font=dict(size=11)))
     fig.update_xaxes(showgrid=True, gridcolor='#eef0f3', zeroline=False, showline=True, linecolor='#d7dbdf')
@@ -40,6 +59,17 @@ def style(fig: go.Figure, height: int, legend_top: bool = True) -> go.Figure:
 
 
 _style = style     # прежнее имя
+
+
+def _nbsp_int(v) -> str:
+    """Целое с узким неразрывным пробелом в разрядах: 24000 → «24 000» (подписи графиков)."""
+    s = '%.0f' % float(v)
+    sign, s = ('-', s[1:]) if s.startswith('-') else ('', s)
+    groups = []
+    while len(s) > 3:
+        groups.insert(0, s[-3:]); s = s[:-3]
+    groups.insert(0, s)
+    return sign + ' '.join(groups)
 
 
 def saa_grid(alt_km: float, thr_nT: float, when: datetime, step_deg: float = 4.0):
@@ -70,7 +100,8 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
     fig = go.Figure()
     glo, gla, gb = saa_grid(float(np.mean([p.alt_km for p in traj])), thr_nT, when)
     if len(glo):
-        fig.add_trace(go.Scattergeo(lon=glo, lat=gla, mode='markers', name='аномалия, |B| < %.0f нТл (наш расчёт по IGRF)' % thr_nT,
+        fig.add_trace(go.Scattergeo(lon=glo, lat=gla, mode='markers',
+                                    name='аномалия: |B| ниже порога %s нТл' % _nbsp_int(thr_nT),
                                     marker=dict(size=9, color=RED, opacity=0.18, symbol='square'), hoverinfo='skip'))
     lon_l, lat_l = _split_dateline([p.lon_deg for p in traj], [p.lat_deg for p in traj])
     fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='трасса, шаг 1 мин', line=dict(color=GREY, width=1), hoverinfo='skip'))
@@ -84,7 +115,7 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
         if not seg:
             continue
         sl, sa = _split_dateline([p.lon_deg for p in seg], [p.lat_deg for p in seg])
-        fig.add_trace(go.Scattergeo(lon=sl, lat=sa, mode='lines', name='окно %d: %s' % (i + 1, w.start_utc.strftime('%d.%m %H:%MZ')),
+        fig.add_trace(go.Scattergeo(lon=sl, lat=sa, mode='lines', name='окно %d: %s' % (i + 1, w.start_utc.strftime('%d.%m %H:%M')),
                                     line=dict(color=WIN if i else BLUE, width=3),
                                     hovertemplate='окно %d<br>%%{lat:.1f}°, %%{lon:.1f}°<extra></extra>' % (i + 1)))
         fig.add_trace(go.Scattergeo(lon=[seg[0].lon_deg], lat=[seg[0].lat_deg], mode='markers+text', text=['старт %d' % (i + 1)],
@@ -92,8 +123,12 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
                                     showlegend=False, hoverinfo='skip'))
     fig.update_geos(projection_type='equirectangular', showcountries=False, showcoastlines=True, coastlinecolor='#bbb',
                     showland=True, landcolor='#f7f7f7', showocean=True, oceancolor='#ffffff', lataxis_range=[-75, 75])
-    fig.update_layout(template='plotly_white', height=420, margin=dict(l=0, r=0, t=30, b=0),
+    fig.update_layout(template='plotly_white', height=440, margin=dict(l=0, r=0, t=76, b=0),
+                      title=dict(text='Область аномалии и трасса МКС — наш расчёт |B| по IGRF на средней высоте трассы; '
+                                      'времена UTC',
+                                 x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
                       font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
+                      separators=SEPARATORS,
                       legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0, font=dict(size=11)))
     return fig
 
@@ -118,22 +153,23 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     if kp_obs:
         xs = [a + (b - a) / 2 for a, b, _ in kp_obs]
         wd = [(b - a).total_seconds() * 1000 * 0.92 for a, b, _ in kp_obs]
-        fig.add_trace(go.Bar(x=xs, y=[v for _, _, v in kp_obs], width=wd, name='Kp, наблюдение',
-                             marker_color=[RED if v >= 7 else '#9aa5b1' for _, _, v in kp_obs], opacity=0.9,
+        fig.add_trace(go.Bar(x=xs, y=[v for _, _, v in kp_obs], width=wd, name='Kp — наблюдение',
+                             marker_color=[RED if v >= 7 else GREEN for _, _, v in kp_obs], opacity=0.9,
                              hovertemplate='Kp %{y:.2f}<extra></extra>'), row=2, col=1, secondary_y=False)
     if goes_obs:
-        fig.add_trace(go.Scatter(x=[t for t, _ in goes_obs], y=[v for _, v in goes_obs], name='GOES ≥10 МэВ, pfu (наблюдение, правая ось)',
+        fig.add_trace(go.Scatter(x=[t for t, _ in goes_obs], y=[v for _, v in goes_obs], name='поток GOES ≥10 МэВ — наблюдение',
                                  line=dict(width=1.2, color=GREEN), hovertemplate='%{y:.3g} pfu<extra></extra>'),
                       row=2, col=1, secondary_y=True)
         # метки правой оси задаём сами: иначе на логарифмической оси печатаются числа вида 192,3432 (U4)
-        fig.update_yaxes(type='log', title_text='pfu', range=[-1, 4.2], showgrid=False, row=2, col=1, secondary_y=True,
-                         tickmode='array', tickvals=GOES_TICKVALS, ticktext=GOES_TICKTEXT)
+        fig.update_yaxes(type='log', title_text='поток ≥10 МэВ, pfu', range=[-1, 4.2], showgrid=False, row=2, col=1,
+                         secondary_y=True, tickmode='array', tickvals=GOES_TICKVALS, ticktext=GOES_TICKTEXT)
     if traj:
         ts = [p.t_utc for p in traj]
-        fig.add_trace(go.Scatter(x=ts, y=[p.B_nT for p in traj], name='|B| на трассе, нТл (наш расчёт по IGRF)',
+        fig.add_trace(go.Scatter(x=ts, y=[p.B_nT for p in traj], name='|B| на трассе — наш расчёт по IGRF',
                                  line=dict(width=1.4, color=BLUE), hovertemplate='%{y:.0f} нТл<extra></extra>'), row=1, col=1)
         fig.add_hline(y=thr_nT, line_dash='dot', line_color=RED, line_width=1, row=1, col=1,
-                      annotation_text='порог аномалии %.0f нТл' % thr_nT, annotation_position='top left', annotation_font_size=10)
+                      annotation_text='порог аномалии %s нТл' % _nbsp_int(thr_nT), annotation_position='top left',
+                      annotation_font_size=10)
         in_saa, seg = False, None
         for p in traj + [None]:
             flag = bool(p.in_saa) if p else False
@@ -150,7 +186,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
                            xanchor='left', yanchor='bottom', font=dict(size=11, color=BLUE))
     if search_min:
         fig.add_vline(x=ms(t0 + timedelta(minutes=search_min)), line_dash='dash', line_color=GREY, line_width=1,
-                      annotation_text='конец периода поиска начала (%g ч)' % (search_min / 60.0),
+                      annotation_text='конец периода поиска начала (%s ч)' % ('%g' % (search_min / 60.0)).replace('.', ','),
                       annotation_position='bottom right', annotation_font_size=10)
     # --- ряд 2: Kp
     fc = {l['channel']: l for l in (forecasts or [])}
@@ -158,15 +194,17 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     if cells:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in cells]
         wd = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.92 for c in cells]
-        fig.add_trace(go.Bar(x=x, y=[c['value'] for c in cells], width=wd, name='прогноз Kp NOAA (выпуск до отсечки)',
-                             marker_color=[RED if c['value'] >= 7 else '#d9a441' for c in cells], opacity=0.85,
+        fig.add_trace(go.Bar(x=x, y=[c['value'] for c in cells], width=wd, name='прогноз Kp NOAA — внешний прогноз',
+                             marker_color=[RED if c['value'] >= 7 else AMBER for c in cells], opacity=0.85,
                              hovertemplate='прогноз Kp %{y:.2f}<extra></extra>'), row=2, col=1)
     if kp is not None and kp.value is not None and not kp_obs:
         fig.add_trace(go.Scatter(x=[kp.t_utc], y=[kp.value], mode='markers+text', name='Kp — последнее наблюдение',
                                  marker=dict(size=11, color=RED if kp.value >= 7 else GREEN, symbol='diamond'),
-                                 text=['Kp %.1f' % kp.value], textposition='top center', hoverinfo='skip'), row=2, col=1)
+                                 text=['Kp %s' % ('%.1f' % kp.value).replace('.', ',')], textposition='top center',
+                                 hoverinfo='skip'), row=2, col=1)
     if goes is not None and goes.value is not None and not goes_obs:
-        fig.add_annotation(x=goes.t_utc, y=8.6, xref='x', yref='y2', text='GOES %.2g pfu' % goes.value, showarrow=False,
+        fig.add_annotation(x=goes.t_utc, y=8.6, xref='x', yref='y2',
+                           text='GOES %s pfu' % ('%.2g' % goes.value).replace('.', ','), showarrow=False,
                            font=dict(size=10, color=GREEN), bgcolor='#eafaf1')
     fig.add_hline(y=7, line_dash='dot', line_color=GREY, line_width=1, row=2, col=1,
                   annotation_text='Kp 7 (G3)', annotation_position='top left', annotation_font_size=10)
@@ -181,7 +219,8 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     for k in kinds:
         lst = shown[k]
         s, c, nm = EVENT_SYM.get(k, ('x', GREY, k))
-        fig.add_trace(go.Scatter(x=[a for a, _ in lst], y=[nm] * len(lst), mode='markers',
+        # тип события подписан на оси ряда 3 — в легенду он не идёт: легенда не длиннее четырёх строк
+        fig.add_trace(go.Scatter(x=[a for a, _ in lst], y=[nm] * len(lst), mode='markers', showlegend=False,
                                  name=nm + (' (сценарий)' if any(e.is_simulated for _, e in lst) else ''),
                                  marker=dict(size=10, color=c, symbol=s, line=dict(width=1, color='white')),
                                  text=[(e.note or e.event_id)[:110] for _, e in lst], hovertemplate='%{text}<extra>' + nm + '</extra>'),
@@ -190,44 +229,12 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
         fig.add_annotation(x=0.01, y=0.5, xref='paper', yref='y3 domain', text='событий и прогнозов на горизонте нет',
                            showarrow=False, font=dict(size=10, color=GREY), xanchor='left')
     fig.update_yaxes(title_text='|B|, нТл', row=1, col=1)
-    fig.update_yaxes(title_text='Kp', range=[0, 9.5], row=2, col=1, secondary_y=False)
-    fig.update_yaxes(title_text='события (тип)', type='category', categoryorder='array',
+    fig.update_yaxes(title_text='Kp (безразмерный)', range=[0, 9.5], row=2, col=1, secondary_y=False)
+    fig.update_yaxes(title_text='событие, тип', type='category', categoryorder='array',
                      categoryarray=[EVENT_SYM.get(k, ('', '', k))[2] for k in reversed(kinds)] if kinds else ['—'],
                      showgrid=True, row=3, col=1)
     fig.update_xaxes(range=[x_from, end_h + timedelta(minutes=30)], row=3, col=1)
     fig.update_xaxes(title_text='время, UTC', row=3, col=1)
-    fig = style(fig, 600)
+    fig = style(fig, 600, title=TIMELINE_TITLE.get(mode, TIMELINE_TITLE['live']))
     fig.update_layout(barmode='overlay')
-    return fig
-
-
-def window_bars(assessments) -> go.Figure:
-    """Сравнение окон: минуты в аномалии (столбцы), флюенс (лог, точки), попадания метеороидов (подпись)."""
-    names, saa, flu, mm, flagged, flu_name = [], [], [], [], [], None
-    for i, a in enumerate(assessments):
-        fx = {x.name: x for m in a.mechanisms for x in m.factors}
-        f = {n: x.value for n, x in fx.items()}
-        names.append('окно %d\n%s' % (i + 1, a.window.start_utc.strftime('%d.%m %H:%MZ')))
-        saa.append(f.get('минут в аномалии') or 0.0)
-        fl = next((x for n, x in fx.items() if n.startswith('флюенс')), None)
-        flu.append(fl.value if fl else None)
-        flu_name = flu_name or (fl.name.replace('захваченных ', '') if fl else None)
-        mm.append(f.get('ожидаемое число попаданий, пластина 1 м²'))
-        flagged.append(any(m.needs_check for m in a.mechanisms))
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=names, y=saa, name='минут в аномалии (наш расчёт)',
-                         marker_color=[RED if fl else BLUE for fl in flagged],
-                         text=['%.0f мин%s' % (s, ' · условие' if fl else '') for s, fl in zip(saa, flagged)], textposition='outside'))
-    if any(v is not None for v in flu):
-        fig.add_trace(go.Scatter(x=names, y=[v if v else None for v in flu], name='%s, част./см² (лог, правая ось)' % (flu_name or 'флюенс протонов'),
-                                 mode='markers', marker=dict(size=14, color=GREY, symbol='diamond'), yaxis='y2'))
-    for n, v in zip(names, mm):
-        if v is not None:
-            fig.add_annotation(x=n, y=0, yshift=-28, text='метеороиды: %s попаданий на 1 м²' % fmt(float(v)),
-                               showarrow=False, font=dict(size=11, color=GREY))
-    fig.update_layout(barmode='group', yaxis=dict(title='минут в аномалии, мин'),
-                      yaxis2=dict(title='флюенс, част./см²', overlaying='y', side='right', type='log', showgrid=False,
-                                  exponentformat='power'))
-    fig = style(fig, 360)
-    fig.update_layout(margin=dict(l=10, r=10, t=36, b=64), hovermode='closest')
     return fig

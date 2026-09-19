@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Слой живых источников (experiments/stub_sources): режимы отказа без падения (Т6), давность не из
+"""АРХИВ (experiments/legacy/stub_sources, в конвейере не используется с 0.6.0): режимы отказа без падения (Т6), давность не из
 ничего (Т1), прослеживаемость кеша и снимка (Т2), незавершённый интервал Kp (Т1). Без сети:
 живой запрос подменяется функцией."""
 import json
@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-import experiments.stub_sources as SS
+import experiments.legacy.stub_sources as SS
 
 UTC = timezone.utc
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

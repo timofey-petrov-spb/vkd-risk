@@ -2,8 +2,9 @@
 """Панель наблюдений: ряды GOES и Kp за последние дни с порогами шкал NOAA.
 
 Это то, что видит аналитик как «текущую обстановку» до всякого расчёта:
-наблюдения (зелёный), пороги шкал (серые линии), момент запроса.
-Ряды читаются из кеша слоя источников (experiments/stub_sources или vkd.sources).
+наблюдения (зелёный), внешний прогноз (янтарный), пороги шкал (серые линии), момент запроса.
+Цвет означает происхождение величины, как и на всём экране, а не «хорошо/плохо».
+Ряды читаются из кеша слоя источников.
 """
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ from plotly.subplots import make_subplots
 
 from app.viz import style
 
-GREEN, GREY, RED = '#1e8449', '#7f8c8d', '#c0392b'
+GREEN, GREY, RED, AMBER, BLUE = '#1e8449', '#7f8c8d', '#c0392b', '#b9770e', '#1f4e79'
 S_LEVELS = [(10.0, 'S1'), (100.0, 'S2'), (1000.0, 'S3')]
 G_LEVELS = [(5, 'G1'), (7, 'G3'), (9, 'G5')]
 PFU_TICKVALS = [0.01, 0.1, 1, 10, 100, 1000, 10000]
@@ -50,12 +51,20 @@ def kp_series(path: Optional[str]):
 
 
 def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: datetime) -> Optional[go.Figure]:
+    """Текущий режим: ряды читаются из кеша слоя источников по пути к сырой записи."""
     tg, vg = goes_series(goes_path)
     tk, vk = kp_series(kp_path)
+    return observations_figure(tg, vg, tk, vk, t0, 'GOES, протоны ≥10 МэВ, pfu — наблюдение NOAA SWPC',
+                               'Kp — наблюдение GFZ', 'запрос')
+
+
+def observations_figure(tg, vg, tk, vk, t0: datetime, goes_title: str, kp_title: str,
+                        mark_ru: str = 'запрос') -> Optional[go.Figure]:
+    """Тот же рисунок из готовых рядов: исторические режимы передают ряд архива, а не путь к кешу."""
     if not tg and not tk:
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                        subplot_titles=('GOES, протоны ≥10 МэВ, pfu — наблюдение NOAA SWPC', 'Kp — наблюдение GFZ'))
+                        subplot_titles=(goes_title, kp_title))
     if tg:
         fig.add_trace(go.Scatter(x=tg, y=vg, name='GOES ≥10 МэВ, pfu', line=dict(color=GREEN, width=1.5),
                                  hovertemplate='%{y:.3g} pfu<extra></extra>'), row=1, col=1)
@@ -68,7 +77,7 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
-    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='запрос', showarrow=False, xanchor='left', yanchor='bottom',
+    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text=mark_ru, showarrow=False, xanchor='left', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
     lo = min([v for v in vg if v > 0] or [0.1])
     # метки логарифмической оси задаём сами: иначе печатаются числа вида 192,3432 (U4)
@@ -81,22 +90,27 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
     return fig
 
 
-def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.Figure]:
-    """Прогнозы NOAA из выпусков до отсечки: Kp по 3-часовым интервалам (столбцы), суточные
-    вероятности S1+ и протонного события (ступени). Исходное разрешение сохраняется."""
+def forecast_panel(lines: list, t0: datetime, horizon_min: int,
+                   kp_title: str = 'Прогноз Kp NOAA по 3-часовым интервалам',
+                   mark_ru: str = 'отсечка') -> Optional[go.Figure]:
+    """Прогнозы NOAA: Kp по 3-часовым интервалам (столбцы), суточные вероятности S1+ и протонного
+    события (ступени). Исходное разрешение сохраняется.
+
+    Заголовок и подпись вертикальной черты задаёт вызывающий код: отсечка есть только в режиме
+    «Прогноз из прошлого», и постоянная подпись «(выпуск до отсечки)» в разборе и в текущем режиме
+    называла отсечкой то, чего в них нет (О2)."""
     by = {l['channel']: l for l in lines}
     kp = by.get('kp_forecast', {}).get('cells', [])
     probs = [(by.get(c, {}), name) for c, name in (('s1_prob_daily', 'S1+ за сутки, %'), ('proton_prob_daily', 'протонное событие за сутки, %'))]
     if not kp and not any(p[0].get('cells') for p in probs):
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                        subplot_titles=('Прогноз Kp NOAA по 3-часовым интервалам (выпуск до отсечки)',
-                                        'Суточные вероятности NOAA, %'))
+                        subplot_titles=(kp_title, 'Суточные вероятности NOAA, %'))
     if kp:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
         w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]
         fig.add_trace(go.Bar(x=x, y=[c['value'] for c in kp], width=w, name='прогноз Kp, 3-часовые интервалы',
-                             marker_color=[RED if c['value'] >= 7 else GREY for c in kp],
+                             marker_color=[RED if c['value'] >= 7 else AMBER for c in kp],
                              hovertemplate='прогноз Kp %{y:.2f}<extra></extra>'), row=1, col=1)
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
@@ -107,9 +121,10 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.F
             for c in cells:
                 xs += [datetime.fromisoformat(c['from']), datetime.fromisoformat(c['to'])]
                 ys += [c['value'], c['value']]
-            fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name, line=dict(width=2)), row=2, col=1)
+            fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name,
+                                     line=dict(width=2, color=AMBER, dash=None if 'S1' in name else 'dot')), row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
-    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='отсечка', showarrow=False, xanchor='right', yanchor='bottom',
+    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text=mark_ru, showarrow=False, xanchor='right', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
     fig.add_vrect(x0=t0, x1=t0 + timedelta(minutes=horizon_min), fillcolor='steelblue', opacity=0.06, line_width=0)
     fig.add_annotation(x=t0 + timedelta(minutes=horizon_min / 2), y=1.0, xref='x', yref='paper', text='горизонт окон', showarrow=False,

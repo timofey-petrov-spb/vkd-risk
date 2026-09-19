@@ -23,7 +23,11 @@ def test_repo_settings_file_matches_thresholds_fields(monkeypatch):
     assert raw and set(raw) <= set(Thresholds.__dataclass_fields__)
     for k, v in raw.items():
         assert getattr(th, k) == pytest.approx(float(v))
-    assert cfg.section('history').get('enlil_kp_fields') == ['kp_90']
+    # R10 после стыка A2: оценки Kp прогона WSA-ENLIL больше нет — условие по приходу выброса
+    # строится по опубликованному в уведомлении диапазону, настройка выбирает его границу
+    assert cfg.section('history').get('enlil_kp_fields') is None
+    assert cfg.section('history').get('enlil_publication_lag_min') is None
+    assert cfg.section('history').get('cme_kp_range_bound') == 'max' and th.cme_kp_bound == 'max'
     # каждая настройка либо читается кодом, либо тест падает (Т7: мёртвых ключей нет)
     assert th.sep_valid_hours == float(cfg.section('history')['sep_valid_hours'])
     assert th.kp_max_age_min == float(raw['kp_max_age_min']) and th.fluence_equiv_ratio == float(raw['fluence_equiv_ratio'])

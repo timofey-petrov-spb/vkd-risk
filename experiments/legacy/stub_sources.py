@@ -45,7 +45,9 @@ import requests
 from vkd.config import section as _cfg_section   # Т7: настройки вне кода
 from vkd.types import EnvironmentSample, Kind
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# модуль перенесён в experiments/legacy/ (архив, в конвейере не используется с 0.6.0):
+# корень репозитория теперь на уровень выше
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CACHE = os.path.join(_ROOT, 'data', 'cache')
 SNAP = os.path.join(_ROOT, 'data', 'spaceweather')
 ORBIT_SNAP_DIR = os.path.join(_ROOT, 'data', 'orbit')             # снимок TLE с манифестом A3

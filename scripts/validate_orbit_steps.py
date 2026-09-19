@@ -14,11 +14,13 @@ import numpy as np
 from vkd.orbit import trajectory_with_provenance
 from vkd.orbit.trajectory import satellite_from_tle
 from vkd.orbit.validation import interval_diagnostics
+from vkd.orbit.integration import integrate_time
+from app.compute import ALGO_VERSION
 from vkd.assess.magcoords import belt_coordinates
 from vkd.assess.trapped import BeltTable
 
 ROOT=Path(__file__).resolve().parents[1]
-STEPS=(5,10,30,60,300,600)
+STEPS=(5,10,15,30,60,300,600)
 
 def evaluate(points, seconds):
     times=[p.t_utc for p in points]
@@ -27,7 +29,13 @@ def evaluate(points, seconds):
     flux=[belts.integral_flux(p.L,p.B_over_B0,30).value_per_cm2_s for p in coords]
     field=interval_diagnostics(times,[p.B_nT for p in points],max_gap_seconds=seconds,threshold=24000)
     integral=interval_diagnostics(times,flux,max_gap_seconds=seconds)
-    return {'saa_left_min':field['below_threshold_left_seconds']/60,
+    operational = integrate_time(times, flux, times[0], times[-1], max_gap_seconds=seconds)
+    if operational.known_integral != integral['trapezoid_known_integral_value_seconds']:
+        if not np.isclose(operational.known_integral, integral['trapezoid_known_integral_value_seconds'], rtol=1e-12):
+            raise AssertionError('Production quadrature differs from independent diagnostics')
+    return {'grid_relative_delta': operational.grid_relative_delta,
+            'grid_compared_seconds': operational.grid_compared_seconds,
+            'saa_left_min' :field['below_threshold_left_seconds']/60,
             'saa_linear_min':field['below_threshold_linear_seconds']/60,
             'fluence_known_left_per_cm2':integral['left_known_integral_value_seconds'],
             'fluence_known_trapezoid_per_cm2':integral['trapezoid_known_integral_value_seconds'],
@@ -44,7 +52,7 @@ def main():
            ('june',datetime(2024,6,25,12,tzinfo=timezone.utc),840,[0,480],360,'history_review'),
            ('max_horizon_delay',datetime(2024,5,20,15,tzinfo=timezone.utc),1920,[0,1440],480,'history_review'),
            ('tle',epoch,840,[0,480],360,'live')]
-    report={'schema_version':'orbit-grid-study-v1','algorithm_version':'0.6.1',
+    report={'schema_version':'orbit-grid-study-v1','algorithm_version':ALGO_VERSION,
             'git_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
             'reference_step_seconds':5,'steps_seconds':list(STEPS),
             'units':{'saa':'min','field':'nT','fluence':'particles/cm2'},
@@ -73,6 +81,8 @@ def main():
                 w['saa_left_error_min_vs_5s']=w['saa_left_min']-base['saa_left_min']
                 w['saa_linear_error_min_vs_5s']=w['saa_linear_min']-base['saa_linear_min']
                 v0=base['fluence_known_left_per_cm2'];v=w['fluence_known_left_per_cm2']
+                v0t=base['fluence_known_trapezoid_per_cm2'];vt=w['fluence_known_trapezoid_per_cm2']
+                w['known_fluence_trapezoid_relative_change_vs_5s']=None if v0t in (None,0) or vt is None else vt/v0t-1
                 w['known_fluence_left_relative_change_vs_5s']=None if v0 in (None,0) or v is None else (v/v0-1)
             rows.append({'step_seconds':step,'point_count':len(points),'max_field_interpolation_error_nT':float(error.max()),
                          'windows':windows})
@@ -84,13 +94,13 @@ def main():
     path=out/'orbit_steps.json';path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     lines=['# A3: чувствительность к временному шагу','',
         'Пять заранее заданных случаев, одинаковые исходные файлы на всех сетках. Эталон 5 с — та же модель на более частой сетке, не физическая истина.',
-        '', '| Случай | Шаг, с | Макс. ΔB интерполяции, нТл | Макс. ошибка минут ЮАА, мин | Макс. изменение известного флюенса, % | Покрытие флюенса, % |',
+        '', '| Случай | Шаг, с | Макс. ΔB интерполяции, нТл | Макс. Δ минут ЮАА (линейные пересечения) | Макс. Δ известного флюенса (трапеции), % | Покрытие флюенса по времени, % |',
         '|---|---:|---:|---:|---:|---:|']
     for case in report['cases']:
         for row in case['grids'][1:]:
-            w=row['windows'];delta=[abs(x['known_fluence_left_relative_change_vs_5s']) for x in w if x['known_fluence_left_relative_change_vs_5s'] is not None]
-            lines.append('| %s | %s | %.2f | %.3f | %s | %.1f–%.1f |'%(case['case_id'],row['step_seconds'],row['max_field_interpolation_error_nT'],max(abs(x['saa_left_error_min_vs_5s']) for x in w), '%.2f'%(100*max(delta)) if delta else 'нет данных',100*min(x['flux_left_coverage_fraction'] for x in w),100*max(x['flux_left_coverage_fraction'] for x in w)))
-    lines += ['', 'В таблице — левые прямоугольники, как в текущем минутном оценщике. В JSON отдельно дан интеграл трапециями только по интервалам с двумя известными концами и линейная локализация пересечения порога. Недостающий участок не заполняется нулём.',
+            w=row['windows'];delta=[abs(x['known_fluence_trapezoid_relative_change_vs_5s']) for x in w if x['known_fluence_trapezoid_relative_change_vs_5s'] is not None]
+            lines.append('| %s | %s | %.2f | %.3f | %s | %.1f–%.1f |'%(case['case_id'],row['step_seconds'],row['max_field_interpolation_error_nT'],max(abs(x['saa_linear_error_min_vs_5s']) for x in w), '%.2f'%(100*max(delta)) if delta else 'нет данных',100*min(x['flux_coverage_fraction'] for x in w),100*max(x['flux_coverage_fraction'] for x in w)))
+    lines += ['', 'В таблице — новый интегратор 0.7.0: трапеции по фактическим dt и линейные пересечения порогов. Покрытие требует обоих известных концов интервала. В JSON сохранены прежние левые прямоугольники для сравнения, а также чувствительность к объединению соседних интервалов на общем известном участке. Шаги 300/600 с — только эксперимент: рабочий интегратор отвергает разрывы свыше 60 с. Недостающий участок не заполняется нулём.',
         '', 'Порог 24000 нТл, канал ≥30 МэВ, солнечный минимум таблицы ОСТ; это фиксированные условия исследования. Изменение частичного интеграла смешивает дискретизацию потока и границ применимости. Это не погрешность полного флюенса.',
         '', 'Независимые численные эталоны SGP4/IGRF и их допуски: `tests/orbit/fixtures/README.md`. Здесь не проверяются реальная радиационная доза, магнитосферные токи во время бури или абсолютная точность прогноза OEM.',
         '', f'Код: `{report["git_commit"]}`. Воспроизведение: `python scripts/validate_orbit_steps.py`. Машиночитаемые результаты и SHA-256 каждого входа: `examples/validation/orbit_steps.json`.']

@@ -248,7 +248,9 @@ def test_storm_signals_are_one_condition_with_sources(belts):
                          T0 + timedelta(hours=2), None, 'donki', T0 - timedelta(hours=10), 'donki_enlil#A#1', note='WSA-ENLIL: приход, Kp до 8')]
     a = assess_window(w, tr, belts, goes(0.2), kp_sample(7.0, 30), [], th, T0, mmod_hits=1e-6, events=evs)
     conds = [c for c in a.mechanisms[0].conditions if c.kind == 'GST']
-    assert len(conds) == 1 and len(conds[0].sources_ru) == 3 and '3 источника' in conds[0].text
+    # счёт называет и сигналы, и записи: «(1 источник)» при двух уведомлениях создавало
+    # впечатление, что весь сигнал стоит в одной записи (находка четвёртого круга)
+    assert len(conds) == 1 and len(conds[0].sources_ru) == 3 and '3 сигнала' in conds[0].text
     assert set(conds[0].event_ids) == {'donki_msg#GST', 'donki_enlil#A#1', 'rec#kp'}
     assert len(a.mechanisms[0].conditions) == 1          # буря не размножается на три условия
 
@@ -260,7 +262,10 @@ def test_cutoff_availability_factor_from_trajectory(belts):
     a = assess_window(Window(T0, 360), tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6)
     f10 = next(x for x in a.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥10 МэВ'))
     f100 = next(x for x in a.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥100 МэВ'))
-    assert f10.value == 30.0 and f100.value == 30.0 and f10.kind.value == 'own_calculation'
+    # Linear crossing between minute 29 and 30, not a whole extra minute.
+    assert f10.value == pytest.approx(29 + (rigidity_GV(10)-0.1)/4.9)
+    assert f100.value == pytest.approx(29 + (rigidity_GV(100)-0.1)/4.9)
+    assert f10.kind.value == 'own_calculation'
     assert 0.13 < rigidity_GV(10.0) < 0.14 and 0.44 < rigidity_GV(100.0) < 0.45
     a0 = assess_window(Window(T0 + timedelta(hours=6), 360), tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6)
     f = next(x for x in a0.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥10'))
