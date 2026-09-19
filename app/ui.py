@@ -3279,6 +3279,11 @@ def dark_figure(fig):
     for sh in (fig.layout.shapes or ()):
         if getattr(sh, 'line', None) is not None and getattr(sh.line, 'color', None) is not None:
             sh.line.color = _dark_color(sh.line.color)
+        # Заливка фигуры разметки — полосы окон и полоса аномалии на ленте. app/viz.py кладёт в
+        # неё тёмную пару СВОЕЙ таблицы, то есть прежний тон, и без этой строки полосы остались
+        # бы небесно-голубыми под стальным профилем — разнобой ровно там, где его видно первым.
+        if getattr(sh, 'fillcolor', None) is not None:
+            sh.fillcolor = _dark_color(sh.fillcolor)
     for an in (fig.layout.annotations or ()):
         if getattr(an, 'font', None) is not None and getattr(an.font, 'color', None) is not None:
             an.font.color = _dark_color(an.font.color)
