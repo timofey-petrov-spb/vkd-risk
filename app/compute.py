@@ -51,7 +51,8 @@ except ImportError:
     HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.5.0'      # 19.09: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ, строгая отсечка карточек SEP
+ALGO_VERSION = '0.5.1'      # 19.09, второй круг: конец действия записи по её собственному началу, окно вне архива — «оснований недостаточно» в обоих режимах,
+                            # покрытие механизма объявляется частичным без наблюдения Kp (0.5.0: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ)
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
