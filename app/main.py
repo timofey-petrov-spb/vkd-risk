@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Экран сервиса «ВКД-Риск» — один путь пользователя (О5): запрос в боковой панели (пресеты, режим,
-когда, окно работ, источники) → приборная полоса состояния → ответ первым (вердикт) → окна-кандидаты
-карточками → лента времени → вкладки: Объяснения, Окна и факторы, Методика, Карта, Наблюдения
-и прогнозы, Данные (и Устойчивость и нормы на профессиональном уровне).
+"""Экран сервиса «ВКД-Риск» — один путь пользователя (О5), сверху вниз, как ответ на вопрос
+человека «нам надо выйти» (техзадание одиннадцатого круга, раздел 3.0):
+
+  1 заголовок и назначение → 2 строка задачи (длительность, срок, «Найти окна») →
+  3 рекомендация (когда выходить, почему, область вывода, условия, отчёт) →
+  4 глобус (где и когда) → 5 лента окон (два графика по сроку и таблица лучших) →
+  6 что учтено и что нет → 7 состояние источников (в нём же приборная полоса) →
+  8 разобрать конкретные окна, свёрнуто (прежние карточки, ползунки сдвига и вердикт по ним) →
+  9 вкладки: Объяснения, Окна и факторы, Наблюдения и прогнозы, Методика, Данные
+  (и Устойчивость и нормы на профессиональном уровне).
+
+Рекомендация читается из ключа `scan` снимка (договор раздела 1a). Ключа нет — перебор не
+выполнялся, и экран показывает прежний разбор окон, честно называя, чего не было.
 
 Экран ничего не считает: всё берётся из одного снимка расчёта app.compute.run (Т7, Т8).
 Новые ключи снимка читаются через .get: их отсутствие не должно ронять экран (стык третьего круга).
@@ -32,16 +41,21 @@ from app.obs import forecast_panel, observations_figure, observations_panel
 from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI_REGISTRY_ROW, LIVE_NO_EVENTS_RU,
                     MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESET_CHANGED_RU, PRESETS,
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE, SEV_RU, STRICT_RU,
-                    VERDICT_TITLE,
+                    TASK_HINT_RU, VERDICT_TITLE,
+                    SCAN_SOURCES_RU, accounted_lines, accounted_lines_from_scan, accounted_sources,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
-                    coverage_scope_ru, dedup_clauses, forecast_label_ru,
+                    coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
-                    grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands, panel,
+                    grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands,
+                    not_accounted_ru, panel, split_panel_rows,
                     pill, plan_change_ru, plan_state, plural_ru, preset_matches,
-                    ratio_ru, raw_record, record_label_ru, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
-                    saa_note_ru, screen_text, short_reason, source_issues, source_issues_short_ru, source_name_ru,
+                    ratio_ru, raw_record, recommendation_panel, record_label_ru, record_no_url_ru, record_release_ru,
+                    record_url, registry_row, ribbon_caption_ru, robustness_gain_ru,
+                    saa_note_ru, scan_absent_ru, scan_answer, scan_best_rows, scan_of, screen_text, short_reason,
+                    source_issues, source_issues_short_ru, source_name_ru,
                     source_short, spread_offsets,
-                    status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card)
+                    status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card,
+                    windows_ribbon)
 from app.viz import PLOTLY_CONFIG, ground_track, timeline
 from vkd.config import section as _settings_section
 from vkd.explain.cards import KIND_RU
@@ -79,7 +93,9 @@ def _apply_preset(p: dict) -> None:
         st.session_state['hist_date'] = datetime(*p['date']).date()
         st.session_state['hist_hour'] = int(p['hour'])
     st.session_state['duration'] = int(p['duration_min'])
-    st.session_state['search'] = int(p['search_min'])
+    # Срок человек называет в ЧАСАХ: «надо выйти в ближайшие 12 ч», а не «в ближайшие 720 мин».
+    # Внутри всё считается в минутах, и `_search_prev` остаётся в минутах.
+    st.session_state['search_h'] = max(1, int(p['search_min']) // 60)
     st.session_state['_search_prev'] = int(p['search_min'])       # период задан пресетом, пересчёта сдвигов не нужно
     st.session_state['n_windows'] = len(p['offsets_min'])
     for i, off in enumerate(p['offsets_min']):
@@ -92,7 +108,18 @@ def _apply_preset(p: dict) -> None:
         st.session_state.pop(_k, None)
 
 
-# ================================================================= боковая панель: запрос
+# ================================================================= боковая панель: ввод по классам
+# Владелец о прежней панели: «однородная каша слева». Ввод разложен по СМЫСЛОВЫМ разделам, у
+# каждого — материальная иконка (не эмодзи: эмодзи делают экран детским, а нужен вид рабочего
+# решателя). Иконка означает смысл раздела, а не украшает.
+#
+# Разделов пять, и они отвечают на разные вопросы: КОГДА считаем, ЧЕМ считаем, ЧТО проверяем,
+# ПО КАКИМ порогам, КАК показываем. Шестого раздела «задача выхода» в панели нет намеренно:
+# длительность и срок — это вопрос человека, и он задаётся строкой наверху главной области
+# (раздел 3.1 техзадания). Второй такой же пары полей в панели быть не должно: один параметр —
+# один элемент управления.
+#
+# Пресеты стоят НАД разделами: это быстрый путь целиком, а не класс параметров.
 with st.sidebar:
     st.markdown('### ВКД-Риск')
     st.markdown('<div class="sect">Пресеты запроса</div>', unsafe_allow_html=True)
@@ -104,98 +131,34 @@ with st.sidebar:
     # пресета до конца сессии, даже когда пользователь всё перекрутил руками (К4). Само место
     # под подпись занимается сейчас, а текст ставится ниже, когда известны все поля запроса.
     _preset_caption = st.empty()
-    level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
-                     help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
-    pro = level == 'Профессиональный'
+    st.caption('Длительность выхода и срок задаются строкой задачи наверху экрана.')
     # умолчание задаётся только при первом показе: у элемента с сохранённым значением Streamlit
     # предупреждает и всё равно берёт сохранённое (пресет пишет состояние до создания элементов)
     _def = lambda key, kw: ({} if key in st.session_state else kw)
-    mode_ru = st.radio('Режим', list(MODE_IDS), key='mode', **_def('mode', {'index': 0}),
-                       help='Текущая обстановка — живые источники. Исторический разбор — весь архив мая–июня 2024. '
-                            'Прогноз из прошлого — только записи, опубликованные до отсечки.')
-    mode = MODE_IDS[mode_ru]
-    if mode == 'live':
-        t0 = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-        st.caption('Начало периода поиска: **%s UTC** (сейчас)' % t0.strftime('%d.%m.%Y %H:%M'))
-    else:
-        d = st.date_input('Дата (1 мая — 30 июня 2024)', key='hist_date',
-                          **_def('hist_date', {'value': datetime(2024, 5, 10).date()}),
-                          min_value=ARCHIVE_FROM.date(), max_value=datetime(2024, 6, 30).date())
-        hh = st.slider('Час начала периода, UTC', 0, 23, key='hist_hour', **_def('hist_hour', {'value': 12}))
-        t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
-        if mode == 'history_forecast':
-            st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%d.%m.%Y %H:%M'))
-    st.markdown('**Окно работ**')
-    duration_min = st.slider('Длительность ВКД, мин', 60, 480, step=30, key='duration',
-                             **_def('duration', {'value': int(UI.get('duration_min', 360))}),
-                             help='Постановка: 60…480 мин. Сокращение длительности — изменение плана, не улучшение обстановки.')
-    st.caption('Длительность ВКД: **%s**' % hm_ru(duration_min))
-    search_min = st.slider('Период поиска начала ВКД, мин', 60, 1440, step=60, key='search',
-                           **_def('search', {'value': max(60, int(UI.get('search_min', 720)))}),
-                           help='В этом периоде размещаются начала окон-кандидатов; постановка — до 1440 мин (сутки).')
-    st.caption('Период поиска начала: **%s** (постановка — до 24 ч)' % hm_ru(search_min))
-    n_windows = st.radio('Окон для сравнения', [2, 3], horizontal=True, key='n_windows')
-    OFF_STEP = 30
-    _def_off = list(UI.get('window_offsets_min', [0, 240]))
-    # R4-1: сдвиги живут в невиджетных ключах `_off<i>`, а не только в состоянии ползунка.
-    # У ползунка меняется max_value вместе с периодом поиска — Streamlit считает его НОВЫМ виджетом
-    # и теряет сохранённое значение, поэтому при любом движении «Периода поиска» оба сдвига уходили
-    # в 0 и настройка окон пропадала. Порядок каждого прогона: взять сдвиги из `_off<i>` (или из
-    # ползунка, если период не менялся и пользователь только что его двинул), ограничить периодом,
-    # развести совпавшие, записать обратно и отдать ползункам ДО их создания.
-    _search_prev = st.session_state.get('_search_prev')
-    _period_changed = _search_prev is not None and int(_search_prev) != int(search_min)
-    want_off = []
-    for i in range(n_windows):
-        v = st.session_state.get('_off%d' % i)
-        if not _period_changed and st.session_state.get('w%d' % i) is not None:
-            v = st.session_state['w%d' % i]            # пользователь двинул ползунок в этом прогоне
-        if v is None:
-            v = int(_def_off[i]) if i < len(_def_off) else i * 240
-        want_off.append(int(v))
-    offsets_state = [max(0, min(v, search_min)) for v in want_off]
-    if _period_changed and len(set(offsets_state)) != len(offsets_state):
-        offsets_state = spread_offsets(offsets_state, search_min, OFF_STEP)
-    recalc = list(offsets_state) if offsets_state != want_off else []
-    for i, v in enumerate(offsets_state):
-        st.session_state['_off%d' % i] = int(v)
-        st.session_state['w%d' % i] = int(v)
-    offsets_in = []
-    for i in range(n_windows):
-        offsets_in.append(st.slider('Сдвиг начала окна %d, мин после начала периода' % (i + 1), 0, search_min,
-                                    step=30, key='w%d' % i))
-        # Аналитик планирует в часах UTC, а не в сдвигах от начала периода: пока тянется ползунок,
-        # время начала окна не видно — оно появлялось только в карточке после пересчёта.
-        _ws = t0 + timedelta(minutes=int(offsets_in[i]))
-        st.caption('окно %d: %s — %s UTC' % (i + 1, _ws.strftime('%d.%m %H:%M'),
-                                             (_ws + timedelta(minutes=int(duration_min))).strftime('%H:%M')))
-    for i, v in enumerate(offsets_in):
-        st.session_state['_off%d' % i] = int(v)
-    if recalc:
-        st.caption('сдвиги пересчитаны под период: %s' % ', '.join('окно %d — %d мин' % (i + 1, v) for i, v in enumerate(recalc)))
-    st.session_state['_search_prev'] = search_min
-    # окна нумеруются по времени начала; одинаковые сдвиги разводим на шаг, экран не останавливаем (U1)
-    offsets = sorted(offsets_in)
-    if offsets != offsets_in:
-        st.caption('Окна пронумерованы по времени начала: окно 1 — самое раннее.')
-    dup = sorted({o for o in offsets if offsets.count(o) > 1})
-    if dup:
-        offsets = spread_offsets(offsets, search_min, OFF_STEP)
-        st.warning('Окна с одинаковым началом (сдвиг %s мин) сравнивать нечем: считаю по сдвигам %s мин. '
-                   'Поставьте ползунки на нужные начала.'
-                   % (', '.join(str(o) for o in dup), ', '.join(str(o) for o in offsets)))
-    # К4: подпись пресета сверяется с ФАКТИЧЕСКИМ запросом по каждому полю. Расходится хоть одно —
-    # печатается это, а не параметры пресета: иначе член жюри, нажавший пресет и двинувший ползунок,
-    # читает в первом же элементе интерфейса три утверждения, два из которых ложные.
-    if _cur is None:
-        _preset_caption.caption('Одна кнопка выставляет режим, дату, час и окна; расчёт запускается обычным путём.')
-    elif preset_matches(_cur, mode_ru, st.session_state.get('hist_date'), st.session_state.get('hist_hour'),
-                        duration_min, search_min, offsets):
-        _preset_caption.caption('%s — %s' % (_cur['label'], _cur['shows']))
-    else:
-        _preset_caption.caption(PRESET_CHANGED_RU)
-    if mode == 'live':
-        with st.expander('Источники и обновление', expanded=False):
+    # Уровень интерфейса стоит в разделе «Вид» — последнем, — но нужен раньше: от него зависит,
+    # какие разделы показываются и насколько подробны их подписи. Значение читается из состояния
+    # до создания элемента, как и сдвиги окон; сам элемент создаётся ниже.
+    pro = st.session_state.get('level') == 'Профессиональный'
+
+    with st.expander('Когда считаем', expanded=True, icon=':material/schedule:'):
+        mode_ru = st.radio('Режим', list(MODE_IDS), key='mode', **_def('mode', {'index': 0}),
+                           help='Текущая обстановка — живые источники. Исторический разбор — весь архив мая–июня 2024. '
+                                'Прогноз из прошлого — только записи, опубликованные до отсечки.')
+        mode = MODE_IDS[mode_ru]
+        if mode == 'live':
+            t0 = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+            st.caption('Начало срока поиска: **%s UTC** (сейчас)' % t0.strftime('%d.%m.%Y %H:%M'))
+        else:
+            d = st.date_input('Дата (1 мая — 30 июня 2024)', key='hist_date',
+                              **_def('hist_date', {'value': datetime(2024, 5, 10).date()}),
+                              min_value=ARCHIVE_FROM.date(), max_value=datetime(2024, 6, 30).date())
+            hh = st.slider('Час начала срока, UTC', 0, 23, key='hist_hour', **_def('hist_hour', {'value': 12}))
+            t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
+            if mode == 'history_forecast':
+                st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%d.%m.%Y %H:%M'))
+
+    with st.expander('Источники данных', expanded=False, icon=':material/database:'):
+        if mode == 'live':
             _SRC_STATE = {'включён': False, 'отказ: только кеш': 'cache', 'исключён: нет данных': 'off'}
             _SRC_LABEL = {'goes': 'GOES, протоны ≥10 МэВ', 'kp': 'Kp (GFZ)',
                           'noaa': 'Прогноз NOAA на трое суток'}     # живой бюллетень: те же три состояния (C6)
@@ -208,23 +171,26 @@ with st.sidebar:
             _auto_def = int(UI.get('auto_refresh_min', 5))
             auto_min = st.select_slider('Автообновление, мин', [0, 5, 10, 15], value=_auto_def if _auto_def in (0, 5, 10, 15) else 5,
                                         key='auto_min', help='0 — выключено. Частота публикации: GOES 5 мин, Kp 3 ч, TLE по мере выпуска.')
-        kp_off_hist = False
-    else:
-        if pro:
-            # «выпуски NOAA до отсечки» верно только в строгом режиме: в разборе отсечки нет вовсе (R4-4)
-            st.caption('Источники режима: архив уведомлений DONKI за 01.05–30.06.2024, орбита OEM NASA/JSC, выпуски NOAA %s; '
-                       'Kp — окончательный ряд GFZ по 3-часовым интервалам%s. Живые наблюдения GOES и Kp в этом режиме не запрашиваются.'
-                       % ('до отсечки' if mode == 'history_forecast' else 'из архива',
-                          ' (в разборе; в строгом режиме исключён: времени публикации по интервалам нет)' if mode == 'history_forecast'
-                          else ' (разбор после факта)'))
         else:
-            st.caption('Источники режима — архив: уведомления DONKI, орбита OEM NASA/JSC, выпуски NOAA%s.'
-                       % (' до отсечки' if mode == 'history_forecast' else ' и ряд Kp GFZ'))
-        kp_off_hist = st.checkbox('Исключить Kp из архива (проверка отказа)', key='kp_off_hist',
-                                  help='Проверка поведения при отказе источника: наблюдение Kp не используется, покрытие объявляется.')
-        disabled = {'goes': False, 'kp': 'off' if kp_off_hist else False}
-        auto_min = 0
-    with st.expander('Что если — стресс-сценарий', expanded=False):
+            if pro:
+                # «выпуски NOAA до отсечки» верно только в строгом режиме: в разборе отсечки нет вовсе (R4-4)
+                st.caption('Источники режима: архив уведомлений DONKI за 01.05–30.06.2024, орбита OEM NASA/JSC, выпуски NOAA %s; '
+                           'Kp — окончательный ряд GFZ по 3-часовым интервалам%s. Живые наблюдения GOES и Kp в этом режиме не запрашиваются.'
+                           % ('до отсечки' if mode == 'history_forecast' else 'из архива',
+                              ' (в разборе; в строгом режиме исключён: времени публикации по интервалам нет)' if mode == 'history_forecast'
+                              else ' (разбор после факта)'))
+            else:
+                st.caption('Источники режима — архив: уведомления DONKI, орбита OEM NASA/JSC, выпуски NOAA%s.'
+                           % (' до отсечки' if mode == 'history_forecast' else ' и ряд Kp GFZ'))
+            auto_min = 0
+
+    with st.expander('Проверки и сценарии', expanded=False, icon=':material/science:'):
+        if mode == 'live':
+            kp_off_hist = False
+        else:
+            kp_off_hist = st.checkbox('Исключить Kp из архива (проверка отказа)', key='kp_off_hist',
+                                      help='Проверка поведения при отказе источника: наблюдение Kp не используется, покрытие объявляется.')
+            disabled = {'goes': False, 'kp': 'off' if kp_off_hist else False}
         # О7 оценивает не саму функцию, а объяснённую потребность, связь с основным сценарием и
         # пользу, подтверждённую примером. Без этой подписи свёртка содержала только ползунки.
         # Числа примера проверены прогоном: history_forecast 25.06.2024 12:00, период 1440,
@@ -238,10 +204,12 @@ with st.sidebar:
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15, key='sc_delay',
                              help='Все окна сдвигаются на задержку; показывается как изменение плана.')
         sc_sep_on = st.checkbox('Смоделировать протонное событие', key='sc_sep_on')
-        sc_sep_off = st.slider('Начало протонного события, мин после начала периода', 0, 1440, 120, step=30, disabled=not sc_sep_on, key='sc_sep_off')
+        sc_sep_off = st.slider('Начало протонного события, мин после начала срока', 0, 1440, 120, step=30, disabled=not sc_sep_on, key='sc_sep_off')
         sc_sep_pfu = st.select_slider('Уровень события, pfu (≥10 МэВ)', [10.0, 100.0, 1000.0, 10000.0], value=100.0, disabled=not sc_sep_on, key='sc_sep_pfu')
         sc_kp_on = st.checkbox('Смоделировать скачок Kp', key='sc_kp_on')
-        sc_kp = st.slider('Kp при скачке', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
+        sc_kp = st.slider('Kp при скачке, безразмерный', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
+        st.caption('Сравнить два-три конкретных окна вручную можно в разделе «Разобрать конкретные окна» '
+                   'под ответом: там же стоят ползунки сдвига.')
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
     if mode == 'history_forecast':
@@ -250,7 +218,7 @@ with st.sidebar:
         scenario = Scenario('none')
     TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
     if pro:
-        with st.expander('Пороги и настройки', expanded=False):
+        with st.expander('Пороги и правила', expanded=False, icon=':material/tune:'):
             st.caption('Умолчания — из config/settings.toml; всё применённое попадает в снимок и выгрузку.')
             th = replace(TH0,
                          saa_B_threshold_nT=st.number_input('Порог аномалии |B|, нТл', 18000.0, 30000.0, TH0.saa_B_threshold_nT, 500.0, key='th_B'),
@@ -258,12 +226,19 @@ with st.sidebar:
                                                 index=[12.5, 30.0, 50.0].index(TH0.e_min_MeV) if TH0.e_min_MeV in (12.5, 30.0, 50.0) else 1),
                          goes_max_age_min=st.number_input('Допустимая давность наблюдения GOES, мин', 10.0, 360.0, TH0.goes_max_age_min, 10.0, key='th_age',
                                                           help='Старше — для будущих участков окна покрытие частичное.'),
-                         kp_check=st.number_input('Порог Kp для условия проверки', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
+                         kp_check=st.number_input('Порог Kp для условия проверки, безразмерный', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
                                                   help='Применяется к наблюдению, уведомлениям о буре и прогнозам NOAA/ENLIL.'),
                          tle_max_age_days=st.number_input('Допустимый возраст TLE, сут', 1.0, 14.0, TH0.tle_max_age_days, 1.0, key='th_tle'))
             T_months = st.slider('Длительность экспедиции для норм, мес', 1, 12, 6, key='T_months')
     else:
         th, T_months = TH0, 6
+
+    with st.expander('Вид', expanded=False, icon=':material/visibility:'):
+        level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
+                         help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
+        st.caption('Тема тёмная: экран смотрят в затемнённом зале, и светлая заливка на проекторе слепит. '
+                   'Светлой темы у сервиса нет — переключателя не ставим, чтобы половина элементов не '
+                   'осталась светлой на тёмном фоне.')
 
 # автообновление: фрагмент перезапускает расчёт по таймеру (Т1), обновляя только эту сессию (Т6).
 if mode == 'live' and auto_min:
@@ -296,16 +271,87 @@ def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
     return fetch_live_sources({'goes': dis_goes, 'kp': dis_kp, 'noaa': dis_noaa})
 
 
+# ================================================================= блок 1: заголовок и назначение
+st.markdown(head('ВКД-Риск', 'когда выходить в открытый космос: внешняя обстановка на траектории МКС '
+                             'и выбор окна · времена UTC'), unsafe_allow_html=True)
+
+# ================================================================= блок 2: строка задачи
+# Вопрос человека стоит первым элементом главной области, а не в боковой панели: он приходит
+# спросить «нам надо выйти на столько-то минут в ближайшие столько-то часов — когда?», и до
+# одиннадцатого круга сервис требовал от него ответа, за которым он и пришёл (ползунки сдвига).
+_task = st.container(border=True)       # строка задачи обведена рамкой: это отдельный блок, а не поля россыпью
+_t1, _t2, _t3, _t4 = _task.columns([1.5, 1.6, 1.3, 3.2])
+duration_min = int(_t1.number_input('Выход на, мин', min_value=60, max_value=480, step=30, key='duration',
+                                    **_def('duration', {'value': int(UI.get('duration_min', 360))}),
+                                    help='Постановка: 60…480 мин. Сокращение длительности — изменение плана, '
+                                         'не улучшение обстановки.'))
+search_h = int(_t2.number_input('Начать в ближайшие, ч', min_value=1, max_value=24, step=1, key='search_h',
+                                **_def('search_h', {'value': max(1, int(UI.get('search_min', 720)) // 60)}),
+                                help='Срок, внутри которого сервис ищет начало выхода; постановка — до суток.'))
+search_min = int(search_h) * 60
+_t3.markdown('<div class="btnpad"></div>', unsafe_allow_html=True)   # кнопка встаёт вровень с полями
+_t3.button('Найти окна', key='find_windows', width='stretch', help=TASK_HINT_RU)
+# Одна приглушённая строка на блок: длительность и срок уже стоят в самих полях, повторять их
+# словами незачем. Как работает кнопка — в её подсказке, а не третьей строкой на экране.
+_t4.caption('Выход на %s, начать в ближайшие %s · режим: %s · времена UTC'
+            % (hm_ru(duration_min), hm_ru(search_min), mode_ru))
+
+# --- сдвиги окон ручного разбора: значения берутся из состояния ДО расчёта, сами ползунки стоят
+# в свёрнутом разделе «Разобрать конкретные окна» ниже (раздел 3.1 техзадания). Порядок обязателен:
+# Streamlit читает значение элемента из состояния, а записывать состояние можно только ДО создания
+# элемента, поэтому здесь значения только читаются и ограничиваются сроком.
+n_windows = int(st.session_state.get('n_windows') or 2)
+OFF_STEP = 30
+_def_off = list(UI.get('window_offsets_min', [0, 240]))
+# R4-1: сдвиги живут в невиджетных ключах `_off<i>`, а не только в состоянии ползунка.
+# У ползунка меняется max_value вместе со сроком поиска — Streamlit считает его НОВЫМ виджетом
+# и теряет сохранённое значение, поэтому при любом изменении срока оба сдвига уходили в 0 и
+# настройка окон пропадала. Порядок каждого прогона: взять сдвиги из `_off<i>` (или из ползунка,
+# если срок не менялся и пользователь только что его двинул), ограничить сроком, развести
+# совпавшие, записать обратно и отдать ползункам ДО их создания.
+_search_prev = st.session_state.get('_search_prev')
+_period_changed = _search_prev is not None and int(_search_prev) != int(search_min)
+want_off = []
+for i in range(n_windows):
+    v = st.session_state.get('_off%d' % i)
+    if not _period_changed and st.session_state.get('w%d' % i) is not None:
+        v = st.session_state['w%d' % i]            # пользователь двинул ползунок в этом прогоне
+    if v is None:
+        v = int(_def_off[i]) if i < len(_def_off) else i * 240
+    want_off.append(int(v))
+offsets_state = [max(0, min(v, search_min)) for v in want_off]
+if _period_changed and len(set(offsets_state)) != len(offsets_state):
+    offsets_state = spread_offsets(offsets_state, search_min, OFF_STEP)
+recalc = list(offsets_state) if offsets_state != want_off else []
+for i, v in enumerate(offsets_state):
+    st.session_state['_off%d' % i] = int(v)
+    st.session_state['w%d' % i] = int(v)
+st.session_state['_search_prev'] = search_min
+# окна нумеруются по времени начала; одинаковые сдвиги разводим на шаг, экран не останавливаем (U1)
+offsets, offsets_in = sorted(offsets_state), list(offsets_state)
+dup = sorted({o for o in offsets if offsets.count(o) > 1})
+if dup:
+    offsets = spread_offsets(offsets, search_min, OFF_STEP)
+# К4: подпись пресета сверяется с ФАКТИЧЕСКИМ запросом по каждому полю. Расходится хоть одно —
+# печатается это, а не параметры пресета: иначе член жюри, нажавший пресет и двинувший ползунок,
+# читает в первом же элементе интерфейса три утверждения, два из которых ложные.
+if _cur is None:
+    _preset_caption.caption('Одна кнопка выставляет режим, дату, час и окна; расчёт запускается обычным путём.')
+elif preset_matches(_cur, mode_ru, st.session_state.get('hist_date'), st.session_state.get('hist_hour'),
+                    duration_min, search_min, offsets):
+    _preset_caption.caption('%s — %s' % (_cur['label'], _cur['shows']))
+else:
+    _preset_caption.caption(PRESET_CHANGED_RU)
+
 horizon_min = search_min + duration_min
 windows_end = t0 + timedelta(minutes=max(offsets) + duration_min + scenario.work_delay_min)
+# Предупреждение о границе архива печатается ВНИЗУ, в разделе ручного разбора: оно относится
+# к окнам, которые человек расставил сам, и между его вопросом и ответом ему не место (3.0).
 windows_beyond_archive = mode != 'live' and windows_end > ARCHIVE_TO
-if windows_beyond_archive:
-    st.warning('Последнее окно за границей архива уведомлений DONKI (май–июнь 2024). Покрытие проверяется по фактическим '
-               'интервалам каждого источника; наличие нескольких соседних суток не гарантирует полноту всех линий.')
 try:                              # границы постановки проверяются до любого запроса (Т7): сообщение зрителю, расчёта нет
     validate_request(mode, t0, duration_min, search_min, offsets)
 except ValueError as e:
-    st.error('Запрос вне границ постановки: %s. Измените запрос в боковой панели.' % e)
+    st.error('Запрос вне границ постановки: %s. Измените запрос строкой задачи выше или в боковой панели.' % e)
     st.stop()
 try:
     if mode == 'live':
@@ -351,8 +397,10 @@ if sc_delay:
 if plan_change:
     S['request']['plan_change'] = plan_change
 
-# ================================================================= шапка и приборная полоса
-st.markdown(head('ВКД-Риск', 'внешняя обстановка на траектории МКС и выбор окна ВКД · %s · времена UTC' % mode_ru), unsafe_allow_html=True)
+# ================================================================= приборная полоса (рисуется в блоке 7)
+# Шапка стоит блоком 1, ДО расчёта: человек должен понять, куда попал, раньше, чем увидит числа.
+# Приборная полоса из четырёх ячеек собирается здесь, а печатается в блоке «Состояние источников»:
+# это происхождение данных, а не ответ на вопрос человека (раздел 3.0 техзадания).
 src = S['sources']
 tm = S['trajectory_meta']
 QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
@@ -389,14 +437,14 @@ if mode == 'live':
         _v, _k = source_short(g_src, disabled.get('goes'))
         row2.append(('GOES ≥10 МэВ сейчас, pfu', '—', _v, {'ok': 'obs', 'warn': 'fc', 'crit': 'cond'}.get(_k, 'none')))
     if k:
-        row2.append(('Kp (GFZ)', fmt(float(k.value)),
+        row2.append(('Kp (GFZ), безразмерный', fmt(float(k.value)),
                      '%s · интервал до %s · %s%s' % (QUALITY_RU.get(k.quality, k.quality), dt_ru(k.t_utc),
                                                      age_ru(k_src.get('age_min'), th.kp_max_age_min),
                                                      ' · из кеша' if k_src.get('from_cache') else ''),
                      'cond' if k.value >= th.kp_check else 'obs'))
     else:
         _v, _k = source_short(k_src, disabled.get('kp'))
-        row2.append(('Kp (GFZ)', '—', _v, {'ok': 'obs', 'warn': 'fc', 'crit': 'cond'}.get(_k, 'none')))
+        row2.append(('Kp (GFZ), безразмерный', '—', _v, {'ok': 'obs', 'warn': 'fc', 'crit': 'cond'}.get(_k, 'none')))
     if meta and meta.epoch_utc:
         age_h = src['orbit'].get('age_h')
         # Давность печатается ОДИН раз и в одних единицах (часы). Прежде в ту же ячейку уходило
@@ -421,9 +469,12 @@ if mode == 'live':
                  '%s %s' % (fmt(len(R.events)), plural_ru(len(R.events), ('запись', 'записи', 'записей'))),
                  'наш подсчёт по реестру: сценарий «что если» и датированные прогнозы, учтённые в окнах'
                  if R.events else
-                 'наш подсчёт по реестру. Источник уведомлений NASA DONKI в текущем режиме не опрашивается: '
-                 'это ноль опрошенных источников событий, а не отсутствие событий. Условия ставятся по '
-                 'наблюдению GOES и прогнозу Kp NOAA — ограничение охвата, объявлено',
+                 # Самое важное — ПЕРВОЙ частью: короткая подпись ячейки берёт её целиком, и
+                 # объявление о неопрошенном источнике остаётся на первом экране, а не только
+                 # в раскрытии (находка №9: пропуск данных не равен нулевому риску).
+                 'наш подсчёт по реестру; NASA DONKI не опрашивается — это не отсутствие событий · '
+                 'ноль опрошенных источников событий · условия ставятся по наблюдению GOES и '
+                 'прогнозу Kp NOAA — ограничение охвата, объявлено',
                  'fc' if R.events else 'none'))
 else:
     # Сколько записей не пошло в расчёт ИМЕННО из-за отсечки: остальные не подошли по содержанию,
@@ -440,8 +491,10 @@ else:
     # стояло в мелкой подписи, а крупное зелёное число её забивало, и верхняя полоса за десять
     # секунд читалась как «обстановка спокойная» — прямо противоположное вердикту на том же экране.
     # В архивных режимах тон ячеек нейтральный: зелёный здесь означал бы «благоприятно» (Т6, О2).
-    _kp_label = ('Kp на начало периода (архив GFZ)' if mode == 'history_review'
-                 else 'Kp на начало периода, наблюдение')
+    # Единица называется прямо в метке: Kp безразмерен, и голое число рядом с «pfu» и «нТл»
+    # соседних ячеек читалось бы как величина в тех же единицах (замечание владельца о размерностях).
+    _kp_label = ('Kp на начало периода, безразмерный (архив GFZ)' if mode == 'history_review'
+                 else 'Kp на начало периода, безразмерный, наблюдение')
     _win_hint = ' Характеристика окон — в карточках окон, а не здесь.'
     if kp_off_hist:
         row2.append((_kp_label, 'исключён', 'исключён пользователем — проверка отказа источника', 'cond'))
@@ -478,10 +531,10 @@ else:
                      'уведомления и карточки событий NASA DONKI', 'obs' if _cat else 'none'))
 if S['is_simulated']:
     row2.append(('Сценарий «что если»', 'моделируемые значения', 'часть величин задана пользователем, не источником', 'fc'))
-st.markdown(panel([row1, row2]), unsafe_allow_html=True)
-if meta is None:
-    st.error('**Орбита недоступна.** %s Оценка без траектории невозможна: покрытие обязательной линии отсутствует, '
-             'рекомендации нет. Заглушка не подставляется.' % status_ru(tm['status'], pro))
+# Полоса печатается в блоке 7 «Состояние источников»: короткие подписи в ячейках, полные —
+# раскрытием под полосой (у шести ячеек подряд подпись в три строки читать было нечем).
+_panel_short_rows, _panel_details = split_panel_rows([row1, row2])
+_panel_html = panel(_panel_short_rows)
 # Признак исключения источника берётся из ЗАПРОСА (что выставил пользователь), а не из подстроки
 # «исключён» в тексте статуса: слой источников дописывает это слово в свои штатные пояснения (R4-11).
 issues = source_issues(src, th, mode, kp_excluded_hist=kp_off_hist, tle_fetch=tm.get('tle_fetch_status'), pro=pro,
@@ -494,25 +547,8 @@ if fetch_note and not any(LIMIT_MARK in x for x in issues):
     # строкам непонятно, почему живого запроса не было ни у одного.
     issues.insert(0, 'Живые источники: %s%s. Взяты кеш и снимок репозитория — экран построен без сети.'
                   % (fetch_note, ' (настройка total_deadline_s в config/settings.toml)' if pro else ''))
-if issues:
-    # Бриф §9.1: ответ на вопрос «Когда выходить?» стоит первым и без прокрутки. Жёлтая плашка
-    # на четыре пункта уводила его вниз, и первым впечатлением становилась тревога, не относящаяся
-    # к решению. Наверху остаётся одна строка; полный перечень — на один клик глубже и в таблице 3.
-    # Только в текущем режиме: там строк четыре и все они об одном — живых ответов нет, взят кеш.
-    # В архивных режимах строк мало и каждая о своём (нет численного GOES, объявленная
-    # реконструкция орбиты), сводить их в одну нельзя — потеряется смысл каждой.
-    # Общий предел получения источников (LIMIT_MARK) не сворачивается никогда: когда живых
-    # ответов нет по пределу, причина — самое важное на экране, и она обязана стоять в самой
-    # плашке, а не на клик глубже (бриф §9.7 и проверки развёртывания).
-    _short = source_issues_short_ru(issues) if mode == 'live' and not any(LIMIT_MARK in x for x in issues) else ''
-    if _short and not pro:
-        st.warning('**Состояние источников:** ' + _short)
-        with st.expander('Состояние источников: по каждому источнику', expanded=False):
-            st.markdown('\n'.join('- ' + x for x in issues))
-    else:
-        st.warning('**Состояние источников:**\n' + '\n'.join('- ' + x for x in issues))
 
-# ================================================================= ответ первым
+# ================================================================= чего не хватает (вход блока 3)
 missing_ru = []
 _dis = S['request'].get('disabled') or {}
 for m_ in rec.missing:
@@ -539,26 +575,142 @@ if _conseq and missing_ru:
 any_cond = any(m.needs_check for a in R.assessments for m in a.mechanisms)
 # политика прототипа целиком — один раз, во вкладке «Объяснения»; здесь только указатель (U5)
 policy_short = 'Окна с условиями не выбираются автоматически — правило команды, не норма (вкладка «Объяснения»).' if any_cond else None
-c_main, c_btn = st.columns([6, 1.5])
-c_main.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
-                              missing_ru=missing_ru, policy_short=policy_short,
-                              thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
-                unsafe_allow_html=True)
 _fname = 'vkd_risk_%s_%s_calc%s' % (mode, t0.strftime('%Y%m%dT%H%M'), now.strftime('%Y%m%dT%H%M'))
 _zip = build_zip(S, R.raw_records)
+# Перебор начал пишется параллельно с экраном. Ключа нет — экран показывает прежний разбор окон
+# и честно говорит, что перебора не было; выдуманных чисел он не подставляет (раздел 1a техзадания).
+scan = scan_of(S)
+# Ответ перебора почти всегда ПРОМЕЖУТОК, а не точка: соседние начала неразличимы внутри
+# собственной чувствительности модели. Поэтому окно для блока «Что учтено» берётся из ответа
+# (первое начало названной группы), а не из `recommended_index`, который на живых данных чаще
+# всего пуст, и пустота эта отказом не является.
+scan_ans = scan_answer(scan) if scan is not None else None
+scan_cand = (scan_ans or {}).get('first')
+
+# ================================================================= блок 3: рекомендация
+c_main, c_btn = st.columns([6, 1.5])
+if scan is not None:
+    c_main.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
+                                         duration_min=duration_min), unsafe_allow_html=True)
+    if plan_change:
+        c_main.info(plan_change)
+else:
+    # Перебора нет: на месте рекомендации стоит вердикт по вручную заданным окнам — ровно то,
+    # что сервис действительно посчитал, — и одна строка о том, что перебор не выполнялся.
+    c_main.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
+                                  missing_ru=missing_ru, policy_short=policy_short,
+                                  thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
+                    unsafe_allow_html=True)
+    c_main.caption(scan_absent_ru())
 c_btn.download_button('Скачать отчёт (ZIP)', _zip, file_name=_fname + '.zip', mime='application/zip', width='stretch', key='dl_top')
 c_btn.caption('отчёт, запрос, факторы, сырые записи')
-cols = st.columns(len(R.assessments))
-for i, (col, a) in enumerate(zip(cols, R.assessments)):
-    col.markdown(window_card(i, a, best=(rec.preferred is not None and rec.preferred.start_utc == a.window.start_utc),
-                             mode=mode, saa_thr_nT=th.saa_B_threshold_nT), unsafe_allow_html=True)
-# Служебная подпись о том, как считаны минуты в аномалии, одинакова у всех окон и печатается
-# один раз под парой карточек, а не в каждой: место под карточками нужно ответу (О5).
-_saa_note = saa_note_ru(th.saa_B_threshold_nT)
-if _saa_note:
-    st.markdown('<div class="legend">%s</div>' % _saa_note, unsafe_allow_html=True)
-# Легенда происхождения читается один раз за сессию, а занимала 330 знаков между ответом
-# и графиком. На оперативном уровне остаётся одна строка; полное пояснение — на профессиональном.
+if mode == 'history_forecast' and R.verification:
+    st.info('**Проверка после отсечки** (в расчёт не входит — только сопоставление прогноза с фактом): %s. '
+            'Подробности — вкладка «Наблюдения и прогнозы».' % verification_ru(R.verification['summary'], any_cond))
+
+# ================================================================= блок 4: глобус — где и когда
+# Глобус переехал из вкладки на главный экран: он обыгрывает рекомендацию, а не иллюстрирует
+# методику (раздел 3.5 техзадания). Плоская карта остаётся запасным видом — она работает без
+# WebGL и без сети.
+_globe_recommended = None
+if scan_cand is not None and (scan_ans or {}).get('kind') in ('point', 'interval'):
+    try:
+        _globe_recommended = (datetime.fromisoformat(scan_cand['start_utc']),
+                              datetime.fromisoformat(scan_cand['end_utc']))
+    except (KeyError, TypeError, ValueError):
+        _globe_recommended = None
+if _globe_recommended is None and rec.preferred is not None:
+    _globe_recommended = rec.preferred      # перебора нет — подсвечивается предпочтительное окно разбора
+st.markdown('<div class="sect">Где и когда: трасса, аномалия и окно</div>', unsafe_allow_html=True)
+if traj:
+    view = st.radio('Вид', [globe.VIEW_GLOBE, globe.VIEW_FLAT], index=0, horizontal=True, key='map_view',
+                    help='Глобус показывает ту же трассу и ту же область аномалии на сфере, без разрыва '
+                         'по долготе. Плоская карта — запасной вид: она работает без WebGL и без сети.')
+    if view == globe.VIEW_GLOBE:
+        try:
+            with st.spinner('Область аномалии по IGRF на сетке 4°…'):
+                # Глобус подсвечивает РЕКОМЕНДОВАННОЕ окно — то самое, которое названо в блоке
+                # ответа выше, а не предпочтительное окно ручного разбора: иначе на одном экране
+                # подсвечено одно окно, а рекомендовано другое. При ответе промежутком берётся
+                # самое раннее начало из него — то же окно, что разобрано в блоке «Что учтено».
+                # Ответа нет (отказ или условие у всех начал) — подсветки нет, и это честно.
+                _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0,
+                                          recommended=_globe_recommended)
+            globe.render_globe(_gp)
+            # Подпись глобуса длинная и своя: на первом экране остаётся первая фраза — что
+            # нарисовано, — остальное вместе с технической строкой уходит раскрытием.
+            _gcap = globe.caption(_gp)
+            _gc_head, _gc_dot, _gc_rest = _gcap.partition('. ')
+            st.caption(_gc_head + ('.' if _gc_dot else ''))
+            if _gc_rest or pro:
+                with st.expander('Подробнее о глобусе: чем посчитано и чего не даёт', expanded=False):
+                    if _gc_rest:
+                        st.caption(_gc_rest)
+                    if pro:
+                        st.caption(globe.tech_line(_gp))
+        except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
+            LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
+            st.warning('Глобус не построен (%s). Переключите вид на «Плоская карта» — данные те же.'
+                       % type(e).__name__)
+    else:
+        with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
+            st.plotly_chart(dark_figure(ground_track(traj, windows, th.saa_B_threshold_nT, t0)), width='stretch', config=PLOTLY_CONFIG)
+        st.caption(map_caption(pro))
+else:
+    st.write('Трассы нет: орбита недоступна.')
+
+# ================================================================= блок 5: лента окон
+st.markdown('<div class="sect">Лента окон: что даёт каждое начало выхода</div>', unsafe_allow_html=True)
+if scan is not None:
+    st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV)), width='stretch', config=PLOTLY_CONFIG)
+    st.caption(ribbon_caption_ru(scan, th.e_min_MeV))
+    _best_rows = scan_best_rows(scan)
+    if _best_rows:
+        st.dataframe(_best_rows, width='stretch', hide_index=True,
+                     column_config={'условия проверки': st.column_config.TextColumn(width='large')})
+        # Номера 1…6 заняты таблицами вкладок; эта стоит на главном экране и называется по имени,
+        # чтобы не оказалось двух «Таблиц 1» на одном экране.
+        st.markdown('<div class="tcap">Таблица лучших начал: по тому же правилу, что и рекомендация — '
+                    'обе величины и условия проверки поимённо. Безразмерных баллов и нормировки здесь нет: '
+                    'минуты в аномалии и флюенс складывать нельзя.</div>', unsafe_allow_html=True)
+else:
+    st.caption('Ленты нет: перебор начал не выполнялся, рисовать по нему нечего.')
+
+# ================================================================= блок 6: что учтено и что нет
+st.markdown('<div class="sect">Что учтено и что нет</div>', unsafe_allow_html=True)
+_acc_target = None
+if scan_cand is not None:
+    _acc_target = next((a for a in R.assessments
+                        if a.window.start_utc.isoformat() == str(scan_cand.get('start_utc'))), None)
+if _acc_target is None and scan_cand is None:
+    _acc_target = next((a for a in R.assessments
+                        if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
+                       (R.assessments[0] if R.assessments else None))
+_ACC_HEAD_RU = {'point': 'Величины рекомендованного окна',
+                'interval': 'Величины самого раннего начала из рекомендованного промежутка',
+                'tradeoff': 'Величины первого из названных начал'}
+_acc_head = _ACC_HEAD_RU.get((scan_ans or {}).get('kind')) if scan_cand is not None else None
+if not _acc_head:
+    _acc_head = 'Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'
+st.markdown('**%s** — со своей единицей и происхождением.' % _acc_head)
+_acc_sources = []
+if _acc_target is not None:
+    for _line in accounted_lines(_acc_target):
+        st.markdown(_line, unsafe_allow_html=True)
+    _acc_sources = accounted_sources(_acc_target, R.raw_records)
+elif scan_cand is not None:
+    for _line in accounted_lines_from_scan(scan_cand, th.e_min_MeV):
+        st.markdown(_line, unsafe_allow_html=True)
+    _acc_sources = list(SCAN_SOURCES_RU)
+else:
+    st.write('Величин нет: окна не посчитаны.')
+# Источник каждой величины — раскрытием: прослеживаемость сохранена целиком, но вторую половину
+# строки у каждой из десяти величин первый экран больше не несёт.
+if _acc_sources:
+    with st.expander('Откуда взята каждая величина: первоисточник и формула', expanded=False):
+        for _line in _acc_sources:
+            st.markdown(_line)
+# Легенда происхождения стоит ровно здесь, рядом с плашками, и один раз на весь экран.
 if pro:
     st.markdown('<div class="legend">Происхождение величин: %s — измерено источником; %s — выпуск с указанием времени публикации; '
                 '%s — посчитано сервисом по траектории и стандартам. %s</div>'
@@ -568,57 +720,100 @@ else:
     st.markdown('<div class="legend">Цвет = происхождение: синий — наш расчёт, зелёный — наблюдение, '
                 'янтарный — внешний прогноз, красный — условие проверки или аномалия, серый — данных нет.</div>',
                 unsafe_allow_html=True)
-if mode == 'history_forecast' and R.verification:
-    st.info('**Проверка после отсечки** (в расчёт не входит — только сопоставление прогноза с фактом): %s. '
-            'Подробности — вкладка «Наблюдения и прогнозы».' % verification_ru(R.verification['summary'], any_cond))
+# «Чего не учли» — раскрытием, и число пунктов названо прямо в заголовке: пропуски никуда не
+# делись и видны одним кликом, но шесть длинных строк на первом экране забивали сам ответ.
+_not_acc = not_accounted_ru(S, mode)
+if _not_acc:
+    with st.expander('Чего сервис не учёл: %s %s — поимённо и с причиной'
+                     % (fmt(len(_not_acc)), plural_ru(len(_not_acc), ('пункт', 'пункта', 'пунктов'))),
+                     expanded=False):
+        for _line in _not_acc:
+            st.markdown('- ' + _line)
 
-# ================================================================= лента времени (график 1 из 2 на главном экране)
-kp_obs, goes_obs = [], []
-if mode == 'live':
-    from app.obs import goes_series, kp_series
-    tk, vk = kp_series(R.fetch_status['kp'].raw_path)
-    kp_obs = [(t, t + timedelta(hours=3), v) for t, v in zip(tk, vk) if t >= t0 - timedelta(hours=12)]
-    tg, vg = goes_series(R.fetch_status['goes'].raw_path)
-    goes_obs = [(t, v) for t, v in zip(tg, vg) if t >= t0 - timedelta(hours=12)]
-elif mode == 'history_review':
-    kp_obs = R.kp_obs or []
-# S8: снимок третьего круга может принести наблюдения GOES из архива 2024 — рисуем их, если ключ есть.
-for _row in (S.get('observations') or []):
-    if _row.get('channel') in ('goes_p_ge10MeV', 'goes') and not goes_obs:
-        goes_obs = [(datetime.fromisoformat(c['t']), float(c['value'])) for c in (_row.get('points') or [])
-                    if c.get('t') and c.get('value') is not None]
-# подпись описывает ряды ленты и живёт рядом с самим рисунком (app/ui.py): ряды менялись,
-# и подпись, написанная здесь, каждый раз оставалась описывать прежний вид
-_tl_caption = timeline_caption(mode, pro)
+# ================================================================= блок 7: состояние источников
+st.markdown('<div class="sect">Состояние источников: чем считали</div>', unsafe_allow_html=True)
+st.markdown(_panel_html, unsafe_allow_html=True)
+if _panel_details:
+    with st.expander('Подробнее о каждой величине полосы: происхождение, момент и давность', expanded=False):
+        for _lbl, _full in _panel_details:
+            st.markdown('- **%s** — %s' % (_lbl, _full))
+if meta is None:
+    st.error('**Орбита недоступна.** %s Оценка без траектории невозможна: покрытие обязательной линии отсутствует, '
+             'рекомендации нет. Заглушка не подставляется.' % status_ru(tm['status'], pro))
+if issues:
+    # Бриф §9.1: ответ на вопрос «Когда выходить?» стоит первым и без прокрутки. Жёлтая плашка
+    # на четыре пункта уводила его вниз, и первым впечатлением становилась тревога, не относящаяся
+    # к решению. С одиннадцатого круга весь блок стоит ПОСЛЕ ответа; свёртка перечня остаётся.
+    # Только в текущем режиме: там строк четыре и все они об одном — живых ответов нет, взят кеш.
+    # В архивных режимах строк мало и каждая о своём (нет численного GOES, объявленная
+    # реконструкция орбиты), сводить их в одну нельзя — потеряется смысл каждой.
+    # Общий предел получения источников (LIMIT_MARK) не сворачивается никогда: когда живых
+    # ответов нет по пределу, причина — самое важное на экране, и она обязана стоять в самой
+    # плашке, а не на клик глубже (бриф §9.7 и проверки развёртывания).
+    _short = source_issues_short_ru(issues) if mode == 'live' and not any(LIMIT_MARK in x for x in issues) else ''
+    if _short and not pro:
+        st.warning('**Состояние источников:** ' + _short)
+        with st.expander('Состояние источников: по каждому источнику', expanded=False):
+            st.markdown('\n'.join('- ' + x for x in issues))
+    else:
+        st.warning('**Состояние источников:**\n' + '\n'.join('- ' + x for x in issues))
 
+# ================================================================= блок 8: разобрать конкретные окна
+# Ручное сравнение двух-трёх окон осталось целиком, но стало РАЗБОРОМ, а не входом: человек
+# приходит спросить «когда выходить», и требовать от него расставить окна ползунками — значит
+# требовать ответа, за которым он пришёл (раздел 3.1 техзадания).
+with st.expander('Разобрать конкретные окна: сравнить два-три начала вручную', expanded=False):
+    st.caption('Раздел для ручного сравнения и показа. На рекомендацию выше он не влияет: она '
+               'считается перебором всех начал на сроке.')
+    if windows_beyond_archive:
+        st.warning('Последнее окно за границей архива уведомлений DONKI (май–июнь 2024). Покрытие проверяется по фактическим '
+                   'интервалам каждого источника; наличие нескольких соседних суток не гарантирует полноту всех линий.')
+    st.radio('Окон для сравнения', [2, 3], horizontal=True, key='n_windows')
+    _wc = st.columns(len(offsets_in))
+    for i in range(len(offsets_in)):
+        _wc[i].slider('Сдвиг начала окна %d, мин после начала срока' % (i + 1), 0, search_min, step=30, key='w%d' % i)
+        # Аналитик планирует в часах UTC, а не в сдвигах от начала срока: пока тянется ползунок,
+        # время начала окна не видно — оно появлялось только в карточке после пересчёта.
+        _ws = t0 + timedelta(minutes=int(offsets_in[i]))
+        _wc[i].caption('окно %d: %s — %s UTC' % (i + 1, _ws.strftime('%d.%m %H:%M'),
+                                                 (_ws + timedelta(minutes=int(duration_min))).strftime('%H:%M')))
+    # Невиджетные ключи `_off<i>` записаны выше, ДО создания ползунков: писать их здесь второй раз
+    # нечем — значение ползунка этого прогона уже учтено там же, откуда взялся `offsets_in`.
+    if recalc:
+        st.caption('сдвиги пересчитаны под период: %s' % ', '.join('окно %d — %d мин' % (i + 1, v) for i, v in enumerate(recalc)))
+    if sorted(offsets_in) != offsets_in:
+        st.caption('Окна пронумерованы по времени начала: окно 1 — самое раннее.')
+    if dup:
+        st.warning('Окна с одинаковым началом (сдвиг %s мин) сравнивать нечем: считаю по сдвигам %s мин. '
+                   'Поставьте ползунки на нужные начала.'
+                   % (', '.join(str(o) for o in dup), ', '.join(str(o) for o in offsets)))
+    if scan is not None:
+        # Вердикт по вручную заданным окнам стоит здесь, рядом со своими карточками: он отвечает
+        # на другой вопрос, чем рекомендация, и два ответа на одном месте спорили бы друг с другом.
+        st.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
+                                  missing_ru=missing_ru, policy_short=policy_short,
+                                  thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
+                    unsafe_allow_html=True)
+    cols = st.columns(len(R.assessments))
+    for i, (col, a) in enumerate(zip(cols, R.assessments)):
+        col.markdown(window_card(i, a, best=(rec.preferred is not None and rec.preferred.start_utc == a.window.start_utc),
+                                 mode=mode, saa_thr_nT=th.saa_B_threshold_nT), unsafe_allow_html=True)
+    # Служебная подпись о том, как считаны минуты в аномалии, одинакова у всех окон и печатается
+    # один раз под парой карточек, а не в каждой: место под карточками нужно ответу (О5).
+    _saa_note = saa_note_ru(th.saa_B_threshold_nT)
+    if _saa_note:
+        st.markdown('<div class="legend">%s</div>' % _saa_note, unsafe_allow_html=True)
 
-def _timeline_chart():
-    st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events,
-                             S.get('forecasts', []), mode, kp_obs=kp_obs, goes_obs=goes_obs, search_min=search_min),
-                    width='stretch', config=PLOTLY_CONFIG)
-    st.caption(_tl_caption)
-
-
-if pro:
-    st.subheader('Картина по времени')
-    _timeline_chart()
-else:
-    # Постановка перечисляет, что должно быть ВИДНО в результате запроса, и «временная картина
-    # выбранных воздействий» стоит в этом перечне. На оперативном уровне — а его смотрит отраслевой
-    # эксперт — она была свёрнута, и первое, что видело жюри, это экран без единого графика.
-    # Место освобождено свёрткой блока источников и сокращением легенды происхождения.
-    with st.expander('Картина по времени: пролёты аномалии и прогноз Kp на горизонте окон', expanded=True):
-        _timeline_chart()
-
-# ================================================================= вкладки
+# ================================================================= блок 9: вкладки
 # Порядок вкладок — рабочий путь аналитика, а не порядок разработчика: вердикт → почему →
-# чем подтверждается в наблюдениях и прогнозах → где это на трассе → и только при споре формулы.
+# чем подтверждается в наблюдениях и прогнозах → и только при споре формулы.
 # Прежде «Методика» стояла третьей, и пользователь дважды проходил мимо формул, прежде чем
-# добирался до данных.
-tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Карта', 'Методика', 'Данные'] \
+# добирался до данных. Вкладка «Карта» упразднена: её содержимое — глобус и запасная плоская
+# карта — стоит блоком 4 главного экрана, и держать второе такое же место незачем.
+tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика', 'Данные'] \
     + (['Устойчивость и нормы'] if pro else [])
 tabs = st.tabs(tab_names)
-TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_MAP, TAB_METHOD, TAB_DATA, TAB_ROBUST = 0, 1, 2, 3, 4, 5, 6
+TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_METHOD, TAB_DATA, TAB_ROBUST = 0, 1, 2, 3, 4, 5
 
 with tabs[TAB_CARDS]:
     _win_labels = ['Окно %d (%s)%s' % (i + 1, dt_ru(a.window.start_utc),
@@ -818,38 +1013,39 @@ with tabs[TAB_METHOD]:
                        fmt(_flu.value if _flu else None, _flu.unit if _flu else ''), frac_ru(rec.tolerance_basis)),
                     unsafe_allow_html=True)
 
-with tabs[TAB_MAP]:
-    if traj:
-        # Основной вид — глобус: на сфере трасса не рвётся на долготе 180°, и видно, как окно
-        # ложится на геометрию пролётов аномалии. Плоская карта остаётся запасным видом и нужна
-        # там, где трёхмерная сцена не строится (нет WebGL, нет сети за three.js или текстурой).
-        view = st.radio('Вид', [globe.VIEW_GLOBE, globe.VIEW_FLAT], index=0, horizontal=True, key='map_view',
-                        help='Глобус показывает ту же трассу и ту же область аномалии на сфере, без разрыва '
-                             'по долготе. Плоская карта — запасной вид: она работает без WebGL и без сети.')
-        if view == globe.VIEW_GLOBE:
-            try:
-                with st.spinner('Область аномалии по IGRF на сетке 4°…'):
-                    _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0)
-                globe.render_globe(_gp)
-                st.caption(globe.caption(_gp))
-                if pro:
-                    st.caption(globe.tech_line(_gp))
-            except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
-                LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
-                st.warning('Глобус не построен (%s). Переключите вид на «Плоская карта» — данные те же.'
-                           % type(e).__name__)
-        else:
-            with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
-                st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
-            st.caption(map_caption(pro))
-    else:
-        st.write('Трассы нет: орбита недоступна.')
-
 with tabs[TAB_OBS]:
+    # «Картина по времени» переехала сюда с главного экрана. Владелец о ней сказал: «график
+    # кажется достаточно странным и нерезультативным». Лента окон его не заменяет — она про выбор
+    # начала, а он про обстановку на трассе, — но место главного экрана занимает ответ, а не
+    # обстановка. Здесь он стоит рядом с наблюдениями и прогнозами, из которых и построен,
+    # и открыт сразу на обоих уровнях: свёрнутым его прятать нельзя (находка №33).
+    st.subheader('Картина по времени')
+    kp_obs, goes_obs = [], []
+    if mode == 'live':
+        from app.obs import goes_series, kp_series
+        tk, vk = kp_series(R.fetch_status['kp'].raw_path)
+        kp_obs = [(t, t + timedelta(hours=3), v) for t, v in zip(tk, vk) if t >= t0 - timedelta(hours=12)]
+        tg, vg = goes_series(R.fetch_status['goes'].raw_path)
+        goes_obs = [(t, v) for t, v in zip(tg, vg) if t >= t0 - timedelta(hours=12)]
+    elif mode == 'history_review':
+        kp_obs = R.kp_obs or []
+    # S8: снимок третьего круга может принести наблюдения GOES из архива 2024 — рисуем их, если ключ есть.
+    for _row in (S.get('observations') or []):
+        if _row.get('channel') in ('goes_p_ge10MeV', 'goes') and not goes_obs:
+            goes_obs = [(datetime.fromisoformat(c['t']), float(c['value'])) for c in (_row.get('points') or [])
+                        if c.get('t') and c.get('value') is not None]
+    st.plotly_chart(dark_figure(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp,
+                                         R.events, S.get('forecasts', []), mode, kp_obs=kp_obs, goes_obs=goes_obs,
+                                         search_min=search_min)),
+                    width='stretch', config=PLOTLY_CONFIG)
+    # подпись описывает ряды ленты и живёт рядом с самим рисунком (app/ui.py): ряды менялись,
+    # и подпись, написанная здесь, каждый раз оставалась описывать прежний вид
+    st.caption(timeline_caption(mode, pro))
+    st.markdown('<div class="sect">Наблюдения и прогнозы источников</div>', unsafe_allow_html=True)
     if mode == 'live':
         obs_fig = observations_panel(R.fetch_status['goes'].raw_path, R.fetch_status['kp'].raw_path, t0)
         if obs_fig is not None:
-            st.plotly_chart(obs_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(obs_fig), width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения источников за последние дни, не расчёт. Пороги — шкалы NOAA S и G.' + (
                 ' GOES меряет на геостационарной орбите. Обрезание — отдельный показатель; локальный поток МКС не рассчитан.'
                 if pro else ''))
@@ -892,7 +1088,7 @@ with tabs[TAB_OBS]:
                                            'Kp — наблюдение из окончательного ряда GFZ',
                                            'отсечка' if mode == 'history_forecast' else 'начало периода')
         if hist_obs_fig is not None:
-            st.plotly_chart(hist_obs_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(hist_obs_fig), width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения архива, не расчёт и не прогноз. Пороги — шкалы NOAA S и G.%s'
                        % (' Ряд GOES — 5-минутные средние; Kp — 3-часовые интервалы.' if pro else ''))
         else:
@@ -903,7 +1099,7 @@ with tabs[TAB_OBS]:
                                 kp_title='Прогноз Kp NOAA по 3-часовым интервалам (%s)' % RELEASE_BY_MODE_RU[mode],
                                 mark_ru='отсечка' if mode == 'history_forecast' else 'начало периода')
         if fc_fig is not None:
-            st.plotly_chart(fc_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(fc_fig), width='stretch', config=PLOTLY_CONFIG)
         for line in S.get('forecasts', []):
             if line['release_id']:
                 u = record_url(raw_record(R.raw_records, line['record'])) if line.get('record') else None

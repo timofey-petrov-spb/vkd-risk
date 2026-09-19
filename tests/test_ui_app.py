@@ -439,37 +439,46 @@ def test_stress_scenariy():
 
 
 def test_tri_okna():
+    # Одиннадцатый круг, раздел 3.1: выбор числа окон и ползунки их сдвига — это РУЧНОЙ разбор,
+    # и они переехали из боковой панели в свёрнутый раздел «Разобрать конкретные окна» главной
+    # области. Проверка та же (три окна считаются и дают три карточки), сменилось только место
+    # элементов: `at.sidebar.radio` → `at.radio`, `at.sidebar.slider` → `at.slider`.
     at = run_app(MODES[1])
-    at.sidebar.radio('n_windows').set_value(3).run()
+    at.radio('n_windows').set_value(3).run()
     assert not at.exception, at.exception
-    assert at.sidebar.slider('w2') is not None
+    assert at.slider('w2') is not None
     cards = [m.value for m in at.markdown if 'class="wcard' in m.value]
     assert len(cards) == 3
 
 
 # ----------------------------------------------------------------- U1: сжатие периода поиска
 def test_szhatie_perioda_ne_ostanavlivaet_ekran():
+    # Одиннадцатый круг, раздел 3.1: срок поиска задаётся строкой задачи в ЧАСАХ («начать
+    # в ближайшие 6 ч»), а ползунки сдвига живут в разделе ручного разбора. Проверка прежняя —
+    # срок короче прежнего сдвига не останавливает экран, — сменились место и единица элемента.
     at = run_app(MODES[1])
-    at.sidebar.slider('search').set_value(360).run()
-    at.sidebar.slider('w0').set_value(120).run()
-    at.sidebar.slider('w1').set_value(360).run()
+    at.number_input('search_h').set_value(6).run()
+    at.slider('w0').set_value(120).run()
+    at.slider('w1').set_value(360).run()
     assert not at.error, [e.value for e in at.error]
-    at.sidebar.slider('search').set_value(120).run()          # период короче прежнего сдвига
+    at.number_input('search_h').set_value(2).run()            # срок короче прежнего сдвига
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт исчез — экран остановился'
-    assert at.sidebar.slider('w0').value != at.sidebar.slider('w1').value
-    assert at.sidebar.slider('w1').value == 120
-    assert any('сдвиги пересчитаны под период' in c.value for c in at.sidebar.caption)
+    assert at.slider('w0').value != at.slider('w1').value
+    assert at.slider('w1').value == 120
+    assert any('сдвиги пересчитаны под период' in c.value for c in at.caption)
     assert at.tabs, 'вкладки должны остаться на экране'
 
 
 def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
+    # Место ползунков и предупреждения — раздел «Разобрать конкретные окна» главной области
+    # (одиннадцатый круг, раздел 3.1); смысл проверки не изменился.
     at = run_app(MODES[1])
-    at.sidebar.slider('w0').set_value(at.sidebar.slider('w1').value).run()      # оба окна с одним началом
+    at.slider('w0').set_value(at.slider('w1').value).run()      # оба окна с одним началом
     assert not at.exception, at.exception
     assert not at.error, [e.value for e in at.error]
-    warn = [w.value for w in at.sidebar.warning]
+    warn = [w.value for w in at.warning]
     assert any('одинаков' in w for w in warn), warn
     assert any('считаю по сдвигам' in w for w in warn), warn
     assert any('class="verdict' in m.value for m in at.markdown)
@@ -548,9 +557,11 @@ def test_preset_vystavlyaet_zapros(key, mode_ru, date, hour, search, offsets):
     assert at.sidebar.radio('mode').value == mode_ru
     assert at.sidebar.date_input('hist_date').value == datetime(*date).date()
     assert at.sidebar.slider('hist_hour').value == hour
-    assert at.sidebar.slider('search').value == search
+    # Срок пресета проверяется там, где он теперь стоит, — в строке задачи и в часах
+    # (одиннадцатый круг, раздел 3.1); значение то же самое, 720 мин это 12 ч.
+    assert at.number_input('search_h').value == search // 60
     for i, off in enumerate(offsets):
-        assert at.sidebar.slider('w%d' % i).value == off
+        assert at.slider('w%d' % i).value == off
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт должен быть на экране'
 
 
@@ -563,7 +574,7 @@ def test_preset_seychas_vozvrashchaet_v_tekushchiy_rezhim():
     at.sidebar.button('preset_now').click().run()
     assert not at.exception, at.exception
     assert at.sidebar.radio('mode').value == 'Текущая обстановка'
-    assert at.sidebar.slider('search').value == 720
+    assert at.number_input('search_h').value == 12          # 720 мин — это 12 ч строки задачи
     assert any('class="verdict' in m.value for m in at.markdown)
 
 
@@ -584,9 +595,14 @@ def test_vkladka_metodika_tretya_i_s_formulami():
     assert not at.exception, at.exception
     labels = [t.label for t in at.tabs]
     # Девятый круг, находка «экран» №29: порядок вкладок — рабочий путь аналитика, а не порядок
-    # разработчика. «Методика» (формулы) ушла с третьего места за «Наблюдения и прогнозы» и «Карту»:
+    # разработчика. «Методика» (формулы) ушла с третьего места за «Наблюдения и прогнозы»:
     # пользователь дважды проходил мимо формул, прежде чем добирался до данных.
-    assert labels[:5] == ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Карта', 'Методика'], labels
+    # Одиннадцатый круг, раздел 3.0: вкладка «Карта» упразднена — глобус и запасная плоская карта
+    # стоят блоком 4 ГЛАВНОГО экрана и обыгрывают рекомендацию. Ничего не потеряно: переключатель
+    # вида и обе подписи те же, что были во вкладке, и их проверяет tests/test_globe.py.
+    assert labels[:4] == ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика'], labels
+    assert 'Карта' not in labels, labels
+    assert at.radio('map_view') is not None, 'переключатель вида карты должен остаться на экране'
     lat = [x.value for x in at.latex]
     assert len(lat) >= 9, lat
     for f in lat:
@@ -729,11 +745,24 @@ def test_ne_bolshe_dvuh_grafikov_na_glavnom_ekrane(mode):
 
 
 def test_lenta_v_svyortke_na_operativnom_i_razvyornuta_na_professionalnom():
-    """S6 (И6): на оперативном уровне лента убрана в свёртку, на профессиональном — развёрнута."""
-    at_op = run_app(MODES[1], pro=False)
-    assert any('Картина по времени' in str(e.label) for e in at_op.expander), [str(e.label) for e in at_op.expander]
-    at_pro = run_app(MODES[1], pro=True)
-    assert any('Картина по времени' in str(s.value) for s in at_pro.subheader)
+    """S6 (И6): «Картина по времени» доступна на обоих уровнях и НЕ свёрнута ни на одном.
+
+    Было: на оперативном уровне лента лежала в свёртке, на профессиональном стояла заголовком.
+    Стало (одиннадцатый круг, раздел 3.0 и замечание владельца о самом графике): главный экран
+    занят ответом — рекомендацией, глобусом и лентой окон, — а «Картина по времени» переехала
+    во вкладку «Наблюдения и прогнозы», где стоит первой и РАЗВЁРНУТОЙ на обоих уровнях.
+    Разница уровней была в том, свёрнут график или нет; теперь он не свёрнут нигде, и проверка
+    стала строже, а не слабее: ни на одном уровне он не спрятан.
+    """
+    for pro in (False, True):
+        at = run_app(MODES[1], pro=pro)
+        assert not at.exception, at.exception
+        assert any('Картина по времени' in str(s.value) for s in at.subheader), [str(s.value) for s in at.subheader]
+        assert not any('Картина по времени' in str(e.label) for e in at.expander), \
+            'график не должен быть спрятан в свёртку ни на одном уровне'
+        tab = next(t for t in at.tabs if t.label == 'Наблюдения и прогнозы')
+        assert any('Картина по времени' in str(s.value) for s in tab.get('subheader')), 'график ушёл не в ту вкладку'
+        assert tab.get('plotly_chart'), 'во вкладке нет ни одного графика'
 
 
 def test_okna_i_faktory_tablitsa_bez_grafika():
@@ -990,9 +1019,18 @@ def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
     # Девятый круг, находка «экран» №14: момент стоит в самой МЕТКЕ ячейки, а не только в мелкой
     # подписи — крупное число забивало подпись, и полоса читалась как «обстановка спокойная».
-    assert 'Kp на начало периода, наблюдение' in bar and 'архив GFZ' not in bar, bar
+    # В метке прибавилась единица: Kp безразмерен, и голое число рядом с «pfu» и «нТл» соседних
+    # ячеек читалось бы как величина в тех же единицах (замечание владельца о размерностях).
+    # Проверяемое утверждение то же: метка называет ЗАПИСЬ наблюдения, а не режим.
+    assert 'Kp на начало периода, безразмерный, наблюдение' in bar and 'архив GFZ' not in bar, bar
     assert 'уведомление NASA DONKI' in bar, bar
-    assert 'начало периода поиска' in bar, bar
+    # Полная подпись ячейки («значение на … — начало периода поиска») сокращена до одной строки
+    # при разгрузке главного экрана и целиком стоит в раскрытии «Подробнее о каждой величине
+    # полосы» — там же, в блоке состояния источников. Ничего не потеряно: момент назван и в
+    # самой МЕТКЕ ячейки, что и есть закрытая находка №14, а полный текст — одним кликом.
+    _details = [str(m.value) for e in at.expander if 'Подробнее о каждой величине полосы' in str(e.label)
+                for m in e.get('markdown')]
+    assert any('начало периода поиска' in x for x in _details), _details
     warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
     assert warns.count('GOES ≥10 МэВ: численного наблюдения') == 1, warns
 
@@ -1002,7 +1040,9 @@ def test_pribornaya_polosa_razbora_pokazyvaet_nablyudenie_goes():
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
-    assert 'GOES ≥10 МэВ на начало периода, pfu' in bar and 'Kp на начало периода (архив GFZ)' in bar, bar
+    # Та же прибавка единицы к метке Kp; смысл проверки не изменился.
+    assert 'GOES ≥10 МэВ на начало периода, pfu' in bar, bar
+    assert 'Kp на начало периода, безразмерный (архив GFZ)' in bar, bar
     # в архивных режимах тон ячеек нейтральный: зелёный здесь читался бы как «благоприятно» (Т6)
     assert 'k-obs"><div class="cl">GOES' not in bar, bar
 
@@ -1078,15 +1118,17 @@ def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik(monkeypatch, request):
 def test_sdvigi_okon_perezhivayut_smenu_perioda_poiska():
     """R4-1: смена периода поиска меняет max_value ползунков, и Streamlit теряет их значения.
     Сдвиги держатся в невиджетном ключе состояния и переживают и сжатие, и расширение периода."""
+    # Срок и сдвиги переехали из боковой панели (одиннадцатый круг, раздел 3.1); смысл проверки
+    # тот же: сдвиги держатся в невиджетном ключе и переживают и сжатие, и расширение срока.
     at = run_app(MODES[1])
-    at.sidebar.slider('search').set_value(1440).run()
-    at.sidebar.slider('w0').set_value(120).run()
-    at.sidebar.slider('w1').set_value(360).run()
-    for period in (720, 360, 1440):
-        at.sidebar.slider('search').set_value(period).run()
+    at.number_input('search_h').set_value(24).run()
+    at.slider('w0').set_value(120).run()
+    at.slider('w1').set_value(360).run()
+    for period_h in (12, 6, 24):
+        at.number_input('search_h').set_value(period_h).run()
         assert not at.exception, at.exception
-        assert at.sidebar.slider('w0').value == 120, (period, at.sidebar.slider('w0').value)
-        assert at.sidebar.slider('w1').value == 360, (period, at.sidebar.slider('w1').value)
+        assert at.slider('w0').value == 120, (period_h, at.slider('w0').value)
+        assert at.slider('w1').value == 360, (period_h, at.slider('w1').value)
     assert any('class="verdict' in m.value for m in at.markdown)
 
 
@@ -1096,14 +1138,14 @@ def test_granica_arhiva_i_verdikt_ne_protivorechat():
     at = run_app(MODES[2])
     at.sidebar.date_input('hist_date').set_value(datetime(2024, 6, 30).date()).run()
     at.sidebar.slider('hist_hour').set_value(12).run()
-    at.sidebar.slider('search').set_value(1440).run()
-    at.sidebar.slider('w0').set_value(0).run()
-    at.sidebar.slider('w1').set_value(120).run()
+    at.number_input('search_h').set_value(24).run()       # срок задаётся строкой задачи, в часах
+    at.slider('w0').set_value(0).run()
+    at.slider('w1').set_value(120).run()
     assert not at.exception, at.exception
     warn = '\n'.join(w.value for w in at.warning)
     assert 'за границей архива' not in warn, warn
     assert any('class="verdict' in m.value for m in at.markdown)
-    at.sidebar.slider('w1').set_value(780).run()          # последнее окно уходит за 01.07.2024
+    at.slider('w1').set_value(780).run()          # последнее окно уходит за 01.07.2024
     assert not at.exception, at.exception
     warn = '\n'.join(w.value for w in at.warning)
     assert 'за границей архива' in warn, warn
@@ -1771,7 +1813,9 @@ def test_podpis_preseta_ne_vryot_posle_ruchnyh_izmeneniy():
     at.sidebar.button('preset_gannon').click().run()
     caps = ' '.join(str(c.value) for c in at.sidebar.caption)
     assert 'Буря Гэннон' in caps, caps
-    at.sidebar.slider('duration').set_value(120).run()
+    # Длительность выхода задаётся строкой задачи главной области, а не ползунком боковой панели
+    # (одиннадцатый круг, раздел 3.1): проверяется то же самое изменение плана 360 -> 120 мин.
+    at.number_input('duration').set_value(120).run()
     assert not at.exception, at.exception
     caps = ' '.join(str(c.value) for c in at.sidebar.caption)
     assert PRESET_CHANGED_RU in caps, caps
@@ -1815,8 +1859,9 @@ def test_uvedomleniya_o_sobytiyah_v_zhivom_rezhime_obyavleny():
     body = '\n'.join(str(m.value) for m in tab.get('markdown'))
     # После слияния десятого круга готовую строку охвата кладёт слой расчёта
     # (`app.compute`, ключ `coverage_missing[0]`), и она говорит «не опрашиваются»;
-    # собственная запасная строка экрана (`ui.LIVE_NO_EVENTS_RU`, «не запрашиваются»)
-    # подставляется, только если в охвате про DONKI нет ни слова. Проверяется смысл, а не
+    # собственная запасная строка экрана (`ui.LIVE_NO_EVENTS_RU`) подставляется, только если
+    # в охвате про DONKI нет ни слова, — иначе на экране стояли бы два сообщения об одном и том
+    # же. Глагол в запасной строке приведён к тому же, что и в расчёте. Проверяется смысл, а не
     # какая из двух редакций победила: канал назван и сказано, что его не спрашивают.
     assert 'DONKI' in body, body[:600]
     assert re.search(r'не (?:о|за)прашива', body), body[:600]
@@ -1873,7 +1918,9 @@ def test_izmenenie_plana_pokazyvaet_ishod_pereschyota():
     at.run()
     at.sidebar.button('preset_quiet').click().run()
     assert 'Изменение плана' not in verdict_visible(at), verdict_visible(at)
-    at.sidebar.slider('duration').set_value(120).run()
+    # Длительность выхода задаётся строкой задачи главной области, а не ползунком боковой панели
+    # (одиннадцатый круг, раздел 3.1): проверяется то же самое изменение плана 360 -> 120 мин.
+    at.number_input('duration').set_value(120).run()
     assert not at.exception, at.exception
     assert 'Изменение плана' in verdict_visible(at), verdict_visible(at)
     assert 'Пересчёт:' in verdict_visible(at), verdict_visible(at)
@@ -2042,12 +2089,22 @@ def test_flyuens_pechataetsya_odnim_vidom():
 
 def test_lenta_vremeni_vidna_na_operativnom_urovne():
     """Находка №33: постановка перечисляет, что должно быть ВИДНО, и «временная картина выбранных
-    воздействий» стоит в этом перечне; на оперативном уровне она была свёрнута."""
+    воздействий» стоит в этом перечне; на оперативном уровне она была свёрнута.
+
+    Одиннадцатый круг: владелец назвал этот график «странным и нерезультативным», а таблица 3.0
+    техзадания отдаёт главный экран ответу. График не выброшен и не свёрнут — он стоит первым во
+    вкладке «Наблюдения и прогнозы», рядом с наблюдениями, из которых построен, и открыт сразу.
+    Проверка требует того же, ради чего была написана: график на месте и не спрятан за клик
+    свёртки; изменилось только то, что он больше не занимает главный экран.
+    """
     at = run_app(MODES[1])
     assert not at.exception, at.exception
-    tl = [e for e in at.expander if 'Картина по времени' in str(e.label)]
-    assert tl, [str(e.label) for e in at.expander]
-    assert tl[0].proto.expanded, 'лента времени свёрнута на оперативном уровне'
+    tab = next(t for t in at.tabs if t.label == 'Наблюдения и прогнозы')
+    assert any('Картина по времени' in str(s.value) for s in tab.get('subheader')), 'графика нет во вкладке'
+    assert not [e for e in at.expander if 'Картина по времени' in str(e.label)], \
+        'график не должен лежать в свёртке'
+    caps = ' '.join(str(c.value) for c in tab.get('caption'))
+    assert 'в аномалии' in caps, caps           # подпись про то, как читать, осталась при графике
 
 
 def test_sluzhebnaya_podpis_o_minutah_odna_na_pare_kartochek():
@@ -2094,7 +2151,10 @@ def test_tle_origin_ne_vypuskaet_adres_i_angliyskoe_slovo():
     cell = re.search(r'<div class="cl">Элементы орбиты</div>.*?<div class="cs">([^<]*)</div>', bar, re.S)
     if cell:
         assert 'http' not in cell.group(1) and 'timeout' not in cell.group(1), cell.group(1)
-        assert cell.group(1).count('давность') == 1, cell.group(1)
+        # Подпись ячейки сокращена до одной строки (разгрузка главного экрана): давность в ней
+        # либо одна, либо уехала в раскрытие «Подробнее о каждой величине полосы». Проверяемое
+        # утверждение прежнее: ДВУХ давностей в разных единицах в одной ячейке быть не должно.
+        assert cell.group(1).count('давность') <= 1, cell.group(1)
 
 
 def test_nehvatka_pokrytiya_nazyvaet_sledstvie():
@@ -2124,3 +2184,511 @@ def test_dve_veroyatnosti_noaa_nazvany_odnim_pokazatelem():
     at.sidebar.button('preset_gannon').click().run()
     assert not at.exception, at.exception
     assert 'один показатель NOAA' in texts(at), texts(at)[:800]
+
+
+# ================================================================= одиннадцатый круг: задача → ответ
+# Экран отвечает на вопрос человека «нам надо выйти», а не требует от него расставить окна.
+# Порядок блоков главной области — таблица 3.0 техзадания, и он проверяется дампом, а не на глаз.
+BLOCK_MARKS = [('ВКД-Риск', 'заголовок'),
+               ('Выход на', 'строка задачи'),
+               ('class="reco', 'рекомендация'),
+               ('class="verdict', 'рекомендация'),
+               ('Где и когда', 'глобус'),
+               ('Лента окон', 'лента окон'),
+               ('Что учтено и что нет', 'что учтено'),
+               ('Состояние источников: чем считали', 'состояние источников')]
+
+
+def main_blocks(at: AppTest) -> list[str]:
+    """Блоки главной области сверху вниз — по ним сверяется таблица 3.0 техзадания.
+
+    Обход идёт по дереву элементов в порядке показа. Внутрь свёртки ручного разбора и внутрь
+    вкладок не заходим: их содержимое — часть своего блока, а не отдельные блоки.
+    """
+    out: list[str] = []
+
+    def add(name: str) -> None:
+        if not out or out[-1] != name:
+            out.append(name)
+
+    def walk(node) -> None:
+        kids = getattr(node, 'children', None) or {}
+        for e in (kids.values() if isinstance(kids, dict) else kids):
+            label = str(getattr(e, 'label', '') or '')
+            ty = str(getattr(e, 'type', '') or '')
+            if 'Разобрать конкретные окна' in label:
+                add('разбор окон')
+                continue
+            if 'tab' in ty.lower():
+                add('вкладки')
+                continue
+            if hasattr(e, 'children'):
+                walk(e)
+                continue
+            try:
+                v = str(getattr(e, 'value', '') or '')
+            except Exception:                              # noqa: BLE001 — значение таблицы не строка
+                v = ''
+            for mark, name in BLOCK_MARKS:
+                if mark in v:
+                    add(name)
+                    break
+
+    walk(at.main)
+    return out
+
+
+# Ровно та последовательность, что записана таблицей 3.0 техзадания одиннадцатого круга.
+EXPECTED_BLOCKS = ['заголовок', 'строка задачи', 'рекомендация', 'глобус', 'лента окон', 'что учтено',
+                   'состояние источников', 'разбор окон', 'вкладки']
+
+
+@pytest.mark.parametrize('mode', MODES)
+@pytest.mark.parametrize('pro', [False, True])
+def test_poryadok_blokov_po_tablice_3_0(mode, pro):
+    """Одиннадцатый круг, раздел 3.0: порядок блоков жёсткий и одинаков на обоих уровнях."""
+    at = run_app(mode, pro)
+    assert not at.exception, at.exception
+    assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_stroka_zadachi_stoit_v_glavnoy_oblasti(mode):
+    """Раздел 3.1: человек задаёт свой вопрос первым делом — длительность, срок и кнопка стоят
+    в главной области, а не в боковой панели, и ползунков сдвига рядом с ними нет."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    assert at.number_input('duration').value == 360
+    assert at.number_input('search_h').value == 12
+    assert any('Найти окна' in str(b.label) for b in at.button), [str(b.label) for b in at.button]
+    assert not [s for s in at.sidebar.slider if str(s.label).startswith('Сдвиг начала окна')], \
+        'ползунки сдвига окон должны уйти из боковой панели в раздел ручного разбора'
+    caps = ' '.join(str(c.value) for c in at.caption)
+    # Строка задачи сокращена до одной приглушённой строки: те же три факта, но без повторов.
+    assert 'режим:' in caps and 'Выход на' in caps, caps[:300]
+
+
+def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo(monkeypatch):
+    """Договор раздела 1a: ключа `scan` в снимке нет — экран показывает прежний разбор окон и
+    честно говорит, что перебор не выполнялся. Выдуманных чисел на месте рекомендации нет.
+
+    После слияния движка перебор в расчёте ЕСТЬ, и снимок без ключа приходится собирать нарочно:
+    иначе эта ветка экрана перестала бы проверяться вовсе. Она нужна — старые сохранённые примеры
+    и любой расчёт, где перебор не сделан, приходят без ключа.
+    """
+    import app.compute as compute
+    from app.ui import scan_of
+    assert scan_of({}) is None
+    assert scan_of({'scan': None}) is None
+    assert scan_of({'scan': {'candidates': []}}) is None, 'пустой перебор договором не допускается'
+    real_run = compute.run
+
+    def run_without_scan(*a, **kw):
+        r = real_run(*a, **kw)
+        r.S.pop('scan', None)
+        return r
+
+    monkeypatch.setattr(compute, 'run', run_without_scan)
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    body = texts(at)
+    # Формулировки сокращены при разгрузке главного экрана; утверждения те же.
+    assert 'Перебор начал не выполнялся' in body, body[:400]
+    assert 'Ленты нет: перебор начал не выполнялся' in body, body[:400]
+    assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
+    assert 'Выходить' not in body.split('Разобрать конкретные окна')[0], 'рекомендация без перебора выдумана'
+
+
+_NOTSET = object()
+
+
+def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditions=(),
+                  best=None, recommended_index=None, answer_kind=_NOTSET, answer_span=None):
+    """Искусственный снимок перебора ровно той формы, что записана в разделе 1a техзадания.
+
+    По умолчанию — ответ ТОЧКОЙ: один кандидат в лучшей группе и заполненный `recommended_index`.
+    На живых данных так бывает редко (по замерам движка — 12 прогонов из 110), поэтому исходы
+    «промежуток», «спор величин», «проверка аналитиком» и «отказ» собираются здесь же, своими
+    значениями `best`, `recommended_index` и `verdict`.
+    """
+    cands = []
+    for k in range(n):
+        s = t0 + timedelta(minutes=step * k)
+        cands.append({'start_utc': s.isoformat(), 'end_utc': (s + timedelta(minutes=duration)).isoformat(),
+                      'saa_min': 53.0 - 4.0 * k, 'fluence': 2.4e6 - 2.5e5 * k, 'mmod_hits': 5.64e-7,
+                      'coverage': 'partial', 'conditions': list(conditions) if k == n - 1 else [],
+                      'rank': n - k, 'group': 1 if k == n - 1 else 2})
+    return {'requested_duration_min': duration, 'search_from_utc': t0.isoformat(),
+            'search_to_utc': (t0 + timedelta(hours=12)).isoformat(), 'step_min': step, 'n_candidates': n,
+            'rule': 'не хуже по обеим величинам и строго лучше хотя бы по одной',
+            'tolerance_note': 'допуск равнозначности 20 мин по минутам и отношение 1,5 по флюенсу',
+            'candidates': cands, 'best': list(best) if best is not None else [n - 1],
+            'recommended_index': (n - 1) if (recommended_index is None and best is None) else recommended_index,
+            'verdict': verdict,
+            'scope': 'сравнение сделано по минутам в аномалии и флюенсу захваченных протонов',
+            'why': 'наименьшее воздействие из 7 проверенных начал: 29 мин в аномалии против 53 у худшего',
+            # `answer_kind` кладётся только когда его задали: снимок БЕЗ этого ключа проверяет
+            # прежний разбор (движок ещё не слит), снимок С ключом — договор движка.
+            **({} if answer_kind is _NOTSET else {'answer_kind': answer_kind, 'answer_span': answer_span})}
+
+
+def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
+    """Раздел 3.2: когда перебор есть, на месте ответа стоит «Выходить …», одна фраза «почему»
+    с числами, объявленная область вывода и число перебранных начал."""
+    from app.ui import recommendation_panel
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    html_ = recommendation_panel(_scan_fixture(t0), {'coverage_missing': []}, duration_min=240)
+    txt = _strip_tags(html_)
+    # «19.09 в 13:00 UTC» — так человек и говорит; час без даты читался бы как «сегодня»,
+    # а зона названа прямо в самой заметной строке экрана (раздел 3.2 техзадания).
+    assert 'Выходить 19.09 в 13:00 UTC' in txt, txt
+    assert '240 мин' in txt, txt
+    assert 'Перебрано 7 начал с шагом 10 мин' in txt, txt
+    assert 'Область вывода:' in txt, txt
+    assert 'Условий проверки у рекомендованного окна нет' in txt, txt
+    assert txt.count('(') == txt.count(')'), txt
+    # На профессиональном уровне названо, один кандидат в лучшей группе или несколько: множество
+    # равнозначных — повод проверить допуски, а не признак хорошей обстановки.
+    pro_txt = _strip_tags(recommendation_panel(_scan_fixture(t0), {}, pro=True, duration_min=240))
+    assert 'В лучшей группе 1 из 7 перебранных начал' in pro_txt, pro_txt
+    # Т6 и находка №4 десятого круга: там, где различающие величины не посчитаны, «условий нет» —
+    # неправда, условию просто неоткуда взяться. Плашка серая в обоих случаях, но говорит разное.
+    # Поле coverage кандидата считается только по каналам ранжирования, и читать его шире нельзя.
+    sc = _scan_fixture(t0)
+    sc['candidates'][-1]['coverage'] = 'none'
+    no_cov = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
+    assert 'которые различают начала, на это окно не посчитаны' in no_cov, no_cov
+    assert 'не означает отсутствия воздействия' in no_cov, no_cov
+
+
+def test_otkaz_perebora_nazyvaet_prichinu_i_chto_nuzhno():
+    """Раздел 3.2: при отказе на том же месте крупно стоит причина и что нужно, чтобы он снялся.
+    Структурный пробел не закрывается ожиданием нового выпуска — так решено владельцем 19.09."""
+    from app.ui import recommendation_panel, refusal_lift_ru
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0, verdict='insufficient')
+    sc['recommended_index'] = None
+    txt = _strip_tags(recommendation_panel(sc, {}, missing_ru=['наблюдение GOES устарело'], mode='live'))
+    assert 'Оснований для рекомендации недостаточно' in txt, txt
+    assert 'Чтобы отказ снялся' in txt, txt
+    assert 'не существует ни у одного источника' in txt, txt
+    assert 'Выходить' not in txt, txt
+    need = refusal_lift_ru('all_need_check', [], 'live')
+    assert 'решение аналитика' in need and 'нештатная' in need, need
+
+
+def test_lenta_okon_dva_grafika_bez_bezrazmernyh_ballov():
+    """Раздел 3.3: два графика делят ось времени, у обоих подпись «ниже — лучше»; ни третьей оси,
+    ни нормировки, ни безразмерного балла."""
+    from app.ui import ribbon_caption_ru, scan_best_rows, windows_ribbon
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0)
+    fig = windows_ribbon(sc, 30.0)
+    ys = [fig.layout[k].title.text for k in ('yaxis', 'yaxis2')]
+    assert all(y and 'ниже — лучше' in y for y in ys), ys
+    assert 'минут в аномалии' in ys[0] and 'флюенс' in ys[1], ys
+    assert fig.layout.xaxis2.title.text and 'врем' in fig.layout.xaxis2.title.text
+    body = ' '.join(str(tr.name or '') for tr in fig.data) + ' ' + ribbon_caption_ru(sc, 30.0)
+    for bad in ('балл', 'нормиров', 'индекс риска'):
+        assert bad not in body, bad
+    rows = scan_best_rows(sc)
+    assert 1 <= len(rows) <= 5, rows
+    assert list(rows[0]) == ['начало выхода', 'минут в аномалии', 'флюенс, част./см²', 'условия проверки']
+    assert rows[0]['начало выхода'] == '19.09 13:00', rows[0]
+
+
+def test_chto_uchteno_nazyvaet_edinicu_proishozhdenie_i_istochnik():
+    """Раздел 3.4: у каждой величины окна — единица, происхождение плашкой и источник; отдельно
+    перечень неучтённого с причинами, обычными словами."""
+    from app.ui import accounted_lines_from_scan, not_accounted_ru
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    lines = accounted_lines_from_scan(_scan_fixture(t0)['candidates'][-1], 30.0)
+    assert len(lines) == 3, lines
+    assert all(x.startswith('- **') and 'pill-calc' in x for x in lines), lines
+    assert any('мин' in x for x in lines) and any('част./см²' in x for x in lines), lines
+    out = not_accounted_ru({'coverage_missing': ['сближения SOCRATES — нет данных'],
+                            'events_line': {'connected': False, 'source_ru': 'уведомления NASA DONKI',
+                                            'reason_ru': 'источник не опрашивается'}}, 'live')
+    assert out[0] == 'сближения SOCRATES — нет данных', out
+    assert any('прогноза потока с разрешением по окну не существует' in x for x in out), out
+    assert any('доза на человека' in x for x in out), out
+    # одно сообщение об одном и том же: линия уведомлений называется один раз (бриф §9.7)
+    dup = not_accounted_ru({'coverage_missing': ['события и уведомления NASA DONKI не опрашиваются'],
+                            'events_line': {'connected': False, 'source_ru': 'уведомления NASA DONKI',
+                                            'reason_ru': 'источник не опрашивается'}}, 'live')
+    assert sum(1 for x in dup if 'DONKI' in x) == 1, dup
+
+
+def test_ekran_s_pereborom_risuet_rekomendaciyu_lentu_i_tablicu(monkeypatch):
+    """Тот же экран на снимке С ключом `scan`: рекомендация из перебора, лента окон двумя
+    графиками, таблица лучших и вердикт по вручную заданным окнам — в разделе разбора."""
+    import app.compute as compute
+    real_run = compute.run
+
+    def fake_run(*a, **kw):
+        r = real_run(*a, **kw)
+        t0 = datetime.fromisoformat(r.S['request']['t0_utc'])
+        r.S['scan'] = _scan_fixture(t0, duration=int(r.S['request']['duration_min']))
+        return r
+
+    monkeypatch.setattr(compute, 'run', fake_run)
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.radio('mode').set_value(MODES[1]).run()
+    assert not at.exception, at.exception
+    assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
+    body = texts(at)
+    assert 'Выходить ' in body, body[:500]
+    assert 'Перебрано 7 начал с шагом 10 мин' in body, body[:500]
+    assert 'ниже — лучше' in body, body[:500]
+    assert main_charts(at) == 1, 'лента окон — один рисунок из двух графиков, других на главном нет'
+    assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться на экране'
+    assert 'Таблица лучших начал' in body, body[:500]
+
+
+def test_chto_dalshe_ne_obeshchaet_vypuska_pri_strukturnom_probele():
+    """Смежная находка решения владельца 19.09: при структурном пробеле строка «Что дальше»
+    обещала новый выпуск источника. Прогноза потока протонов с разрешением по окну не существует
+    ни у одного источника, и сколько ни ждать выпуска NOAA, покрытие не появится: строка обязана
+    называть причину и предлагать посильное."""
+    from app.ui import structural_gap
+    assert structural_gap({'request': {'disabled': {}}}, 'live', ['нет прогноза потока протонов на окно'])
+    assert not structural_gap({'request': {'disabled': {'goes': 'off'}}}, 'live', ['GOES исключён'])
+    assert not structural_gap({'request': {'disabled': {}}}, 'history_review', ['GOES'])
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    vis = verdict_visible(at)
+    if 'Оснований для рекомендации недостаточно' not in vis:
+        pytest.skip('на живых данных этого прогона вердикт не отказ — проверять структурный пробел не на чем')
+    assert 'Следующий выпуск источника этот пробел не закроет' in vis, vis
+    assert 'или новый выпуск' not in vis, vis
+    assert 'перейти в исторический разбор' in vis, vis
+
+
+def test_otvet_pereborom_chashche_promezhutok_chem_tochka():
+    """Ответ перебора почти всегда ПРОМЕЖУТОК, а не точка: по замерам движка на 110 датах архива
+    недоминируемых кандидатов медиана шесть, единственный кандидат — лишь в 12 прогонах, а в 43
+    случаях из 55 лучшая группа это ПОДРЯД идущие начала. Пустой `recommended_index` при исходе
+    «равнозначны» — нормальный успешный случай, и рисовать на его месте отказ нельзя."""
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 9, 19, 23, 30, tzinfo=timezone.utc)
+    # подряд идущие начала → один промежуток
+    sc = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 1, 2, 3, 4, 5])
+    assert scan_answer(sc)['kind'] == 'interval', scan_answer(sc)
+    txt = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
+    assert 'Выходить в промежутке 19.09 23:30 — 20.09 00:20 UTC' in txt, txt
+    assert 'неразличимы в пределах чувствительности модели' in txt, txt
+    assert 'начало в этих границах' in txt, txt
+    for bad in ('Оснований для рекомендации недостаточно', 'Чтобы отказ снялся', 'Рекомендации нет'):
+        assert bad not in txt, (bad, txt)
+    # один кандидат → ответ точкой
+    one = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[4])
+    assert scan_answer(one)['kind'] == 'point', scan_answer(one)
+    assert 'Выходить 20.09 в 00:10 UTC' in _strip_tags(recommendation_panel(one, {}, duration_min=240))
+    # разрыв в лучшей группе → спор величин, а не промежуток
+    gap = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 9])
+    assert scan_answer(gap)['kind'] == 'tradeoff', scan_answer(gap)
+    dis = _strip_tags(recommendation_panel(gap, {}, duration_min=240))
+    assert 'Выбор между окнами сервис не делает' in dis, dis
+    assert 'выбор за аналитиком' in dis, dis
+    assert 'Чтобы отказ снялся' not in dis, dis
+
+
+def test_otkaz_tolko_pri_nedostatke_osnovaniy():
+    """Отказ рисуется ТОЛЬКО при исходе «оснований недостаточно». «Все начала требуют проверки» —
+    не отказ: обстановка нештатная, условие стоит у каждого начала, решает аналитик."""
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    chk = _scan_fixture(t0, verdict='all_need_check', best=[])
+    assert scan_answer(chk)['kind'] == 'check', scan_answer(chk)
+    txt = _strip_tags(recommendation_panel(chk, {}, mode='live'))
+    assert 'Все начала требуют проверки аналитиком' in txt, txt
+    assert 'Чтобы отказ снялся' not in txt, txt
+    assert 'решение аналитика' in txt, txt
+    no = _scan_fixture(t0, verdict='insufficient', best=[])
+    assert scan_answer(no)['kind'] == 'none', scan_answer(no)
+    ref = _strip_tags(recommendation_panel(no, {}, missing_ru=['наблюдение GOES устарело'], mode='live'))
+    assert 'Оснований для рекомендации недостаточно' in ref, ref
+    assert 'Чтобы отказ снялся' in ref, ref
+    assert 'Выходить' not in ref, ref
+
+
+def test_ekran_s_promezhutkom_pokazyvaet_otvet_a_ne_pustotu(monkeypatch):
+    """Тот же экран на снимке, где перебор ответил ПРОМЕЖУТКОМ и `recommended_index` пуст:
+    на месте ответа стоит промежуток, а не отказ и не пустое место."""
+    import app.compute as compute
+    real_run = compute.run
+
+    def fake_run(*a, **kw):
+        r = real_run(*a, **kw)
+        t0 = datetime.fromisoformat(r.S['request']['t0_utc'])
+        r.S['scan'] = _scan_fixture(t0, n=13, step=30, duration=int(r.S['request']['duration_min']),
+                                    verdict='equivalent', best=[2, 3, 4])
+        return r
+
+    monkeypatch.setattr(compute, 'run', fake_run)
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.radio('mode').set_value(MODES[1]).run()
+    assert not at.exception, at.exception
+    assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
+    body = texts(at)
+    assert 'Выходить в промежутке' in body, body[:600]
+    assert 'Оснований для рекомендации недостаточно' not in body.split('Разобрать конкретные окна')[0], body[:600]
+    assert 'Величины самого раннего начала из рекомендованного промежутка' in body, body[:600]
+
+
+def test_dogovor_answer_kind_chetyre_znacheniya():
+    """Договор движка: `answer_kind` принимает 'point', 'interval', 'tradeoff' и ПУСТО.
+
+    Пустое значение означает «ответа нет вовсе» — 15 прогонов из 110 на архиве. Без него при
+    вердикте «все начала требуют проверки» пришло бы 'interval', и над окнами, каждое из которых
+    требует решения аналитика, встало бы крупное «Выходить в промежутке»: ровно то утверждение,
+    которое опровергается числами рядом с ним.
+    """
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 5, 4, 1, 0, tzinfo=timezone.utc)
+    span = {'from_utc': (t0 + timedelta(minutes=30)).isoformat(),
+            'to_utc': (t0 + timedelta(minutes=80)).isoformat()}
+    iv = _scan_fixture(t0, n=60, step=10, verdict='equivalent', best=[0, 1, 38, 39, 40, 41, 48, 49, 50],
+                       recommended_index=None, answer_kind='interval', answer_span=span)
+    ans = scan_answer(iv)
+    assert ans['kind'] == 'interval', ans
+    # Промежуток берётся из `answer_span` КАК ЕСТЬ: по крайним элементам `best` он тянулся бы
+    # через разрыв и утверждал бы равнозначность начал, которые правило отбросило.
+    assert ans['from'] == datetime.fromisoformat(span['from_utc']), ans
+    assert ans['to'] == datetime.fromisoformat(span['to_utc']), ans
+    txt = _strip_tags(recommendation_panel(iv, {}, duration_min=240))
+    assert 'Выходить в промежутке 04.05 01:30 — 02:20 UTC' in txt, txt
+    assert 'любое начало в этих границах' in txt, txt        # теми же словами, что строка отчёта
+    assert '08:20' not in txt, 'промежуток протянут через разрыв лучшей группы'
+    # пустой answer_kind: отказ и «все требуют проверки» различаются по вердикту
+    none_chk = _scan_fixture(t0, verdict='all_need_check', best=[], recommended_index=None,
+                             answer_kind=None, answer_span=None)
+    assert scan_answer(none_chk)['kind'] == 'check', scan_answer(none_chk)
+    chk = _strip_tags(recommendation_panel(none_chk, {}, mode='live'))
+    assert 'Выходить в промежутке' not in chk and 'Выходить' not in chk, chk
+    assert 'Все начала требуют проверки аналитиком' in chk, chk
+    none_ref = _scan_fixture(t0, verdict='insufficient', best=[], recommended_index=None,
+                             answer_kind=None, answer_span=None)
+    assert scan_answer(none_ref)['kind'] == 'none', scan_answer(none_ref)
+    # 'point' берёт кандидата по recommended_index
+    pt = _scan_fixture(t0, n=60, step=10, verdict='recommended', best=[5], recommended_index=5,
+                       answer_kind='point')
+    assert scan_answer(pt)['kind'] == 'point'
+    assert 'Выходить 04.05 в 01:50 UTC' in _strip_tags(recommendation_panel(pt, {}, duration_min=240))
+
+
+def test_drob_pered_pfu_tozhe_s_zapyatoy():
+    """Найдено дампом чисел экрана: единица «pfu» пишется латиницей, и по прежнему правилу дробь
+    перед ней запятой не получала — на экране стояло «GOES ≥10 МэВ = 77.5 pfu» рядом с «207 pfu»
+    и «2,43·10⁶ част./см²» того же блока. Прежняя проверка дробей смотрела только на кириллицу
+    и знаки после числа, поэтому латинская единица сквозь неё проходила."""
+    from app.ui import frac_ru, screen_text
+    assert screen_text('окно 2: GOES ≥10 МэВ = 77.5 pfu') == 'окно 2: GOES ≥10 МэВ = 77,5 pfu'
+    assert frac_ru('поток 0.19 pfu') == 'поток 0,19 pfu'
+    assert screen_text('версия v3.1') == 'версия v3.1'            # номер версии не трогаем
+    assert screen_text('дата 01.05.2024') == 'дата 01.05.2024'    # и дату тоже
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_na_glavnom_ekrane_net_desyatichnoy_tochki_pered_edinicey(mode):
+    """Та же находка на живом экране: перед любой единицей, латинской или кириллической,
+    десятичный разделитель — запятая (техзадание, раздел 4)."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    bad = re.findall(r'\d+\.\d+\s*(?:pfu|мин|нТл|МэВ|%|част|км|ч\b|сут)', body)
+    assert not bad, bad
+
+
+def test_velichiny_nazyvayut_edinicu_ili_bezrazmernost():
+    """Замечание владельца: «добавь размерности, где они нужны». У величины либо стоит единица,
+    либо прямо сказано, что она безразмерная. Kp — худший случай: голое «1,33» не говорит, в чём
+    оно измерено, и рядом в той же полосе стоят «pfu» и «нТл»."""
+    from app.ui import DIMENSIONLESS_RU, value_with_unit_ru
+    kp = SimpleNamespace(name='Kp, последнее наблюдение', unit='', value=1.33, limits_note='')
+    assert value_with_unit_ru(kp) == '1,33, ' + DIMENSIONLESS_RU, value_with_unit_ru(kp)
+    saa = SimpleNamespace(name='минут в аномалии', unit='мин', value=48.55, limits_note='')
+    assert value_with_unit_ru(saa) == '48,55 мин', value_with_unit_ru(saa)
+    empty = SimpleNamespace(name='поток протонов GOES ≥10 МэВ', unit='pfu', value=0.2,
+                            limits_note='горизонт наблюдения до 04:15Z покрывает 0 % окна')
+    assert value_with_unit_ru(empty) == 'значения на окно нет', value_with_unit_ru(empty)
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'безразмерный' in bar, bar          # метка Kp в приборной полосе называет безразмерность
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards and all('макс. в окне, безразмерный' in c for c in cards), cards[0]
+
+
+def test_glavnyy_ekran_razgruzhen_i_nichego_ne_poteryano():
+    """Замечание владельца: «сделай главную страницу менее загруженной… адекватно с ходу
+    воспринимать информацию просто невозможно». Подробности уехали под раскрытия, но остались
+    достижимыми: источник каждой величины, перечень неучтённого и полные подписи полосы."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    labels = [str(e.label) for e in at.expander]
+    for need in ('Откуда взята каждая величина', 'Чего сервис не учёл', 'Подробнее о каждой величине полосы'):
+        assert any(need in x for x in labels), (need, labels)
+    body = texts(at)
+    # прослеживаемость не потеряна: первоисточники и пропуски охвата на экране есть
+    assert 'прогноза потока с разрешением по окну не существует' in body, body[:300]
+    assert 'Цвет = происхождение' in body or 'Происхождение величин' in body, body[:300]
+    # приглушённая подпись ленты окон — одна строка
+    from app.ui import ribbon_caption_ru
+    cap = ribbon_caption_ru({'candidates': []}, 30.0)
+    assert cap.count('.') <= 1 and len(cap) < 160, cap
+
+
+def test_temnaya_tema_i_grafiki_v_ney():
+    """Тёмная тема: палитра одна и означает происхождение величины, контраст проверен расчётом,
+    графики Plotly приводятся к тёмной подложке — светлый рисунок на тёмной странице читается
+    как поломка."""
+    import tomllib
+    from app.ui import CSS, DARK_PAPER, dark_figure
+    cfg = tomllib.loads(open(os.path.join(os.path.dirname(APP), '..', '.streamlit', 'config.toml'),
+                             encoding='utf-8').read())
+    assert cfg['theme']['base'] == 'dark', cfg['theme']
+    assert cfg['theme']['backgroundColor'] == '#0e1117', cfg['theme']
+
+    def contrast(a, b):
+        def lum(h):
+            h = h.lstrip('#')
+            ch = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+            f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+            return 0.2126 * f(ch[0]) + 0.7152 * f(ch[1]) + 0.0722 * f(ch[2])
+        la, lb = lum(a), lum(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+    root = re.search(r':root \{(.*?)\}', CSS, re.S).group(1)
+    var = lambda name: re.search(r'--%s:(#[0-9a-f]{6})' % name, root).group(1)
+    bg = var('bg')
+    for name in ('ink', 'muted', 'calc', 'obs', 'fc', 'cond', 'none'):
+        assert contrast(var(name), bg) >= 4.5, (name, contrast(var(name), bg))
+        # текст плашки на её собственной заливке — тоже не ниже 4,5:1
+        if name in ('calc', 'obs', 'fc', 'cond', 'none'):
+            assert contrast(var(name), var(name + '-bg')) >= 4.5, (name, contrast(var(name), var(name + '-bg')))
+    fig = dark_figure(go.Figure(go.Scatter(x=[1, 2], y=[1, 2], line={'color': '#1f4e79'})))
+    assert fig.layout.paper_bgcolor == DARK_PAPER, fig.layout.paper_bgcolor
+    assert fig.data[0].line.color != '#1f4e79', 'тёмный синий светлой темы не читается на тёмном фоне'
+
+
+def test_vvod_razlozhen_po_klassam_s_ikonkami():
+    """Замечание владельца: ввод «не выглядеть как однородная каша слева, распределённая по
+    логическим иконкам». Боковая панель разложена на смысловые разделы с материальными иконками;
+    эмодзи не используются — нужен вид рабочего решателя, а не детского приложения."""
+    src = open(APP, encoding='utf-8').read()
+    sections = re.findall(r"st\.expander\('([^']+)', expanded=\w+, icon=':material/([a-z_]+):'\)", src)
+    names = [n for n, _ in sections]
+    for need in ('Когда считаем', 'Источники данных', 'Проверки и сценарии', 'Пороги и правила', 'Вид'):
+        assert need in names, (need, names)
+    assert all(icon and '_' not in icon or icon for _, icon in sections), sections
+    assert not EMOJI.findall(' '.join(names)), names
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    # элементы управления остались на месте и доступны
+    assert at.sidebar.radio('mode') is not None and at.sidebar.radio('level') is not None
+    assert at.sidebar.checkbox('sc_sep_on') is not None
+    assert any('Длительность выхода и срок задаются строкой задачи' in str(c.value) for c in at.sidebar.caption), \
+        [str(c.value) for c in at.sidebar.caption]
