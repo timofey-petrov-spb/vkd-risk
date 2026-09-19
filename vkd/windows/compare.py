@@ -845,7 +845,8 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
         """Один выход на все пять исходов: объявленная область считается по фактическому вердикту
         и кладётся рядом с ним — в вердикт, а не в комментарий к нему. Пропустить её, добавив
         шестой исход, теперь нельзя: другого конструктора Recommendation в recommend() нет."""
-        scope, detail, scope_facts = declared_scope(assessments, kw['verdict'], candidates)
+        scope, detail, scope_facts = declared_scope(assessments, kw['verdict'], candidates,
+                                                   kw.get('missing') or ())
         return Recommendation(per_mechanism_comparison=per, tolerance_basis=tol,
                               scope_ru=scope, scope_detail_ru=detail, scope_facts=scope_facts, **kw)
     if missing_l:
@@ -915,12 +916,35 @@ SCOPE_NOT_RU = 'это сравнение рассчитанных фактор�
 # необязателен, а потому, что он всегда один и тот же и стоит рядом — в подробной форме,
 # в отчёте и во вкладке «Методика». Короткая форма уже говорит главное: это НЕ полный риск.
 SCOPE_NOT_LIST_RU = 'вероятность разгерметизации, доза на экипаж и техногенный мусор не считаются'
-SCOPE_REFUSAL_RU = ('обязательная линия не покрыта совсем, поэтому факторы окон не сопоставляются; '
-                    'это отказ от вывода, а не оценка риска')
+# Область ОТКАЗА. «Не покрыта совсем» обязано относиться к названным окнам, а не ко всем сразу:
+# в живом режиме бывает, что у окна 1 наблюдение GOES покрывает 13 % окна, а у окна 2 — 0 %.
+# Общая фраза «обязательная линия не покрыта совсем» стояла бы рядом с числом 13 %, которое её
+# опровергает (находка при приёмке восьмого круга). Поэтому окна называются, а подробная форма
+# перечисляет те же причины, что лежат в `missing` снимка, — одним и тем же текстом.
+SCOPE_REFUSAL_TAIL_RU = 'это отказ от вывода, а не оценка риска'
+
+
+def _refusal_scope(assessments: Sequence[WindowAssessment], blocking: Sequence[str]) -> tuple[str, str]:
+    blocked = [i for i, a in enumerate(assessments, 1)
+               if any(m.mandatory and (m.coverage == Coverage.NONE
+                                       or (set(m.blocking_notes) & set(m.coverage_notes)))
+                      for m in a.mechanisms)]
+    if blocked and len(blocked) == len(assessments):
+        where = ' у каждого сравниваемого окна'
+    elif len(blocked) == 1:
+        where = ' у окна %d' % blocked[0]
+    elif blocked:
+        where = ' у окон %s' % ', '.join(str(i) for i in blocked)
+    else:
+        where = ''
+    short = ('обязательная линия не покрыта совсем%s, поэтому факторы окон не сопоставляются; %s'
+             % (where, SCOPE_REFUSAL_TAIL_RU))
+    detail = short + (': ' + '; '.join(dict.fromkeys(blocking)) if blocking else '')
+    return short, detail
 
 
 def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
-                   compared) -> tuple[str, str, tuple[tuple[str, str], ...]]:
+                   compared, blocking: Sequence[str] = ()) -> tuple[str, str, tuple[tuple[str, str], ...]]:
     """ОБЪЯВЛЕННАЯ ОБЛАСТЬ ВЫВОДА (разбор Codex п. 1, решение владельца 19.09).
 
     Собирается ИЗ ВЫЧИСЛЕННОГО, а не из заготовленной фразы: доля окна берётся из того же
@@ -959,8 +983,9 @@ def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
                     gaps.setdefault(g.reason_ru, []).append(g.minutes)
 
     if verdict == 'insufficient':
-        facts.append(('вывод не сделан', SCOPE_REFUSAL_RU))
-        return SCOPE_REFUSAL_RU, SCOPE_REFUSAL_RU, tuple(facts)
+        short, detail = _refusal_scope(assessments, blocking)
+        facts.append(('вывод не сделан', detail))
+        return short, detail, tuple(facts)
 
     if names:
         facts.append(('учтённые факторы', ', '.join(names)))

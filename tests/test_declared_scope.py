@@ -126,4 +126,32 @@ def test_verdikt_ne_menyaet_ni_odnogo_chisla(belts):
     assert r_partial.scope_facts == r_full.scope_facts
 
 
+def test_otkaz_nazyvaet_okna_a_ne_obyavlyaet_pustymi_vse(belts):
+    """Находка приёмки восьмого круга: у окна 1 наблюдение GOES покрывало 13 % окна, у окна 2 — 0 %,
+    и область отказа печатала общее «обязательная линия не покрыта совсем» рядом с этими 13 %.
+    Отказ обязан называть окно, по которому он вынесен, и перечислять те же причины, что лежат
+    в `missing` того же снимка, — иначе на одном экране утверждение спорит с числом под ним."""
+    th = Thresholds(goes_max_age_min=20 * 60)
+    tr = traj(24 * 60, lambda i: i < 60)
+    w = [Window(T0, 360), Window(T0 + timedelta(minutes=480), 360)]
+    A = [assess_window(w[0], tr, belts, goes(0.2), kp_sample(3.0, age_min=30), [], th, T0, mmod_hits=1e-6),
+         assess_window(w[1], tr, belts, None, kp_sample(3.0, age_min=30), [], th, T0, mmod_hits=1e-6)]
+    r = recommend(A, th)
+    assert r.verdict == 'insufficient', r.rule_applied
+    assert 'у окна 2' in r.scope_ru, r.scope_ru
+    assert 'у каждого' not in r.scope_ru, r.scope_ru
+    assert 'отказ от вывода, а не оценка риска' in r.scope_ru
+    for m in r.missing:                      # подробная форма построена из того же списка
+        assert m in r.scope_detail_ru, (m, r.scope_detail_ru)
+    assert r.scope_detail_ru.startswith(r.scope_ru)
+
+
+def test_otkaz_po_oboim_oknam_govorit_pro_oba(belts):
+    """Обратный случай: когда пуст канал у обоих окон, область не занижает охват отказа."""
+    A, th = two_windows(belts, None)
+    r = recommend(A, th)
+    assert r.verdict == 'insufficient'
+    assert 'у каждого сравниваемого окна' in r.scope_ru, r.scope_ru
+
+
 pytest_plugins = ('tests.test_compare',)
