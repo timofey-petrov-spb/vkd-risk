@@ -571,18 +571,39 @@ def cells(html: str) -> list[tuple[str, str]]:
     return [(label, value) for _kind, label, value in _CELL_RE.findall(html)]
 
 
+def _by_position(html: str) -> dict[tuple[str, int], str]:
+    """Ячейки по ключу «метка и какая она по счёту среди одноимённых» → значение.
+
+    Просто по метке сравнивать нельзя: полоса состоит из нескольких строк, и две ячейки в разных
+    строках вполне могут называться одинаково. Словарь по одной метке оставил бы из них
+    последнюю, и первая сравнивалась бы с чужим значением — то есть подсвечивалась бы ячейка,
+    которая не менялась. Номер среди одноимённых это исключает.
+    """
+    seen: dict[str, int] = {}
+    out: dict[tuple[str, int], str] = {}
+    for label, value in cells(html):
+        number = seen.get(label, 0)
+        seen[label] = number + 1
+        out[(label, number)] = value
+    return out
+
+
 def changed_labels(html_now: str, html_previous: str | None) -> list[str]:
     """Метки ячеек, значение которых отличается от предыдущего снимка полосы.
 
     Ячейка, которой в предыдущем снимке не было вовсе, изменившейся НЕ считается: она появилась,
     а появление — это не смена значения, и подсвечивать при первой отрисовке всю полосу было бы
     ровно тем мельтешением, которого требуется избежать.
+
+    Одноимённые ячейки сравниваются по порядку, а не сваливаются в одну (см. _by_position).
+    Если одноимённые ячейки изменились обе, метка встретится в ответе дважды — по разу на
+    ячейку, а не один раз на имя.
     """
     if not html_previous:
         return []
-    was = dict(cells(html_previous))
-    return [label for label, value in cells(html_now)
-            if label in was and was[label] != value]
+    was = _by_position(html_previous)
+    return [label for (label, number), value in _by_position(html_now).items()
+            if (label, number) in was and was[(label, number)] != value]
 
 
 def mark_changed_cells(html_now: str, html_previous: str | None) -> str:
@@ -598,13 +619,19 @@ def mark_changed_cells(html_now: str, html_previous: str | None) -> str:
         raise RuntimeError('разметка приборной полосы не разбирается: структура ячейки в '
                            'app/ui.py изменилась, и подсветка изменившихся ячеек больше не '
                            'находит ни метки, ни значения')
-    changed = set(changed_labels(html_now, html_previous))
-    if not changed:
+    if not html_previous:
         return html_now
+    was = _by_position(html_previous)
+    # Пометки ставятся по тому же ключу «метка и номер среди одноимённых», по которому считалось
+    # изменение, поэтому при одинаковых метках подсвечивается именно изменившаяся ячейка.
+    seen: dict[str, int] = {}
 
     def replace(match: re.Match) -> str:
         kind, label, value = match.group(1), match.group(2), match.group(3)
-        if label not in changed:
+        number = seen.get(label, 0)
+        seen[label] = number + 1
+        key = (label, number)
+        if key not in was or was[key] == value:
             return match.group(0)
         return ('<div class="cell %s vk-changed"><div class="cl">%s</div><div class="cv">%s</div>'
                 % (kind, label, value))

@@ -539,3 +539,25 @@ def test_obshchedostupnyy_nabor_obyavlen():
     # Одна строка подключения и способ проверить её стоимость — снаружи доступны.
     for needed in ('apply', 'css', 'weight_bytes', 'contrast_table', 'mark_changed_cells'):
         assert needed in b.__all__, needed
+
+
+def test_odnoimyonnye_yacheyki_sravnivayutsya_po_poryadku():
+    """Две ячейки с одинаковой меткой не сваливаются в одну.
+
+    Полоса состоит из нескольких строк, и одноимённые ячейки в них возможны. Словарь по одной
+    метке оставил бы из них последнюю, и первая сравнивалась бы с чужим значением: подсветилась
+    бы ячейка, которая не менялась. Ровно то «непонятное поведение», которого быть не должно.
+    """
+    was = _panel(('Источник', 'GOES'), ('Источник', 'Kp'))
+    now = _panel(('Источник', 'GOES'), ('Источник', 'Kp изменился'))
+    assert b.changed_labels(now, was) == ['Источник']       # изменилась ровно одна из двух
+    marked = b.mark_changed_cells(now, was)
+    assert marked.count('vk-changed') == 1
+    # Помечена ВТОРАЯ, а не первая: проверяем по соседнему значению.
+    assert '<div class="cell k-calc vk-changed"><div class="cl">Источник</div>' \
+           '<div class="cv">Kp изменился</div>' in marked
+    assert '<div class="cell k-calc"><div class="cl">Источник</div><div class="cv">GOES</div>' in marked
+    # Если изменились обе — помечены обе, и метка названа дважды.
+    both = _panel(('Источник', 'GOES-16'), ('Источник', 'Kp изменился'))
+    assert b.changed_labels(both, was) == ['Источник', 'Источник']
+    assert b.mark_changed_cells(both, was).count('vk-changed') == 2
