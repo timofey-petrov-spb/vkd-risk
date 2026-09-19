@@ -299,9 +299,13 @@ def _prepare(alt_km_seq, inclination_deg, interp):
 
 def _rule(inc_req, inc_used, clamped, year, extrapolated, K, interp, area_m2, lo, hi):
     parts = [
-        'ГОСТ Р 25645.167-2005: Q_отн(h, i)_j таблица 7.2 (эпоха 2000 г.) × сечение %.3f м² '
-        '(формула (2), C_N = 1) × прирост F(t) таблиц 8.1—8.16'
-        % (area_m2 * PLATE_TO_CROSS_SECTION),
+        # Десятичный разделитель — запятая: строка правила видна пользователю на экране,
+        # а там на всём сервисе запятая. Скобок внутри скобок в этой строке быть не должно:
+        # проверка экрана их запрещает, потому что при сокращении строки по первой скобке
+        # терялся хвост вместе с происхождением числа.
+        'ГОСТ Р 25645.167-2005: Q_отн(h, i)_j таблица 7.2, эпоха 2000 г.; сечение %s м² '
+        'по формуле 2 при C_N = 1; прирост F(t) таблиц 8.1—8.16'
+        % ('%.3f' % (area_m2 * PLATE_TO_CROSS_SECTION)).replace('.', ','),
         'сумма по восьми диапазонам размеров j (КО крупнее %.1f см)' % SCOPE_SIZE_CM_MIN,
         'гипотеза K = %g' % K,
         'высота трассы %.0f…%.0f км, интерполяция по высоте — %s'
@@ -401,3 +405,26 @@ def debris_hits(alt_km: float, inclination_deg: float, area_m2: float, duration_
         rule=_rule(inclination_deg, inc_used, clamped, year, extrapolated, K, interp,
                    area_m2, lo, hi),
     )
+
+
+DEBRIS_RECORD_ID = 'gost167:tehnogennoe-veschestvo-2005'
+
+
+def record_files() -> tuple:
+    """Файлы, до которых прослеживается число попаданий: (идентификатор, путь от корня, метаданные).
+
+    Нужно выгрузке (`vkd/integration/manifest.py`). Идентификатор один на всю модель:
+    таблицы стандарта разделены по файлам, но фактор называет модель целиком, и
+    разбивать его на четыре записи значило бы обещать прослеживаемость до таблицы,
+    которой в факторе нет.
+    """
+    files = sorted(str(f.relative_to(ROOT)).replace('\\', '/') for f in DATA.glob('*.csv'))
+    files.append(str((DATA / 'index.json').relative_to(ROOT)).replace('\\', '/'))
+    out = []
+    for i, rel in enumerate(files):
+        out.append(('%s#%d' % (DEBRIS_RECORD_ID, i + 1) if i else DEBRIS_RECORD_ID,
+                    rel,
+                    {'source_id': 'gost167', 'quality': 'model',
+                     'citation': 'ГОСТ Р 25645.167-2005, таблицы 5.1, 7.1, 7.2, 8.1—8.16',
+                     'evidence_role': 'extracted standard tables; not a provider observation'}))
+    return tuple(out)
