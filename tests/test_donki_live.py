@@ -86,7 +86,10 @@ def test_kanonicheskaya_forma_sovpadaet_s_arhivom_pobaytno():
         assert hashlib.sha256(canonical).hexdigest() == record['sha256'], release_id
         assert record['raw_record_id'].endswith(record['sha256'][:12]), release_id
         checked += 1
-    assert checked >= 100, 'проверено слишком мало записей: %d' % checked
+    # 175 — столько сообщений майского ответа службы одновременно проиндексировано реестром A1
+    # (всего в реестре 247 записей за три запроса: 30.04, май и июнь). Число измерено, а не
+    # взято с потолка: если архив изменится, проверка обязана это заметить, а не промолчать.
+    assert checked == 175, 'сверено записей: %d' % checked
 
 
 # ===================================================== разбор ответа службы до записи в кеш
@@ -126,6 +129,17 @@ def test_uvedomlenie_iz_budushchego_otbrasyvaetsya():
                                                     '## Message Issue Date: ')
     with pytest.raises(LiveDataError):
         parse_notifications(json.dumps(messages).encode(), NOW)
+
+
+def test_soobshchenie_bez_vremeni_vypuska_nazyvaetsya_a_ne_ronyaet_lentu(tmp_path):
+    """Одно сообщение без времени выпуска не отменяет ленту: оно названо неразобранным."""
+    messages = json.loads(response_bytes())[:4]
+    del messages[1]['messageIssueTime']
+    notes, _, f = _fetch_from_transport(tmp_path, json.dumps(messages, ensure_ascii=False).encode())
+    assert notes.connected is True
+    assert len(notes.not_parsed) == 1, notes.not_parsed
+    assert notes.not_parsed[0][0] == messages[1]['messageID']
+    assert notes.message_count == 4 and sum(notes.by_status.values()) == 4
 
 
 def test_neprigodnye_soobshcheniya_schitayutsya_a_ne_ischezayut():

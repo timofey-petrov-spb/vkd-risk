@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlsplit
 
-from vkd.sources.donki import NotificationParseError, PARSER_VERSION, SOURCE_ID, STAMP, parse_notification
+from vkd.sources.donki import NotificationParseError, SOURCE_ID, STAMP, parse_notification
 from vkd.sources.live_cache import Fetch, Product, acquire, raw_record
 from vkd.sources.live_parsers import LiveDataError
 from vkd.sources.registry import iso_utc, utc
@@ -254,10 +254,13 @@ def decode(fetch: Fetch) -> Notifications:
         kind = message.get('messageType') if isinstance(message.get('messageType'), str) else '—'
         by_type[kind] = by_type.get(kind, 0) + 1
         canonical = canonical_message(message)
-        record = _record_of(message, canonical, fetched_utc)
         try:
+            # Сборка метаданных записи — внутри той же попытки, что и разбор: в ответе службы
+            # законно попадается сообщение без времени выпуска или с нечитаемым временем, и оно
+            # обязано стать НАЗВАННЫМ неразобранным, а не уронить получение целиком.
+            record = _record_of(message, canonical, fetched_utc)
             parsed = parse_notification(canonical, record)
-        except (NotificationParseError, KeyError, TypeError, ValueError) as exc:
+        except (NotificationParseError, KeyError, TypeError, ValueError, OverflowError) as exc:
             # Неразобранное сообщение не исчезает и не превращается в «событий нет»:
             # оно называется поимённо и уходит в снимок расчёта.
             not_parsed.append((message['messageID'], str(exc)))
@@ -321,6 +324,6 @@ def summary_ru(notes: Notifications) -> str:
         notes.message_count, kinds or '—', notes.event_records, tail)
 
 
-__all__ = ['DONKI_URL', 'FEED_WINDOW_DAYS', 'MAX_AGE_MIN', 'Notifications', 'PARSER_VERSION',
+__all__ = ['DONKI_URL', 'FEED_WINDOW_DAYS', 'MAX_AGE_MIN', 'Notifications', 'STATUS_RU', 'TYPE_RU',
            'canonical_message', 'coverage_ru', 'decode', 'donki_latest', 'parse_notifications',
-           'summary_ru', 'STATUS_RU', 'TYPE_RU']
+           'summary_ru']
