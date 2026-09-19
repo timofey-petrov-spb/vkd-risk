@@ -257,7 +257,7 @@ _MODULE_BARE_RE = re.compile(r'(?:vkd|experiments|app|scripts|tests)\.[\w.]+')
 _HASH_RE = re.compile(r'[;,]?\s*(?:sha256|SHA-256)\s+[0-9a-fA-F]+…?', re.I)
 _FILE_RE = re.compile(r'[;,]?\s*файл\s+[^\s;,]+')
 _RECORD_RE = re.compile(r'[;,]?\s*запис[ьи]\s+(?=[A-Za-z0-9])[\w:#.\-]*')   # «запись donki_msg#…», не «записи не указан»
-_RECORDS_TAIL_RE = re.compile(r'[;,]?\s*запис[ьи]:\s.*$', re.S)     # перечень записей — ниже, ссылками
+_RECORDS_TAIL_RE = re.compile(r'[;,]?\s*запис[ьи]:\s+(?=(?:[a-z][a-z0-9_]*[#:]|[0-9]{8}-[A-Z]+-[0-9]+))[^\n]*$', re.S)     # перечень записей — ниже, ссылками
 _SRCID_RE = re.compile(r'\s*\([a-z][a-z0-9]*_[a-z0-9_]+\)')          # (celestrak_gp), (nasa_jsc_oem)
 _CONTRACT_RE = re.compile(r'CONTRACT\.md(\s+v[\d.]+)?')
 _RELEASE_RE = re.compile(r'выпуск\s+[\w\-]*[A-Za-z][\w\-]*\s+от\b')

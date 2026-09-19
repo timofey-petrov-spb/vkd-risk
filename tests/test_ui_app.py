@@ -265,3 +265,9 @@ def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
     assert any('одинаков' in w for w in warn), warn
     assert any('считаю по сдвигам' in w for w in warn), warn
     assert any('class="verdict' in m.value for m in at.markdown)
+
+
+def test_publication_evidence_survives_record_list_cleanup():
+    text = 'NASA DONKI, записи: публикация 05-09 13:54Z — 05-10 14:19Z'
+    assert 'публикация 05-09 13:54Z — 05-10 14:19Z' in status_ru(text)
+    assert 'nasa_donki_notification' not in status_ru('NASA; записи: nasa_donki_notification:release:hash')
