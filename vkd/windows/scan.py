@@ -55,7 +55,7 @@ from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.explain.format import fmt_ru
 from vkd.orbit.integration import integrate_time
-from vkd.types import TrajectoryPoint, Window, WindowAssessment
+from vkd.types import Coverage, TrajectoryPoint, Window, WindowAssessment
 from vkd.windows.compare import (Thresholds, _cov, _min_cov, _short, declared_scope,
                                  pair_better, pair_not_worse, window_conditions)
 
@@ -198,7 +198,7 @@ def starts(search_from_utc: datetime, search_to_utc: datetime, duration_min: int
     return [search_from_utc + timedelta(minutes=step_min * i) for i in range(n + 1)]
 
 
-def _layers(pool: list, tol_m: float, tol_r: float) -> list:
+def _layers(pool: list, tol_m: float, tol_r: float, better=None) -> list:
     """Разбиение на слои недоминируемости правилом (8) методики.
 
     Слой 1 — кандидаты, которых не превосходит ни один другой из набора: `pair_better` ни от кого
@@ -212,7 +212,8 @@ def _layers(pool: list, tol_m: float, tol_r: float) -> list:
     rest, out = list(pool), []
     while rest:
         front = [a for a in rest
-                 if not any(pair_better(b.saa_min, b.fluence, a.saa_min, a.fluence, tol_m, tol_r)
+                 if not any((better(b, a) if better else
+                             pair_better(b.saa_min, b.fluence, a.saa_min, a.fluence, tol_m, tol_r))
                             for b in rest if b is not a)]
         if not front:
             # Отношение «лучше» с допусками не транзитивно, поэтому теоретически возможен цикл,
@@ -224,7 +225,8 @@ def _layers(pool: list, tol_m: float, tol_r: float) -> list:
     return out
 
 
-def _rank_candidates(cands: list, tol_m: float, tol_r: float) -> tuple[list, tuple, Optional[int], str]:
+def _rank_candidates(cands: list, tol_m: float, tol_r: float, meteor_models=None,
+                     meteor_equal_pct=5.0) -> tuple[list, tuple, Optional[int], str]:
     """Расставляет ранги и группы. Возвращает (кандидаты, best, рекомендованный, исход).
 
     Порядок правил ровно тот, что напечатан пользователю (RANK_RULE_RU):
@@ -237,10 +239,25 @@ def _rank_candidates(cands: list, tol_m: float, tol_r: float) -> tuple[list, tup
     Подставлять вместо непосчитанного нуль или бесконечность нельзя — это превратило бы
     отсутствие данных в лучший или худший исход.
     """
-    ranked = [c for c in cands if c.fluence is not None]
+    ranked = [c for c in cands if c.fluence is not None
+              and (meteor_models is None or c.mmod_hits is not None)]
+    better = None
+    if meteor_models is not None:
+        def better(a, b):
+            sa = meteor_models[a.start_utc].get('sensitivity', {})
+            sb = meteor_models[b.start_utc].get('sensitivity', {})
+            va, vb = sa.get('hypotheses_N', {}), sb.get('hypotheses_N', {})
+            if not va or set(va) != set(vb) or sa.get('invalid_hypotheses') or sb.get('invalid_hypotheses'):
+                return False
+            ratio = 1+meteor_equal_pct/100
+            mm_not_worse = all(va[k] <= vb[k]*ratio for k in va)
+            mm_better = all(va[k]*ratio < vb[k] for k in va)
+            return (pair_not_worse(a.saa_min, a.fluence, b.saa_min, b.fluence, tol_m, tol_r)
+                    and mm_not_worse
+                    and (mm_better or pair_better(a.saa_min, a.fluence, b.saa_min, b.fluence, tol_m, tol_r)))
     free = [c for c in ranked if not c.conditions]
     flagged = [c for c in ranked if c.conditions]
-    order = _layers(free, tol_m, tol_r) + _layers(flagged, tol_m, tol_r)
+    order = _layers(free, tol_m, tol_r, better) + _layers(flagged, tol_m, tol_r, better)
     ranked_out, rank_no, groups = [], 0, {}
     for gno, members in enumerate(order, 1):
         for c in members:
@@ -322,7 +339,8 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
                  forecasts: Sequence = (), event_facts: Optional[dict] = None,
                  cutoff_utc: Optional[datetime] = None,
                  mmod_area_m2: float = 1.0, mmod_m_min_g: float = 1e-3,
-                 tolerance_basis_ru: str = '', shown_limit: int = 5) -> ScanResult:
+                 tolerance_basis_ru: str = '', shown_limit: int = 5,
+                 meteor_model: Optional[Callable[[Window], dict]] = None) -> ScanResult:
     """Перебор начал выхода по готовой трассе.
 
     `full_assess` — полная оценка одного окна теми же входами, какими считается карточка окна.
@@ -350,6 +368,7 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
                          '(config/settings.toml, [ui].scan_step_min) или сократите срок поиска'
                          % (step_min, len(grid), MAX_CANDIDATES))
     cands: list[Candidate] = []
+    meteor_models = {} if meteor_model else None
     for start in grid:
         end = start + timedelta(minutes=duration_min)
         # Нарезка — теми же выражениями, что в assess_window: берутся и обрамляющие точки,
@@ -370,7 +389,13 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
         # включены, точек меньше двух — расчёт невозможен и значение остаётся непосчитанным.
         i0, i1 = bisect_left(times, start), bisect_right(times, end)
         mmod = None
-        if i1 - i0 >= 2:
+        if meteor_model is not None:
+            result = meteor_model(Window(start, duration_min))
+            meteor_models[start] = result
+            mmod = result.get('N')
+            if mmod is None:
+                cov = Coverage.NONE
+        elif i1 - i0 >= 2:
             try:
                 mmod = meteoroid_hits_track(times[i0:i1], alt_km[i0:i1], mmod_area_m2, mmod_m_min_g).N
             except ValueError:
@@ -385,7 +410,7 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
     # чувствительности. Другие числа здесь означали бы, что «равнозначно» на одном экране
     # значит две разные вещи.
     tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
-    cands, best, rec_i, verdict = _rank_candidates(cands, tol_m, tol_r)
+    cands, best, rec_i, verdict = _rank_candidates(cands, tol_m, tol_r, meteor_models, th.meteoroid_equal_pct)
 
     # Полная оценка — только для показываемых: рекомендованного и строк таблицы лучших.
     shown = [i for i in sorted({*best, *( (rec_i,) if rec_i is not None else () )},
@@ -417,12 +442,30 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
                    tolerance_basis_ru or ('оба взяты из настроек сервиса как нижние границы — '
                                           'анализ чувствительности в этом расчёте их не уточнял')))
     kind, span = answer_of(cands, best, verdict, tol_m, tol_r)
+    seasonal_tradeoff = False
+    if meteor_models is not None and len(best) >= 2 and verdict == 'equivalent':
+        from vkd.assess.seasonal import comparison_sensitivity
+        stability = comparison_sensitivity([meteor_models[cands[i].start_utc] for i in best],
+                                           th.meteoroid_equal_pct)
+        vals = [cands[i].mmod_hits for i in best]
+        seasonal_tradeoff = (not stability['stable'] or
+                            max(vals) > min(vals)*(1+th.meteoroid_equal_pct/100))
+        if seasonal_tradeoff:
+            kind, span = 'tradeoff', None
+    explanation = why_ru(cands, best, rec_i, verdict, step_min, tol_m, tol_r, refusal_ru, kind, span)
+    if seasonal_tradeoff:
+        explanation = ('Перебрано %d начал. Лучшие кандидаты не дают однозначного выбора по двум механизмам: '
+                       'сезонная оценка спорит с космопогодой или меняет различимость при гипотезах модели. '
+                       'Промежуток равнозначных начал не установлен; сравните компоненты и ограничения.' % len(cands))
+    rank_rule = RANK_RULE_RU
+    if meteor_models is not None:
+        rank_rule += (' Сезонные метеороиды участвуют в доминировании: преимущество должно сохраняться '
+                      'при одинаковых гипотезах у всех кандидатов; допуск %.3g %% — правило команды.' % th.meteoroid_equal_pct)
     return ScanResult(requested_duration_min=int(duration_min), search_from_utc=search_from_utc,
-                      search_to_utc=search_to_utc, step_min=int(step_min), rule=RANK_RULE_RU,
+                      search_to_utc=search_to_utc, step_min=int(step_min), rule=rank_rule,
                       tolerance_note=tol_note, candidates=tuple(cands), best=tuple(best),
                       recommended_index=rec_i, verdict=verdict, scope=scope,
-                      why=why_ru(cands, best, rec_i, verdict, step_min, tol_m, tol_r, refusal_ru,
-                                 kind, span),
+                      why=explanation,
                       answer_kind=kind, answer_span=span, assessments=A)
 
 

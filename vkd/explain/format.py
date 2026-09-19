@@ -41,6 +41,8 @@ def fmt_ru(v, unit: str = '') -> str:
 
 # Имена источников по-русски: на оперативном уровне не должно быть идентификаторов кода (О5).
 SOURCE_ID_RU = {
+    'ecss_streams': 'каталог метеорных потоков ECSS C-2',
+    'ecss_seasonal': 'сезонная инженерная модель ECSS',
     'nasa_jsc_oem': 'эфемериды NASA/JSC', 'celestrak_gp': 'элементы орбиты МКС',
     'igrf13': 'коэффициенты IGRF-13', 'igrf14': 'коэффициенты IGRF-14',
     'nasa_donki_notification': 'уведомление NASA DONKI',

@@ -31,6 +31,15 @@ def collect_records(raw_records, history_versions, orbit_provenance, belts, root
         path = 'vkd/assess/meteoroids.py'
         add_file(rid, {'source_id': source, 'raw_path': path, 'quality': 'model',
                       'evidence_role': 'implementation_and_constants; not a provider observation'}, root/path)
+    from vkd.assess.seasonal import CATALOGUE_ID, METHOD_ID
+    for rid, source, path in [
+        (CATALOGUE_ID, 'ecss_streams', 'data/meteoroids/ecss_c2_streams.json'),
+        (METHOD_ID, 'ecss_seasonal', 'vkd/assess/seasonal.py')]:
+        add_file(rid, {'source_id': source, 'raw_path': path, 'quality': 'model',
+                      'citation': 'ECSS-E-ST-10-04C Rev.1 (2020), C-2; seasonal engineering hypotheses v1',
+                      'url': 'https://ecss.nl/wp-content/uploads/2020/07/ECSS-E-ST-10-04C-Rev.1%2815June2020%29.pdf',
+                      'standard_sha256': 'c8bbbc139066eab8300665206b581a2d1b40a9b6ace6342831403078fc4204bc',
+                      'evidence_role': 'model_catalogue_or_implementation; not an observation'}, root/path)
     for rid, item in raw_records.items():
         meta = item.get('metadata') if isinstance(item, dict) else None
         if not meta:

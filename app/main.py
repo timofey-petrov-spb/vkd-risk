@@ -975,6 +975,31 @@ with tabs[TAB_FACTORS]:
         st.caption('Порядок сравнения: охват → условия → сравнение по механизмам → сведение → допуск равнозначности '
                    '(формулы — вкладка «Методика»).')
 
+    if S.get('meteoroids'):
+        with st.expander('Метеороиды: вклад потоков и чувствительность расчёта'):
+            st.caption('Сезонная инженерная модель: 49 потоков ECSS, масса ≥0,001 г, '
+                       'случайно ориентированная односторонняя пластина 1 м². '
+                       'Всплески конкретного года не предсказываются.')
+            manual_starts = {w['start_utc'] for w in S['windows']}
+            models = ((start, m) for start, m in S['meteoroids'].items() if start in manual_starts)
+            for number, (start, model) in enumerate(models, 1):
+                st.markdown('**Окно %d**' % number)
+                if not model.get('streams_included'):
+                    st.warning(model.get('error', 'Сезонный расчёт недоступен'))
+                    continue
+                st.write('Итого %s = фон после вычитания среднего вклада потоков %s + потоки даты %s.' % (
+                    fmt(model['N']), fmt(model['N_sporadic_adjusted']), fmt(model['N_streams'])))
+                st.dataframe([{'поток': part['name'], 'попаданий за окно': fmt(part['expected_hits']),
+                               'время вне тени Земли, мин': round(part['unblocked_duration_s']/60, 2)}
+                              for part in model['contributions'][:5]], hide_index=True, width='stretch')
+                sensitivity = model['sensitivity']
+                st.write('Разброс при альтернативных гипотезах: %s…%s попаданий. '
+                         'Это не доверительный интервал. При уменьшении шага вдвое итог меняется на %s %%.' % (
+                         fmt(sensitivity['min_N']), fmt(sensitivity['max_N']),
+                         fmt(100*sensitivity['half_step_relative_change'])))
+                st.caption(model['limits'])
+            st.caption('Все 49 вкладов, варианты расчёта и происхождение данных сохранены в ZIP-отчёте.')
+
 with tabs[TAB_METHOD]:
     st.markdown('**Как считается то, что показано на экране.** У каждой формулы — номер, расшифровка символов, '
                 'стандарт с пунктом или таблицей и то, что в ней НЕ учтено. Карточки во вкладке «Объяснения» '
