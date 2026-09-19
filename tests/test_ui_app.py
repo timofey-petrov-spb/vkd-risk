@@ -163,7 +163,8 @@ def test_operativnyy_uroven_bez_obryvkov_koda():
     body = texts(at, drop_urls=True) + '\n' + '\n'.join(str(r.get('статус', '')) for r in source_rows(at))
     for bad in ('experiments.', 'vkd.history', 'sha256', 'SHA-256', 'HTTP 200', 'ReadTimeout',
                 'scripts/replay_example.py', 'three_day_forecast', 'README',
-                'CONTRACT.md', 'config/settings.toml', 'nasa_jsc_oem', 'donki_msg#', 'sep_valid_hours'):
+                'CONTRACT.md', 'config/settings.toml', 'nasa_jsc_oem', 'donki_msg#',
+                'sep_valid_hours', 'event_valid_hours'):
         assert bad not in body, bad
     assert 'из архив ' not in body, 'падеж: «из архива»'
 
