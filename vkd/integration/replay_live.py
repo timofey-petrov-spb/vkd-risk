@@ -53,10 +53,18 @@ def _find(raw_records: dict, source_id: str) -> Optional[tuple[str, dict]]:
 
 
 def _parse(rec: dict, source_id: str, now: datetime):
-    """(метаданные, разбор, байты) из сохранённой записи; LiveDataError — если байты не разбираются."""
+    """(метаданные, разбор, байты) из сохранённой записи; LiveDataError — если байты не разбираются.
+
+    Разбор идёт на момент ПОЛУЧЕНИЯ записи, а не на момент расчёта. Иначе повтор
+    не воспроизводит живой запрос: разборщик Kp отбрасывает незавершённый 3-часовой
+    интервал по правилу `конец интервала > now` (`vkd/sources/live_parsers.parse_kp`),
+    и при разборе на момент расчёта интервал, который в живом запросе был ещё
+    незавершённым, становится завершённым — повтор берёт другое значение Kp.
+    Давность данных при этом по-прежнему считается от момента расчёта (см. `_fetch`).
+    """
     meta = dict(rec.get('metadata') or {})
     raw = base64.b64decode(rec['content_base64'])
-    parsed = PARSERS[source_id](raw, now)
+    parsed = PARSERS[source_id](raw, utc(meta['fetched_utc']) if meta.get('fetched_utc') else now)
     return meta, parsed, raw
 
 

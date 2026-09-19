@@ -96,3 +96,43 @@ def test_future_archive_records_do_not_enter_the_strict_snapshot():
     again = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
     assert _strip(strict.S)['windows'] == _strip(again.S)['windows']
     assert strict.S['recommendation'] == again.S['recommendation']
+
+
+def test_replay_parses_saved_records_at_their_fetch_time_not_at_calculation_time():
+    """Т8: повтор текущего режима разбирает сохранённые байты на момент ПОЛУЧЕНИЯ записи.
+
+    Разборщик Kp отбрасывает незавершённый 3-часовой интервал по правилу «конец
+    интервала позже now» (`vkd/sources/live_parsers.parse_kp`). Если повторять разбор
+    на момент расчёта, интервал, который в живом запросе был ещё незавершённым, к
+    моменту расчёта оказывается завершённым, и повтор берёт ДРУГОЕ значение Kp —
+    расчёт перестаёт воспроизводиться. Найдено на `examples/live_now.zip` 19.09.2026:
+    живой запрос в 02:55 дал Kp интервала, закончившегося в 00:00, а повтор на момент
+    расчёта 03:07 — интервала, закончившегося в 03:00.
+    """
+    import base64
+    import json as _json
+    from vkd.integration.replay_live import from_saved_records
+
+    fetched = datetime(2026, 9, 19, 2, 55, tzinfo=timezone.utc)
+    computed = datetime(2026, 9, 19, 3, 7, tzinfo=timezone.utc)
+    payload = _json.dumps({'Kp': [1.667, 2.0], 'status': ['def', 'pre'],
+                           'datetime': ['2026-09-18T21:00:00Z', '2026-09-19T00:00:00Z']}).encode()
+    records = {
+        'gfz_kp:sha': {'metadata': {'source_id': 'gfz_kp', 'raw_record_id': 'gfz_kp:sha', 'version': 'v1',
+                                    'fetched_utc': fetched.isoformat()},
+                       'encoding': 'base64', 'content_base64': base64.b64encode(payload).decode()},
+        'noaa_swpc_goes:sha': {'metadata': {'source_id': 'noaa_swpc_goes', 'raw_record_id': 'noaa_swpc_goes:sha',
+                                            'version': 'v1', 'fetched_utc': fetched.isoformat()},
+                               'encoding': 'base64',
+                               'content_base64': base64.b64encode(_json.dumps(
+                                   [{'time_tag': '2026-09-19T02:55:00Z', 'satellite': 18, 'flux': 0.21,
+                                     'energy': '>=10 MeV'}]).encode()).decode()},
+    }
+    tle = open(TLE, encoding='utf-8').read()
+    (_g, _gr, _fg), (kp, _kr, f_kp), _tle, _noaa = from_saved_records(records, computed, tle_text=tle)
+    assert kp is not None, f_kp.status_ru
+    # интервал 21:00–00:00 завершён к 02:55; интервал 00:00–03:00 на 02:55 ещё шёл
+    assert kp.t_utc == datetime(2026, 9, 19, 0, 0, tzinfo=timezone.utc), kp.t_utc
+    assert kp.value == 1.667
+    # давность по-прежнему считается от момента РАСЧЁТА, а не от момента получения
+    assert abs(f_kp.age_min - 187.0) < 0.001, f_kp.age_min
