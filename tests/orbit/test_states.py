@@ -22,7 +22,7 @@ FIXTURES = Path(__file__).parent/'fixtures'
 
 class InertialTests(unittest.TestCase):
     def test_independent_erfa_teme_to_j2000_position_and_velocity(self):
-        ref = json.loads((FIXTURES/'inertial_reference.json').read_text())
+        ref = json.loads((FIXTURES/'inertial_reference.json').read_text(encoding='utf-8'))
         self.assertEqual(hashlib.sha256((ROOT/'data/orbit/iss.tle').read_bytes()).hexdigest(), ref['tle_sha256'])
         start = utc(ref['cases'][0]['t_utc'])
         meta,_,proof = trajectory_with_provenance(start,1920,24000,mode='live',include_inertial_states=True)

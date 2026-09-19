@@ -23,7 +23,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ephemeris', type=Path, required=True)
     args = parser.parse_args()
-    expected = json.loads(Path(__file__).with_suffix('.json').read_text())
+    expected = json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf-8'))
     if hashlib.sha256(args.ephemeris.read_bytes()).hexdigest() != expected['ephemeris_sha256']:
         raise ValueError('DE421 SHA-256 differs from the verified reference')
     if skyfield.__version__ != expected['skyfield']:

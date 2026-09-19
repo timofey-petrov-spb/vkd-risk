@@ -7,7 +7,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 
 def archived_release(release_id):
-    records = json.loads((REPO / 'data/source_registry_2024/noaa/records.json').read_text())['records']
+    records = json.loads((REPO / 'data/source_registry_2024/noaa/records.json').read_text(encoding='utf-8'))['records']
     record = next(r for r in records if r['release_id'] == release_id)
     return deepcopy(record), (REPO / record['raw_path']).read_bytes()
 

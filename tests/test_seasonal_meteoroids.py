@@ -28,7 +28,7 @@ from vkd.assess.seasonal import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTROLS = json.loads((ROOT / "data/meteoroids/seasonal_controls.json").read_text())
+CONTROLS = json.loads((ROOT / "data/meteoroids/seasonal_controls.json").read_text(encoding='utf-8'))
 UTC = timezone.utc
 
 
@@ -81,7 +81,7 @@ def test_catalogue_matches_frozen_literal_source():
 
 
 def test_solar_coordinates_against_archived_de421():
-    controls = json.loads((ROOT / "data/meteoroids/seasonal_solar_controls.json").read_text())
+    controls = json.loads((ROOT / "data/meteoroids/seasonal_solar_controls.json").read_text(encoding='utf-8'))
     for row in controls["controls"]:
         t = datetime.fromisoformat(row["time_utc"].replace("Z", "+00:00")).timestamp()
         assert abs(float(solar_longitude_deg(t)) - row["solar_apparent_ecliptic_J2000_deg"]) < 0.004

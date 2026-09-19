@@ -56,7 +56,7 @@ def mean_profile(row: dict, truncate_1pct: bool) -> float:
 
 
 def make_controls() -> dict:
-    source = json.loads(INPUT.read_text())
+    source = json.loads(INPUT.read_text(encoding='utf-8'))
     rows = source['streams']
     assert len(rows) == 49
     mass_g = MASS_KG * 1000.0
@@ -148,7 +148,7 @@ def main() -> None:
     if args.write:
         OUTPUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
     elif args.check:
-        expected = json.loads(OUTPUT.read_text())
+        expected = json.loads(OUTPUT.read_text(encoding='utf-8'))
         assert expected == payload, 'Committed controls differ from independent calculation'
         assert all(abs(row['q_at_peak'] - 1.0) < 1e-14 for row in payload['stream_controls'])
         assert all(row['mean_q_uniform_longitude_components_cut_at_1pct'] <= row['mean_q_uniform_longitude_untruncated'] for row in payload['stream_controls'])
