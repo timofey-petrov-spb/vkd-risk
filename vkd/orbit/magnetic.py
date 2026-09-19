@@ -9,11 +9,16 @@ from pathlib import Path
 import numpy as np
 import ppigrf
 
+from . import cutoff_table as zh1
 from .oem import OrbitDataError
 
 # IGRF reference radius, IAGA model convention; c is exact in SI.
 IGRF_RADIUS_KM = 6371.2
 LIGHT_SPEED_M_S = 299792458.0
+# Происхождение жёсткости обрезания в точке: что именно её посчитало.
+CUTOFF_TABLE = 'ost_zh1_table'        # таблица Ж.1 ОСТ 134-1044-2007 + пересчёт высоты (Ж.3)
+CUTOFF_DIPOLE = 'dipole_centred'      # запасной путь: вертикальная формула Штёрмера на центральном диполе
+CUTOFF_NONE = 'none'                  # значения нет ни по одному пути
 
 
 @lru_cache(maxsize=4)
@@ -22,12 +27,21 @@ def _coefficients(path: str, content_sha256: str):
 
 
 def magnetic_coordinates(ecef_km: np.ndarray, lon_deg: np.ndarray, lat_deg: np.ndarray,
-                         alt_km: np.ndarray, times: list[datetime], coeff_path: Path) -> dict:
+                         alt_km: np.ndarray, times: list[datetime], coeff_path: Path,
+                         cutoff_table_path: Path | None = None) -> dict:
     """IGRF vectors vary at each point/time; no mixed IGRF/dipole B/B0.
 
-    L, B/B0 and vertical Størmer cutoff all use degree-one IGRF only.
-    They are approximations, not traced McIlwain coordinates or storm-time cutoff.
-    Full degree-13 IGRF magnitude is returned separately for the field/SAA proxy.
+    L and B/B0 use degree-one IGRF only. They are approximations, not traced
+    McIlwain coordinates. Full degree-13 IGRF magnitude is returned separately
+    for the field/SAA proxy.
+
+    Vertical cutoff rigidity: with cutoff_table_path the primary source is table
+    Zh.1 of OST 134-1044-2007 (see vkd/orbit/cutoff_table.py), because a centred
+    dipole is latitude-symmetric and overstates the southern cutoff by a factor
+    of 1.7-2.2. The dipole formula stays as the fallback outside the table
+    latitudes and when the file is unavailable; 'cutoff_source' says per point
+    which path produced the value, and 'cutoff_dipole_GV' keeps the dipole value
+    for comparison.
     """
     g, h = _coefficients(str(coeff_path), hashlib.sha256(coeff_path.read_bytes()).hexdigest())
     # SHC epochs are naive UTC, so do not interpret timestamp() in local timezone.
@@ -71,5 +85,40 @@ def magnetic_coordinates(ecef_km: np.ndarray, lon_deg: np.ndarray, lat_deg: np.n
     # Vertical Størmer Rc = c * B_equator * R / (4 L²), converted T,m -> GV.
     cutoff_GV[valid] = (LIGHT_SPEED_M_S * equatorial_nT[valid] * 1e-9
                        * IGRF_RADIUS_KM * 1000 / 4 / 1e9 / shell_L[valid] ** 2)
+    dipole_cutoff_GV = cutoff_GV.copy()
+    cutoff_source = np.where(valid, CUTOFF_DIPOLE, CUTOFF_NONE).astype(object)
+    cutoff_valid = valid.copy()
+    info = {'primary': CUTOFF_DIPOLE, 'fallback': CUTOFF_DIPOLE, 'table': None,
+            'n': len(times), 'n_table': 0, 'n_dipole': int(valid.sum()),
+            'n_none': int((~valid).sum()), 'table_status': 'таблица Ж.1 не запрошена'}
+    if cutoff_table_path is not None:
+        table, info['table_status'] = None, None
+        try:
+            table = zh1.load_table(cutoff_table_path)
+        except FileNotFoundError:
+            # Объявленный запасной путь: файла таблицы нет — считаем диполем и говорим об этом.
+            info['table_status'] = ('файл таблицы Ж.1 недоступен (%s); жёсткость обрезания '
+                                    'посчитана запасным путём — центральным диполем' % cutoff_table_path)
+        if table is not None:
+            table_GV, inside = zh1.vertical_cutoff_GV(table, lat_deg, lon_deg, radius_km)
+            use = inside & np.isfinite(table_GV)
+            cutoff_GV = np.where(use, table_GV, cutoff_GV)
+            cutoff_source = np.where(use, CUTOFF_TABLE, cutoff_source).astype(object)
+            cutoff_valid = use | valid
+            # в отчёт — репозиторный путь, не путь машины (Т8), как у коэффициентов поля
+            shown = str(table.path).replace('\\', '/')
+            info.update({'primary': CUTOFF_TABLE, 'table': table.description_ru,
+                         'table_path': (zh1.TABLE_RELATIVE_PATH if shown.endswith(zh1.TABLE_RELATIVE_PATH)
+                                        else shown),
+                         'table_sha256': table.sha256,
+                         'table_altitude_km': zh1.TABLE_ALTITUDE_KM, 'table_epoch_year': zh1.TABLE_EPOCH_YEAR,
+                         'height_correction': 'Ж.3: Rc = R0c · ((R_З + H0) / r)², r — геоцентрическое расстояние точки',
+                         'interpolation': 'билинейная по широте и долготе, долгота замкнута в круг (330° рядом с 0°)',
+                         'kp_mlt_correction': 'не применена (Ж.4–Ж.6); значения — для спокойных условий',
+                         'n_table': int(use.sum()), 'n_dipole': int((~use & valid).sum()),
+                         'n_none': int((~use & ~valid).sum()),
+                         'table_status': 'таблица применена в %d из %d точек' % (int(use.sum()), len(times))})
     return {'B_nT': np.linalg.norm(components, axis=1), 'L': shell_L,
-            'B_over_B0': ratio, 'cutoff_GV': cutoff_GV, 'valid': valid}
+            'B_over_B0': ratio, 'cutoff_GV': cutoff_GV, 'valid': valid,
+            'cutoff_dipole_GV': dipole_cutoff_GV, 'cutoff_source': cutoff_source,
+            'cutoff_valid': cutoff_valid, 'cutoff_info': info}
