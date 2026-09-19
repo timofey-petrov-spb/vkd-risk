@@ -41,7 +41,10 @@ GREEN, AMBER = '#1e8449', '#b9770e'
 BG, PANEL, RULE = '#0e1117', '#161b26', '#242b38'
 INK, MUTED = '#e8ebf2', '#a7b0c0'
 # Одна гарнитура на весь экран: та же, что у страницы и у подписей внутри глобуса.
-FONT = 'Inter, Segoe UI, Roboto, Arial, sans-serif'
+# Public Sans — шрифт государственного стандарта США, которым набран сайт NASA; он свободный,
+# но адресом сюда не подключается: посторонних адресов на площадке не заводим. Нет его в системе —
+# встанет следующий без засечек, а размеры и начертания заданы числами и не поплывут.
+FONT = 'Public Sans, Inter, Segoe UI, Roboto, Arial, sans-serif'
 # Тёмные пары для заливок: dark_figure подставляет тёмный оттенок только по точному совпадению
 # строки цвета, а заливка задаётся с прозрачностью (rgba) и мимо той таблицы проходит.
 RED_FILL = 'rgba(245,139,127,0.16)'          # аномалия: красный тёмной темы (#f58b7f) вполсилы
@@ -112,15 +115,25 @@ def style(fig: go.Figure, height: int, legend_top: bool = True, title: str | Non
                       separators=SEPARATORS,
                       hoverlabel=dict(bgcolor=PANEL, bordercolor=RULE, font=dict(family=FONT, size=12, color=INK)))
     if title:
-        fig.update_layout(title=dict(text=title, x=0, xanchor='left', font=dict(size=14, color=INK)),
-                          margin=dict(l=10, r=10, t=76, b=10))
+        # Заголовок внутри рисунка набран как ПОДПИСЬ, а не как второй заголовок: имя блока уже
+        # стоит на экране над рисунком, и повторять его крупным кеглем — удвоение. Строка остаётся
+        # потому, что называет ОТКУДА взяты величины, а имя блока этого не говорит.
+        fig.update_layout(title=dict(text=title, x=0, xanchor='left',
+                                     font=dict(family=FONT, size=12, weight=400, color=MUTED)),
+                          margin=dict(l=10, r=10, t=70, b=10))
     if legend_top:
         fig.update_layout(legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0,
-                                      font=dict(size=12, color=MUTED), bgcolor='rgba(0,0,0,0)'))
+                                      font=dict(family=FONT, size=12, weight=500, color=MUTED),
+                                      bgcolor='rgba(0,0,0,0)'))
+    # Размеры сняты с сайта NASA и приведены к экрану: подпись оси 13 px полужирная, деления
+    # 12 px обычные приглушённым тоном. Деления тише подписи — иначе сетка чисел спорит с именем
+    # величины, а читают сначала имя.
     fig.update_xaxes(showgrid=False, zeroline=False, showline=False, ticks='outside', ticklen=4, tickcolor=RULE,
-                     tickfont=dict(size=12, color=MUTED), title_font=dict(size=13, color=MUTED))
+                     tickfont=dict(family=FONT, size=12, weight=400, color=MUTED),
+                     title_font=dict(family=FONT, size=13, weight=600, color=MUTED))
     fig.update_yaxes(showgrid=True, gridcolor=RULE, gridwidth=1, zeroline=False, showline=False,
-                     tickfont=dict(size=12, color=MUTED), title_font=dict(size=13, color=MUTED))
+                     tickfont=dict(family=FONT, size=12, weight=400, color=MUTED),
+                     title_font=dict(family=FONT, size=13, weight=600, color=MUTED))
     return fig
 
 
@@ -253,12 +266,14 @@ def ground_track(traj, windows, thr_nT: float, when: datetime, step_lon: float =
     fig.update_layout(template='plotly_dark', height=440, margin=dict(l=0, r=0, t=76, b=0),
                       title=dict(text='Трасса МКС и область аномалии — наш расчёт |B| по IGRF, '
                                       'высота %s, время UTC' % alt_ru,
-                                 x=0, xanchor='left', font=dict(size=14, color=INK)),
+                                 x=0, xanchor='left',
+                                 font=dict(family=FONT, size=12, weight=400, color=MUTED)),
                       font=dict(family=FONT, size=13, color=INK),
                       paper_bgcolor=BG, plot_bgcolor=BG, separators=SEPARATORS,
                       hoverlabel=dict(bgcolor=PANEL, bordercolor=RULE, font=dict(family=FONT, size=12, color=INK)),
                       legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0,
-                                  font=dict(size=12, color=MUTED), bgcolor='rgba(0,0,0,0)'))
+                                  font=dict(family=FONT, size=12, weight=500, color=MUTED),
+                                  bgcolor='rgba(0,0,0,0)'))
     return fig
 
 
@@ -385,7 +400,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     for i, w in enumerate(windows):
         x1 = w.start_utc + timedelta(minutes=w.duration_min)
         for r in range(1, rows + 1):
-            fig.add_vrect(x0=w.start_utc, x1=x1, fillcolor=dark_pair(win_color(i)), opacity=0.10,
+            fig.add_vrect(x0=w.start_utc, x1=x1, fillcolor=dark_pair(win_color(i)), opacity=0.09,
                           line_width=0, layer='below', row=r, col=1, exclude_empty_subplots=False)
         fig.add_annotation(x=w.start_utc, y=0.86, xref='x', yref='y domain', row=1, col=1, secondary_y=False,
                            text='окно %d' % (i + 1), showarrow=False, xanchor='left', yanchor='top',

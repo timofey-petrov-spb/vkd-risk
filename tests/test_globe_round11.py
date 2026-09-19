@@ -530,8 +530,10 @@ def _ops_from_template() -> dict:
     assert ops['OP_REC'] == '1.0', 'рекомендованное окно идёт в полную силу'
     val = {n: float(v) for n, v in ops.items()}
     assert val['OP_BG_DIM'] < val['OP_DIM'] < val['OP_REC'] and val['OP_BG'] < val['OP_REC'], val
-    # JSON печатает 1.0 как «1»: ключи снимка приходят из JSON.stringify
-    return {n: ('1' if v == '1.0' else v) for n, v in ops.items()}
+    # Ключи снимка приходят из JSON.stringify, а JavaScript печатает число короче, чем оно
+    # записано в исходнике: 1.0 как «1», 0.10 как «0.1». Приводим так же, иначе проверка
+    # промахнётся мимо своих же яркостей и скажет, что участков нет.
+    return {n: ('%g' % float(v)) for n, v in ops.items()}
 
 
 def test_component_without_recommendation_keeps_previous_look(traj, field, tmp_path):

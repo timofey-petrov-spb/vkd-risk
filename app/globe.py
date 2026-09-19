@@ -352,13 +352,20 @@ _TEMPLATE = r"""<!DOCTYPE html>
   /* Палитра сцены — та же, что у страницы: фон #0e1117, текст #e8ebf2, приглушённый #a7b0c0,
      разделитель #242b38. Космос тёмный, и единственное яркое пятно в кадре — сама Земля.
      Гарнитура одна на всё: панели, подписи меток на шаре и строка бегунка. */
+  /* Гарнитура: Public Sans (шрифт государственного стандарта США, которым набран сайт NASA),
+     дальше системная без засечек. Адресом шрифт не подключается — посторонних адресов в
+     компоненте нет; не окажется в системе, встанет следующий, а кегли и начертания заданы
+     числами и не поплывут.
+     Межстрочное у мелкого текста свободное (1,55): мелкое читают построчно, ему нужен воздух.
+     У крупного оно тесное — см. подписи меток на шаре. Одинаковое межстрочное везде — первое,
+     что выдаёт любительскую вёрстку. */
   html,body{margin:0;height:100%;background:#0e1117;color:#e8ebf2;overflow:hidden;
-    font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.35;
+    font-family:"Public Sans",Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.55;
     -webkit-font-smoothing:antialiased}
   #scene{position:absolute;inset:0}
   .panel{position:absolute;background:rgba(22,27,38,0.88);border:1px solid #242b38;border-radius:8px;
     padding:11px 13px}
-  #legend{left:14px;top:14px}
+  #legend{left:14px;top:14px;font-size:12px;font-weight:500}
   #ctl{right:14px;top:14px;padding:0;background:none;border:none}
   /* Низ сцены — одна полоса: слева бегунок, справа техническая строка. Прежде панель бегунка
      стояла под кнопкой вращения и закрывала метку начала окна; здесь она шар не перекрывает.
@@ -382,13 +389,16 @@ _TEMPLATE = r"""<!DOCTYPE html>
   #tl input[type=range]::-moz-range-thumb{width:12px;height:12px;border:2px solid #0e1117;
     border-radius:50%;background:#7ab8f5}
   #tl input[type=range]:focus{outline:2px solid #7ab8f5;outline-offset:3px}
-  #tl .val{white-space:nowrap;font-weight:600;font-size:13px;color:#e8ebf2}
+  /* Цифры моноширинные (tabular-nums): при перетаскивании бегунка время и поле меняются каждый
+     кадр, и на пропорциональных цифрах строка дёргалась бы по ширине на каждом знаке. */
+  #tl .val{white-space:nowrap;font-weight:600;font-size:14px;color:#e8ebf2;line-height:1.2;
+    font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
   /* Легенда — сетка с одинаковым шагом строк и одинаковыми образцами, а не список разной длины. */
-  .row{display:flex;align-items:center;gap:10px;height:23px}
-  .sw{width:22px;height:4px;border-radius:2px;flex:none}
-  .bx{width:22px;height:12px;border-radius:3px;flex:none;opacity:.55}
+  .row{display:flex;align-items:center;gap:11px;height:24px}
+  .sw{width:26px;height:5px;border-radius:3px;flex:none}
+  .bx{width:26px;height:13px;border-radius:3px;flex:none;opacity:.55}
   /* Приглушённое в легенде показано так же, как на шаре: тот же цвет, меньшая насыщенность. */
-  .dim{opacity:.5}
+  .dim{opacity:.45}
   button{background:rgba(22,27,38,0.88);color:#e8ebf2;border:1px solid #242b38;border-radius:8px;
     padding:8px 13px;cursor:pointer;font-size:12px;font-family:inherit}
   button:hover{border-color:#7ab8f5;color:#7ab8f5}
@@ -442,7 +452,7 @@ var DAMP = 2.2, V_MAX = 3.0, V_STOP = 1e-4;
    OP_BG, а всё остальное ярко. На тёмной сцене приглушённое читается лучше, чем на светлой,
    поэтому все три приглушённые яркости ниже прежних: ярче Земли и рекомендации не должно
    быть ничего. */
-var OP_REC = 1.0, OP_DIM = 0.28, OP_BG_DIM = 0.12, OP_BG = 0.45;
+var OP_REC = 1.0, OP_DIM = 0.24, OP_BG_DIM = 0.10, OP_BG = 0.45;
 /* Радиусы меток, доли радиуса Земли: окно-кандидат 0,016 — как было; границы рекомендованного
    окна 0,020 и бегунок 0,022 крупнее, потому что читаются первыми. Белый кант 1,5 радиуса. */
 var R_WIN_MARK = 0.016, R_REC_MARK = 0.020, R_SLIDE_MARK = 0.022, RIM_K = 1.5;
@@ -634,8 +644,8 @@ function buildTrack() {
    обрезали бы. Холст рисуется вдвое крупнее CSS-размера (s = 2) — иначе текст мылится на экранах
    с удвоенной плотностью. Высота плашки 40 px и высота в сцене 0,09 — как было; ширина в сцене
    берётся из тех же пропорций, поэтому буквы не растягиваются. */
-var LBL_H = 40, LBL_PAD = 14, LBL_WORLD_H = 0.095;
-var LBL_FONT = "600 17px Inter, 'Segoe UI', Arial, sans-serif";
+var LBL_H = 34, LBL_PAD = 13, LBL_WORLD_H = 0.080;
+var LBL_FONT = "600 14px 'Public Sans', Inter, 'Segoe UI', Arial, sans-serif";
 
 function label(text, color, v) {
   var cv = document.createElement("canvas"), s = 2, c = cv.getContext("2d");
