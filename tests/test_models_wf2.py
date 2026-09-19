@@ -198,9 +198,14 @@ def test_stability_true_when_verdict_and_window_agree_on_grid():
 
 
 def test_tolerance_basis_text_names_verdict_and_window():
+    """Подпись говорит и про вердикт, и про сетку. С третьего круга «предпочтительное окно»
+    называется только там, где оно есть: на «Гэнноне» его нет ни здесь, ни в ячейках сетки,
+    и подпись обязана сказать именно это (ветки — tests/test_models_round3.py)."""
     r = run('history_forecast', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
     t = r.rec.tolerance_basis
-    assert ('вердикт, и предпочтительное окно' in t) or ('вердикт или предпочтительное окно' in t)
+    assert r.rec.preferred is None and all(v is None for v in r.rob.preferred_starts.values())
+    assert 'предпочтительного окна нет ни в одной ячейке сетки' in t
+    assert 'вердикт' in t and 'выбор устойчив' not in t
     assert 'verdict_by_grid' in r.S['robustness'] and r.S['robustness']['verdict_by_grid']
 
 

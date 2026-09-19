@@ -174,6 +174,57 @@ def _empty_fetch(source_id: str, why: str) -> Fetch:
     return Fetch(source_id, False, False, None, None, why, None, None)
 
 
+def tolerance_caption(th, rob, preferred, requested_fluence_ratio: float, pair_txt=lambda pair: '') -> str:
+    """Подпись под таблицей сравнения окон: из чего получен допуск равнозначности и что
+    говорит о выборе сетка порогов и каналов.
+
+    Подпись обязана совпадать И с вердиктом, И с сеткой. Пока хвост собирался безусловно,
+    при вердикте «окна равнозначны» (предпочтительного окна нет) печаталось «выбор устойчив:
+    на всей сетке одинаковы и вердикт, и ПРЕДПОЧТИТЕЛЬНОЕ ОКНО», а при вердикте «все окна
+    требуют проверки» рядом стояли «порядок окон … МЕНЯЕТСЯ» и «выбор устойчив» плюс числовой
+    «допуск 1 мин», хотя допуск в этом случае не вычисляется вовсе (находка третьего круга).
+
+    Поэтому каждая часть печатается только тогда, когда за ней есть вычисленная величина:
+      * допуск по минутам — только при непустом rob.diff_by_thr;
+      * допуск по флюенсу — только при непустом rob.ratio_by_e;
+      * «порядок окон … сохраняется/МЕНЯЕТСЯ» — только там, где на сетке вообще есть лучшее окно;
+      * хвост о выборе — тремя ветками по наличию предпочтительного окна здесь и на сетке.
+    """
+    thr_txt = '/'.join('%.0f' % x for x in rob.grid[0])
+    e_txt = '/'.join('%g' % x for x in rob.grid[1])
+    if rob.diff_by_thr:
+        tol_min_txt = ('допуск %.0f мин — разброс разности минут в аномалии между окнами при порогах %s нТл '
+                       '(разность минут%s на сетке от %.0f до %.0f)'
+                       % (th.equiv_tol_min, thr_txt, pair_txt(rob.pair),
+                          min(rob.diff_by_thr.values()), max(rob.diff_by_thr.values())))
+    else:
+        tol_min_txt = ('допуск равнозначности по минутам не вычисляется: на сетке порогов %s нТл разность минут между '
+                       'двумя лучшими окнами не определена (меньше двух окон без условий либо минуты не вычислены)' % thr_txt)
+    if rob.ratio_by_e:
+        tol_fl_txt = ('допуск ×%.2f по флюенсу — не меньше настройки ×%.2f и разброса по каналу %s МэВ '
+                      '(отношение флюенсов%s по каналу от ×%.2f до ×%.2f)'
+                      % (th.fluence_equiv_ratio, requested_fluence_ratio, e_txt, pair_txt(rob.pair_fluence),
+                         min(rob.ratio_by_e.values()), max(rob.ratio_by_e.values())))
+    else:
+        tol_fl_txt = ('допуск равнозначности по флюенсу не вычисляется: отношение флюенсов двух лучших окон по каналу '
+                      '%s МэВ не определено (меньше двух окон без условий либо флюенс не вычислен)' % e_txt)
+    if all(v is None for v in (rob.ranking_by_grid or {}).values()):
+        rank_txt = 'порядок окон при нулевом допуске не определён: ни в одной ячейке сетки правило не называет лучшее окно'
+    else:
+        rank_txt = 'порядок окон при нулевом допуске на сетке %s' % ('сохраняется' if rob.ranking_stable else 'МЕНЯЕТСЯ')
+    grid_prefs = set((rob.preferred_starts or {}).values())
+    if preferred is not None:
+        choice_txt = ('выбор устойчив: на всей сетке одно и то же предпочтительное окно и тот же вердикт' if rob.stable else
+                      'ВЫБОР МЕНЯЕТСЯ на сетке: предпочтительное окно или вердикт на ней не одни и те же')
+    elif grid_prefs in ({None}, set()):
+        choice_txt = ('предпочтительного окна нет ни в одной ячейке сетки — сравнивать нечего, и вердикт на сетке '
+                      'один и тот же' if rob.stable else
+                      'предпочтительного окна нет ни в одной ячейке сетки, но ВЕРДИКТ на сетке меняется')
+    else:
+        choice_txt = 'ВЫБОР МЕНЯЕТСЯ на сетке: здесь предпочтительного окна нет, а в части её ячеек оно есть'
+    return '; '.join((tol_min_txt, tol_fl_txt, rank_txt, choice_txt))
+
+
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
         disabled: Optional[dict] = None, thresholds: Optional[Thresholds] = None,
         scenario: Optional[Scenario] = None, T_months: int = 6,
@@ -266,8 +317,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             goes_src_note = 'источник исключён пользователем — данных нет'
             goes_absent_ru = 'архив наблюдений GOES исключён пользователем'
         elif goes is not None:
-            goes_src_note = ('разбор: численный архив наблюдений GOES ≥10 МэВ (NASA iSWA, 5-минутные средние), запись %s; '
-                             'временной охват горизонта %.2f %%' % (goes.raw_record_id, 100.0 * float(goes_cov_a2.get('coverage_fraction') or 0.0)))
+            # имя режима в префиксе — по фактическому режиму: «разбор» означает history_review
+            goes_src_note = ('%sчисленный архив наблюдений GOES ≥10 МэВ (NASA iSWA, 5-минутные средние), запись %s; '
+                             'временной охват горизонта %.2f %%'
+                             % ('строгий режим: ' if mode == 'history_forecast' else 'разбор: ',
+                                goes.raw_record_id, 100.0 * float(goes_cov_a2.get('coverage_fraction') or 0.0)))
         elif mode == 'history_forecast':
             goes_absent_ru = ('архив наблюдений GOES 2024 в строгом режиме исключён: %s'
                               % EXCLUDED_RU['historic_publication_and_version_availability_not_proven'])
@@ -284,10 +338,18 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                               and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min)),
                              key=lambda s: s.t_utc)
             if _g_line:
+                # Прослеживаемость ряда: у каждой записи выгрузки должно быть ЛИБО время публикации,
+                # ЛИБО названная причина его отсутствия — иначе причина живёт только в таблице
+                # источников на экране, а в самом файле ряда её нет (находка третьего круга).
+                _g_pub = _g_line[0].published_utc
                 observations.append({
                     'channel': GOES_CHANNEL, 'label': 'GOES, протоны ≥10 МэВ — наблюдение',
                     'unit': _g_line[0].unit, 'source_id': _g_line[0].source_id,
-                    'published_utc': (_g_line[0].published_utc.isoformat() if _g_line[0].published_utc else None),
+                    'published_utc': (_g_pub.isoformat() if _g_pub else None),
+                    'publication_absence_reason': (
+                        None if _g_pub else
+                        'у записей архива наблюдений собственного времени публикации нет: %s'
+                        % EXCLUDED_RU['historic_publication_and_version_availability_not_proven']),
                     'record': _g_line[0].raw_record_id,
                     'quality': _g_line[0].quality, 'n_points': len(_g_line),
                     'points': [{'t': s.t_utc.isoformat(), 'value': float(s.value)} for s in _g_line]})
@@ -451,29 +513,17 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     th = replace(th, equiv_tol_min=rob.tol_min, fluence_equiv_ratio=rob.tol_ratio)
     assessments = [_assess(w, traj, th) for w in windows]
     rec = recommend(assessments, th)
-    thr_txt = '/'.join('%.0f' % x for x in rob.grid[0])
     def _pair_txt(pair):
         if not pair:
             return ''
         i_b = next(i + 1 for i, a in enumerate(assessments) if a.window.start_utc.isoformat() == pair[0])
         i_s = next(i + 1 for i, a in enumerate(assessments) if a.window.start_utc.isoformat() == pair[1])
         return ' между окнами %d и %d' % (i_b, i_s)
-    d_txt = ('разность минут%s на сетке от %.0f до %.0f' % (_pair_txt(rob.pair), min(rob.diff_by_thr.values()), max(rob.diff_by_thr.values()))
-             if rob.diff_by_thr else 'разность минут на сетке не определена (меньше двух окон без условий)')
-    r_txt = ('отношение флюенсов%s по каналу от ×%.2f до ×%.2f' % (_pair_txt(rob.pair_fluence), min(rob.ratio_by_e.values()), max(rob.ratio_by_e.values()))
-             if rob.ratio_by_e else 'отношение флюенсов не определено')
     rec = replace(rec, is_simulated=is_sim,
                   missing=rec.missing + (('орбита недоступна: %s' % orb.error,) if orb.error else ()),
-                  tolerance_basis='допуск %.0f мин — разброс разности минут в аномалии между окнами при порогах %s нТл (%s); '
-                                  'допуск ×%.2f по флюенсу — не меньше настройки ×%.2f и разброса по каналу %s МэВ (%s); '
-                                  'порядок окон при нулевом допуске на сетке %s; %s' % (
-                                      th.equiv_tol_min, thr_txt, d_txt, th.fluence_equiv_ratio,
-                                      max(1.0, (thresholds or Thresholds.from_settings()).fluence_equiv_ratio),
-                                      '/'.join('%g' % x for x in rob.grid[1]), r_txt,
-                                      'сохраняется' if rob.ranking_stable else 'МЕНЯЕТСЯ',
-                                      'выбор устойчив: на всей сетке одинаковы и вердикт, и предпочтительное окно'
-                                      if rob.stable else
-                                      'ВЫБОР МЕНЯЕТСЯ на сетке: вердикт или предпочтительное окно на ней не одни и те же'))
+                  tolerance_basis=tolerance_caption(
+                      th, rob, rec.preferred,
+                      max(1.0, (thresholds or Thresholds.from_settings()).fluence_equiv_ratio), _pair_txt))
     samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
                **{s.raw_record_id: s for s in forecasts}}
     cards_by_window = {a.window.start_utc: cards_for_window(a, samples, events=events, window_index=i + 1, meta=meta,
@@ -501,11 +551,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         # давность — от КОНЦА интервала измерения (valid_to_utc), как в compare.py: у Kp GFZ
         # t_utc — начало трёхчасового интервала, и таблица источников расходилась с фактором на 3 ч
         ref_t = (sample.valid_to_utc or sample.t_utc) if sample else None
+        # давность не бывает отрицательной: у живого Kp GFZ текущий 3-часовой интервал ещё не закончился,
+        # и таблица источников печатала «−97 мин». Фактор в compare.py клампит через max(0, …) —
+        # здесь тот же клампинг, иначе одна и та же величина на одном экране печатается по-разному (R4-3).
         return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
                 'origin': ('живой запрос' if f.ok else ('кеш или снимок репозитория' if f.from_cache else 'данных нет')),
                 'fetched_utc': iso(f.fetched_utc) if f.fetched_utc else None,
                 'data_utc': iso(sample.t_utc) if sample else None,
-                'age_min': round((ref_now - ref_t).total_seconds() / 60) if sample else f.age_min}
+                'age_min': max(0, round((ref_now - ref_t).total_seconds() / 60)) if sample else f.age_min}
 
     orbit_src = {'role': 'орбита', 'status': orb.status_ru, 'strictness': orb.strictness,
                  'origin': ('живой запрос TLE' if mode == 'live' and getattr(f_tle, 'ok', None) else
@@ -533,20 +586,29 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                      'data_utc': iso(goes.t_utc) if goes is not None else None,
                                      # давность GOES — от МОМЕНТА наблюдения (начала 5-минутного усреднения),
                                      # как её считает фактор в compare.py; иначе таблица и фактор разойдутся
-                                     'age_min': round((t0 - goes.t_utc).total_seconds() / 60) if goes is not None else None,
+                                     'age_min': max(0, round((t0 - goes.t_utc).total_seconds() / 60)) if goes is not None else None,
                                      'coverage_fraction': (hist_meta.get('coverage_map') or {}).get(
                                          'goes_p_ge10MeV:observations', {}).get('coverage_fraction')}
         kp_origin = {'gfz_kp_archive': 'архив GFZ (окончательный ряд Kp по 3-часовым интервалам, без времени публикации)',
                      'nasa_donki_notification': 'уведомление DONKI о буре (наблюдённый Kp с временем публикации)',
                      'nasa_donki_gst': 'архив DONKI (карточки GST)'}.get(kp.source_id if kp else '', 'архив (%s)' % kp.source_id if kp else 'нет данных')
+        # родительный падеж для строки «Kp из …»: «из уведомления DONKI о буре», а не «из уведомление».
+        # Имя режима в префиксе — по фактическому режиму: «разбор» — это history_review, разбор после
+        # факта. Строгий прогноз, подписанный словом «разбор», стирает ровно то различие, на котором
+        # держится проверка отсечкой (находка третьего круга); строка уходит в отчёт и манифест.
+        kp_origin_gen = {'gfz_kp_archive': 'архива GFZ (окончательный ряд Kp по 3-часовым интервалам)',
+                         'nasa_donki_notification': 'уведомления DONKI о буре',
+                         'nasa_donki_gst': 'архива DONKI (карточки GST)'}.get(
+            kp.source_id if kp else '', ('архива (%s)' % kp.source_id) if kp else 'нет данных')
+        kp_mode_prefix = 'строгий режим: ' if mode == 'history_forecast' else 'разбор: '
         sources['gfz_kp'] = {'role': 'Kp (в разборе — окончательный ряд GFZ; в строгом режиме — уведомления DONKI о буре)',
-                             'status': (kp_src_note or 'разбор: Kp из %s, запись %s' % (kp_origin.split(' (')[0], kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
+                             'status': (kp_src_note or '%sKp из %s, запись %s' % (kp_mode_prefix, kp_origin_gen, kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
                              else 'сценарий «что если»: моделируемое значение',
                              'live_ok': None, 'from_cache': None,
                              'origin': kp_origin if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
                              'fetched_utc': None,
                              'data_utc': iso(kp.t_utc) if kp and kp.source_id != 'scenario' else None,
-                             'age_min': round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60)
+                             'age_min': max(0, round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60))
                              if kp and kp.source_id != 'scenario' else None}
         sources['donki_archive'] = {'role': 'уведомления DONKI (протонное событие, буря, прогноз прихода выброса)',
                                     # имя программного слоя стоит в '_layers'; в тексте статуса,

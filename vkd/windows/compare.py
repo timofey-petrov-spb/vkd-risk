@@ -30,7 +30,7 @@ from typing import Optional, Sequence
 
 from vkd.assess.meteoroids import SHOWERS_SOURCE_RU, active_showers
 from vkd.assess.trapped import BeltTable
-from vkd.explain.format import fmt_ru, record_ru
+from vkd.explain.format import STORM_SIGNAL_RU, fmt_ru, record_ru
 from vkd.types import (Condition, Conjunction, Coverage, EnvironmentSample, EventInterval, FactorValue, Kind,
                        MechanismAssessment, Presence, Recommendation, TrajectoryPoint,
                        Window, WindowAssessment)
@@ -91,6 +91,8 @@ class Thresholds:
     event_valid_hours: float = 24.0         # действие бури и прихода выброса без объявленного конца ([history])
     cme_kp_bound: str = 'max'               # какая граница ОПУБЛИКОВАННОГО диапазона Kp прихода выброса
                                             # сравнивается с kp_check: 'max' (верхняя, консервативно) или 'min' ([history])
+    meteoroid_equal_pct: float = 5.0        # порог различимости окон по линии метеороидов, % относительной разницы
+                                            # числа попаданий; правило команды, не норма и не стандарт (был литералом в коде)
 
     @classmethod
     def from_settings(cls) -> 'Thresholds':
@@ -347,9 +349,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     if forecasts:
         from vkd.integration.noaa_forecast import covered_fraction, in_window
         for cid, name, unit, rule in (
-                ('kp_forecast', 'прогноз Kp NOAA, максимум в окне', KP_UNIT, 'NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск до отсечки'),
-                ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA', '%', 'NOAA SWPC 3-day forecast, суточная вероятность; выпуск до отсечки'),
-                ('proton_prob_daily', 'вероятность протонного события за сутки, прогноз NOAA', '%', 'NOAA SWPC daypre, суточная вероятность; выпуск до отсечки')):
+                ('kp_forecast', 'прогноз Kp NOAA, максимум в окне', KP_UNIT, 'NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации'),
+                ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA', '%', 'NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации'),
+                ('proton_prob_daily', 'вероятность протонного события за сутки, прогноз NOAA', '%', 'NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации')):
             ss = [s for s in forecasts if s.channel_id == cid]
             hit = in_window(ss, win.start_utc, win.duration_min)
             frac = covered_fraction(ss, win.start_utc, win.duration_min)
@@ -365,7 +367,8 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                 horizon_utc=hz))
             if cid == 'kp_forecast' and val is not None and val >= th.kp_check:
                 cells = [s for s in hit if s.value is not None and s.value >= th.kp_check]
-                storm_signals.append('прогноз NOAA: Kp %s в окне (выпуск %s)' % (fmt_ru(val), pub.strftime('%m-%d %H:%MZ') if pub else '?'))
+                storm_signals.append('%s %s в окне (выпуск %s)' % (STORM_SIGNAL_RU['noaa_kp_forecast'], fmt_ru(val),
+                                                                   pub.strftime('%m-%d %H:%MZ') if pub else '?'))
                 storm_ids += sorted({s.raw_record_id for s in cells})
                 storm_span += [(max(s.valid_from_utc, win.start_utc), min(s.valid_to_utc, end)) for s in cells]
 
@@ -403,7 +406,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                                   + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),
                  FactorValue('активных метеорных потоков на дату (календарь IMO)', float(len(showers)), 'шт', Kind.OWN_CALCULATION,
                              Presence.DETECTED if showers else Presence.NOT_DETECTED, Coverage.FULL, ('imo_calendar',),
-                             SHOWERS_SOURCE_RU + '; ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель — вклад в N не рассчитан',
+                             SHOWERS_SOURCE_RU + '; признак активности потока на дату — в число попаданий не входит '
+                             '(формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, '
+                             'вклад в N не рассчитан',
                              ('активны: ' + '; '.join('%s (пик %s, ZHR до %d, активность %s)' % (s['name'], s['peak'], s['zhr_peak'], s['active'])
                                                      for s in showers) + ' — поток активен, вклад в число попаданий не рассчитан'
                               if showers else 'главных потоков по календарю нет; спорадический фон учтён моделью Grün')
@@ -454,9 +459,10 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     if kp is not None and kp.value is not None and kp_fresh and kp.value >= th.kp_check:
         kp_sim = kp.source_id == 'scenario'
         ref = kp.valid_to_utc or kp.t_utc
-        storm_signals.append('%sнаблюдение Kp %s (интервал до %s, давность %.0f мин, на окно распространено как условие проверки — '
+        storm_signals.append('%s%s %s (интервал до %s, давность %.0f мин, на окно распространено как условие проверки — '
                              'буря может продолжаться, прогноза на окно нет)'
-                             % ('МОДЕЛИРУЕМОЕ ' if kp_sim else '', fmt_ru(kp.value), ref.strftime('%d.%m %H:%MZ'), kp_age_min or 0))
+                             % ('МОДЕЛИРУЕМОЕ ' if kp_sim else '', STORM_SIGNAL_RU['kp_obs'], fmt_ru(kp.value),
+                                ref.strftime('%d.%m %H:%MZ'), kp_age_min or 0))
         storm_ids.append(kp.raw_record_id)
         storm_span.append((kp.valid_from_utc or kp.t_utc, ref))
     # Условиями становятся ТОЛЬКО протонные события, бури и прогноз прихода выброса
@@ -534,13 +540,15 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                 kp_txt = ('Kp до %g (%s)' % (kp_max, kp_basis_ru)) if kp_max is not None else 'уровень Kp не назван'
                 storm_sim = storm_sim or sim
                 if kind_ev == 'GST':
-                    storm_signals.append('%sуведомление DONKI о буре с %s, %s; действие %s — %s%s (%d %s, %s)'
-                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', a0.strftime('%m-%d %H:%MZ'), kp_txt,
+                    storm_signals.append('%s%s с %s, %s; действие %s — %s%s (%d %s, %s)'
+                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', STORM_SIGNAL_RU['donki_storm'],
+                                            a0.strftime('%m-%d %H:%MZ'), kp_txt,
                                             a0.strftime('%m-%d %H:%MZ'), a1.strftime('%m-%d %H:%MZ'), assumed_txt, n,
                                             _plural(n, 'запись', 'записи', 'записей'), pub_txt))
                 else:
-                    storm_signals.append('%sопубликованный прогноз прихода выброса %s (уведомление NASA DONKI), ожидаемый %s; действие %s — %s%s (%d %s, %s)'
-                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', a0.strftime('%m-%d %H:%MZ'), kp_txt,
+                    storm_signals.append('%s%s %s (уведомление NASA DONKI), ожидаемый %s; действие %s — %s%s (%d %s, %s)'
+                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', STORM_SIGNAL_RU['cme_arrival'],
+                                            a0.strftime('%m-%d %H:%MZ'), kp_txt,
                                             a0.strftime('%m-%d %H:%MZ'), a1.strftime('%m-%d %H:%MZ'), assumed_txt, n,
                                             _plural(n, 'запись', 'записи', 'записей'), pub_txt))
                 storm_ids += ids
@@ -667,10 +675,17 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
             vals = [v for v in mm_vals.values() if v is not None]
             best_mm = min((a for a in candidates if mm_vals[id(a)] is not None), key=lambda a: mm_vals[id(a)])
             rel = (max(vals) - min(vals)) / max(min(vals), 1e-30)
+            # Порог различимости окон по линии метеороидов — НЕ стандарт: это правило команды,
+            # вынесенное в config/settings.toml [thresholds].meteoroid_equal_pct. Происхождение
+            # печатается рядом с числом, иначе «меньше 5 %» появляется на экране ниоткуда.
+            equal_pct = th.meteoroid_equal_pct
             per['mmod_stat'] = ('%s: %s попаданий против %s' % (lab(best_mm), fmt_ru(min(vals)), fmt_ru(max(vals)))
-                                if rel > 0.05 else 'окна не различаются (разница %.3f %% меньше 5 %%); %s' % (100 * rel, MMOD_ROLE_RU))
+                                if 100 * rel > equal_pct else
+                                'окна не различаются: разница %s %% ниже порога различимости %s %% '
+                                '(%s; настройка config/settings.toml); %s'
+                                % (('%.3f' % (100 * rel)).replace('.', ','), fmt_ru(equal_pct), TEAM_RULE_RU, MMOD_ROLE_RU))
             # 4. сведение: противоречие механизмов вне допуска → компромисс
-            conflict = rel > 0.05 and best is not None and best_mm.window.start_utc != best.window.start_utc
+            conflict = 100 * rel > equal_pct and best is not None and best_mm.window.start_utc != best.window.start_utc
     tol = 'допуск %.0f мин по минутам и ×%.2f по флюенсу — инженерная настройка, до анализа чувствительности' % (th.equiv_tol_min, th.fluence_equiv_ratio)
     note_partial = tuple(partial_l)
     if missing_l:
