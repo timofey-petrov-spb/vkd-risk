@@ -39,14 +39,15 @@ from app.export import _git_sha, build_zip
 from app.fetch_guard import LIMIT_MARK, fetch_live_sources, total_deadline_s
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_figure, observations_panel
-from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIMITS_SECTION_RU, LIVE_DONKI_REGISTRY_ROW,
+from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DECISION_LEGEND, DISABLED_KEY,
+                    LIMITS_SECTION_RU, LIVE_DONKI_REGISTRY_ROW,
                     LIVE_NO_EVENTS_RU,
                     MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESET_CHANGED_RU, PRESETS,
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE, SCOPE_TAB_HINT_RU,
                     SEV_RU, STRICT_RU, TASK_HINT_RU, VERDICT_TITLE,
                     SCAN_SOURCES_RU, accounted_lines, accounted_lines_from_scan, accounted_sources,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
-                    coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
+                    coverage_scope_ru, dark_figure, dedup_clauses, dose_factor, forecast_label_ru,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
                     grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands,
                     not_accounted_ru, panel, split_panel_rows,
@@ -138,7 +139,6 @@ with st.sidebar:
     # пресета до конца сессии, даже когда пользователь всё перекрутил руками (К4). Само место
     # под подпись занимается сейчас, а текст ставится ниже, когда известны все поля запроса.
     _preset_caption = st.empty()
-    st.caption('Длительность выхода и срок задаются строкой задачи наверху экрана.')
     # умолчание задаётся только при первом показе: у элемента с сохранённым значением Streamlit
     # предупреждает и всё равно берёт сохранённое (пресет пишет состояние до создания элементов)
     _def = lambda key, kw: ({} if key in st.session_state else kw)
@@ -202,12 +202,15 @@ with st.sidebar:
         # пользу, подтверждённую примером. Без этой подписи свёртка содержала только ползунки.
         # Числа примера проверены прогоном: history_forecast 25.06.2024 12:00, период 1440,
         # сдвиги 0/480, Kp 7 — вердикт меняется с preferred на all_need_check.
-        st.caption('Зачем: проверить, устоит ли выбор окна, если обстановка ухудшится уже ПОСЛЕ согласования '
-                   'плана. Подставленные условия помечаются на экране плашкой «сценарий «что если»» и в '
-                   'выгрузке, в реестр источников не попадают. Пример: на тихой дате 25.06.2024 при Kp 7 '
-                   'оба окна получают условие проверки, и вердикт меняется с «есть предпочтительное окно» '
-                   'на «все окна требуют проверки» — то же правило, что на буре Гэннон, но на данных, '
-                   'происхождение которых видно.')
+        # Тринадцатый круг: объяснение потребности (О7) уехало под раскрытие в самой панели.
+        # Оно не потеряно — заголовок раскрытия виден и называет, что внутри.
+        with st.expander('Зачем нужен сценарий «что если»', expanded=False):
+            st.caption('Зачем: проверить, устоит ли выбор окна, если обстановка ухудшится уже ПОСЛЕ согласования '
+                       'плана. Подставленные условия помечаются на экране плашкой «сценарий «что если»» и в '
+                       'выгрузке, в реестр источников не попадают. Пример: на тихой дате 25.06.2024 при Kp 7 '
+                       'оба окна получают условие проверки, и вердикт меняется с «есть предпочтительное окно» '
+                       'на «все окна требуют проверки» — то же правило, что на буре Гэннон, но на данных, '
+                       'происхождение которых видно.')
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15, key='sc_delay',
                              help='Все окна сдвигаются на задержку; показывается как изменение плана.')
         sc_sep_on = st.checkbox('Смоделировать протонное событие', key='sc_sep_on')
@@ -215,8 +218,7 @@ with st.sidebar:
         sc_sep_pfu = st.select_slider('Уровень события, pfu (≥10 МэВ)', [10.0, 100.0, 1000.0, 10000.0], value=100.0, disabled=not sc_sep_on, key='sc_sep_pfu')
         sc_kp_on = st.checkbox('Смоделировать скачок Kp', key='sc_kp_on')
         sc_kp = st.slider('Kp при скачке, безразмерный', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
-        st.caption('Сравнить два-три конкретных окна вручную можно в разделе «Разобрать конкретные окна» '
-                   'под ответом: там же стоят ползунки сдвига.')
+        st.caption('Ручное сравнение окон — раздел «Разобрать конкретные окна» под ответом.')
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
     if mode == 'history_forecast':
@@ -243,9 +245,10 @@ with st.sidebar:
     with st.expander('Вид', expanded=False, icon=':material/visibility:'):
         level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
                          help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
-        st.caption('Тема тёмная: экран смотрят в затемнённом зале, и светлая заливка на проекторе слепит. '
-                   'Светлой темы у сервиса нет — переключателя не ставим, чтобы половина элементов не '
-                   'осталась светлой на тёмном фоне.')
+        # Почему светлой темы нет — в подсказке переключателя, а не строкой в панели.
+        st.caption('Тема тёмная, светлой нет.', help='Экран смотрят в затемнённом зале, и светлая заливка '
+                   'на проекторе слепит. Переключателя не ставим, чтобы половина элементов не осталась '
+                   'светлой на тёмном фоне.')
 
 # автообновление: фрагмент перезапускает расчёт по таймеру (Т1), обновляя только эту сессию (Т6).
 if mode == 'live' and auto_min:
@@ -279,8 +282,9 @@ def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
 
 
 # ================================================================= блок 1: заголовок и назначение
-st.markdown(head('ВКД-Риск', 'когда выходить в открытый космос: внешняя обстановка на траектории МКС '
-                             'и выбор окна · времена UTC'), unsafe_allow_html=True)
+# Тринадцатый круг: под названием стоит ЯРЛЫК в четыре слова, а не предложение о назначении.
+# Полное описание сервиса — во вкладке «Объяснения», первым абзацем.
+st.markdown(head('ВКД-Риск', 'выбор окна выхода · UTC'), unsafe_allow_html=True)
 
 # ================================================================= блок 2: строка задачи
 # Вопрос человека стоит первым элементом главной области, а не в боковой панели: он приходит
@@ -300,7 +304,9 @@ _t3.markdown('<div class="btnpad"></div>', unsafe_allow_html=True)   # кноп�
 _t3.button('Найти окна', key='find_windows', width='stretch', help=TASK_HINT_RU)
 # Одна приглушённая строка на блок: длительность и срок уже стоят в самих полях, повторять их
 # словами незачем. Как работает кнопка — в её подсказке, а не третьей строкой на экране.
-_t4.caption('Выход на %s, начать в ближайшие %s · режим: %s · времена UTC'
+# Ярлык, а не фраза: те же три факта через разделитель, без связок и без «времена UTC»
+# (единица времени названа один раз, в ярлыке под названием сервиса).
+_t4.caption('Выход на %s · срок %s · режим: %s'
             % (hm_ru(duration_min), hm_ru(search_min), mode_ru))
 
 # --- сдвиги окон ручного разбора: значения берутся из состояния ДО расчёта, сами ползунки стоят
@@ -343,7 +349,7 @@ if dup:
 # печатается это, а не параметры пресета: иначе член жюри, нажавший пресет и двинувший ползунок,
 # читает в первом же элементе интерфейса три утверждения, два из которых ложные.
 if _cur is None:
-    _preset_caption.caption('Одна кнопка выставляет режим, дату, час и окна; расчёт запускается обычным путём.')
+    _preset_caption.caption('пресет не выбран')
 elif preset_matches(_cur, mode_ru, st.session_state.get('hist_date'), st.session_state.get('hist_hour'),
                     duration_min, search_min, offsets):
     _preset_caption.caption('%s — %s' % (_cur['label'], _cur['shows']))
@@ -431,7 +437,7 @@ row1 = [('Время расчёта', dt_ru(now), 'все времена на э
         ('Режим', mode_ru, MODE_SUB[mode], 'calc'),
         ('Орбита', orbit_val, orbit_sub, orbit_kind),
         ('Горизонт', '%s ч от начала периода' % fmt(horizon_min / 60.0),
-         'данные берутся до %s, последнее окно кончается %s' % (dt_ru(horizon_to), dt_ru(windows_end)), 'calc')]
+         'данные до %s · окно до %s' % (dt_ru(horizon_to), dt_ru(windows_end)), 'calc')]
 # --- строка 2: источники. Цвет означает ТОЛЬКО происхождение: наблюдение зелёное, даже если взято
 # из кеша (давность стоит подписью); янтарный остаётся за внешним прогнозом; красный — условие
 # проверки по порогу или отказ источника. Кеш цветом больше не помечается (R4-28).
@@ -513,7 +519,7 @@ else:
     _n_by_cutoff = sum(1 for x in R.excluded
                        if excl_group_ru(x.partition(': ')[2]) == 'время публикации или доступность')
     row2.append(('Отсечка публикации' if mode == 'history_forecast' else 'Начало периода', dt_ru(t0),
-                 ('позже отсечки не используется ничего: по времени публикации отложено %s %s'
+                 ('отложено %s %s позже отсечки'
                   % (nbsp_thousands(_n_by_cutoff), plural_ru(_n_by_cutoff, ('запись', 'записи', 'записей'))))
                  if mode == 'history_forecast' else 'архив взят весь — разбор после факта', 'calc'))
     # Наблюдение Kp: в разборе — окончательный ряд GFZ, в строгом режиме — уведомление DONKI
@@ -619,20 +625,36 @@ scan_ans = scan_answer(scan) if scan is not None else None
 scan_cand = (scan_ans or {}).get('first')
 
 # ================================================================= блок 3: рекомендация
-c_main, c_btn = st.columns([6, 1.5])
+# Оценка окна, отвечающая ответу перебора, ищется ЗДЕСЬ, а не только в блоке «Что учтено»:
+# из неё берётся доза за защитой скафандра — третье число ряда под решением. Перебор дозу не
+# считает (договор раздела 1a — три различающие величины), поэтому, когда полной оценки на
+# это начало нет, числа дозы нет тоже, и подставлять его неоткуда.
+_acc_target = None
+if scan_cand is not None:
+    _acc_target = next((a for a in R.assessments
+                        if a.window.start_utc.isoformat() == str(scan_cand.get('start_utc'))), None)
+if _acc_target is None and scan_cand is None:
+    _acc_target = next((a for a in R.assessments
+                        if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
+                       (R.assessments[0] if R.assessments else None))
+_dose = dose_factor(_acc_target) if _acc_target is not None else None
+# Блок ответа идёт ВО ВСЮ ШИРИНУ содержимого. Прежде он стоял в колонке 6 из 7,5, а справа
+# от него — кнопка отчёта, и главный элемент экрана читался как карточка сбоку, а не как ответ.
+# Кнопка переехала ПОД полосу решения: она нужна после ответа, а не рядом с ним.
 if scan is not None:
-    c_main.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
-                                         duration_min=duration_min), unsafe_allow_html=True)
+    st.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
+                                     duration_min=duration_min, dose=_dose), unsafe_allow_html=True)
     if plan_change:
-        c_main.info(plan_change)
+        st.info(plan_change)
 else:
     # Перебора нет: на месте рекомендации стоит вердикт по вручную заданным окнам — ровно то,
     # что сервис действительно посчитал, — и одна строка о том, что перебор не выполнялся.
-    c_main.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
-                                  missing_ru=missing_ru, policy_short=policy_short,
-                                  thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
-                    unsafe_allow_html=True)
-    c_main.caption(scan_absent_ru())
+    st.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
+                              missing_ru=missing_ru, policy_short=policy_short,
+                              thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
+                unsafe_allow_html=True)
+    st.caption(scan_absent_ru())
+c_btn, _c_rest = st.columns([2, 6])
 c_btn.download_button('Скачать отчёт (ZIP)', _zip, file_name=_fname + '.zip', mime='application/zip', width='stretch', key='dl_top')
 c_btn.caption('отчёт, запрос, факторы, сырые записи')
 # Пункт 1 двенадцатого круга. Здесь стояла плашка «Проверка после отсечки»: владелец о ней —
@@ -659,9 +681,19 @@ if scan_cand is not None and (scan_ans or {}).get('kind') in ('point', 'interval
         _globe_recommended = None
 if _globe_recommended is None and rec.preferred is not None:
     _globe_recommended = rec.preferred      # перебора нет — подсвечивается предпочтительное окно разбора
-st.markdown('<div class="sect">Где и когда: трасса, аномалия и окно</div>', unsafe_allow_html=True)
+# Тринадцатый круг. Эксперт хакатона о прежнем заголовке «Где и когда: трасса, аномалия и окно»:
+# «глобус и плоская карта — для чего, нужен сигнал, пометка», «для чего это надо». Значит
+# заголовок не сработал: он называл, ЧТО нарисовано, а не ЧТО это доказывает. Новый заголовок —
+# ярлык в пять слов, и он связан с числом из ряда под решением: «Минут в аномалии 4,9 / худшее 104».
+# Рисунок показывает, ГДЕ именно эти минуты набираются, — красные отрезки трассы внутри области.
+# Строки пояснения под ним больше нет: у самого глобуса есть своя легенда, а полная подпись
+# (чем посчитано и чего вид не даёт) стоит во вкладке «Методика», в «Границах применимости».
+st.markdown('<div class="sect">Где набираются минуты в аномалии</div>', unsafe_allow_html=True)
 if traj:
+    # Подпись у переключателя называет РАЗНИЦУ видов, а не их назначение: на шаре трасса
+    # непрерывна, плоскую карту рвёт 180-й меридиан. Это ровно то, из-за чего вид и выбирают.
     view = st.radio('Вид', [globe.VIEW_GLOBE, globe.VIEW_FLAT], index=0, horizontal=True, key='map_view',
+                    captions=['трасса непрерывна', 'разрыв на 180° долготы'],
                     help='Глобус показывает ту же трассу и ту же область аномалии на сфере, без разрыва '
                          'по долготе. Плоская карта — запасной вид: она работает без WebGL и без сети.')
     if view == globe.VIEW_GLOBE:
@@ -681,9 +713,10 @@ if traj:
             # применимости»: владелец просил не перечислять ограничения на главном экране
             # россыпью — «что не даёт глобус, тоже не надо писать». Текст не потерян: он стоит
             # в одном месте со всеми остальными ограничениями и попадает в отчёт.
-            _gcap = globe.caption(_gp)
-            _gc_head, _gc_dot, _globe_limits = _gcap.partition('. ')
-            st.caption(_gc_head + ('.' if _gc_dot else ''))
+            # Подпись глобуса не печатается на главном экране вовсе (тринадцатый круг): и первая
+            # её фраза — предложение на 250 знаков. Целиком она стоит во вкладке «Методика»,
+            # в разделе «Границы применимости», вместе с остальными ограничениями.
+            _globe_limits = globe.caption(_gp)
             _globe_tech = globe.tech_line(_gp) if pro else ''
         except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
             LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
@@ -692,18 +725,26 @@ if traj:
     else:
         with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
             st.plotly_chart(dark_figure(ground_track(traj, windows, th.saa_B_threshold_nT, t0)), width='stretch', config=PLOTLY_CONFIG)
-        st.caption(map_caption(pro))
+        # Подпись карты — раскрытием, а не строкой под рисунком: цвета названы легендой самой карты.
+        with st.expander('Как читать карту: что означают цвета', expanded=False):
+            st.caption(map_caption(pro))
 else:
     st.write('Трассы нет: орбита недоступна.')
 
 # ================================================================= блок 5: профиль воздействия
-st.markdown('<div class="sect">Профиль воздействия на сроке поиска</div>', unsafe_allow_html=True)
+# Заголовок-ярлык называет НАЗНАЧЕНИЕ рисунка, как и у глобуса: эксперт спрашивал «для чего
+# это надо», и «Профиль воздействия на сроке поиска» на этот вопрос не отвечало — оно называло
+# содержимое. График доказывает ровно одно: в какое время на сроке воздействие наименьшее.
+st.markdown('<div class="sect">Когда на сроке воздействие наименьшее</div>', unsafe_allow_html=True)
 if scan is not None:
     # Пункт 3: один график вместо двух панелей с ломаными. Ось Y — круглые степени десяти,
     # рекомендованный промежуток залит, пик подписан временем (app.ui.windows_ribbon).
     st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV, duration_min=duration_min)),
-                    width='stretch', config=PLOTLY_CONFIG)
-    st.caption(ribbon_caption_ru(scan, duration_min=duration_min))
+                    width='stretch', config=PLOTLY_CONFIG, key=backdrop.LENTA_KEY)
+    # Строки пояснения под графиком больше нет: направление сказано на самой оси («ниже — лучше»),
+    # полоса и пик подписаны на рисунке. Подпись целиком — раскрытием, одним нажатием.
+    with st.expander('Как читать профиль: кривая, полоса и пик', expanded=False):
+        st.caption(ribbon_caption_ru(scan, duration_min=duration_min))
     _best_rows = scan_best_rows(scan)
     if _best_rows:
         st.dataframe(_best_rows, width='stretch', hide_index=True,
@@ -714,9 +755,10 @@ if scan is not None:
         _cond_note = scan_conditions_note_ru(_best_rows)
         # Номера 1…6 заняты таблицами вкладок; эта стоит на главном экране и называется по имени,
         # чтобы не оказалось двух «Таблиц 1» на одном экране.
-        st.markdown('<div class="tcap">Таблица лучших начал: по тому же правилу, что и рекомендация. '
-                    'Безразмерных баллов и нормировки здесь нет: минуты в аномалии и флюенс складывать '
-                    'нельзя.%s</div>' % ((' ' + _cond_note) if _cond_note else ''), unsafe_allow_html=True)
+        # Ярлык вместо абзаца: «по тому же правилу» и «баллов и нормировки нет» — это утверждения
+        # о методе, и они стоят во вкладке «Методика», рядом с самим правилом.
+        st.markdown('<div class="tcap">Таблица лучших начал%s</div>'
+                    % ((' · ' + _cond_note) if _cond_note else ''), unsafe_allow_html=True)
 else:
     st.caption('Профиля нет: перебор начал не выполнялся, рисовать по нему нечего.')
 
@@ -724,21 +766,17 @@ else:
 # Заголовок был «Что учтено и что нет». Вторая половина переехала во вкладку «Методика» (пункт 1),
 # и держать её в названии блока значило бы обещать на экране то, чего на нём больше нет.
 st.markdown('<div class="sect">Что учтено</div>', unsafe_allow_html=True)
-_acc_target = None
-if scan_cand is not None:
-    _acc_target = next((a for a in R.assessments
-                        if a.window.start_utc.isoformat() == str(scan_cand.get('start_utc'))), None)
-if _acc_target is None and scan_cand is None:
-    _acc_target = next((a for a in R.assessments
-                        if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
-                       (R.assessments[0] if R.assessments else None))
+# `_acc_target` найден выше, в блоке 3: там из него берётся доза для ряда чисел под решением.
+# Ярлыки в три-четыре слова. Какое именно начало взято, сказано словом «раннего»: полная
+# формулировка стоит раскрытием «Откуда взята каждая величина» и в отчёте.
 _ACC_HEAD_RU = {'point': 'Величины рекомендованного окна',
-                'interval': 'Величины самого раннего начала из рекомендованного промежутка',
+                'interval': 'Величины самого раннего начала',
                 'tradeoff': 'Величины первого из названных начал'}
 _acc_head = _ACC_HEAD_RU.get((scan_ans or {}).get('kind')) if scan_cand is not None else None
 if not _acc_head:
     _acc_head = 'Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'
-st.markdown('**%s** — со своей единицей и происхождением.' % _acc_head)
+# Ярлык, а не фраза: «со своей единицей и происхождением» видно по самим строкам ниже.
+st.markdown('**%s**' % _acc_head)
 _acc_sources = []
 if _acc_target is not None:
     for _line in accounted_lines(_acc_target):
@@ -753,19 +791,26 @@ else:
 # Источник каждой величины — раскрытием: прослеживаемость сохранена целиком, но вторую половину
 # строки у каждой из десяти величин первый экран больше не несёт.
 if _acc_sources:
-    with st.expander('Откуда взята каждая величина: первоисточник и формула', expanded=False):
+    with st.expander('Откуда взята каждая величина: первоисточник', expanded=False):
         for _line in _acc_sources:
             st.markdown(_line)
-# Легенда происхождения стоит ровно здесь, рядом с плашками, и один раз на весь экран.
-if pro:
-    st.markdown('<div class="legend">Происхождение величин: %s — измерено источником; %s — выпуск с указанием времени публикации; '
-                '%s — посчитано сервисом по траектории и стандартам. %s</div>'
-                % (kind_pill('observation'), kind_pill('external_forecast'), kind_pill('own_calculation'), COLOR_LEGEND),
+# Легенда стоит ровно здесь, рядом с плашками, и один раз на весь экран. Тринадцатый круг:
+# на поверхности от неё остаётся РЯД ПЛАШЕК (каждая называет себя сама) и два коротких ярлыка —
+# про цвет величины и про цвет решения. Второй ярлык обязателен: на экране теперь два языка
+# цвета, и без одной строки зелёная полоса решения читалась бы как «зелёное = наблюдение».
+# Полная формулировка (COLOR_LEGEND) стоит раскрытием здесь же и во вкладке «Методика».
+st.markdown('<div class="legend">%s %s %s &nbsp; %s</div>'
+            % (kind_pill('own_calculation'), kind_pill('observation'), kind_pill('external_forecast'),
+               DECISION_LEGEND), unsafe_allow_html=True)
+with st.expander('Что означает каждый цвет и каждая плашка', expanded=False):
+    st.markdown('%s — измерено источником; %s — выпуск с указанием времени публикации; '
+                '%s — посчитано сервисом по траектории и стандартам.'
+                % (kind_pill('observation'), kind_pill('external_forecast'), kind_pill('own_calculation')),
                 unsafe_allow_html=True)
-else:
-    st.markdown('<div class="legend">Цвет = происхождение: синий — наш расчёт, зелёный — наблюдение, '
-                'янтарный — внешний прогноз, красный — условие проверки или аномалия, серый — данных нет.</div>',
-                unsafe_allow_html=True)
+    st.markdown(COLOR_LEGEND)
+    st.markdown('%s Полоса решения — широкая, во всю ширину блока и прямыми углами; плашка '
+                'происхождения — маленькая и скруглённая. Формы разные намеренно: цвет на экране '
+                'значит разное, и спутать их нельзя.' % DECISION_LEGEND)
 # Пункт 1 двенадцатого круга. Здесь стояло раскрытие «Чего сервис не учёл: N пунктов — поимённо
 # и с причиной». Владелец: «вообще недочёты не надо указывать в программе, подчисти это». Список
 # не удалён — он целиком переехал во вкладку «Методика», в раздел «Границы применимости», где
@@ -778,7 +823,7 @@ st.caption(SCOPE_TAB_HINT_RU)
 st.markdown('<div class="sect">Состояние источников: чем считали</div>', unsafe_allow_html=True)
 st.markdown(_panel_html, unsafe_allow_html=True)
 if _panel_details:
-    with st.expander('Подробнее о каждой величине полосы: происхождение, момент и давность', expanded=False):
+    with st.expander('Полоса источников: происхождение и давность', expanded=False):
         for _lbl, _full in _panel_details:
             st.markdown('- **%s** — %s' % (_lbl, _full))
 if meta is None:
@@ -794,13 +839,21 @@ if issues:
     # Общий предел получения источников (LIMIT_MARK) не сворачивается никогда: когда живых
     # ответов нет по пределу, причина — самое важное на экране, и она обязана стоять в самой
     # плашке, а не на клик глубже (бриф §9.7 и проверки развёртывания).
-    _short = source_issues_short_ru(issues) if mode == 'live' and not any(LIMIT_MARK in x for x in issues) else ''
-    if _short and not pro:
-        st.warning('**Состояние источников:** ' + _short)
+    # Тринадцатый круг: перечень по источникам уехал под раскрытие во ВСЕХ режимах и на обоих
+    # уровнях, а не только в текущем режиме на оперативном. Прежде в архивных режимах эти строки
+    # печатались целиком — два абзаца про объявленную реконструкцию эфемериды прямо на главном
+    # экране. Ничего не потеряно: заголовок раскрытия виден, перечень открывается одним нажатием
+    # и целиком лежит в выгрузке.
+    if any(LIMIT_MARK in x for x in issues):
+        st.warning('**Состояние источников:**\n' + '\n'.join('- ' + x for x in issues))
+    else:
+        _short = source_issues_short_ru(issues) if mode == 'live' else ''
+        _n = len(issues)
+        st.markdown('<div class="legend">%s</div>'
+                    % screen_text(_short or ('источники: %d %s' % (_n, plural_ru(_n, ('замечание', 'замечания', 'замечаний'))))),
+                    unsafe_allow_html=True)
         with st.expander('Состояние источников: по каждому источнику', expanded=False):
             st.markdown('\n'.join('- ' + x for x in issues))
-    else:
-        st.warning('**Состояние источников:**\n' + '\n'.join('- ' + x for x in issues))
 
 # ================================================================= блок 8: разобрать конкретные окна
 # Ручное сравнение двух-трёх окон осталось целиком, но стало РАЗБОРОМ, а не входом: человек
