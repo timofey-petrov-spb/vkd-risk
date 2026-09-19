@@ -33,7 +33,7 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 
-from app import globe
+from app import backdrop, globe
 from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, run, validate_request
 from app.export import _git_sha, build_zip
 from app.fetch_guard import LIMIT_MARK, fetch_live_sources, total_deadline_s
@@ -79,6 +79,10 @@ LOG = logging.getLogger('vkd.app')
 
 st.set_page_config(page_title='ВКД-Риск', layout='wide', initial_sidebar_state='expanded')
 st.markdown(CSS, unsafe_allow_html=True)
+# Тёмный фон со звёздами и короткие осмысленные анимации (app/backdrop.py). Отдельный
+# модуль, а не часть CSS экрана: у него своя проверка контраста на 21 пару и свой
+# предел веса разметки. Возвращает вес в байтах и падает сам, если предел превышен.
+backdrop.apply(st)
 st.session_state.setdefault('fetch_nonce', 0)     # Т6: обновление данных — сессионное, не st.cache_data.clear()
 
 
@@ -364,9 +368,17 @@ try:
                                              int(st.session_state['fetch_nonce']))
     else:
         fetched, fetch_note = None, None   # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
-    with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
+    # Этапы перечисляются заранее и закрываются по факту: человек видит, ЧТО считается,
+    # а не одну фразу «идёт расчёт». Порядок соответствует действительному ходу расчёта
+    # внутри app.compute.run; если он там изменится, этот перечень станет враньём.
+    with st.status('Считаю окна выхода…', expanded=True) as _st_progress:
+        st.write('Траектория станции: распространение элементов орбиты и магнитное поле по трассе')
+        st.write('Оценка окон: минуты в аномалии, флюенс захваченных протонов, доза за защитой')
+        st.write('Метеороиды и техногенный мусор: ожидаемое число попаданий за окно')
+        st.write('Перебор начал выхода на всём сроке и проверка устойчивости выбора')
         R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
                 scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note)
+        _st_progress.update(label='Расчёт закончен', state='complete', expanded=False)
 except Exception as e:            # noqa: BLE001 — экран не падает; подробности в лог, не зрителю (Т6, Т7)
     LOG.error('расчёт не выполнен: %s\n%s', e, traceback.format_exc())
     st.error('Расчёт не выполнен: %s. Измените запрос или повторите позже; подробности записаны в журнал сервера.' % type(e).__name__)
@@ -826,10 +838,10 @@ with st.expander('Разобрать конкретные окна: сравни
 # Прежде «Методика» стояла третьей, и пользователь дважды проходил мимо формул, прежде чем
 # добирался до данных. Вкладка «Карта» упразднена: её содержимое — глобус и запасная плоская
 # карта — стоит блоком 4 главного экрана, и держать второе такое же место незачем.
-tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика', 'Данные'] \
-    + (['Устойчивость и нормы'] if pro else [])
+tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика', 'Данные',
+             'Перспектива'] + (['Устойчивость и нормы'] if pro else [])
 tabs = st.tabs(tab_names)
-TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_METHOD, TAB_DATA, TAB_ROBUST = 0, 1, 2, 3, 4, 5
+TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_METHOD, TAB_DATA, TAB_OUTLOOK, TAB_ROBUST = 0, 1, 2, 3, 4, 5, 6
 
 with tabs[TAB_CARDS]:
     _win_labels = ['Окно %d (%s)%s' % (i + 1, dt_ru(a.window.start_utc),
@@ -1255,6 +1267,35 @@ with tabs[TAB_OBS]:
                      column_config={'ссылка': st.column_config.LinkColumn('первоисточник', display_text='открыть'),
                                     'примечание': st.column_config.TextColumn(width='large'),
                                     **({'запись': st.column_config.TextColumn('запись', width='medium')} if pro else {})})
+
+with tabs[TAB_OUTLOOK]:
+    st.markdown('**Когда планировать выход дальше ближайших суток.** Это НЕ вердикт: '
+                'рекомендованного окна, ранжирования начал и условий проверки здесь нет. '
+                'Разные механизмы видят вперёд на разное расстояние, и каждый ярус объявлен.')
+    _ndays = st.slider('На сколько суток вперёд', min_value=3, max_value=27, value=14, step=1,
+                       key='outlook_days', help='Обзор NOAA выпускается раз в неделю, поэтому '
+                       'космическая погода кончается раньше выбранного срока — это видно в таблице.')
+    if st.button('Посчитать перспективу', key='outlook_go'):
+        try:
+            from vkd.integration.noaa_27day import fetch_27day
+            from vkd.windows.outlook import build_outlook, outlook_table
+            with st.status('Считаю перспективу…', expanded=True) as _op:
+                st.write('Обзор NOAA на 27 суток: выпуск и его время публикации')
+                _o27, _ = fetch_27day()
+                st.write('Геометрия трассы и метеороидные потоки по суткам')
+                _res = build_outlook(now, days=int(_ndays), three_day_samples=S.get('forecasts'),
+                                     outlook27=_o27, include_meteoroids=True)
+                _op.update(label='Перспектива посчитана', state='complete', expanded=False)
+            st.session_state['outlook_rows'] = outlook_table(_res)
+            st.session_state['outlook_scope'] = getattr(_res, 'scope_ru', '')
+        except Exception as _e:            # noqa: BLE001 — вкладка не роняет экран (Т6)
+            LOG.error('перспектива не посчитана: %s\n%s', _e, traceback.format_exc())
+            st.warning('Перспектива не посчитана: %s. Основной расчёт это не затрагивает.'
+                       % type(_e).__name__)
+    if st.session_state.get('outlook_rows'):
+        st.dataframe(st.session_state['outlook_rows'], hide_index=True, width='stretch')
+        if st.session_state.get('outlook_scope'):
+            st.caption(st.session_state['outlook_scope'])
 
 with tabs[TAB_DATA]:
     st.markdown('**Источники этого расчёта** — состояние, получение, давность; каждый фактор прослеживается до записи в выгрузке.')
