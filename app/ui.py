@@ -497,6 +497,13 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
     else:
         if kp_excluded_hist:
             out.append('Kp: исключён пользователем из архива (проверка отказа) — условие по наблюдению Kp не проверяется')
+        # C3: численный архив наблюдений GOES 2024 есть, но в строгий режим он не идёт.
+        # Причина берётся из снимка и называется один раз, здесь, а не плашкой в полосе состояния.
+        g = src.get('noaa_swpc_goes') or {}
+        if not g.get('data_utc'):
+            out.append('GOES ≥10 МэВ: численного наблюдения на этот момент нет — %s. Линия протонного события '
+                       'держится на пороговых уведомлениях DONKI; покрытие объявлено'
+                       % status_ru(g.get('status') or 'причина в записи источника не указана', pro))
         o = src.get('orbit') or {}
         if o.get('strictness') == 'declared_reconstruction':
             out.append('Орбита: OEM NASA/JSC создан до отсечки, но его публичная доступность в тот момент не доказана — '
@@ -832,7 +839,7 @@ METHOD_BLOCKS = [
      'latex': r"L = \frac{r'}{\cos^{2}\lambda'}, \qquad r' = \frac{\left|\mathbf{r} - \mathbf{d}\right|}{R_E}, "
               r"\qquad \frac{B}{B_0} = \frac{\left|\mathbf{B}\right|_{IGRF}}{B_{eq}\,L^{-3}}",
      'symbols': "r′ — расстояние точки от смещённого центра диполя в радиусах Земли; λ′ — геомагнитная широта от "
-                "смещённой оси; d — смещение центра диполя (около 0,08 R_E); |B| — полное поле IGRF в точке трассы; "
+                "смещённой оси; d — смещение центра диполя (603 км, 0,095 R_E на май 2024; вектор печатается в снимке полем belt_coordinates.offset_km); |B| — полное поле IGRF в точке трассы; "
                 "минуты в аномалии считаются по порогу |B| из настроек, шаг трассы 1 мин.",
      'source': 'Fraser-Smith A. C. Centered and eccentric geomagnetic dipoles and their poles. Rev. Geophys. 25(1), 1987; '
                'коэффициенты IGRF — те же файлы, что у модуля орбиты.',

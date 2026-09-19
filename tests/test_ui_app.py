@@ -714,3 +714,26 @@ def test_lenta_nablyudeniy_v_razbore_i_chestnoe_otsutstvie_v_strogom():
     s_body = '\n'.join(str(m.value) for m in s_tab.get('markdown'))
     assert 'Численных наблюдений на этом горизонте нет' in s_body, s_body
     assert 'не доказан' in s_body, 'причина отсутствия берётся из снимка, а не придумывается'
+
+
+def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
+    """C3: в строгом режиме наблюдение Kp приходит из уведомления DONKI — полоса состояния
+    не подписывает его архивом GFZ; отсутствие численного GOES объявляется один раз."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.radio('mode').set_value(MODES[2]).run()
+    at.sidebar.slider('hist_hour').set_value(19).run()
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'Kp, наблюдение' in bar and 'Kp (архив GFZ)' not in bar, bar
+    assert 'уведомление NASA DONKI' in bar, bar
+    warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
+    assert warns.count('GOES ≥10 МэВ: численного наблюдения') == 1, warns
+
+
+def test_pribornaya_polosa_razbora_pokazyvaet_nablyudenie_goes():
+    """C3: в разборе численное наблюдение GOES стоит в полосе состояния рядом с Kp."""
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'GOES ≥10 МэВ, pfu' in bar and 'Kp (архив GFZ)' in bar, bar

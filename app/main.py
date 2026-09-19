@@ -324,20 +324,36 @@ if mode == 'live':
     row2.append(('События на горизонте', fmt(len(R.events)),
                  'уведомления и датированные прогнозы, учтённые в окнах', 'obs' if R.events else 'none'))
 else:
+    # Сколько записей не пошло в расчёт ИМЕННО из-за отсечки: остальные не подошли по содержанию,
+    # и называть их исключёнными отсечкой нельзя (в разборе отсечки нет вовсе).
+    _n_by_cutoff = sum(1 for x in R.excluded
+                       if excl_group_ru(x.partition(': ')[2]) == 'время публикации или доступность')
     row2.append(('Отсечка публикации' if mode == 'history_forecast' else 'Начало периода', dt_ru(t0),
-                 ('позже отсечки не используется ничего: не использовано %s %s'
-                  % (nbsp_thousands(len(R.excluded)), plural_ru(len(R.excluded), ('запись', 'записи', 'записей'))))
+                 ('позже отсечки не используется ничего: по времени публикации отложено %s %s'
+                  % (nbsp_thousands(_n_by_cutoff), plural_ru(_n_by_cutoff, ('запись', 'записи', 'записей'))))
                  if mode == 'history_forecast' else 'архив взят весь — разбор после факта', 'calc'))
+    # Наблюдение Kp: в разборе — окончательный ряд GFZ, в строгом режиме — уведомление DONKI
+    # с наблюдённым Kp и собственным временем публикации. Подпись идёт от записи, а не от режима.
+    _kp_label = 'Kp (архив GFZ)' if mode == 'history_review' else 'Kp, наблюдение'
     if kp_off_hist:
-        row2.append(('Kp (архив GFZ)', 'исключён', 'исключён пользователем — проверка отказа источника', 'cond'))
+        row2.append((_kp_label, 'исключён', 'исключён пользователем — проверка отказа источника', 'cond'))
     elif R.kp is not None and R.kp.source_id != 'scenario':
-        row2.append(('Kp (архив GFZ)', fmt(float(R.kp.value)),
-                     'интервал до %s · %s' % (dt_ru(R.kp.t_utc), age_ru(src['gfz_kp'].get('age_min'), th.kp_max_age_min)),
+        row2.append((_kp_label, fmt(float(R.kp.value)),
+                     '%s · интервал до %s · %s' % (source_ru(R.kp.source_id), dt_ru(R.kp.t_utc),
+                                                   age_ru(src['gfz_kp'].get('age_min'), th.kp_max_age_min)),
                      'cond' if R.kp.value >= th.kp_check else 'obs'))
     elif mode == 'history_forecast':
-        row2.append(('Kp (архив GFZ)', '—', 'наблюдения до отсечки нет', 'fc'))
+        row2.append((_kp_label, '—', 'наблюдения с доказанной публикацией до отсечки нет', 'fc'))
     else:
-        row2.append(('Kp (архив GFZ)', '—', 'в архиве на этот момент нет', 'none'))
+        row2.append((_kp_label, '—', 'в архиве на этот момент нет', 'none'))
+    # C3: в разборе есть численное наблюдение GOES — показываем его там же, где Kp.
+    # Его отсутствие в строгом режиме объявляется один раз, в общем блоке о состоянии
+    # источников, а не второй плашкой здесь (одно сообщение об одном и том же).
+    if R.goes is not None and R.goes.source_id != 'scenario':
+        row2.append(('GOES ≥10 МэВ, pfu', fmt(float(R.goes.value)),
+                     '%s · наблюдение %s' % (s_level(R.goes.value), dt_ru(R.goes.t_utc)),
+                     'cond' if R.goes.value >= th.goes_p10_priority_pfu else
+                     'fc' if R.goes.value >= th.goes_p10_warning_pfu else 'obs'))
     if meta and meta.created_utc:
         row2.append(('Элементы орбиты', 'эфемериды OEM NASA/JSC',
                      'создан %s · за %s ч до начала периода' % (dt_ru(meta.created_utc),
@@ -345,10 +361,11 @@ else:
                      'fc' if tm['strictness'] != 'strict' else 'obs'))
     else:
         row2.append(('Элементы орбиты', '—', 'эфемерид на этот момент нет — орбита не построена', 'cond'))
-    _cat = (S.get('history') or {}).get('catalog_coverage') or {}
-    _cat_ru = lambda k: (datetime.fromisoformat(_cat[k]).strftime('%d.%m.%Y') if _cat.get(k) else '—')
-    row2.append(('Архив уведомлений', '%s — %s' % (_cat_ru('from_utc'), _cat_ru('to_utc')),
-                 'уведомления и карточки событий NASA DONKI', 'obs' if _cat else 'none'))
+    if pro:                    # границы архива не меняются от запроса — на оперативном уровне это шум
+        _cat = (S.get('history') or {}).get('catalog_coverage') or {}
+        _cat_ru = lambda k: (datetime.fromisoformat(_cat[k]).strftime('%d.%m.%Y') if _cat.get(k) else '—')
+        row2.append(('Архив уведомлений', '%s — %s' % (_cat_ru('from_utc'), _cat_ru('to_utc')),
+                     'уведомления и карточки событий NASA DONKI', 'obs' if _cat else 'none'))
 if S['is_simulated']:
     row2.append(('Сценарий «что если»', 'моделируемые значения', 'часть величин задана пользователем, не источником', 'fc'))
 st.markdown(panel([row1, row2]), unsafe_allow_html=True)

@@ -25,7 +25,9 @@ def _traj(minutes=360):
 
 def test_eccentric_dipole_offset_is_physical():
     axis, b_eq, off = eccentric_dipole(IGRF13, T0)
-    assert 0.06 < float((off ** 2).sum() ** 0.5) < 0.10          # ≈ 0,08 R_E (Fraser-Smith 1987, ~500 км)
+    # 603 км = 0,0946 R_E на май 2024 и 609 км = 0,0956 R_E на сентябрь 2026 — пересчитано
+    # по belt_coordinates.offset_km примеров; прежняя граница «≈0,08 R_E» была взята на глаз
+    assert 0.085 < float((off ** 2).sum() ** 0.5) < 0.105
     assert 28000 < b_eq < 31000                                 # экваториальное поле диполя, нТл
     assert abs(float((axis ** 2).sum()) - 1) < 1e-12
 
