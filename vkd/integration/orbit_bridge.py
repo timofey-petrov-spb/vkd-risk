@@ -33,11 +33,13 @@ CACHE_ROOT = os.path.join(ROOT, 'data', 'cache', 'orbit_root')
 # Строка уходит в sources.json выгрузки и в манифест. Прежде она говорила «L, B/B0 и жёсткость —
 # центральный наклонённый диполь», и в одном архиве оказывались два взаимоисключающих заявления
 # о модели поля: формула (3) «Методики», карточка флюенса и решение R11 называют L и B/B0
-# эксцентричным диполем (Fraser-Smith 1987). По центральному диполю остаётся только жёсткость.
+# эксцентричным диполем (Fraser-Smith 1987). Круг 11: жёсткость обрезания тоже перестала быть
+# дипольной — её даёт таблица Ж.1 ОСТ, диполь остался объявленным запасным путём.
 ORBIT_SRC = ('vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; '
              'IGRF-13 для 2024 и IGRF-14 сейчас; |B| — полный IGRF; L и B/B0 для таблиц ОСТ — '
              'эксцентричный диполь (Fraser-Smith 1987, vkd.assess.magcoords); вертикальная жёсткость '
-             'обрезания — центральный наклонённый диполь (A3), метод подписан отдельно')
+             'обрезания — таблица Ж.1 ОСТ 134-1044-2007 (запасной путь — центральный наклонённый '
+             'диполь A3), метод подписан отдельно')
 TLE_URL_UNKNOWN = 'неизвестен (кеш или снимок репозитория)'   # адрес не приписывается, если запроса не было (Т7)
 
 
@@ -180,6 +182,10 @@ def provenance_summary(prov: dict) -> dict:
                                                  'strict_replay_eligibility', 'model', 'distribution')
                           if k in r} for rid, r in recs.items()},
         'segments': prov.get('segments', []), 'limitations': prov.get('limitations', []),
+        # Круг 11: происхождение модели обрезания (таблица Ж.1, её путь и sha256, сколько точек
+        # ушло на запасной диполь) должно доходить до снимка и выгрузки, а не только до слов
+        # в «ограничениях»: иначе подмену таблицы в выгрузке нечем увидеть.
+        'cutoff_model': prov.get('cutoff_model'),
         'earth_orientation': prov.get('earth_orientation'), 'max_tle_age_days': prov.get('max_tle_age_days'),
         'inertial_states': prov.get('inertial_states'),
         'strict_attempt_error': prov.get('strict_attempt_error'), 'errors': prov.get('errors'),

@@ -250,12 +250,20 @@ def test_sostoyanie_off_tolko_pri_otklyuchenii_polzovatelem():
 
 # ------------------------------------------------- слои и покрытие флюенса
 def test_sloi_ne_pripisyvayut_L_i_BB0_centralnomu_dipolyu():
-    """В одном архиве не должно быть двух взаимоисключающих заявлений о модели поля."""
+    """В одном архиве не должно быть двух взаимоисключающих заявлений о модели поля.
+
+    ИЗМЕНЕНО в круге 11: проверка требовала, чтобы жёсткость обрезания называлась центральным
+    наклонённым диполем. Теперь её считает таблица Ж.1 ОСТ, а диполь остался ОБЪЯВЛЕННЫМ
+    запасным путём, и строка слоёв обязана называть таблицу — иначе выгрузка утверждала бы
+    диполь рядом с ограничениями модуля орбиты, которые говорят о таблице. Смысл проверки тот
+    же: L и B/B0 не приписываются центральному диполю, а жёсткость подписана своей моделью.
+    """
     from vkd.integration.orbit_bridge import ORBIT_SRC
     head = ORBIT_SRC.split('L и B/B0')[1].split(';')[0]
     assert 'эксцентричный диполь' in head, ORBIT_SRC
     assert 'центральный' not in head, ORBIT_SRC
-    assert 'жёсткость' in ORBIT_SRC and 'центральный наклонённый диполь' in ORBIT_SRC
+    assert 'жёсткость' in ORBIT_SRC and 'Ж.1' in ORBIT_SRC, ORBIT_SRC
+    assert 'запасной путь' in ORBIT_SRC, ORBIT_SRC
 
 
 def test_pokrytie_flyuensa_nazyvaet_prichinu_ryadom_s_chislom(gannon):

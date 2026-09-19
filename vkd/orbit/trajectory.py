@@ -16,6 +16,7 @@ from skyfield.positionlib import Geocentric
 
 from vkd.sources.registry import SourceRegistry, iso_utc, utc
 from vkd.types import MagMethod, TrajectoryMeta, TrajectoryPoint
+from . import cutoff_table as zh1
 from .magnetic import magnetic_coordinates
 from .oem import OrbitDataError, parse_oem, validate_continuous_coverage
 from .states import make_state_payload
@@ -57,6 +58,56 @@ def _checked_model(root: Path, filename: str) -> tuple[Path, dict]:
     if hashlib.sha256(raw).hexdigest() != item['sha256'] or len(raw) != item['bytes']:
         raise OrbitDataError(f'Orbital data hash/length mismatch: {filename}')
     return path, item
+
+
+def _cutoff_limitations_ru(info: dict) -> list[str]:
+    """Оговорки к жёсткости обрезания — по-русски, теми же словами, что остальные ограничения.
+
+    Печатаются в блоке ограничений модуля орбиты (app/main.py -> app.ui.limit_ru) и попадают
+    в выгрузку вместе с provenance. Границы применимости объявляются ВСЕГДА, а не только
+    когда таблица применилась: если её нет, сказано, что считал запасной диполь и чем он плох.
+    """
+    pct = lambda x: ('%+.1f' % x).replace('.', ',')      # запятая как разделитель, как везде на экране
+    out = []
+    if info.get('n_table'):
+        out.append(
+            'Вертикальная жёсткость обрезания взята из таблицы Ж.1 ОСТ 134-1044-2007 '
+            '(вертикальное обрезание, высота %g км, эпоха %d, сетка 5° по широте и 30° по долготе; '
+            'интерполяция билинейная, по долготе замкнута в круг) с пересчётом на высоту точки по '
+            'формуле Ж.3 — %d из %d точек. Дипольная формула осталась запасным путём (%d точек: '
+            '|широта| > 85° или файл таблицы недоступен); чем посчитана точка, записано в ней самой '
+            '(cutoff_kind). Оговорка про центральный наклонный диполь относится к L и B/B0 всегда, '
+            'а к обрезанию — только в запасных точках.'
+            % (info.get('table_altitude_km', zh1.TABLE_ALTITUDE_KM), info.get('table_epoch_year', zh1.TABLE_EPOCH_YEAR),
+               info['n_table'], info['n'], info['n_dipole']))
+        out.append(
+            'Таблица Ж.1 построена для эпохи %d и высоты %g км, а расчёт идёт на другую эпоху и на '
+            'высоту трассы: высота пересчитана по Ж.3 (закон 1/r²), пересчёта эпохи в стандарте нет — '
+            'значение в точке остаётся картиной %d года, а поле за прошедшие годы сместилось. '
+            'Порядок ошибки от разницы эпох, измеренный нашей же дипольной формулой на широтах МКС '
+            'при замене коэффициентов IGRF 2010 на 2024: медиана %s %%, в отдельных точках от '
+            '%s до %s %%. Это оценка только дипольной части; дрейф недипольной картины — того '
+            'самого, ради чего нужна таблица, — так не оценивается, и числа для него здесь нет. '
+            'Для сравнения, расхождение таблицы с симметричным диполем в южном полушарии составляет '
+            '70…120 %%, то есть на порядок больше.'
+            % (info.get('table_epoch_year', zh1.TABLE_EPOCH_YEAR), info.get('table_altitude_km', zh1.TABLE_ALTITUDE_KM),
+               info.get('table_epoch_year', zh1.TABLE_EPOCH_YEAR), pct(zh1.EPOCH_DIPOLE_SHIFT_MEDIAN_PCT),
+               pct(zh1.EPOCH_DIPOLE_SHIFT_MIN_PCT), pct(zh1.EPOCH_DIPOLE_SHIFT_MAX_PCT)))
+        out.append(
+            'Коррекция обрезания по геомагнитной возмущённости Kp и местному времени (Ж.4–Ж.6 ОСТ) '
+            'не выполнена: значения соответствуют СПОКОЙНЫМ условиям. Во время бури обрезание '
+            'снижается, поэтому в бурю доступность частиц по этой величине занижена, а не завышена.')
+        out.append(
+            'Сам ОСТ (прил. Ж, примечание) объявляет, что расчёт по вертикальной жёсткости R0c '
+            'вместо точного даёт ошибку функции проникновения до ≈10 %; направленная жёсткость '
+            'обрезания не считается.')
+    else:
+        out.append(
+            'Таблица Ж.1 ОСТ 134-1044-2007 не применена (%s). Вертикальная жёсткость обрезания '
+            'посчитана центральным наклонённым диполем: он симметричен по широте и в южном '
+            'полушарии завышает минимум обрезания в 1,7–2,2 раза по сравнению с таблицей.'
+            % info.get('table_status', 'причина не записана'))
+    return out
 
 
 def trajectory(start_utc: datetime, minutes: int, saa_B_threshold_nT: float, tle_path=None, **kwargs):
@@ -212,8 +263,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
         raise OrbitDataError('Nonfinite orbital coordinates')
     model = 'IGRF13.shc' if start.year < 2025 else 'IGRF14.shc'
     coeff_path, coeff_record = _checked_model(root, model)
-    field = magnetic_coordinates(ecef_km, lon, lat, alt, times, coeff_path)
+    field = magnetic_coordinates(ecef_km, lon, lat, alt, times, coeff_path,
+                                 cutoff_table_path=root / zh1.TABLE_RELATIVE_PATH)
     provenance['field_model'] = coeff_record
+    provenance['cutoff_model'] = field['cutoff_info']
     provenance['records'][coeff_record['raw_record_id']] = coeff_record
     if expected_record_hashes is not None:
         actual = {rid: record['sha256'] for rid, record in provenance['records'].items()}
@@ -221,16 +274,24 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
             raise OrbitDataError('Replay orbital input records/hashes differ from the saved calculation')
     provenance['limitations'].extend([
         'IGRF is the internal main field; no storm-time external field is modelled.',
+        # Круг 11: прежняя строка называла диполем и обрезание тоже. Когда таблица Ж.1 применена,
+        # это уже неправда, и на экране она вставала рядом с оговоркой про таблицу — два
+        # противоположных утверждения об одной величине. Русский текст экран печатает как есть.
+        ('L и B/B_0 — центральный наклонный диполь, не трассированная L Мак-Илвейна; '
+         'вертикальное обрезание считается отдельно (строки ниже), направленная жёсткость '
+         'обрезания во время бури не считается.') if field['cutoff_info'].get('n_table') else
         'L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.',
         'Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.',
         'SAA flag is the configured |B| threshold proxy, not an official region boundary.'])
+    provenance['limitations'].extend(_cutoff_limitations_ru(field['cutoff_info']))
     points = [TrajectoryPoint(when, float(lat[i]), float(lon[i]), float(alt[i]), float(field['B_nT'][i]),
               float(field['L'][i]) if field['valid'][i] else None,
               float(field['B_over_B0'][i]) if field['valid'][i] else None,
-              float(field['cutoff_GV'][i]) if field['valid'][i] else None,
+              float(field['cutoff_GV'][i]) if field['cutoff_valid'][i] else None,
               MagMethod.DIPOLE if field['valid'][i] else MagMethod.NONE,
               'approximation' if field['valid'][i] else 'outside_model',
-              bool(field['B_nT'][i] < saa_B_threshold_nT)) for i, when in enumerate(times)]
+              bool(field['B_nT'][i] < saa_B_threshold_nT),
+              str(field['cutoff_source'][i])) for i, when in enumerate(times)]
     meta = TrajectoryMeta(source, method, frame, epoch, start, end, created, available, fetched,
                           reconstruction, 'IGRF-13' if model == 'IGRF13.shc' else 'IGRF-14')
     if include_inertial_states:

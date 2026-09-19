@@ -42,21 +42,29 @@ def utc(y, m, d, h=0, mi=0):
 
 
 CASES = [
-    # имя, режим, t0, длительность, период поиска, сдвиги окон, сценарий
-    ('live_now', 'live', None, 360, 720, [0, 240], None),
-    ('gannon_2024-05-10_cutoff12Z', 'history_forecast', utc(2024, 5, 10, 12), 360, 720, [0, 240], None),
-    ('gannon_2024-05-10_cutoff19Z', 'history_forecast', utc(2024, 5, 10, 19), 360, 720, [0, 240], None),
-    ('quiet_2024-05-03_12Z', 'history_forecast', utc(2024, 5, 3, 12), 360, 1440, [0, 480], None),
-    ('gap_2024-05-20_12Z', 'history_forecast', utc(2024, 5, 20, 12), 360, 1440, [0, 480], None),
-    ('end_2024-06-25_12Z', 'history_forecast', utc(2024, 6, 25, 12), 360, 1440, [0, 480], None),
+    # имя, режим, t0, длительность, период поиска, сдвиги окон, сценарий, исключённые источники
+    ('live_now', 'live', None, 360, 720, [0, 240], None, None),
+    ('gannon_2024-05-10_cutoff12Z', 'history_forecast', utc(2024, 5, 10, 12), 360, 720, [0, 240], None, None),
+    ('gannon_2024-05-10_cutoff19Z', 'history_forecast', utc(2024, 5, 10, 19), 360, 720, [0, 240], None, None),
+    ('quiet_2024-05-03_12Z', 'history_forecast', utc(2024, 5, 3, 12), 360, 1440, [0, 480], None, None),
+    ('gap_2024-05-20_12Z', 'history_forecast', utc(2024, 5, 20, 12), 360, 1440, [0, 480], None, None),
+    ('end_2024-06-25_12Z', 'history_forecast', utc(2024, 6, 25, 12), 360, 1440, [0, 480], None, None),
     # Исход «равнозначны» на настоящих данных (О3 требует показать все исходы, а не только отказ).
     # Дата не подобрана под ответ: перебор всего архива 01.05–30.06 с шагом 6 ч даёт 80 случаев
     # «равнозначны» из 496; взят первый спокойный, без условий проверки у обоих окон.
-    ('equal_2024-05-04_12Z', 'history_forecast', utc(2024, 5, 4, 12), 360, 1440, [0, 480], None),
-    ('review_2024-05-10', 'history_review', utc(2024, 5, 10, 12), 360, 720, [0, 240], None),
-    ('whatif_sep_now', 'live', None, 360, 720, [0, 240], Scenario('example', sep_onset_offset_min=120, sep_level_pfu=100.0)),
-    ('whatif_delay_90min', 'live', None, 360, 720, [0, 240], Scenario('example', work_delay_min=90)),
+    ('equal_2024-05-04_12Z', 'history_forecast', utc(2024, 5, 4, 12), 360, 1440, [0, 480], None, None),
+    ('review_2024-05-10', 'history_review', utc(2024, 5, 10, 12), 360, 720, [0, 240], None, None),
+    ('whatif_sep_now', 'live', None, 360, 720, [0, 240], Scenario('example', sep_onset_offset_min=120, sep_level_pfu=100.0), None),
+    ('whatif_delay_90min', 'live', None, 360, 720, [0, 240], Scenario('example', work_delay_min=90), None),
+    # Исход «отказ» на настоящих данных. До круга 11 его давали три примера текущего режима, но
+    # давали ПО ПОСТРОЕНИЮ — окно позже часа от последнего измерения GOES в горизонт наблюдения не
+    # попадало; правило R14 этот структурный отказ убрало, и показывать отказ на сдаче стало нечем.
+    # Здесь отказ настоящий и не зависит от дня: пользователь ИСКЛЮЧИЛ источник протонных событий,
+    # наблюдения нет вовсе, значит нет и общего канала (R14 требует полученного наблюдения) —
+    # обязательная линия пуста, вердикт insufficient. Дата не подбиралась: случай не про дату.
+    ('refusal_goes_off', 'live', None, 360, 720, [0, 240], None, {'goes': 'off'}),
 ]
+SOURCE_OFF_RU = {'goes': 'наблюдение протонов GOES', 'kp': 'наблюдение Kp', 'noaa': 'прогноз NOAA'}
 T5_EVENT = 'gannon_2024-05-10_cutoff12Z'
 T5_CONTROL = ('quiet_2024-05-03_12Z', 'end_2024-06-25_12Z')
 
@@ -118,10 +126,13 @@ def main():
     th = Thresholds.from_settings()
     sha = _git_sha()
     index = []
-    for name, mode, t0, dur, search, offs, sc in CASES:
+    for name, mode, t0, dur, search, offs, sc, off_sources in CASES:
         t0 = t0 or now
         # исторические режимы: живые источники не запрашиваются (Т6) — входы только из архива, статус так и записан
-        r = run(mode, t0, dur, search, offs, scenario=sc, now=now, fetched=(None if mode == 'live' else fetch_none()))
+        # disabled — исключённые пользователем источники (Т6, состояние 'off'); без проброса
+        # сохранить пример с настоящим отказом было нечем
+        r = run(mode, t0, dur, search, offs, disabled=off_sources, scenario=sc, now=now,
+                fetched=(None if mode == 'live' else fetch_none()))
         # JSON-снимок несёт коммит кода, как и манифест ZIP: повтор по JSON тоже может доказать версию (Т8)
         io.open(os.path.join(OUT, name + '.json'), 'w', encoding='utf-8').write(json.dumps({**r.S, 'git_commit': sha}, ensure_ascii=False, indent=1, default=str))
         open(os.path.join(OUT, name + '.zip'), 'wb').write(build_zip(r.S, r.raw_records))
@@ -131,7 +142,10 @@ def main():
                       'rule': rec['rule'], 'conditions': short_conditions(r.S),
                       'excluded_by_cutoff': len(r.excluded), 'excluded_kp': n_kp_excl, 'events_used': len(r.events),
                       'fact': fact_after(t0, dur, search, th.kp_check, th.goes_p10_warning_pfu) if mode != 'live' else '—',
-                      'is_simulated': r.S['is_simulated']})
+                      'is_simulated': r.S['is_simulated'],
+                      # исключённые пользователем источники называются в индексе: иначе отказ выглядел бы
+                      # свойством дня, а он свойство запроса
+                      'disabled_ru': ', '.join(sorted(SOURCE_OFF_RU.get(k, k) for k, v in (off_sources or {}).items() if v == 'off'))})
         print('%-30s %-22s вердикт %-15s исключено %3d событий %2d | %s' % (name, r.S['mode'], rec['verdict'], len(r.excluded), len(r.events),
                                                                               index[-1]['conditions'][:90]))
     by = {x['name']: x for x in index}
@@ -167,20 +181,23 @@ def main():
             % (now.strftime('%Y-%m-%d %H:%M'), ALGO_VERSION, sha or 'вне репозитория', os.path.relpath(settings_path(), _ROOT).replace('\\', '/'),
                th.kp_check, th.goes_p10_warning_pfu), '']
     cols = ['пример', 'режим', 't0 (отсечка)', 'вердикт', 'правило', 'условия по окнам', 'исключено отсечкой (из них интервалов Kp)',
-            'событий', 'факт после отсечки (проверка)', 'сценарий']
+            'событий', 'факт после отсечки (проверка)', 'сценарий', 'источники, исключённые пользователем']
     tbl = ['| ' + ' | '.join(cols) + ' |', '|' + '---|' * len(cols)]
     for x in index:
-        tbl.append('| %s | %s | %s | %s | %s | %s | %s | %d | %s | %s |' % (
+        tbl.append('| %s | %s | %s | %s | %s | %s | %s | %d | %s | %s | %s |' % (
             x['name'], x['mode'], x['t0_utc'][:16].replace('T', ' '), x['verdict'], x['rule'], x['conditions'],
             ('%d (%d)' % (x['excluded_by_cutoff'], x['excluded_kp'])) if x['mode_id'] != 'live' else '—',
-            x['events_used'], x['fact'], 'да' if x['is_simulated'] else ''))
+            x['events_used'], x['fact'], 'да' if x['is_simulated'] else '', x['disabled_ru'] or '—'))
     notes = ['', '## Что означают столбцы', '',
              '- «условия по окнам» — заголовки условий проверки из панели вердикта (полный текст с идентификаторами записей — в `cards.json` и `factors.json` архива);',
              '- «исключено отсечкой» — записи, отброшенные строгим отбором по времени публикации (`manifest.json` → `excluded_by_cutoff`, каждая с причиной); '
              'в скобках — записи окончательного ряда Kp GFZ, у которых нет собственного времени публикации по интервалам (только разбор после факта);',
              '- «факт после отсечки» — из архива после события, для проверки прогноза (Т4/Т5); в расчёт не входит;',
              '- «Текущая обстановка» — живые источники на момент генерации; их сырые записи (GOES, Kp, TLE с адресом и временем получения) лежат в `raw/`, '
-             'и повтор по ZIP их использует вместо живых запросов.', '']
+             'и повтор по ZIP их использует вместо живых запросов;',
+             '- «источники, исключённые пользователем» — состояние `off` запроса (Т6): источник не опрашивается и данных от него нет. '
+             'Именно так получен единственный пример с вердиктом `insufficient`: без наблюдения протонов обязательная линия пуста, '
+             'канал общим не объявляется (правило требует полученного наблюдения), и рекомендации нет — отказ по запросу, а не по дате.', '']
     io.open(os.path.join(OUT, 'INDEX.md'), 'w', encoding='utf-8', newline='\n').write('\n'.join(head + pair + [''] + ['## Все примеры', ''] + tbl + notes))
     print('индекс: examples/INDEX.md')
 

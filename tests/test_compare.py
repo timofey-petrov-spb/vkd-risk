@@ -81,26 +81,43 @@ def test_clean_windows_prefer_less_saa(belts):
     assert 'окно 1' in txt and 'окно 2' in txt and 'флюенс' in txt and 'мин в аномалии' in txt
 
 
-def test_priority_condition_S3_does_not_extend_to_unobserved_future(belts):
+def test_priority_condition_S3_velichina_ne_rasprostranyaetsya_a_ostorozhnost_da(belts):
+    """ИЗМЕНЕНО в круге 11 (R14) — и это не ослабление, а перемена местами двух разных вещей.
+
+    Было: приоритетное предупреждение S3 стояло только у окна, попавшего в горизонт наблюдения,
+    а вердикт был `insufficient`, потому что у второго окна канал GOES был пуст и обнулял линию.
+    Стало: канал протонных событий объявлен ОБЩИМ для всех сравниваемых окон (прогноза с
+    разрешением по окну не существует), поэтому уровень S3 ставит условие проверки КАЖДОМУ окну,
+    и исход — `all_need_check`, то есть «решает аналитик», а не «данных нет».
+
+    Что осталось ровно как было и проверяется здесь же: САМА ВЕЛИЧИНА на непокрытое окно не
+    распространяется. Поток у второго окна остаётся неизвестным (presence = unknown), покрытие
+    величины — «нет», и никакое число прошлого измерения не выдаётся за характеристику будущего
+    окна. Осторожность распространяется, измерение — нет.
+    """
     A, th = two_windows(belts, goes(1500.0))
     r = recommend(A, th)
-    assert r.verdict == 'insufficient'
-    assert A[0].mechanisms[0].priority
-    assert not A[1].mechanisms[0].priority
-    assert any('приоритетное' in x for x in r.reasons)
-    # Comparator still supports all_need_check for a hypothetical fully covered
-    # pair whose two windows each have their own established warning.
-    covered = complete_for_comparator(A)
-    covered[1] = replace(covered[1], mechanisms=covered[0].mechanisms)
-    assert recommend(covered, th).verdict == 'all_need_check'
+    assert r.verdict == 'all_need_check', r.rule_applied
+    assert A[0].mechanisms[0].priority and A[1].mechanisms[0].priority
+    assert any('приоритетное' in x for x in reasons_of(A))
+    f2 = next(x for x in A[1].mechanisms[0].factors if x.name.startswith('поток протонов GOES'))
+    assert f2.presence.value == 'unknown' and f2.coverage.value == 'none'
+    assert 'наличие протонного события в окне неизвестно' in f2.limits_note
+    # условие второго окна прямо говорит, к чему относится названный уровень
+    c2 = next(c for m in A[1].mechanisms for c in m.conditions if c.kind == 'GOES')
+    assert 'канал общий для всех сравниваемых окон' in c2.text
 
 
 def test_warning_S1_S2_marks_windows_as_team_rule(belts):
+    """ИЗМЕНЕНО в круге 11 (R14): условие S1–S2 ставится ОБОИМ окнам, а не только тому, чьё
+    начало попало в горизонт наблюдения. Канал общий: прогноза потока с разрешением по окну не
+    существует, значит уровень последнего наблюдения относится ко всем сравниваемым окнам
+    одинаково. Формулировки правила команды и уровня не изменились — проверяются те же."""
     A, th = two_windows(belts, goes(20.0))
     reasons = reasons_of(A)
     assert reasons and all('правило команды' in x and 'S1' in x for x in reasons)
     assert not any('политика прототипа' in x for x in reasons)
-    assert A[0].mechanisms[0].needs_check and not A[1].mechanisms[0].needs_check
+    assert A[0].mechanisms[0].needs_check and A[1].mechanisms[0].needs_check
 
 
 def test_goes_presence_distinguishes_background_from_event(belts):
@@ -215,7 +232,12 @@ def test_kp_condition_only_when_fresh_and_declared(belts):
     rs = reasons_of(A)
     assert rs and all('наблюдение Kp 7,33' in x and 'распространено' in x and 'правилу команды' in x for x in rs)
     r = recommend(A, th)
-    assert r.verdict == 'insufficient' and r.preferred is None
+    # ИЗМЕНЕНО в круге 11 (R14): раньше здесь стоял `insufficient`, потому что пустой канал GOES
+    # у второго окна обнулял обязательную линию. Теперь канал протонных событий объявлен общим
+    # (наблюдение свежее и фоновое), линия не обнуляется, и исход определяется УСЛОВИЕМ по буре:
+    # оба окна под условием — `all_need_check`. Рекомендации по-прежнему нет, preferred по-прежнему
+    # None; изменилась причина, и она стала точнее: не «данных нет», а «решает аналитик».
+    assert r.verdict == 'all_need_check' and r.preferred is None
 
 
 def test_sep_level_defines_class_and_unknown_level_is_declared(belts):

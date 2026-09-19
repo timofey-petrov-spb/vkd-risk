@@ -93,7 +93,12 @@ def test_v_tekushchem_rezhime_liniya_sobytiy_obyavlena_neoproshennoy():
     assert 'DONKI' in line['reason_ru']
     assert line['records'] == 0 and line['simulated_records'] == 0
     cov = ' | '.join(S['coverage_missing'])
-    assert 'не опрашиваются' in cov and 'DONKI' in cov, S['coverage_missing']
+    # Глагол приведён к тому, которым говорит об этом же экран (`app.ui.LIVE_NO_EVENTS_RU`,
+    # «не запрашиваются»): экран подставляет свою фразу про DONKI только когда её нет в этом
+    # списке, поэтому про один факт печатается ровно одно предложение — и оно должно называть
+    # вещь теми же словами на обоих уровнях (найдено слиянием круга 11). Смысл проверки прежний:
+    # канал уведомлений в текущем режиме объявлен неопрошенным, и ноль записей не значит «событий нет».
+    assert 'не запрашиваются' in cov and 'DONKI' in cov, S['coverage_missing']
     assert re.search(r'\d{2}\.\d{2}\.2024', cov), cov          # границы архива названы датами
     src = S['sources']['donki_archive']
     assert src['state'] == 'none' and 'не запрашивается' in src['status'], src
