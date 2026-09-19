@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """Правило рекомендации и надёжность (CONTRACT.md v3, разделы 4 и 8; критерии О3, Т6)."""
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from vkd.assess.trapped import BeltTable
-from vkd.types import EnvironmentSample, Kind, MagMethod, TrajectoryPoint, Window
+from vkd.types import Coverage, EnvironmentSample, Kind, MagMethod, TrajectoryPoint, Window
 from vkd.windows.compare import Thresholds, assess_window, recommend, rigidity_GV, s_level_ru
 
 T0 = datetime(2024, 5, 3, 12, 0, tzinfo=timezone.utc)
@@ -41,6 +42,17 @@ def two_windows(belts, g, mmod=1e-6, pattern=lambda i: i < 60, kp=None, **kw):
     return A, th
 
 
+def complete_for_comparator(assessments):
+    """Synthetic full-coverage inputs ONLY to isolate comparator mathematics.
+
+    Production assess_window remains partial when seasonal MMOD is unmodelled.
+    These tests explicitly supply a hypothetical complete mechanism assessment.
+    """
+    return [replace(a, mechanisms=tuple(replace(m, coverage=Coverage.FULL,
+                    coverage_notes=()) if m.mandatory else m for m in a.mechanisms))
+            for a in assessments]
+
+
 def reasons_of(A):
     return [x for a in A for m in a.mechanisms for x in m.needs_check_reasons]
 
@@ -60,6 +72,7 @@ def test_disabled_source_never_yields_favorable(belts):
 
 def test_clean_windows_prefer_less_saa(belts):
     A, th = two_windows(belts, goes(0.2))
+    A = complete_for_comparator(A)
     r = recommend(A, th)
     assert r.verdict == 'preferred' and r.preferred.start_utc == T0 + timedelta(minutes=480)
     assert 'spaceweather' in r.per_mechanism_comparison
@@ -68,15 +81,18 @@ def test_clean_windows_prefer_less_saa(belts):
     assert 'окно 1' in txt and 'окно 2' in txt and 'флюенс' in txt and 'мин в аномалии' in txt
 
 
-def test_priority_condition_S3_flags_all_windows(belts):
-    """S ≥ 3 (≥1000 pfu): приоритетное предупреждение; все окна требуют проверки, не «недостаточно»."""
+def test_priority_condition_S3_does_not_extend_to_unobserved_future(belts):
     A, th = two_windows(belts, goes(1500.0))
     r = recommend(A, th)
-    assert r.verdict == 'all_need_check' and any('приоритетное' in x for x in r.reasons)
-    assert all(m.priority for a in A for m in a.mechanisms if m.mechanism_id == 'spaceweather')
-    # причины привязаны к окнам и не дублируются (одинаковое условие схлопнуто в «окна 1, 2»)
-    cond = [x for x in r.reasons if 'приоритетное' in x]
-    assert len(cond) == 1 and cond[0].startswith('окна 1, 2:')
+    assert r.verdict == 'insufficient'
+    assert A[0].mechanisms[0].priority
+    assert not A[1].mechanisms[0].priority
+    assert any('приоритетное' in x for x in r.reasons)
+    # Comparator still supports all_need_check for a hypothetical fully covered
+    # pair whose two windows each have their own established warning.
+    covered = complete_for_comparator(A)
+    covered[1] = replace(covered[1], mechanisms=covered[0].mechanisms)
+    assert recommend(covered, th).verdict == 'all_need_check'
 
 
 def test_warning_S1_S2_marks_windows_as_team_rule(belts):
@@ -84,7 +100,7 @@ def test_warning_S1_S2_marks_windows_as_team_rule(belts):
     reasons = reasons_of(A)
     assert reasons and all('правило команды' in x and 'S1' in x for x in reasons)
     assert not any('политика прототипа' in x for x in reasons)
-    assert all(m.needs_check for a in A for m in a.mechanisms if m.mechanism_id == 'spaceweather')
+    assert A[0].mechanisms[0].needs_check and not A[1].mechanisms[0].needs_check
 
 
 def test_goes_presence_distinguishes_background_from_event(belts):
@@ -107,18 +123,19 @@ def test_no_abort_or_continue_commands_in_reasons(belts):
 
 def test_equivalent_within_tolerance(belts):
     A, th = two_windows(belts, goes(0.2), pattern=lambda i: (i % 90) < 10)   # одинаковая доля аномалии
+    A = complete_for_comparator(A)
     r = recommend(A, th)
     assert r.verdict == 'equivalent' and 'инженерная' in r.tolerance_basis
     assert 'окно 1' in r.rule_applied and 'окно 2' in r.rule_applied
 
 
-def test_stale_goes_gives_partial_coverage_but_declared_not_blocking(belts):
-    """Разбор Codex п. 14: частичное покрытие объявляется, но не превращается в отказ."""
+def test_stale_goes_blocks_recommendation_with_named_gap(belts):
+    """Пригодный кеш сохраняет покрытие; устаревшее наблюдение не закрывает окно."""
     A, th = two_windows(belts, goes(0.2, age_min=600))
     m1 = A[0].mechanisms[0]
-    assert m1.coverage.value == 'partial'
+    assert m1.coverage.value == 'none'
     r = recommend(A, th)
-    assert r.verdict != 'insufficient' and any('GOES' in x for x in r.reasons)
+    assert r.verdict == 'insufficient' and any('GOES' in x for x in r.missing)
 
 
 def test_goes_observation_does_not_cover_future_window(belts):
@@ -128,7 +145,7 @@ def test_goes_observation_does_not_cover_future_window(belts):
     late = Window(T0 + timedelta(hours=20), 360)
     a = assess_window(late, tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6)
     f = next(x for x in a.mechanisms[0].factors if x.name.startswith('поток протонов GOES'))
-    assert f.coverage.value == 'partial' and f.horizon_utc == T0 - timedelta(minutes=5) + timedelta(minutes=th.goes_max_age_min)
+    assert f.coverage.value == 'none' and f.horizon_utc == T0 - timedelta(minutes=5) + timedelta(minutes=th.goes_max_age_min)
     assert 'не распространяется' in f.limits_note and 'прогноза' in f.limits_note
     assert any('GOES' in n and 'прогноза' in n for n in a.mechanisms[0].coverage_notes)
     # окно внутри горизонта наблюдения — покрытие полное
@@ -145,6 +162,7 @@ def test_trade_off_when_mechanisms_disagree(belts):
     w = [Window(T0, 360), Window(T0 + timedelta(minutes=480), 360)]
     A = [assess_window(w[0], tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-7),
          assess_window(w[1], tr, belts, goes(0.2), None, [], th, T0, mmod_hits=3e-7)]
+    A = complete_for_comparator(A)
     r = recommend(A, th)
     assert r.verdict == 'trade_off' and 'mmod_stat' in r.per_mechanism_comparison
 
@@ -162,6 +180,7 @@ def test_minutes_and_fluence_inversion_is_trade_off_not_preferred(belts):
     m1, m2 = (next(x.value for x in a.mechanisms[0].factors if x.name == 'минут в аномалии') for a in A)
     f1, f2 = (next(x.value for x in a.mechanisms[0].factors if x.name.startswith('флюенс')) for a in A)
     assert m2 < m1 and f2 > f1 * th.fluence_equiv_ratio
+    A = complete_for_comparator(A)
     r = recommend(A, th)
     assert r.verdict == 'trade_off' and 'по минутам лучше окно 2' in r.rule_applied and 'по флюенсу — окно 1' in r.rule_applied
     assert 'флюенс' in r.per_mechanism_comparison['spaceweather']
@@ -175,6 +194,7 @@ def test_three_windows_equivalence_with_runner_up(belts):
     th = Thresholds(equiv_tol_min=5.0)
     w = [Window(T0, 360), Window(T0 + timedelta(minutes=480), 360), Window(T0 + timedelta(minutes=960), 360)]
     A = [assess_window(x, tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6) for x in w]
+    A = complete_for_comparator(A)
     r = recommend(A, th)
     assert r.verdict == 'equivalent' and 'окно 1' in r.rule_applied and 'окно 2' in r.rule_applied and 'окно 3' not in r.rule_applied
     assert 'хуже: окно 3' in r.per_mechanism_comparison['spaceweather']
@@ -195,7 +215,7 @@ def test_kp_condition_only_when_fresh_and_declared(belts):
     rs = reasons_of(A)
     assert rs and all('наблюдение Kp 7,33' in x and 'распространено' in x and 'правилу команды' in x for x in rs)
     r = recommend(A, th)
-    assert r.verdict == 'all_need_check'
+    assert r.verdict == 'insufficient' and r.preferred is None
 
 
 def test_sep_level_defines_class_and_unknown_level_is_declared(belts):
@@ -242,7 +262,10 @@ def test_cutoff_availability_factor_from_trajectory(belts):
     a = assess_window(Window(T0, 360), tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6)
     f10 = next(x for x in a.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥10 МэВ'))
     f100 = next(x for x in a.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥100 МэВ'))
-    assert f10.value == 30.0 and f100.value == 30.0 and f10.kind.value == 'own_calculation'
+    # Linear crossing between minute 29 and 30, not a whole extra minute.
+    assert f10.value == pytest.approx(29 + (rigidity_GV(10)-0.1)/4.9)
+    assert f100.value == pytest.approx(29 + (rigidity_GV(100)-0.1)/4.9)
+    assert f10.kind.value == 'own_calculation'
     assert 0.13 < rigidity_GV(10.0) < 0.14 and 0.44 < rigidity_GV(100.0) < 0.45
     a0 = assess_window(Window(T0 + timedelta(hours=6), 360), tr, belts, goes(0.2), None, [], th, T0, mmod_hits=1e-6)
     f = next(x for x in a0.mechanisms[0].factors if x.name.startswith('минут доступности протонов ≥10'))

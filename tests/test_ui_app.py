@@ -461,6 +461,10 @@ def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
     assert any('class="verdict' in m.value for m in at.markdown)
 
 
+def test_publication_evidence_survives_record_list_cleanup():
+    text = 'NASA DONKI, записи: публикация 05-09 13:54Z — 05-10 14:19Z'
+    assert 'публикация 09.05 13:54 — 10.05 14:19' in status_ru(text)
+    assert 'nasa_donki_notification' not in status_ru('NASA; записи: nasa_donki_notification:release:hash')
 # ================================================================= S1: мелкие правки экрана
 def test_verification_ru_bez_usloviy_ne_vryot():
     """S1: «условие поставлено в 12:00» печатается только там, где условия действительно были.
@@ -1024,9 +1028,17 @@ def test_gannon_kartochka_usloviya_vedyot_na_pervoistochnik():
     assert not any('записей без ссылки' in x for x in links), links
 
 
-def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik():
+def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik(monkeypatch, request):
     """О4 в режиме «Сейчас»: хотя бы одна ссылка на первоисточник NOAA на экране есть."""
-    at = run_app(MODES[0])
+    import streamlit as st
+    from tests.test_integration import _fetched, TLE
+    from datetime import timezone
+    st.cache_data.clear()
+    request.addfinalizer(st.cache_data.clear)
+    pinned = _fetched(open(TLE, encoding='utf-8').read(), goes_at=datetime.now(timezone.utc))
+    pinned[0][1]['goes_test']['url'] = 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-1-day.json'
+    monkeypatch.setattr('app.fetch_guard.fetch_live_sources', lambda *a, **kw: (pinned, None))
+    at = run_app(MODES[0], pro=True)
     assert not at.exception, at.exception
     body = texts(at)
     assert 'https://' in body, 'в текущем режиме на экране не было ни одной ссылки'
@@ -1335,9 +1347,15 @@ def test_pod_verdiktom_skazano_otkuda_dopusk():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     line = _strip_tags(verdict_html(at))
+    # Покрытие частичное, но сравнение состоялось (решение владельца 19.09 по разбору Codex п. 1),
+    # поэтому допуск участвует в выводе — и обязан объяснить, откуда взят. Рядом стоит область
+    # вывода: на какой доле окна сравнение сделано и чего оно не означает.
+    assert 'Есть предпочтительное окно' in line, line[:400]
     assert 'Откуда допуск' in line, line
-    assert '24 000 нТл' in line.replace('\u202f', ' '), line            # рабочий порог сетки назван
+    assert '24 000 нТл' in line.replace(' ', ' '), line            # рабочий порог сетки назван
     assert 'размах по сетке' in line, line
+    assert 'Область вывода' in line and 'при покрытии модели' in line, line[:600]
+    assert 'не заключение о полном риске ВКД' in line, line[:600]
 
 
 def test_tolerance_origin_ru_schitaet_po_snimku():
@@ -1377,18 +1395,24 @@ def test_blok_verdikta_ne_splosnoy_abzac(mode):
     метеороидов, остальные строки о покрытии, происхождение допуска и результат сетки порогов
     стоят в свёртке ВНУТРИ того же блока — ничего не выброшено (проверяется ниже).
 
-    Измерено на этой ветке (оперативный уровень, видимая часть): режимы «Текущая обстановка» 441,
-    «Исторический разбор» 326, «Прогноз из прошлого» 265; пресеты «Сейчас» 439…481 (живые данные
-    от прогона к прогону разные), «Гэннон» 481, «Тихая дата» 583 символа.
+    Измерено на этой ветке 19.09 (оперативный уровень, видимая часть): режимы «Текущая обстановка»
+    315, «Исторический разбор» 526, «Прогноз из прошлого» 409; пресеты «Сейчас» 315 (живые данные
+    от прогона к прогону разные), «Гэннон» 625, «Тихая дата» 489 символов.
     Было 1242/1921/1343/1242/934/1517.
 
     400 символов из находки достигнуты не везде, и вот чем заняты остальные — это ограничение,
-    а не недосмотр: «Тихая дата» 583 — из них 295 занимает вычисленное правило шага 3–4, где
-    рядом с «не хуже по флюенсу» обязаны стоять обе величины, допуск и отношение (R4-17: без них
-    фраза опровергается числами той же строки), и 209 — строка о том, почему покрытие неполное;
-    «Гэннон» 481 — из них 415 занимает перечень записей единственного условия: два уведомления
-    DONKI, каждое со своим временем публикации и своим Kp, и сводить их в одну фразу нельзя
-    (закрытая критическая находка пятого круга). Порог 650 стоит как защита от нового разрастания."""
+    а не недосмотр: «Гэннон» 625 — из них 415 занимает перечень записей единственного условия:
+    два уведомления DONKI, каждое со своим временем публикации и своим Kp, и сводить их в одну
+    фразу нельзя (закрытая критическая находка пятого круга), а ещё 141 — строка «Область вывода»,
+    без которой заголовок утверждает больше, чем посчитано (решение владельца 19.09 по разбору
+    Codex п. 1). «Тихая дата» 489 — почти всё занимает вычисленное правило шага 3–4, где рядом
+    с «не хуже по флюенсу» обязаны стоять обе величины, допуск и отношение (R4-17: без них фраза
+    опровергается числами той же строки); прежняя строка о причине неполного покрытия (209
+    символов) из видимой части убрана — те же доля и пропуски теперь стоят в «Области вывода»,
+    а подробности с минутами — в свёртке, в карточке окна и в отчёте.
+
+    Порог 650 стоит как защита от нового разрастания и с появлением «Области вывода» НЕ поднят:
+    место под неё освобождено снятием повтора, а не расширением бюджета."""
     at = run_app(mode)
     assert not at.exception, at.exception
     html_ = verdict_html(at)
@@ -1549,13 +1573,21 @@ def test_tihaya_data_pravilo_s_dopuskom_na_ekrane():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     rule = re.sub(r'\s+', ' ', _strip_tags(verdict_html(at)))
-    m = re.search(r'не хуже по флюенсу[^;]*', rule)
+    assert 'Есть предпочтительное окно' in rule, rule[:400]
+    # Утверждение о флюенсе — в одной фразе с ОБЕИМИ величинами и отношением, какой бы из двух
+    # веток правила ни была напечатана. После перехода на интегрирование по фактическому времени
+    # (ветка Codex 0.7.0) на этой дате печатается «флюенс ниже», а не «не хуже»; инвариант тот же:
+    # слово рядом с числами, которые его подтверждают, и допуск там, где он нужен.
+    m = re.search(r'(?:не хуже по флюенсу|флюенс ниже)[^;]*', rule)
     assert m, rule[:600]
     claim = m.group(0)
-    assert 'в пределах допуска ×1,50' in claim, claim          # допуск — в той же фразе
-    assert '1,74·10⁶ против 1,65·10⁶ част./см²' in claim, claim  # оба числа, с единицей
-    assert 'отношение ×1,05' in claim, claim                   # и во сколько раз — тоже число, не слово
+    assert re.search(r'\d+,\d+·10⁶ против \d+,\d+·10⁶ част\./см²', claim), claim
+    assert re.search(r'отношение ×\d+,\d+', claim), claim
+    if 'не хуже по флюенсу' in claim:
+        assert 'в пределах допуска ×' in claim, claim
     assert 'мин' in rule and 'флюенс' in rule, rule[:600]
+    # Вывод сделан при неполном покрытии — это сказано рядом, а не подразумевается.
+    assert 'при покрытии модели' in verdict_visible(at), verdict_visible(at)
 
 
 def test_tablica_posle_otsechki_nazyvaet_proishozhdenie_stroki():

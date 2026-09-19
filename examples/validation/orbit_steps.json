@@ -1,0 +1,1420 @@
+{
+  "schema_version": "orbit-grid-study-v1",
+  "algorithm_version": "0.7.0",
+  "git_commit": "6672e63414c89d68f5da994835584bf18f4ea1f2",
+  "reference_step_seconds": 5,
+  "steps_seconds": [
+    5,
+    10,
+    15,
+    30,
+    60,
+    300,
+    600
+  ],
+  "units": {
+    "saa": "min",
+    "field": "nT",
+    "fluence": "particles/cm2"
+  },
+  "scope": "numerical discretization of fixed-input models; NOT physical validation",
+  "limitations": [
+    "5-second reference is not an exact solution",
+    "OEM history is declared reconstruction, not proven historical public availability",
+    "eccentric dipole is not McIlwain L; IGRF omits storm external currents",
+    "known fluence contributions are NOT totals when model coverage is partial",
+    "five predeclared cases do not bound all possible dates or windows"
+  ],
+  "cases": [
+    {
+      "case_id": "quiet",
+      "start_utc": "2024-05-03T12:00:00+00:00",
+      "cutoff_utc": "2024-05-03T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "mode": "history_review",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "nasa_jsc_oem:2024-05-02:9337242c0562": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+        "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+      },
+      "grids": [
+        {
+          "step_seconds": 5,
+          "point_count": 10081,
+          "max_field_interpolation_error_nT": 0.0,
+          "windows": [
+            {
+              "grid_relative_delta": 0.0335132642329476,
+              "grid_compared_seconds": 17770.0,
+              "saa_left_min": 107.5,
+              "saa_linear_min": 107.51219159516144,
+              "fluence_known_left_per_cm2": 2829189.5252162395,
+              "fluence_known_trapezoid_per_cm2": 2829175.1305457614,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8238425925925926,
+              "flux_left_coverage_fraction": 0.8252314814814815,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            },
+            {
+              "grid_relative_delta": 0.03009700396335211,
+              "grid_compared_seconds": 18310.0,
+              "saa_left_min": 63.5,
+              "saa_linear_min": 63.55089829383617,
+              "fluence_known_left_per_cm2": 2548204.56332077,
+              "fluence_known_trapezoid_per_cm2": 2548204.563320777,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8481481481481481,
+              "flux_left_coverage_fraction": 0.8490740740740741,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            }
+          ]
+        },
+        {
+          "step_seconds": 10,
+          "point_count": 5041,
+          "max_field_interpolation_error_nT": 1.164334760294878,
+          "windows": [
+            {
+              "grid_relative_delta": 0.06928145871417685,
+              "grid_compared_seconds": 17720.0,
+              "saa_left_min": 107.5,
+              "saa_linear_min": 107.51278210853307,
+              "fluence_known_left_per_cm2": 2820288.332350115,
+              "fluence_known_trapezoid_per_cm2": 2820257.634066288,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8226851851851852,
+              "flux_left_coverage_fraction": 0.825462962962963,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0005905133716339606,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.0031519775439823317,
+              "known_fluence_left_relative_change_vs_5s": -0.0031461988625326454
+            },
+            {
+              "grid_relative_delta": 0.06646589345450235,
+              "grid_compared_seconds": 18280.0,
+              "saa_left_min": 63.5,
+              "saa_linear_min": 63.549752024121624,
+              "fluence_known_left_per_cm2": 2501597.1114038876,
+              "fluence_known_trapezoid_per_cm2": 2501597.1114038867,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8476851851851852,
+              "flux_left_coverage_fraction": 0.8495370370370371,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": -0.001146269714546122,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.01829031020027383,
+              "known_fluence_left_relative_change_vs_5s": -0.01829031020027072
+            }
+          ]
+        },
+        {
+          "step_seconds": 15,
+          "point_count": 3361,
+          "max_field_interpolation_error_nT": 2.32833342194499,
+          "windows": [
+            {
+              "grid_relative_delta": 0.10919153667189638,
+              "grid_compared_seconds": 17700.0,
+              "saa_left_min": 107.5,
+              "saa_linear_min": 107.50854159990708,
+              "fluence_known_left_per_cm2": 2914346.6354093296,
+              "fluence_known_trapezoid_per_cm2": 2914303.4513979126,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8222222222222222,
+              "flux_left_coverage_fraction": 0.8263888888888888,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": -0.0036499952543636027,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.030089449017505432,
+              "known_fluence_left_relative_change_vs_5s": 0.03009947175121863
+            },
+            {
+              "grid_relative_delta": 0.09952357109145124,
+              "grid_compared_seconds": 18240.0,
+              "saa_left_min": 63.75,
+              "saa_linear_min": 63.547237691023184,
+              "fluence_known_left_per_cm2": 2537761.2768806936,
+              "fluence_known_trapezoid_per_cm2": 2537761.276880695,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8465277777777778,
+              "flux_left_coverage_fraction": 0.8493055555555555,
+              "saa_left_error_min_vs_5s": 0.25,
+              "saa_linear_error_min_vs_5s": -0.003660602812985303,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.004098292025061068,
+              "known_fluence_left_relative_change_vs_5s": -0.004098292025058958
+            }
+          ]
+        },
+        {
+          "step_seconds": 30,
+          "point_count": 1681,
+          "max_field_interpolation_error_nT": 10.46216226190154,
+          "windows": [
+            {
+              "grid_relative_delta": 0.25570814372614603,
+              "grid_compared_seconds": 17520.0,
+              "saa_left_min": 107.5,
+              "saa_linear_min": 107.51166164123573,
+              "fluence_known_left_per_cm2": 2897408.0566912172,
+              "fluence_known_trapezoid_per_cm2": 2897303.0246690707,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8194444444444444,
+              "flux_left_coverage_fraction": 0.8277777777777777,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": -0.0005299539257066499,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.024080479637952568,
+              "known_fluence_left_relative_change_vs_5s": 0.024112393626144035
+            },
+            {
+              "grid_relative_delta": 0.2318682389884085,
+              "grid_compared_seconds": 18060.0,
+              "saa_left_min": 64.0,
+              "saa_linear_min": 63.53758699570411,
+              "fluence_known_left_per_cm2": 2532074.3968293546,
+              "fluence_known_trapezoid_per_cm2": 2532074.3968293527,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8444444444444444,
+              "flux_left_coverage_fraction": 0.85,
+              "saa_left_error_min_vs_5s": 0.5,
+              "saa_linear_error_min_vs_5s": -0.013311298132059335,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.006330012403087282,
+              "known_fluence_left_relative_change_vs_5s": -0.00633001240308384
+            }
+          ]
+        },
+        {
+          "step_seconds": 60,
+          "point_count": 841,
+          "max_field_interpolation_error_nT": 41.86091922309424,
+          "windows": [
+            {
+              "grid_relative_delta": 0.4480457118697393,
+              "grid_compared_seconds": 17160.0,
+              "saa_left_min": 107.0,
+              "saa_linear_min": 107.47097516520066,
+              "fluence_known_left_per_cm2": 2682184.6046018405,
+              "fluence_known_trapezoid_per_cm2": 2681877.7353419308,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8111111111111111,
+              "flux_left_coverage_fraction": 0.8277777777777777,
+              "saa_left_error_min_vs_5s": -0.5,
+              "saa_linear_error_min_vs_5s": -0.041216429960783785,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.05206372472792675,
+              "known_fluence_left_relative_change_vs_5s": -0.05196008231479765
+            },
+            {
+              "grid_relative_delta": 0.4460288102817052,
+              "grid_compared_seconds": 18000.0,
+              "saa_left_min": 65.0,
+              "saa_linear_min": 63.49196518061653,
+              "fluence_known_left_per_cm2": 2452331.6310491483,
+              "fluence_known_trapezoid_per_cm2": 2452331.6310491497,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8361111111111111,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": 1.5,
+              "saa_linear_error_min_vs_5s": -0.05893311321963779,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.03762371893200256,
+              "known_fluence_left_relative_change_vs_5s": -0.03762371893200045
+            }
+          ]
+        },
+        {
+          "step_seconds": 300,
+          "point_count": 169,
+          "max_field_interpolation_error_nT": 980.7594754994425,
+          "windows": [
+            {
+              "grid_relative_delta": 0.6691865502312996,
+              "grid_compared_seconds": 14400.0,
+              "saa_left_min": 100.0,
+              "saa_linear_min": 106.21325485243987,
+              "fluence_known_left_per_cm2": 3521398.810472996,
+              "fluence_known_trapezoid_per_cm2": 3506350.6686530854,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7361111111111112,
+              "flux_left_coverage_fraction": 0.8194444444444444,
+              "saa_left_error_min_vs_5s": -7.5,
+              "saa_linear_error_min_vs_5s": -1.2989367427215655,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.23935440786116824,
+              "known_fluence_left_relative_change_vs_5s": 0.24466698999383918
+            },
+            {
+              "grid_relative_delta": 0.8676751642261779,
+              "grid_compared_seconds": 15600.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 61.91916358833373,
+              "fluence_known_left_per_cm2": 2984616.064418478,
+              "fluence_known_trapezoid_per_cm2": 2984616.064418478,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7916666666666666,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": 6.5,
+              "saa_linear_error_min_vs_5s": -1.6317347055024385,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.17126234972634102,
+              "known_fluence_left_relative_change_vs_5s": 0.17126234972634413
+            }
+          ]
+        },
+        {
+          "step_seconds": 600,
+          "point_count": 85,
+          "max_field_interpolation_error_nT": 3632.5324578510845,
+          "windows": [
+            {
+              "grid_relative_delta": 0.9285289819653645,
+              "grid_compared_seconds": 12000.0,
+              "saa_left_min": 110.0,
+              "saa_linear_min": 100.34201318967085,
+              "fluence_known_left_per_cm2": 2863057.225907097,
+              "fluence_known_trapezoid_per_cm2": 2863057.225907096,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6944444444444444,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": 2.5,
+              "saa_linear_error_min_vs_5s": -7.170178405490589,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.011975962532513318,
+              "known_fluence_left_relative_change_vs_5s": 0.01197081368674624
+            },
+            {
+              "grid_relative_delta": 0.9553029913589473,
+              "grid_compared_seconds": 13200.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 57.227110754891335,
+              "fluence_known_left_per_cm2": 2754532.5292261564,
+              "fluence_known_trapezoid_per_cm2": 2715138.778800241,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7222222222222222,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": 6.5,
+              "saa_linear_error_min_vs_5s": -6.323787538944835,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.06551052371632138,
+              "known_fluence_left_relative_change_vs_5s": 0.08096993815775289
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "gannon",
+      "start_utc": "2024-05-10T12:00:00+00:00",
+      "cutoff_utc": "2024-05-10T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "mode": "history_review",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "nasa_jsc_oem:2024-05-08:a164f5909b9f": "a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce",
+        "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+      },
+      "grids": [
+        {
+          "step_seconds": 5,
+          "point_count": 10081,
+          "max_field_interpolation_error_nT": 0.0,
+          "windows": [
+            {
+              "grid_relative_delta": 0.02514267851892796,
+              "grid_compared_seconds": 16380.0,
+              "saa_left_min": 71.83333333333333,
+              "saa_linear_min": 71.96704460913065,
+              "fluence_known_left_per_cm2": 1368371.2071278323,
+              "fluence_known_trapezoid_per_cm2": 1369641.6605417535,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7604166666666666,
+              "flux_left_coverage_fraction": 0.7622685185185185,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            },
+            {
+              "grid_relative_delta": 0.036797596376749474,
+              "grid_compared_seconds": 17890.0,
+              "saa_left_min": 32.333333333333336,
+              "saa_linear_min": 32.418633160196585,
+              "fluence_known_left_per_cm2": 707331.7561570471,
+              "fluence_known_trapezoid_per_cm2": 707331.7561570476,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8300925925925926,
+              "flux_left_coverage_fraction": 0.8314814814814815,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            }
+          ]
+        },
+        {
+          "step_seconds": 10,
+          "point_count": 5041,
+          "max_field_interpolation_error_nT": 1.183478440507315,
+          "windows": [
+            {
+              "grid_relative_delta": 0.0545814850214076,
+              "grid_compared_seconds": 16280.0,
+              "saa_left_min": 71.66666666666667,
+              "saa_linear_min": 71.96578212524744,
+              "fluence_known_left_per_cm2": 1361465.3789067394,
+              "fluence_known_trapezoid_per_cm2": 1364001.9317611998,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7583333333333333,
+              "flux_left_coverage_fraction": 0.7620370370370371,
+              "saa_left_error_min_vs_5s": -0.1666666666666572,
+              "saa_linear_error_min_vs_5s": -0.0012624838832095975,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.004117667374635037,
+              "known_fluence_left_relative_change_vs_5s": -0.0050467506076717905
+            },
+            {
+              "grid_relative_delta": 0.07772403601203631,
+              "grid_compared_seconds": 17820.0,
+              "saa_left_min": 32.166666666666664,
+              "saa_linear_min": 32.41772184336794,
+              "fluence_known_left_per_cm2": 728761.6453856629,
+              "fluence_known_trapezoid_per_cm2": 728761.6453856629,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8282407407407407,
+              "flux_left_coverage_fraction": 0.8310185185185185,
+              "saa_left_error_min_vs_5s": -0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.0009113168286418727,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.030296800676735458,
+              "known_fluence_left_relative_change_vs_5s": 0.030296800676736124
+            }
+          ]
+        },
+        {
+          "step_seconds": 15,
+          "point_count": 3361,
+          "max_field_interpolation_error_nT": 2.366351094129641,
+          "windows": [
+            {
+              "grid_relative_delta": 0.09413989499218256,
+              "grid_compared_seconds": 16200.0,
+              "saa_left_min": 72.0,
+              "saa_linear_min": 71.96494880870145,
+              "fluence_known_left_per_cm2": 1357712.5980686503,
+              "fluence_known_trapezoid_per_cm2": 1361517.427350341,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75625,
+              "flux_left_coverage_fraction": 0.7618055555555555,
+              "saa_left_error_min_vs_5s": 0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.0020958004292026544,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.005931648711823612,
+              "known_fluence_left_relative_change_vs_5s": -0.007789267271674061
+            },
+            {
+              "grid_relative_delta": 0.12178617661201986,
+              "grid_compared_seconds": 17790.0,
+              "saa_left_min": 32.5,
+              "saa_linear_min": 32.4115205246531,
+              "fluence_known_left_per_cm2": 734488.5877308932,
+              "fluence_known_trapezoid_per_cm2": 734488.5877308934,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8277777777777777,
+              "flux_left_coverage_fraction": 0.8319444444444445,
+              "saa_left_error_min_vs_5s": 0.1666666666666643,
+              "saa_linear_error_min_vs_5s": -0.007112635543485624,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.03839334419451146,
+              "known_fluence_left_relative_change_vs_5s": 0.0383933441945119
+            }
+          ]
+        },
+        {
+          "step_seconds": 30,
+          "point_count": 1681,
+          "max_field_interpolation_error_nT": 10.627871546887036,
+          "windows": [
+            {
+              "grid_relative_delta": 0.21283554755613665,
+              "grid_compared_seconds": 15900.0,
+              "saa_left_min": 72.0,
+              "saa_linear_min": 71.95283221033979,
+              "fluence_known_left_per_cm2": 1360943.2788966033,
+              "fluence_known_trapezoid_per_cm2": 1368552.9374599834,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75,
+              "flux_left_coverage_fraction": 0.7611111111111111,
+              "saa_left_error_min_vs_5s": 0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.014212398790860448,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.0007948962952393224,
+              "known_fluence_left_relative_change_vs_5s": -0.005428299128582226
+            },
+            {
+              "grid_relative_delta": 0.26468372585201083,
+              "grid_compared_seconds": 17520.0,
+              "saa_left_min": 32.5,
+              "saa_linear_min": 32.38987658081722,
+              "fluence_known_left_per_cm2": 755519.3411274585,
+              "fluence_known_trapezoid_per_cm2": 755519.3411274584,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8236111111111111,
+              "flux_left_coverage_fraction": 0.8319444444444445,
+              "saa_left_error_min_vs_5s": 0.1666666666666643,
+              "saa_linear_error_min_vs_5s": -0.028756579379361824,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.06812586109835528,
+              "known_fluence_left_relative_change_vs_5s": 0.06812586109835617
+            }
+          ]
+        },
+        {
+          "step_seconds": 60,
+          "point_count": 841,
+          "max_field_interpolation_error_nT": 42.22443298475264,
+          "windows": [
+            {
+              "grid_relative_delta": 0.3197215006617376,
+              "grid_compared_seconds": 15600.0,
+              "saa_left_min": 72.0,
+              "saa_linear_min": 71.93202631873599,
+              "fluence_known_left_per_cm2": 1344114.918880467,
+              "fluence_known_trapezoid_per_cm2": 1359203.7144242793,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7361111111111112,
+              "flux_left_coverage_fraction": 0.7583333333333333,
+              "saa_left_error_min_vs_5s": 0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.03501829039466031,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.007620932115445123,
+              "known_fluence_left_relative_change_vs_5s": -0.017726394797708767
+            },
+            {
+              "grid_relative_delta": 0.595597102870404,
+              "grid_compared_seconds": 17280.0,
+              "saa_left_min": 32.0,
+              "saa_linear_min": 32.298693870286094,
+              "fluence_known_left_per_cm2": 726417.3938544862,
+              "fluence_known_trapezoid_per_cm2": 726417.393854486,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8111111111111111,
+              "flux_left_coverage_fraction": 0.8277777777777777,
+              "saa_left_error_min_vs_5s": -0.3333333333333357,
+              "saa_linear_error_min_vs_5s": -0.11993928991049074,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.026982582828079416,
+              "known_fluence_left_relative_change_vs_5s": 0.026982582828080304
+            }
+          ]
+        },
+        {
+          "step_seconds": 300,
+          "point_count": 169,
+          "max_field_interpolation_error_nT": 1020.9468562727125,
+          "windows": [
+            {
+              "grid_relative_delta": 0.36977840363577025,
+              "grid_compared_seconds": 13800.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 70.57177967402474,
+              "fluence_known_left_per_cm2": 1610238.822591821,
+              "fluence_known_trapezoid_per_cm2": 1350173.548799771,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6805555555555556,
+              "flux_left_coverage_fraction": 0.7916666666666666,
+              "saa_left_error_min_vs_5s": -1.8333333333333286,
+              "saa_linear_error_min_vs_5s": -1.3952649351059137,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.014214018383671312,
+              "known_fluence_left_relative_change_vs_5s": 0.17675584973149294
+            },
+            {
+              "grid_relative_delta": 0.65934462568306,
+              "grid_compared_seconds": 15000.0,
+              "saa_left_min": 35.0,
+              "saa_linear_min": 29.544310300052,
+              "fluence_known_left_per_cm2": 344198.88950571493,
+              "fluence_known_trapezoid_per_cm2": 344198.889505715,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": 2.6666666666666643,
+              "saa_linear_error_min_vs_5s": -2.8743228601445843,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.5133840853183846,
+              "known_fluence_left_relative_change_vs_5s": -0.5133840853183844
+            }
+          ]
+        },
+        {
+          "step_seconds": 600,
+          "point_count": 85,
+          "max_field_interpolation_error_nT": 3386.797985973244,
+          "windows": [
+            {
+              "grid_relative_delta": 0.8627847902856386,
+              "grid_compared_seconds": 13200.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 68.4300733868837,
+              "fluence_known_left_per_cm2": 1937004.3738977974,
+              "fluence_known_trapezoid_per_cm2": 2016856.3141743145,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7222222222222222,
+              "flux_left_coverage_fraction": 0.8611111111111112,
+              "saa_left_error_min_vs_5s": -1.8333333333333286,
+              "saa_linear_error_min_vs_5s": -3.5369712222469474,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.4725430543464626,
+              "known_fluence_left_relative_change_vs_5s": 0.41555475868533365
+            },
+            {
+              "grid_relative_delta": 0.9303107826095764,
+              "grid_compared_seconds": 13200.0,
+              "saa_left_min": 30.0,
+              "saa_linear_min": 22.46665866819769,
+              "fluence_known_left_per_cm2": 230595.81358133056,
+              "fluence_known_trapezoid_per_cm2": 230595.81358133053,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7222222222222222,
+              "flux_left_coverage_fraction": 0.8611111111111112,
+              "saa_left_error_min_vs_5s": -2.3333333333333357,
+              "saa_linear_error_min_vs_5s": -9.951974491998893,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.6739919965785732,
+              "known_fluence_left_relative_change_vs_5s": -0.673991996578573
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "june",
+      "start_utc": "2024-06-25T12:00:00+00:00",
+      "cutoff_utc": "2024-06-25T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "mode": "history_review",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "nasa_jsc_oem:2024-06-24:e0785fd963f7": "e0785fd963f7ddd8d0de7555af4ff57b22034c9d063e2bba20826d789af68ff2",
+        "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+      },
+      "grids": [
+        {
+          "step_seconds": 5,
+          "point_count": 10081,
+          "max_field_interpolation_error_nT": 0.0,
+          "windows": [
+            {
+              "grid_relative_delta": 0.03479952737515408,
+              "grid_compared_seconds": 18580.0,
+              "saa_left_min": 71.83333333333333,
+              "saa_linear_min": 71.88440136845833,
+              "fluence_known_left_per_cm2": 2044314.268676172,
+              "fluence_known_trapezoid_per_cm2": 2052832.706371466,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8611111111111112,
+              "flux_left_coverage_fraction": 0.862037037037037,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            },
+            {
+              "grid_relative_delta": 0.021871079536985482,
+              "grid_compared_seconds": 16630.0,
+              "saa_left_min": 51.083333333333336,
+              "saa_linear_min": 51.202195777235275,
+              "fluence_known_left_per_cm2": 1787885.5748148954,
+              "fluence_known_trapezoid_per_cm2": 1787885.574814896,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7717592592592593,
+              "flux_left_coverage_fraction": 0.7733796296296296,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            }
+          ]
+        },
+        {
+          "step_seconds": 10,
+          "point_count": 5041,
+          "max_field_interpolation_error_nT": 1.2352767685297295,
+          "windows": [
+            {
+              "grid_relative_delta": 0.07374661285012767,
+              "grid_compared_seconds": 18520.0,
+              "saa_left_min": 71.66666666666667,
+              "saa_linear_min": 71.88217610492065,
+              "fluence_known_left_per_cm2": 2088974.0259754523,
+              "fluence_known_trapezoid_per_cm2": 2106010.901366044,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8601851851851852,
+              "flux_left_coverage_fraction": 0.862037037037037,
+              "saa_left_error_min_vs_5s": -0.1666666666666572,
+              "saa_linear_error_min_vs_5s": -0.002225263537681599,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.02590478748196401,
+              "known_fluence_left_relative_change_vs_5s": 0.021845837493567055
+            },
+            {
+              "grid_relative_delta": 0.04925885531980992,
+              "grid_compared_seconds": 16580.0,
+              "saa_left_min": 51.166666666666664,
+              "saa_linear_min": 51.201893202033034,
+              "fluence_known_left_per_cm2": 1790457.1959690792,
+              "fluence_known_trapezoid_per_cm2": 1790457.1959690785,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7699074074074074,
+              "flux_left_coverage_fraction": 0.7731481481481481,
+              "saa_left_error_min_vs_5s": 0.0833333333333286,
+              "saa_linear_error_min_vs_5s": -0.00030257520224097334,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0014383589142434872,
+              "known_fluence_left_relative_change_vs_5s": 0.0014383589142443753
+            }
+          ]
+        },
+        {
+          "step_seconds": 15,
+          "point_count": 3361,
+          "max_field_interpolation_error_nT": 2.4699278600674006,
+          "windows": [
+            {
+              "grid_relative_delta": 0.12499876055840665,
+              "grid_compared_seconds": 18540.0,
+              "saa_left_min": 71.75,
+              "saa_linear_min": 71.8781171264422,
+              "fluence_known_left_per_cm2": 2001892.7731964013,
+              "fluence_known_trapezoid_per_cm2": 2027448.0862822875,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8590277777777777,
+              "flux_left_coverage_fraction": 0.8618055555555556,
+              "saa_left_error_min_vs_5s": -0.0833333333333286,
+              "saa_linear_error_min_vs_5s": -0.006284242016121766,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.01236565454671057,
+              "known_fluence_left_relative_change_vs_5s": -0.020750965802944443
+            },
+            {
+              "grid_relative_delta": 0.08098625365266986,
+              "grid_compared_seconds": 16470.0,
+              "saa_left_min": 51.0,
+              "saa_linear_min": 51.20160287894485,
+              "fluence_known_left_per_cm2": 1783642.2777121903,
+              "fluence_known_trapezoid_per_cm2": 1783642.2777121912,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7673611111111112,
+              "flux_left_coverage_fraction": 0.7722222222222223,
+              "saa_left_error_min_vs_5s": -0.0833333333333357,
+              "saa_linear_error_min_vs_5s": -0.0005928982904279678,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.0023733605564462135,
+              "known_fluence_left_relative_change_vs_5s": -0.0023733605564463245
+            }
+          ]
+        },
+        {
+          "step_seconds": 30,
+          "point_count": 1681,
+          "max_field_interpolation_error_nT": 11.114630957985355,
+          "windows": [
+            {
+              "grid_relative_delta": 0.28921656410817054,
+              "grid_compared_seconds": 18360.0,
+              "saa_left_min": 71.5,
+              "saa_linear_min": 71.85494250840775,
+              "fluence_known_left_per_cm2": 1905787.2728758175,
+              "fluence_known_trapezoid_per_cm2": 1956897.8990475903,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8583333333333333,
+              "flux_left_coverage_fraction": 0.8638888888888889,
+              "saa_left_error_min_vs_5s": -0.3333333333333286,
+              "saa_linear_error_min_vs_5s": -0.029458860050581848,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.04673289110511469,
+              "known_fluence_left_relative_change_vs_5s": -0.06776208429541508
+            },
+            {
+              "grid_relative_delta": 0.18574488409301965,
+              "grid_compared_seconds": 16260.0,
+              "saa_left_min": 51.0,
+              "saa_linear_min": 51.19761257086326,
+              "fluence_known_left_per_cm2": 1791067.62952457,
+              "fluence_known_trapezoid_per_cm2": 1791067.6295245702,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7625,
+              "flux_left_coverage_fraction": 0.7722222222222223,
+              "saa_left_error_min_vs_5s": -0.0833333333333357,
+              "saa_linear_error_min_vs_5s": -0.004583206372018367,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0017797865559732173,
+              "known_fluence_left_relative_change_vs_5s": 0.0017797865559734394
+            }
+          ]
+        },
+        {
+          "step_seconds": 60,
+          "point_count": 841,
+          "max_field_interpolation_error_nT": 44.33042151016707,
+          "windows": [
+            {
+              "grid_relative_delta": 0.41424117209168776,
+              "grid_compared_seconds": 18120.0,
+              "saa_left_min": 72.0,
+              "saa_linear_min": 71.72785625251537,
+              "fluence_known_left_per_cm2": 1649895.4655387413,
+              "fluence_known_trapezoid_per_cm2": 1752116.717882291,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.85,
+              "flux_left_coverage_fraction": 0.8611111111111112,
+              "saa_left_error_min_vs_5s": 0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.1565451159429614,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.14648830737927632,
+              "known_fluence_left_relative_change_vs_5s": -0.19293452537160194
+            },
+            {
+              "grid_relative_delta": 0.4105743163291219,
+              "grid_compared_seconds": 15840.0,
+              "saa_left_min": 51.0,
+              "saa_linear_min": 51.195092945914766,
+              "fluence_known_left_per_cm2": 1740297.7312071668,
+              "fluence_known_trapezoid_per_cm2": 1740297.731207166,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7527777777777778,
+              "flux_left_coverage_fraction": 0.7722222222222223,
+              "saa_left_error_min_vs_5s": -0.0833333333333357,
+              "saa_linear_error_min_vs_5s": -0.00710283132050904,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.02661682843582247,
+              "known_fluence_left_relative_change_vs_5s": -0.026616828435821693
+            }
+          ]
+        },
+        {
+          "step_seconds": 300,
+          "point_count": 169,
+          "max_field_interpolation_error_nT": 1087.4495342763475,
+          "windows": [
+            {
+              "grid_relative_delta": 0.7727236538984172,
+              "grid_compared_seconds": 16200.0,
+              "saa_left_min": 65.0,
+              "saa_linear_min": 68.35916917883702,
+              "fluence_known_left_per_cm2": 1086823.4645499329,
+              "fluence_known_trapezoid_per_cm2": 1597929.7262676759,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8194444444444444,
+              "flux_left_coverage_fraction": 0.875,
+              "saa_left_error_min_vs_5s": -6.833333333333329,
+              "saa_linear_error_min_vs_5s": -3.525232189621306,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.22159768727957618,
+              "known_fluence_left_relative_change_vs_5s": -0.4683677156674534
+            },
+            {
+              "grid_relative_delta": 0.45768837764468884,
+              "grid_compared_seconds": 13200.0,
+              "saa_left_min": 50.0,
+              "saa_linear_min": 51.315996041921494,
+              "fluence_known_left_per_cm2": 1240534.5664745271,
+              "fluence_known_trapezoid_per_cm2": 1195182.9259760964,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6805555555555556,
+              "flux_left_coverage_fraction": 0.7777777777777778,
+              "saa_left_error_min_vs_5s": -1.0833333333333357,
+              "saa_linear_error_min_vs_5s": 0.11380026468621907,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.3315103926044951,
+              "known_fluence_left_relative_change_vs_5s": -0.3061443170920136
+            }
+          ]
+        },
+        {
+          "step_seconds": 600,
+          "point_count": 85,
+          "max_field_interpolation_error_nT": 3707.3510445328793,
+          "windows": [
+            {
+              "grid_relative_delta": 0.9691451745502757,
+              "grid_compared_seconds": 14400.0,
+              "saa_left_min": 60.0,
+              "saa_linear_min": 59.881971899497834,
+              "fluence_known_left_per_cm2": 457315.93835236423,
+              "fluence_known_trapezoid_per_cm2": 1479528.4617878504,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75,
+              "flux_left_coverage_fraction": 0.8611111111111112,
+              "saa_left_error_min_vs_5s": -11.833333333333329,
+              "saa_linear_error_min_vs_5s": -12.002429468960493,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.27927470309890634,
+              "known_fluence_left_relative_change_vs_5s": -0.7762986125178756
+            },
+            {
+              "grid_relative_delta": 0.9097860548680125,
+              "grid_compared_seconds": 9600.0,
+              "saa_left_min": 50.0,
+              "saa_linear_min": 48.75765381376161,
+              "fluence_known_left_per_cm2": 1332762.0491913576,
+              "fluence_known_trapezoid_per_cm2": 1242058.7681944952,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6111111111111112,
+              "flux_left_coverage_fraction": 0.8055555555555556,
+              "saa_left_error_min_vs_5s": -1.0833333333333357,
+              "saa_linear_error_min_vs_5s": -2.444541963473668,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.3052918007221528,
+              "known_fluence_left_relative_change_vs_5s": -0.25455964969718936
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "max_horizon_delay",
+      "start_utc": "2024-05-20T15:00:00+00:00",
+      "cutoff_utc": "2024-05-20T12:00:00+00:00",
+      "horizon_min": 1920,
+      "window_offsets_min": [
+        0,
+        1440
+      ],
+      "duration_min": 480,
+      "mode": "history_review",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "nasa_jsc_oem:2024-05-17:c27c3b8acb46": "c27c3b8acb4618ffb66c98515285b6e11b95914cdc71073319f2c57cb10c1970",
+        "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+      },
+      "grids": [
+        {
+          "step_seconds": 5,
+          "point_count": 23041,
+          "max_field_interpolation_error_nT": 0.0,
+          "windows": [
+            {
+              "grid_relative_delta": 0.03709362049054466,
+              "grid_compared_seconds": 23980.0,
+              "saa_left_min": 45.583333333333336,
+              "saa_linear_min": 45.598994137670125,
+              "fluence_known_left_per_cm2": 1449755.3195342906,
+              "fluence_known_trapezoid_per_cm2": 1449739.6323107334,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8335069444444444,
+              "flux_left_coverage_fraction": 0.8348958333333333,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            },
+            {
+              "grid_relative_delta": 0.03479699250384555,
+              "grid_compared_seconds": 24420.0,
+              "saa_left_min": 50.5,
+              "saa_linear_min": 50.50230674646411,
+              "fluence_known_left_per_cm2": 1777485.3531825035,
+              "fluence_known_trapezoid_per_cm2": 1777485.3531825051,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8493055555555555,
+              "flux_left_coverage_fraction": 0.8505208333333333,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            }
+          ]
+        },
+        {
+          "step_seconds": 10,
+          "point_count": 11521,
+          "max_field_interpolation_error_nT": 1.250486327087856,
+          "windows": [
+            {
+              "grid_relative_delta": 0.07787467254919637,
+              "grid_compared_seconds": 23860.0,
+              "saa_left_min": 45.666666666666664,
+              "saa_linear_min": 45.595857367372034,
+              "fluence_known_left_per_cm2": 1451954.8163569341,
+              "fluence_known_trapezoid_per_cm2": 1451921.776963387,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8326388888888889,
+              "flux_left_coverage_fraction": 0.8354166666666667,
+              "saa_left_error_min_vs_5s": 0.0833333333333286,
+              "saa_linear_error_min_vs_5s": -0.0031367702980915624,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0015051976258491084,
+              "known_fluence_left_relative_change_vs_5s": 0.0015171503722091195
+            },
+            {
+              "grid_relative_delta": 0.07325050929338434,
+              "grid_compared_seconds": 24340.0,
+              "saa_left_min": 50.5,
+              "saa_linear_min": 50.499450532619385,
+              "fluence_known_left_per_cm2": 1758647.9100689455,
+              "fluence_known_trapezoid_per_cm2": 1758647.9100689462,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8479166666666667,
+              "flux_left_coverage_fraction": 0.8503472222222223,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": -0.002856213844722788,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.010597804971968605,
+              "known_fluence_left_relative_change_vs_5s": -0.01059780497196805
+            }
+          ]
+        },
+        {
+          "step_seconds": 15,
+          "point_count": 7681,
+          "max_field_interpolation_error_nT": 2.5009032652233145,
+          "windows": [
+            {
+              "grid_relative_delta": 0.12129551964459825,
+              "grid_compared_seconds": 23820.0,
+              "saa_left_min": 45.75,
+              "saa_linear_min": 45.58639824677902,
+              "fluence_known_left_per_cm2": 1385565.1645872453,
+              "fluence_known_trapezoid_per_cm2": 1385518.102916578,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8307291666666666,
+              "flux_left_coverage_fraction": 0.8348958333333333,
+              "saa_left_error_min_vs_5s": 0.1666666666666643,
+              "saa_linear_error_min_vs_5s": -0.01259589089110591,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.04429866436898944,
+              "known_fluence_left_relative_change_vs_5s": -0.04427654382924784
+            },
+            {
+              "grid_relative_delta": 0.11254315142203024,
+              "grid_compared_seconds": 24300.0,
+              "saa_left_min": 51.0,
+              "saa_linear_min": 50.49588463489508,
+              "fluence_known_left_per_cm2": 1845098.4098799382,
+              "fluence_known_trapezoid_per_cm2": 1845098.4098799382,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.846875,
+              "flux_left_coverage_fraction": 0.8505208333333333,
+              "saa_left_error_min_vs_5s": 0.5,
+              "saa_linear_error_min_vs_5s": -0.0064221115690301644,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0380386013175158,
+              "known_fluence_left_relative_change_vs_5s": 0.038038601317516685
+            }
+          ]
+        },
+        {
+          "step_seconds": 30,
+          "point_count": 3841,
+          "max_field_interpolation_error_nT": 11.244886610351386,
+          "windows": [
+            {
+              "grid_relative_delta": 0.27607494645577946,
+              "grid_compared_seconds": 23640.0,
+              "saa_left_min": 45.5,
+              "saa_linear_min": 45.55468268952661,
+              "fluence_known_left_per_cm2": 1336045.933683748,
+              "fluence_known_trapezoid_per_cm2": 1335937.9751212792,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8270833333333333,
+              "flux_left_coverage_fraction": 0.8354166666666667,
+              "saa_left_error_min_vs_5s": -0.0833333333333357,
+              "saa_linear_error_min_vs_5s": -0.044311448143517396,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.07849799691829229,
+              "known_fluence_left_relative_change_vs_5s": -0.07843350137668048
+            },
+            {
+              "grid_relative_delta": 0.2831014462429557,
+              "grid_compared_seconds": 24060.0,
+              "saa_left_min": 51.0,
+              "saa_linear_min": 50.4736980175711,
+              "fluence_known_left_per_cm2": 1758780.4883081554,
+              "fluence_known_trapezoid_per_cm2": 1758780.4883081561,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.84375,
+              "flux_left_coverage_fraction": 0.8510416666666667,
+              "saa_left_error_min_vs_5s": 0.5,
+              "saa_linear_error_min_vs_5s": -0.02860872889300481,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.01052321744359741,
+              "known_fluence_left_relative_change_vs_5s": -0.010523217443596855
+            }
+          ]
+        },
+        {
+          "step_seconds": 60,
+          "point_count": 1921,
+          "max_field_interpolation_error_nT": 44.95044394804427,
+          "windows": [
+            {
+              "grid_relative_delta": 0.5437643815002846,
+              "grid_compared_seconds": 23280.0,
+              "saa_left_min": 46.0,
+              "saa_linear_min": 45.47891475211282,
+              "fluence_known_left_per_cm2": 1470592.9831333775,
+              "fluence_known_trapezoid_per_cm2": 1470377.0660084416,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8208333333333333,
+              "flux_left_coverage_fraction": 0.8375,
+              "saa_left_error_min_vs_5s": 0.4166666666666643,
+              "saa_linear_error_min_vs_5s": -0.12007938555730391,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.014235269035733245,
+              "known_fluence_left_relative_change_vs_5s": 0.014373227894608265
+            },
+            {
+              "grid_relative_delta": 0.5259884667448086,
+              "grid_compared_seconds": 23520.0,
+              "saa_left_min": 50.0,
+              "saa_linear_min": 50.403652355702235,
+              "fluence_known_left_per_cm2": 1424273.2678934338,
+              "fluence_known_trapezoid_per_cm2": 1424273.2678934338,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8354166666666667,
+              "flux_left_coverage_fraction": 0.85,
+              "saa_left_error_min_vs_5s": -0.5,
+              "saa_linear_error_min_vs_5s": -0.09865439076187243,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.19871448428908933,
+              "known_fluence_left_relative_change_vs_5s": -0.19871448428908856
+            }
+          ]
+        },
+        {
+          "step_seconds": 300,
+          "point_count": 385,
+          "max_field_interpolation_error_nT": 1092.674963259,
+          "windows": [
+            {
+              "grid_relative_delta": 0.8509317793765189,
+              "grid_compared_seconds": 19800.0,
+              "saa_left_min": 40.0,
+              "saa_linear_min": 40.83340973745007,
+              "fluence_known_left_per_cm2": 2386241.656306334,
+              "fluence_known_trapezoid_per_cm2": 2386241.656306334,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7604166666666666,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": -5.583333333333336,
+              "saa_linear_error_min_vs_5s": -4.765584400220057,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.6459794594308732,
+              "known_fluence_left_relative_change_vs_5s": 0.6459616489442326
+            },
+            {
+              "grid_relative_delta": 0.744872285430762,
+              "grid_compared_seconds": 19800.0,
+              "saa_left_min": 45.0,
+              "saa_linear_min": 45.285387712354684,
+              "fluence_known_left_per_cm2": 837773.2134541688,
+              "fluence_known_trapezoid_per_cm2": 837773.2134541689,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7708333333333334,
+              "flux_left_coverage_fraction": 0.84375,
+              "saa_left_error_min_vs_5s": -5.5,
+              "saa_linear_error_min_vs_5s": -5.216919034109424,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.5286750397384852,
+              "known_fluence_left_relative_change_vs_5s": -0.5286750397384847
+            }
+          ]
+        },
+        {
+          "step_seconds": 600,
+          "point_count": 193,
+          "max_field_interpolation_error_nT": 3773.0484872200323,
+          "windows": [
+            {
+              "grid_relative_delta": 0.9987923898079032,
+              "grid_compared_seconds": 15600.0,
+              "saa_left_min": 40.0,
+              "saa_linear_min": 33.11265295980463,
+              "fluence_known_left_per_cm2": 3127815.414513415,
+              "fluence_known_trapezoid_per_cm2": 3127815.4145134157,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6875,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": -5.583333333333336,
+              "saa_linear_error_min_vs_5s": -12.486341177865498,
+              "known_fluence_trapezoid_relative_change_vs_5s": 1.15750148840727,
+              "known_fluence_left_relative_change_vs_5s": 1.1574781429449579
+            },
+            {
+              "grid_relative_delta": 0.9750036035327948,
+              "grid_compared_seconds": 16800.0,
+              "saa_left_min": 40.0,
+              "saa_linear_min": 37.414578381398236,
+              "fluence_known_left_per_cm2": 1241553.416908349,
+              "fluence_known_trapezoid_per_cm2": 1241553.416908349,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6875,
+              "flux_left_coverage_fraction": 0.8333333333333334,
+              "saa_left_error_min_vs_5s": -10.5,
+              "saa_linear_error_min_vs_5s": -13.087728365065871,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.30151130939818716,
+              "known_fluence_left_relative_change_vs_5s": -0.3015113093981865
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "tle",
+      "start_utc": "2026-09-18T03:25:00+00:00",
+      "cutoff_utc": "2026-09-18T03:25:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "mode": "live",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "celestrak_gp:25544:9135d19ca3b6": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+        "igrf14:717f6dce821a": "717f6dce821a8f2bfcc6a77f79cc227ba91f61aeb458d5433e8c72450d48f8e0"
+      },
+      "grids": [
+        {
+          "step_seconds": 5,
+          "point_count": 10081,
+          "max_field_interpolation_error_nT": 0.0,
+          "windows": [
+            {
+              "grid_relative_delta": 0.031572528539823855,
+              "grid_compared_seconds": 18260.0,
+              "saa_left_min": 105.25,
+              "saa_linear_min": 105.32069940715171,
+              "fluence_known_left_per_cm2": 3044713.117790548,
+              "fluence_known_trapezoid_per_cm2": 3044944.570323909,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8467592592592592,
+              "flux_left_coverage_fraction": 0.8476851851851852,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            },
+            {
+              "grid_relative_delta": 0.029272480591765834,
+              "grid_compared_seconds": 17800.0,
+              "saa_left_min": 68.0,
+              "saa_linear_min": 67.963121616226,
+              "fluence_known_left_per_cm2": 2923497.78216966,
+              "fluence_known_trapezoid_per_cm2": 2923497.782169655,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8252314814814815,
+              "flux_left_coverage_fraction": 0.8263888888888888,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": 0.0,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.0,
+              "known_fluence_left_relative_change_vs_5s": 0.0
+            }
+          ]
+        },
+        {
+          "step_seconds": 10,
+          "point_count": 5041,
+          "max_field_interpolation_error_nT": 1.2080425960812136,
+          "windows": [
+            {
+              "grid_relative_delta": 0.07013361202348853,
+              "grid_compared_seconds": 18200.0,
+              "saa_left_min": 105.16666666666667,
+              "saa_linear_min": 105.31799409627605,
+              "fluence_known_left_per_cm2": 3020167.7034375067,
+              "fluence_known_trapezoid_per_cm2": 3020630.6085042385,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8453703703703703,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": -0.0833333333333286,
+              "saa_linear_error_min_vs_5s": -0.0027053108756547317,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.007985026084426972,
+              "known_fluence_left_relative_change_vs_5s": -0.008061650935065168
+            },
+            {
+              "grid_relative_delta": 0.06296757340208627,
+              "grid_compared_seconds": 17740.0,
+              "saa_left_min": 68.16666666666667,
+              "saa_linear_min": 67.96199807895199,
+              "fluence_known_left_per_cm2": 2908498.616599814,
+              "fluence_known_trapezoid_per_cm2": 2908498.6165998154,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8240740740740741,
+              "flux_left_coverage_fraction": 0.8263888888888888,
+              "saa_left_error_min_vs_5s": 0.1666666666666714,
+              "saa_linear_error_min_vs_5s": -0.00112353727401171,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.005130554796832443,
+              "known_fluence_left_relative_change_vs_5s": -0.005130554796834663
+            }
+          ]
+        },
+        {
+          "step_seconds": 15,
+          "point_count": 3361,
+          "max_field_interpolation_error_nT": 2.4164709065917123,
+          "windows": [
+            {
+              "grid_relative_delta": 0.11252339930563138,
+              "grid_compared_seconds": 18180.0,
+              "saa_left_min": 105.5,
+              "saa_linear_min": 105.31417513381419,
+              "fluence_known_left_per_cm2": 3028728.665636548,
+              "fluence_known_trapezoid_per_cm2": 3029423.154720622,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8444444444444444,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": 0.25,
+              "saa_linear_error_min_vs_5s": -0.0065242733375185935,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.00509743781695049,
+              "known_fluence_left_relative_change_vs_5s": -0.005249904189856713
+            },
+            {
+              "grid_relative_delta": 0.09749339566952578,
+              "grid_compared_seconds": 17670.0,
+              "saa_left_min": 68.25,
+              "saa_linear_min": 67.96133577357536,
+              "fluence_known_left_per_cm2": 2951417.7610724433,
+              "fluence_known_trapezoid_per_cm2": 2951417.761072443,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8222222222222222,
+              "flux_left_coverage_fraction": 0.8256944444444444,
+              "saa_left_error_min_vs_5s": 0.25,
+              "saa_linear_error_min_vs_5s": -0.0017858426506478509,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.009550196710622183,
+              "known_fluence_left_relative_change_vs_5s": 0.009550196710620629
+            }
+          ]
+        },
+        {
+          "step_seconds": 30,
+          "point_count": 1681,
+          "max_field_interpolation_error_nT": 10.868154957777733,
+          "windows": [
+            {
+              "grid_relative_delta": 0.25449792625137074,
+              "grid_compared_seconds": 18000.0,
+              "saa_left_min": 105.5,
+              "saa_linear_min": 105.2934712431008,
+              "fluence_known_left_per_cm2": 3059870.966057843,
+              "fluence_known_trapezoid_per_cm2": 3061259.944225986,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8416666666666667,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": 0.25,
+              "saa_linear_error_min_vs_5s": -0.027228164050910664,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.005358184205087602,
+              "known_fluence_left_relative_change_vs_5s": 0.0049784159232362235
+            },
+            {
+              "grid_relative_delta": 0.216512420712607,
+              "grid_compared_seconds": 17460.0,
+              "saa_left_min": 68.5,
+              "saa_linear_min": 67.95830422981854,
+              "fluence_known_left_per_cm2": 3045575.469907219,
+              "fluence_known_trapezoid_per_cm2": 3045575.4699072186,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8180555555555555,
+              "flux_left_coverage_fraction": 0.825,
+              "saa_left_error_min_vs_5s": 0.5,
+              "saa_linear_error_min_vs_5s": -0.004817386407466984,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.041757407336551644,
+              "known_fluence_left_relative_change_vs_5s": 0.04175740733655009
+            }
+          ]
+        },
+        {
+          "step_seconds": 60,
+          "point_count": 841,
+          "max_field_interpolation_error_nT": 43.248966208815546,
+          "windows": [
+            {
+              "grid_relative_delta": 0.3974233557810457,
+              "grid_compared_seconds": 17760.0,
+              "saa_left_min": 105.0,
+              "saa_linear_min": 105.22620495869258,
+              "fluence_known_left_per_cm2": 3177896.4064076976,
+              "fluence_known_trapezoid_per_cm2": 3180674.362743994,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8333333333333334,
+              "flux_left_coverage_fraction": 0.8444444444444444,
+              "saa_left_error_min_vs_5s": -0.25,
+              "saa_linear_error_min_vs_5s": -0.09449444845913035,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.04457545590251799,
+              "known_fluence_left_relative_change_vs_5s": 0.04374247538756504
+            },
+            {
+              "grid_relative_delta": 0.4132048307358084,
+              "grid_compared_seconds": 17160.0,
+              "saa_left_min": 68.0,
+              "saa_linear_min": 67.91999146524505,
+              "fluence_known_left_per_cm2": 3106480.7778924378,
+              "fluence_known_trapezoid_per_cm2": 3106480.7778924406,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.8083333333333333,
+              "flux_left_coverage_fraction": 0.8222222222222222,
+              "saa_left_error_min_vs_5s": 0.0,
+              "saa_linear_error_min_vs_5s": -0.04313015098095718,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.06259043425269373,
+              "known_fluence_left_relative_change_vs_5s": 0.06259043425269084
+            }
+          ]
+        },
+        {
+          "step_seconds": 300,
+          "point_count": 169,
+          "max_field_interpolation_error_nT": 1041.9864406954075,
+          "windows": [
+            {
+              "grid_relative_delta": 0.6412463880472831,
+              "grid_compared_seconds": 16200.0,
+              "saa_left_min": 105.0,
+              "saa_linear_min": 102.8791596593157,
+              "fluence_known_left_per_cm2": 3067093.3119564625,
+              "fluence_known_trapezoid_per_cm2": 3060301.8268195447,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.7916666666666666,
+              "flux_left_coverage_fraction": 0.8472222222222222,
+              "saa_left_error_min_vs_5s": -0.25,
+              "saa_linear_error_min_vs_5s": -2.4415397478360035,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.005043525798567039,
+              "known_fluence_left_relative_change_vs_5s": 0.007350509982416709
+            },
+            {
+              "grid_relative_delta": 0.7264520206956075,
+              "grid_compared_seconds": 14400.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 66.51298089278778,
+              "fluence_known_left_per_cm2": 3446186.956127246,
+              "fluence_known_trapezoid_per_cm2": 3446186.9561272454,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75,
+              "flux_left_coverage_fraction": 0.8194444444444444,
+              "saa_left_error_min_vs_5s": 2.0,
+              "saa_linear_error_min_vs_5s": -1.4501407234382242,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.17878897570761287,
+              "known_fluence_left_relative_change_vs_5s": 0.17878897570761088
+            }
+          ]
+        },
+        {
+          "step_seconds": 600,
+          "point_count": 85,
+          "max_field_interpolation_error_nT": 3294.292992603543,
+          "windows": [
+            {
+              "grid_relative_delta": 0.9157399102822115,
+              "grid_compared_seconds": 13200.0,
+              "saa_left_min": 100.0,
+              "saa_linear_min": 95.69116741761255,
+              "fluence_known_left_per_cm2": 4201057.144090578,
+              "fluence_known_trapezoid_per_cm2": 4102033.075408954,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.75,
+              "flux_left_coverage_fraction": 0.8611111111111112,
+              "saa_left_error_min_vs_5s": -5.25,
+              "saa_linear_error_min_vs_5s": -9.62953198953916,
+              "known_fluence_trapezoid_relative_change_vs_5s": 0.3471618220533308,
+              "known_fluence_left_relative_change_vs_5s": 0.379787514148181
+            },
+            {
+              "grid_relative_delta": 0.9805329924670412,
+              "grid_compared_seconds": 10800.0,
+              "saa_left_min": 70.0,
+              "saa_linear_min": 62.0667129007236,
+              "fluence_known_left_per_cm2": 2402211.2035646774,
+              "fluence_known_trapezoid_per_cm2": 2402211.2035646774,
+              "fluence_total_per_cm2": null,
+              "flux_coverage_fraction": 0.6666666666666666,
+              "flux_left_coverage_fraction": 0.8055555555555556,
+              "saa_left_error_min_vs_5s": 2.0,
+              "saa_linear_error_min_vs_5s": -5.896408715502403,
+              "known_fluence_trapezoid_relative_change_vs_5s": -0.17830920953123086,
+              "known_fluence_left_relative_change_vs_5s": -0.1783092095312323
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

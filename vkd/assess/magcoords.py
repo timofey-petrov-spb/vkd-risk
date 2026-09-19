@@ -111,7 +111,7 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
         status = 'approximation' if ratio >= 1.0 else 'inconsistent_BB0'
         n_incons += status == 'inconsistent_BB0'
         out.append(replace(p, L=L, B_over_B0=ratio, mag_method=MagMethod.DIPOLE, mag_status=status))
-    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(),
+    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(), 'position_conversion': 'WGS84 geodetic to ECEF',
                  'offset_km': [float(x) * R_E_KM for x in off], 'B_eq_nT': B_eq, 'n': len(points),
                  'n_inconsistent_BB0': n_incons, 'n_outside_model': n_nomodel,
                  'position_frame': 'WGS84 geodetic (lat, lon, h) → ECEF, NIMA TR8350.2; a = %.3f км, 1/f = %.9f'
