@@ -51,7 +51,9 @@ TEAM_RULE_RU = 'правило команды, не норма'
 def s_level_ru(pfu: Optional[float]) -> str:
     if pfu is None:
         return 'нет данных'
-    lvl = 'ниже S1 (фон)'
+    # «фон (ниже S1)», а не «ниже S1 (фон)»: уровень подставляется в тексты, где вокруг него уже
+    # стоят скобки, и прежний вид давал скобку в скобке (пятый круг)
+    lvl = 'фон (ниже S1)'
     for n, thr in NOAA_S_PFU:
         if pfu >= thr:
             lvl = 'S%d' % n
@@ -211,12 +213,23 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         # «69 из 72 (96 %)» читалось как неполнота данных, хотя причина у трёх точек названа
         # тут же в статусах: L вне сетки таблицы. Причина печатается рядом с числом, а точки
         # выше точки отражения называются отдельно — там поток известен и равен нулю, это не пропуск.
-        fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (%.0f %%)%s%s'
+        #
+        # Два множества НЕ ПЕРЕСЕКАЮТСЯ и связывать их словом «из них» нельзя: точка без модели
+        # (status no_model_L) значения не имеет и в n_saa_model не входит, а точка выше точки
+        # отражения (status beyond_mirror) имеет значение 0,0 и в n_saa_model ВХОДИТ
+        # (vkd/assess/trapped.py: FluxResult(0.0, 'beyond_mirror')). Пока стояло «из них», карточка
+        # печатала арифметически невозможное «у 3 точек L вне сетки; из них 4 выше точки отражения»
+        # и приписывала одним и тем же точкам два взаимоисключающих статуса (пятый круг).
+        n_saa_nomodel = n_saa - n_saa_model
+        why = []
+        if n_saa_nomodel:
+            why.append('у %d точек L вне сетки 1,14…9 — таблица значения не даёт' % n_saa_nomodel)
+        if n_saa_mirror:
+            why.append(('ещё у %d точек' if n_saa_nomodel else 'у %d точек') % n_saa_mirror
+                       + ' значение известно и равно нулю — они выше точки отражения, это не пропуск данных')
+        fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (%.0f %%)%s'
                        % (n_saa_model, n_saa, 100.0 * n_saa_model / n_saa,
-                          '; у %d точек L вне сетки 1,14…9 — таблица значения не даёт' % (n_saa - n_saa_model)
-                          if n_saa_model < n_saa else '',
-                          '; из них %d выше точки отражения — поток физически нулевой, не пропуск данных' % n_saa_mirror
-                          if n_saa_mirror else ''))
+                          ('; ' + '; '.join(why)) if why else ''))
     else:
         fl_note.append('окно не пересекает аномалию по порогу |B|')
     if n_nomodel:
@@ -271,7 +284,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         frac = max(0.0, (hi - lo).total_seconds()) / (end - win.start_utc).total_seconds()
         goes_frac = frac
         goes_cov = Coverage.FULL if frac >= 0.95 else Coverage.PARTIAL
-        goes_note = 'наблюдение %s (%s), давность %.0f мин; горизонт наблюдения до %s покрывает %.0f %% окна' % (
+        # уровень подставляется БЕЗ внешних скобок: s_level_ru сам печатает «фон (ниже S1)»,
+        # и в шаблоне «наблюдение %s (%s)» получалась скобка в скобке (пятый круг)
+        goes_note = 'наблюдение %s, %s, давность %.0f мин; горизонт наблюдения до %s покрывает %.0f %% окна' % (
             goes.t_utc.strftime('%Y-%m-%d %H:%MZ'), s_level_ru(goes_val), age_min, goes_hz.strftime('%H:%MZ'), 100 * frac)
         if frac < 0.95:
             goes_note += '; на остальные участки окна наблюдение не распространяется, прогноза потока на окно нет'
@@ -281,8 +296,10 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
             # горизонт наблюдения кончился до начала окна: наличие протонного события В ОКНЕ неизвестно.
             # Покрытие остаётся частичным (уровень и время наблюдения объявлены), но «не выявлено» писать нельзя.
             gap_h = (win.start_utc - goes.t_utc).total_seconds() / 3600.0
+            # уровень назван в начале заметки и второй раз не повторяется (бриф §9.7):
+            # здесь важно не какой он, а к чему относится
             goes_note += ('; на само окно наблюдения нет — наличие протонного события в окне неизвестно, '
-                          'уровень %s относится к моменту наблюдения' % s_level_ru(goes_val))
+                          'названный уровень относится к моменту наблюдения, а не к окну')
             notes.append('наблюдение GOES не покрывает окно (до его начала %.0f ч)' % gap_h)
     elif any(e.kind_of_event == 'SEP' and e.published_utc is not None for e in events):
         # архива GOES нет, но есть датированные уведомления о протонных событиях: частичное покрытие канала
@@ -317,7 +334,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                          % (c1.strftime('%Y-%m-%d %H:%MZ'), win.start_utc.strftime('%d.%m %H:%MZ'), end.strftime('%d.%m %H:%MZ')))
             notes.append('GOES/DONKI: ' + goes_note)
     else:
-        notes.append('GOES: данных нет (источник исключён или недоступен, кеша нет)')
+        # тот же разбор, что у Kp ниже: слой сравнения знает только, что значения нет; исключил ли
+        # источник пользователь и что именно случилось с запросом, называет блок состояния источников
+        notes.append('GOES: наблюдения нет — источник значения не дал, кеша нет; причина — в состоянии источников')
 
     # --- наблюдение Kp: отдельный фактор с давностью; условие — только при свежем наблюдении ---
     kp_factor, kp_fresh, kp_age_min, kp_cov = None, False, None, Coverage.PARTIAL
@@ -344,8 +363,12 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         # частичное покрытие — как у GOES без архива. Отсутствие Kp не должно молча исчезать
         # из покрытия и делать вердикт благоприятнее, чем с наблюдением Kp.
         kp_cov = Coverage.PARTIAL
-        notes.append('Kp: наблюдения нет (%s)'
-                     % ('источник исключён или публикации до отсечки нет' if cutoff_utc else 'источник исключён или данных нет'))
+        # Слой сравнения знает только то, что значения нет; исключил ли источник пользователь —
+        # знает блок состояния источников (признак state == 'off'), и он это и печатает. Пока
+        # здесь стояло «источник исключён ИЛИ …», отчёт утверждал исключение источника там, где
+        # тремя строками выше стояло «источники, отключённые пользователем: нет» (пятый круг).
+        notes.append('Kp: наблюдения нет — %s'
+                     % ('записей с доказанной публикацией до отсечки нет' if cutoff_utc else 'источник значения не дал'))
         kp_factor = FactorValue('Kp, последнее наблюдение', None, KP_UNIT, Kind.OBSERVATION, Presence.UNKNOWN, Coverage.NONE, (),
                                 'порог проверки Kp ≥ %.0f (G3 по шкале NOAA); %s' % (th.kp_check, TEAM_RULE_RU),
                                 'наблюдения Kp нет' + (' (в строгом режиме — только с доказанной публикацией до отсечки)' if cutoff_utc else ''))
@@ -389,15 +412,21 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                     'дипольная L — исследовательское приближение' if any(p.mag_status != 'ok' for p in pts) else ''),
         FactorValue('флюенс захваченных протонов ≥%g МэВ' % th.e_min_MeV, fluence, 'част./см²',
                     Kind.OWN_CALCULATION, _presence(fluence), cov_fl, traj_ids + (belts.raw_record_id,),
-                    belts.source + '; всенаправленный поток (%s); интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
-                    % (belts.flux_unit_ru, belts.interpolation_ru),
+                    # «всенаправленный поток (%s)» с полной единицей давало «всенаправленный
+                    # (…, всенаправленный (ОСТ …))»: слово дважды подряд, скобка в скобке и
+                    # стандарт дважды в одном предложении (пятый круг). Стандарт назван один раз
+                    # в belts.source, поэтому единица подставляется короткой формой.
+                    belts.source + '; единицы потока: %s; интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
+                    % (belts.flux_unit_short_ru, belts.interpolation_ru),
                     '; '.join(fl_note)),
     ) + tuple(cut_factors) + (
         FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
                     (Presence.UNKNOWN if goes_val is None or (goes_frac is not None and goes_frac <= 0.0) else
                      (Presence.DETECTED if goes_val >= th.goes_p10_warning_pfu else Presence.NOT_DETECTED)),
                     goes_cov, (goes.raw_record_id,) if goes else (), 'NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)',
-                    goes_note + ('; уровень %s' % s_level_ru(goes_val) if goes_val is not None else ''), horizon_utc=goes_hz),
+                    # уровень по шкале S уже стоит в начале goes_note; дописка «; уровень …»
+                    # печатала его вторым сообщением об одном и том же (бриф §9.7, пятый круг)
+                    goes_note, horizon_utc=goes_hz),
         kp_factor,
     ) + tuple(fc_factors)
 
