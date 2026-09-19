@@ -73,7 +73,7 @@ from datetime import datetime, timedelta
 # в CSS нет знаков вне печатного диапазона.
 CSS = r"""
 <style>
-/* IBM Plex Sans — инженерная гарнитура с полной кириллицей, та, которой набрана техническая
+/* Public Sans — инженерная гарнитура с полной кириллицей, та, которой набрана техническая
    документация IBM. Взята вместо Public Sans по замечанию владельца: Public Sans — гротеск
    общего назначения, он стоит на половине сайтов и не говорит о странице ничего. У Plex Sans
    узнаваемый рисунок (прямой срез у «a» и «g», узкие овалы, инженерная цифра), и кириллица
@@ -106,22 +106,25 @@ CSS = r"""
    Базовая тема Streamlit задана в .streamlit/config.toml: одной правкой стилей не обойтись —
    собственные виджеты красятся своей темой, и светлые виджеты на тёмном фоне читались бы
    как поломка. */
-:root { --ink:#e4e7ea; --muted:#9da1a8; --line:#202328; --bg:#08090b; --soft:#101217;
-        --calc:#a1bed5; --calc-bg:#162734; --calc-line:#294153;
-        --obs:#76a78e;  --obs-bg:#14291f;  --obs-line:#264435;
-        --fc:#bba889;   --fc-bg:#2d2516;   --fc-line:#483d28;
-        --cond:#c17d68; --cond-bg:#382018; --cond-line:#58352b;
-        --none:#91969c; --none-bg:#232629; --none-line:#3b3e44;
+/* Палитра возвращена к прежней по решению владельца от 19.09, 22:15: приглушённый
+   институциональный набор он посмотрел и предпочёл прежний. Разведение по светлоте и
+   низкая насыщенность остались в истории ветки wf14/palette, если понадобятся позже. */
+:root { --ink:#e8ebf2; --muted:#a7b0c0; --line:#242b38; --bg:#0e1117; --soft:#161b26;
+        --calc:#7ab8f5; --calc-bg:#16283c; --calc-line:#24405e;
+        --obs:#5ed39a;  --obs-bg:#12301f;  --obs-line:#1d4d34;
+        --fc:#e7b45c;   --fc-bg:#332711;   --fc-line:#56411c;
+        --cond:#f58b7f; --cond-bg:#3a1d1a; --cond-line:#5c2f2a;
+        --none:#9aa5b5; --none-bg:#1c212b; --none-line:#2b323f;
         /* Цвета РЕШЕНИЯ живут отдельно от цветов происхождения: это два разных языка,
            и общий набор делал вывод таким же тихим, как подпись под числом. Здесь
            насыщенность высокая намеренно — на экране это единственное место, где цвет
            обязан бить в глаза. Контраст к своей заливке: 7,65 / 5,03 / 7,70. */
-        --go:#3ecf7a;   --go-bg:#0c2a1a;
-        --stop:#f0563f; --stop-bg:#2f120d;
-        --ask:#f5a524;  --ask-bg:#2e2108;
+        --go:#5ed39a;   --go-bg:#12301f;
+        --stop:#f58b7f; --stop-bg:#3a1d1a;
+        --ask:#e7b45c;  --ask-bg:#332711;
         /* Главные числа под решением — почти белые: они вторые по важности после
            вывода, и стальной тон происхождения делал их незаметными. Контраст 18,20. */
-        --stat:#f2f5f8;
+        --stat:#e8ebf2;
         /* прежние имена состояний — те же четыре тона, чтобы правила ниже читались одинаково */
         --ok:var(--obs); --ok-bg:var(--obs-bg); --warn:var(--fc); --warn-bg:var(--fc-bg);
         --crit:var(--cond); --crit-bg:var(--cond-bg);
@@ -148,13 +151,13 @@ CSS = r"""
         --lh-0:1.0; --lh-1:1.05; --lh-2:1.65;
         /* воздух между блоками: один шаг сетки и его удвоение, руками числа больше не ставим */
         --gap:20px; --gap-2:48px;
-        /* Шрифт объявлен ОДИН раз: IBM Plex Sans, за ним прежний системный ряд на случай,
+        /* Шрифт объявлен ОДИН раз: Public Sans, за ним прежний системный ряд на случай,
            когда внешний шрифт не пришёл. Экран от этого не ломается — меняется только
            начертание: кегли, межстрочные и сетка заданы числами и от гарнитуры не зависят. */
-        --ff:"IBM Plex Sans", "Segoe UI", Inter, Roboto, Arial, sans-serif; }
+        --ff:"Public Sans", "Segoe UI", Inter, Roboto, Arial, sans-serif; }
 html, body, [class*="css"] { font-family: var(--ff); color: var(--ink); font-size: var(--fs-2);
         line-height: var(--lh-2); font-variant-numeric: tabular-nums; }
-/* Собственная разметка экрана набирается IBM Plex Sans ЯВНО, по своим классам. Проверено в
+/* Собственная разметка экрана набирается Public Sans ЯВНО, по своим классам. Проверено в
    браузере: Streamlit объявляет свой шрифт на собственных узлах с более высокой значимостью,
    и одного правила на html/body мало — заголовок, полоса решения и числа оставались набраны
    шрифтом темы. Широкое правило на `.stApp *` не годится: тем же махом оно переписало бы
@@ -3273,7 +3276,7 @@ DARK_TRACE_COLORS = {
     '#1e8449': '#5ed39a', '#b9770e': '#e7b45c', '#c0392b': '#f58b7f',     # наблюдение, прогноз, условие
     '#7f8c8d': '#9aa5b5', '#9aa0a6': '#9aa5b5',                           # вспомогательные линии
 }
-DARK_PAPER, DARK_PLOT, DARK_GRID = '#08090b', '#101217', '#202328'
+DARK_PAPER, DARK_PLOT, DARK_GRID = '#0e1117', '#161b26', '#242b38'
 # Второй проход по цвету: DARK_TRACE_COLORS выше переводит цвета СВЕТЛОЙ темы в прежние тёмные
 # пары, и трогать её нельзя — та же таблица лежит в app/viz.py (чужая область в этом круге),
 # и их совпадение сторожит tests/test_viz_visual.py. Поэтому новая палитра подставляется
@@ -3284,7 +3287,7 @@ REPALETTE = {
     '#7ab8f5': '#a1bed5', '#4f8fc0': '#7b93a6', '#3f6f97': '#5c6e7c',     # наш расчёт и окна
     '#5ed39a': '#76a78e', '#e7b45c': '#bba889', '#f58b7f': '#c17d68',     # наблюдение, прогноз, условие
     '#9aa5b5': '#91969c',                                                 # вспомогательные линии
-    '#e8ebf2': '#e4e7ea', '#a7b0c0': '#9da1a8',                           # текст на рисунке
+    '#e8ebf2': '#e8ebf2', '#a7b0c0': '#a7b0c0',                           # текст на рисунке
     '#0e1117': '#08090b', '#161b26': '#101217', '#242b38': '#202328',     # бумага, панель, сетка
     'rgba(245,139,127,0.16)': 'rgba(193,125,104,0.16)',                   # заливка аномалии
 }
@@ -3294,7 +3297,7 @@ REPALETTE = {
 # своё семейство (прежний Public Sans) и остаётся чужой областью в этом круге, а подписи осей
 # набранные не тем шрифтом, что весь остальной экран, — ровно тот разнобой, из-за которого
 # страница читается как собранная из кусков. Ряд запасных тот же, что в :root.
-DARK_FONT = 'IBM Plex Sans, Segoe UI, Inter, Roboto, Arial, sans-serif'
+DARK_FONT = 'Public Sans, Segoe UI, Inter, Roboto, Arial, sans-serif'
 
 
 def _one_color(x):
@@ -3322,13 +3325,13 @@ def dark_figure(fig):
     палитры. Светлая подложка графика на тёмной странице — первое, что читается как халтура.
     """
     fig.update_layout(template='plotly_dark', paper_bgcolor=DARK_PAPER, plot_bgcolor=DARK_PLOT,
-                      font={'color': '#e4e7ea', 'family': DARK_FONT},
+                      font={'color': '#e8ebf2', 'family': DARK_FONT},
                       legend={'bgcolor': 'rgba(0,0,0,0)'},
-                      hoverlabel={'bgcolor': DARK_PLOT, 'font': {'color': '#e4e7ea', 'family': DARK_FONT}})
+                      hoverlabel={'bgcolor': DARK_PLOT, 'font': {'color': '#e8ebf2', 'family': DARK_FONT}})
     fig.update_xaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
-                     tickfont={'color': '#9da1a8'}, title_font={'color': '#9da1a8'})
+                     tickfont={'color': '#a7b0c0'}, title_font={'color': '#a7b0c0'})
     fig.update_yaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
-                     tickfont={'color': '#9da1a8'}, title_font={'color': '#9da1a8'})
+                     tickfont={'color': '#a7b0c0'}, title_font={'color': '#a7b0c0'})
     for tr in fig.data:
         for holder in ('line', 'marker'):
             obj = getattr(tr, holder, None)
