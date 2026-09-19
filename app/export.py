@@ -17,8 +17,10 @@ import zipfile
 from datetime import datetime, timedelta
 from typing import Any
 
-from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, fmt, frac_ru, phrase_ru, raw_record, record_url,
-                    rule_ru, source_name_ru, status_ru, verification_ru)
+from types import SimpleNamespace
+
+from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, phrase_ru, raw_record,
+                    record_url, robustness_line_ru, rule_ru, screen_text, source_name_ru, status_ru, verification_ru)
 from vkd.explain.format import record_ru
 
 VERDICT_TITLE = {
@@ -87,17 +89,75 @@ def _win_title(w: dict) -> str:
                                                end, w['duration_min'])
 
 
+def _as_screen_factor(f: dict):
+    """Фактор снимка в том виде, в каком его читают функции экрана.
+
+    Экран получает объект FactorValue с полем `limits_note`, снимок — словарь, где то же
+    поле называется `limits`. Без переходника функции экрана молча видели пустое ограничение
+    и отвечали не то, что отвечают экрану."""
+    return SimpleNamespace(name=f['name'], value=f['value'], unit=f['unit'], limits_note=f.get('limits') or '')
+
+
+_OBS_TIME_RE = re.compile(r'наблюдение\s+([\d.:\s]+)')
+
+
 def _value(f: dict) -> str:
     """Число в отчёте — тем же форматом, что на экране (app.ui.fmt): запятая и надстрочная степень.
     Прежний fmt_ru печатал «1,34·10^6», и одна и та же величина получала два вида в двух
-    артефактах одного расчёта."""
+    артефактах одного расчёта.
+
+    Правило «значения нет» — тоже общее с экраном, а не своё: наблюдение, горизонт которого не
+    покрывает окно ни на одну минуту, характеристикой окна не является, и экран печатает прочерк
+    (app.ui.factor_value_ru). Отчёт печатал в этом месте число и через две строки сам себе
+    противоречил строкой «GOES: наблюдение 05:55Z покрывает 0 % окна» (пятый круг). Решение
+    принимает та же функция экрана — правило не повторяется в двух местах и не может разойтись."""
     if f['value'] is None:
         # «поток протонов GOES ≥10 МэВ: — — наблюдение» читалось как сломанная строка:
         # прочерк-значение и тире-разделитель шли подряд (находка четвёртого круга)
         return 'значение не определено'
+    if factor_value_ru(_as_screen_factor(f), f['unit']) == '—':
+        m = _OBS_TIME_RE.search(dates_ru(f.get('limits') or ''))
+        return 'значение окна не определено: наблюдение%s не покрывает окно' % ((' ' + m.group(1).strip()) if m else '')
     if f['name'].startswith('Kp') or f['name'].startswith('прогноз Kp'):
         return 'Kp %s' % fmt(f['value'])
     return fmt(f['value'], f['unit'])
+
+
+def _robustness_line(S: dict) -> str:
+    """Устойчивость выбора в отчёте — ДОСЛОВНО та фраза, что стоит на оперативном экране
+    под вердиктом (app.ui.robustness_line_ru, блок «cov» app/main.py).
+
+    Отчёт печатал вместо неё профессиональное основание допуска целиком, и в нём стояло
+    «порядок окон при нулевом допуске не определён … ВЫБОР МЕНЯЕТСЯ», тогда как сам отчёт
+    двадцатью строками выше объявлял «Есть предпочтительное окно: окно 2». Одно утверждение
+    опровергало другое в одном документе (пятый круг). Числа берутся из снимка: пороги — из
+    запроса, исходы ячеек — из S['robustness']; ничего не пересчитывается.
+    """
+    rob = S.get('robustness') or {}
+    th = (S.get('request') or {}).get('thresholds') or {}
+    thr_nT, e_min = th.get('saa_B_threshold_nT'), th.get('e_min_MeV')
+    if not rob or thr_nT is None or e_min is None:
+        # объявляем ограничение, а не выдумываем фразу: без сетки и порогов устойчивость не проверена
+        return 'Устойчивость выбора: сетка порогов в снимке не сохранена — устойчивость не проверена.'
+    rec = SimpleNamespace(verdict=S['recommendation']['verdict'],
+                          preferred=(SimpleNamespace(start_utc=_t(S['recommendation']['preferred']))
+                                     if S['recommendation'].get('preferred') else None))
+    return 'Устойчивость выбора: ' + screen_text(robustness_line_ru(rec, S, thr_nT, e_min))
+
+
+def _tolerance_line(r: dict) -> str:
+    """Основание допуска равнозначности — только те его части, которые говорят о ДОПУСКЕ.
+
+    `app.compute.tolerance_caption` собирает подпись из четырёх частей: допуск по минутам,
+    допуск по флюенсу, порядок окон на сетке и вывод о выборе. Последние две — об устойчивости,
+    и о ней отчёт печатает отдельную строку словами экрана; здесь они повторялись третьим
+    сообщением об одном и том же, да ещё в профессиональной формулировке. Части разделены
+    «; », каждая часть про допуск начинается словом «допуск» — отбор идёт по этому признаку,
+    а не по номеру части. Через screen_text, а не frac_ru: иначе в отчёте стояло «22000 нТл»,
+    а на экране «22 000 нТл» — одна и та же величина в двух видах (пятый круг).
+    """
+    parts = [p.strip() for p in str(r.get('tolerance_basis') or '').split('; ') if p.strip().startswith('допуск')]
+    return screen_text('; '.join(parts)) if parts else 'основание допуска в снимке не сохранено'
 
 
 def _mode_id(S: dict) -> str | None:
@@ -208,7 +268,7 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
     L += ['## Почему такой вывод', '', 'Правило сравнения — CONTRACT.md раздел 4: охват → условия → сравнение по каждому механизму → сведение → допуск.', '']
     for k, v in (r.get('per_mechanism') or {}).items():
         L.append('- %s: %s' % (MECH_RU.get(k, k), phrase_ru(v)))
-    L += ['', 'Допуск равнозначности: %s.' % frac_ru(r.get('tolerance_basis', '')),
+    L += ['', _robustness_line(S), '', 'Допуск равнозначности: %s.' % _tolerance_line(r),
           '', 'Охват: учтено — %s; не учтено — %s.' % (', '.join(S['coverage_declared']), ', '.join(S['coverage_missing'])),
           '', S.get('policy_note', ''), '']
     # условия по окнам с первоисточниками (О4)
@@ -255,14 +315,39 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
     L += ['', 'Первоисточники записей:', ''] + (links or ['- ни у одной записи снимка нет сетевого адреса'])
     L += ['', 'Идентификаторы записей, хеши и версии выпусков — в `manifest.json` и `sources.json`; '
               'сами записи — в `raw/`.']
+    # События горизонта с адресами — те же записи и те же адреса, что в таблице «События и прогнозы»
+    # экрана. Без этого перечня множество адресов отчёта было беднее экранного на восемь записей:
+    # уведомления, которые условиями не стали (вспышки, выбросы), в отчёт попадали только номерами
+    # в манифесте, и открыть первоисточник по отчёту было нельзя (пятый круг).
+    used = (S.get('history') or {}).get('events_used') or []
+    if used:
+        L += ['', '## События и прогнозы, учтённые на горизонте', '',
+              'Те же записи, что в таблице событий на экране: тип, номер уведомления, время публикации, адрес.', '']
+        for e in sorted(used, key=lambda x: (str(x.get('published_utc') or ''), str(x.get('id')))):
+            u = record_url(raw_record(raw_records, e['id']))
+            L.append('- %s (%s), публикация %s%s%s'
+                     % (EVENT_KIND_RU.get((e.get('kind') or '').upper(), e.get('kind')),
+                        record_ru(e['id'], with_kind=False),
+                        _dt(e['published_utc']) if e.get('published_utc')
+                        else ('нет — моделируемое' if e.get('simulated') else 'нет'),
+                        ('; начало %s' % _dt(e['start_utc'])) if e.get('start_utc') else '',
+                        (' — ' + u) if u else ''))
+        no_url = [e['id'] for e in used if not record_url(raw_record(raw_records, e['id']))]
+        if no_url:
+            L += ['', 'Без сетевого адреса: %d из %d — адрес записи слоем источников не сохранён, сами записи в `raw/`.'
+                  % (len(no_url), len(used))]
     # прогнозы NOAA: «до отсечки» — только там, где отсечка есть
     if S.get('forecasts'):
         L += ['', '## Внешний прогноз NOAA (%s)' % ('выпуски до отсечки' if req.get('cutoff_utc') else 'выпуск с указанием времени публикации'), '']
         for line in S['forecasts']:
             # идентификатор выпуска — 64-значный хеш; он остаётся в manifest.json и sources.json,
             # а человек читает время выпуска (находка четвёртого круга)
+            # адрес выпуска — той же функцией record_url, что на экране: экран даёт ссылку
+            # «выпуск от … UTC», а отчёт называл то же время без адреса (пятый круг)
+            u = record_url(raw_record(raw_records, line['record'])) if line.get('record') else None
             L.append('- %s: %s%s' % (line['label'], line['status_ru'],
-                                    ('; выпуск от %s' % _dt(line['published_utc'], '%Y-%m-%d %H:%MZ')) if line.get('release_id')
+                                    ('; выпуск от %s%s' % (_dt(line['published_utc'], '%Y-%m-%d %H:%MZ'),
+                                                           (' — ' + u) if u else '')) if line.get('release_id')
                                     else ('; ' + phrase_ru(line['reason']) if line.get('reason') else '')))
     # проверка после отсечки
     ver = S.get('verification')
@@ -279,11 +364,17 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
                                            (k.get('origin') or '—').replace('|', '/'))
                 for k in ver['kp_obs']]
         if ver.get('events'):
-            L += ['', 'События, опубликованные после отсечки на горизонте:'] + [
-                '- %s (%s), публикация %s%s' % (EVENT_KIND_RU.get((e['kind'] or '').upper(), e['kind']),
-                                                record_ru(e['id'], with_kind=False),
-                                                _dt(e['published_utc']), (' — ' + phrase_ru(e['note'])) if e.get('note') else '')
-                for e in ver['events'][:20]]
+            # адрес записи — той же функцией record_url, что на экране: в таблице «События и
+            # прогнозы» экрана у каждого уведомления есть ссылка, а отчёт называл те же
+            # уведомления по номерам без адресов, и множество адресов отчёта было беднее
+            # экранного на восемь записей (пятый круг)
+            L += ['', 'События, опубликованные после отсечки на горизонте:']
+            for e in ver['events'][:20]:
+                u = record_url(raw_record(raw_records, e['id']))
+                L.append('- %s (%s), публикация %s%s%s'
+                         % (EVENT_KIND_RU.get((e['kind'] or '').upper(), e['kind']), record_ru(e['id'], with_kind=False),
+                            _dt(e['published_utc']), (' — ' + phrase_ru(e['note'])) if e.get('note') else '',
+                            (' — ' + u) if u else ''))
     L += ['', '## Чего не заявляем', '',
           '- допустимость реального выхода — за уполномоченными специалистами;',
           '- вероятность разгерметизации и попадания в космонавта;',
