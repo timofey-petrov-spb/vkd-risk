@@ -1813,7 +1813,13 @@ def test_uvedomleniya_o_sobytiyah_v_zhivom_rezhime_obyavleny():
     assert 'NASA DONKI' in bar, bar
     tab = next(t for t in at.tabs if t.label == 'Окна и факторы')
     body = '\n'.join(str(m.value) for m in tab.get('markdown'))
-    assert 'DONKI' in body and 'не запрашиваются' in body, body[:600]
+    # После слияния десятого круга готовую строку охвата кладёт слой расчёта
+    # (`app.compute`, ключ `coverage_missing[0]`), и она говорит «не опрашиваются»;
+    # собственная запасная строка экрана (`ui.LIVE_NO_EVENTS_RU`, «не запрашиваются»)
+    # подставляется, только если в охвате про DONKI нет ни слова. Проверяется смысл, а не
+    # какая из двух редакций победила: канал назван и сказано, что его не спрашивают.
+    assert 'DONKI' in body, body[:600]
+    assert re.search(r'не (?:о|за)прашива', body), body[:600]
 
 
 def test_chto_delat_dalshe_est_pri_lyubom_verdikte():
