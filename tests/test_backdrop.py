@@ -561,3 +561,40 @@ def test_odnoimyonnye_yacheyki_sravnivayutsya_po_poryadku():
     both = _panel(('Источник', 'GOES-16'), ('Источник', 'Kp изменился'))
     assert b.changed_labels(both, was) == ['Источник', 'Источник']
     assert b.mark_changed_cells(both, was).count('vk-changed') == 2
+
+
+# ======================================================================== сверка чисел с текстом
+
+def test_chisla_v_opisanii_moduly_sovpadayut_s_raschyotom():
+    """Сквозная сверка: каждое отношение контраста, напечатанное в описании модуля, совпадает
+    с тем, что считает contrast_table().
+
+    Смысл проверки ровно в требовании владельца «сверка всех чисел». Описание модуля — это то,
+    что человек прочтёт вместо кода; если оно разойдётся с расчётом, разойдётся и отчёт, который
+    на него ссылается. Сверяется программно, а не глазами.
+    """
+    doc = b.__doc__
+    computed = {tone: round(b.contrast_ratio(tone, b.brightest_star_background()), 2)
+                for _n, tone in b.TEXT_TONES}
+    # Строки вида «основной текст  #e8ebf2 — 9,70» из раздела про наихудший фон.
+    printed = dict(re.findall(r'(#[0-9a-f]{6}) — (\d+,\d\d)\n', doc))
+    assert len(printed) == len(b.TEXT_TONES), printed
+    for tone, text in printed.items():
+        assert float(text.replace(',', '.')) == computed[tone], (tone, text, computed[tone])
+    # Наихудшая пара названа в описании тем же числом.
+    worst = min(computed.values())
+    assert ('Наихудшая пара — %.2f' % worst).replace('.', ',') in doc, worst
+    # Наихудший фон и расчётный цвет под ним — те же, что печатает код.
+    assert b.brightest_star_background() in doc
+    assert b.blend(b.INK, b.MAGNITUDE_CLASSES[0][2], b.BG) in doc
+    # Вес разметки, названный в описании, — фактический.
+    assert ('%d' % b.weight_bytes())[:1] + ' ' + ('%d' % b.weight_bytes())[1:] in doc, b.weight_bytes()
+
+
+def test_chisla_pro_podsvetku_i_chistyy_fon_tozhe_svereny():
+    """Две остальные строки чисел в описании — на подсветке ячейки и на чистом фоне страницы."""
+    doc = b.__doc__
+    for background in (b.highlight_background(), b.BG):
+        row = ' / '.join('%.2f' % b.contrast_ratio(tone, background)
+                         for _n, tone in b.TEXT_TONES).replace('.', ',')
+        assert row in doc, (background, row)
