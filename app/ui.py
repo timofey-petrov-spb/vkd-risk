@@ -92,10 +92,21 @@ CSS = r"""
            любительской вёрстки, и на снимках сайта NASA его нет нигде. */
         --lh-0:1.0; --lh-1:1.05; --lh-2:1.65;
         /* воздух между блоками: один шаг сетки и его удвоение, руками числа больше не ставим */
-        --gap:20px; --gap-2:48px; }
-html, body, [class*="css"] { font-family: "Public Sans", "Segoe UI", Inter, Roboto, Arial, sans-serif;
-        color: var(--ink); font-size: var(--fs-2); line-height: var(--lh-2);
-        font-variant-numeric: tabular-nums; }
+        --gap:20px; --gap-2:48px;
+        /* Шрифт объявлен ОДИН раз: Public Sans, за ним прежний системный ряд на случай, когда
+           внешний шрифт не пришёл. Экран от этого не ломается — меняется только начертание. */
+        --ff:"Public Sans", "Segoe UI", Inter, Roboto, Arial, sans-serif; }
+html, body, [class*="css"] { font-family: var(--ff); color: var(--ink); font-size: var(--fs-2);
+        line-height: var(--lh-2); font-variant-numeric: tabular-nums; }
+/* Собственная разметка экрана набирается Public Sans ЯВНО, по своим классам. Проверено в
+   браузере: Streamlit объявляет свой шрифт на собственных узлах с более высокой значимостью,
+   и одного правила на html/body мало — заголовок, полоса решения и числа оставались набраны
+   шрифтом темы. Широкое правило на `.stApp *` не годится: тем же махом оно переписало бы
+   шрифт иконок материала (они шрифтовые, и вместо значка появилось бы слово «schedule») и
+   шрифты формул KaTeX во вкладке «Методика». Поэтому перечислены ровно наши классы —
+   внутрь них Streamlit не вмешивается, и потомки наследуют семейство сами. */
+.vk-head, .vk-title, .vk-sub, .sect, .pill, .panel, .decision, .reco, .verdict, .wcard, .kv,
+.legend, .small, .tcap, .cond, .cov, .covwhy, .wnote { font-family: var(--ff); }
 .stApp, .main, section[data-testid="stSidebar"] { background: var(--bg); }
 .block-container { padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
@@ -271,7 +282,9 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
    «выбрано против худшего» и есть объяснение, только числами, без единого слова связки. */
 .panel.stat { background:transparent; border:none; border-radius:0; margin:0 0 var(--gap-2) 0; }
 .panel.stat .prow { border-top:none; }
-.panel.stat .cell { padding:0 24px 0 0; border-left:none; box-shadow:none; }
+/* Нижний отступ нужен на узком окне: сетка ячеек переносит их друг под друга, и без него
+   подпись «мин · худшее 104» упиралась в следующий ярлык. На широком окне он не мешает. */
+.panel.stat .cell { padding:0 32px 20px 0; border-left:none; box-shadow:none; }
 .panel.stat .cl { font-weight:600; margin-bottom:10px; }
 /* Главное число — крупное, ярким тоном происхождения. «Худшее» под ним — мелкое, обычного
    веса и приглушённое: разница обязана считываться мгновенно, до чтения. */
