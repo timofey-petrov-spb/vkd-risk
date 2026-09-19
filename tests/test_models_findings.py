@@ -63,18 +63,29 @@ def test_history_sources_never_claim_live_requests(gannon, monkeypatch):
     monkeypatch.setattr(ac, 'kp_latest', boom)
     monkeypatch.setattr(ac, 'tle_latest', boom)
     r = run('history_review', T_GANNON, 360, 720, [0, 240], now=T_GANNON)
-    assert r.meta is not None and r.S['sources']['gfz_kp']['origin'].startswith('архив DONKI')
+    assert r.meta is not None and r.S['sources']['gfz_kp']['origin'].startswith('архив GFZ')
     assert r.S['sources']['gfz_kp']['data_utc'] and r.S['sources']['gfz_kp']['age_min'] is not None
 
 
-def test_review_kp_age_is_measured_from_t0_not_now(gannon):
-    """Т1-3: давность наблюдения Kp в разборе считается от t0 (2024), а не от момента запуска (2026)."""
+def test_review_kp_age_is_measured_from_t0_not_now():
+    """Т1-3: давность наблюдения Kp в разборе считается от t0 (2024), а не от момента запуска (2026).
+    Ряд Kp разбора — окончательный ряд GFZ по 3-часовым интервалам (слой данных 19.09): внутри архива
+    последний интервал перед t0 моложе предела 180 мин — покрытие полное; сразу за концом архива
+    (01.07.2024) наблюдение устаревает по давности от t0, а не на два года «от сегодня»."""
+    now = datetime(2026, 9, 19, tzinfo=UTC)
     t0 = datetime(2024, 5, 12, 23, 0, tzinfo=UTC)
-    r = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=datetime(2026, 9, 19, tzinfo=UTC))
+    r = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=now)
     kpf = next(f for f in r.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
-    assert kpf.value == 7.0 and kpf.coverage.value == 'partial' and 'устарело' in kpf.limits_note
+    assert kpf.value == 4.0 and kpf.coverage.value == 'full' and 'устарело' not in kpf.limits_note
+    assert kpf.record_ids and kpf.record_ids[0].startswith('gfz_kp_archive#2024-05-12T18:00Z')
     assert not any('наблюдение Kp' in c.text for m in r.assessments[0].mechanisms for c in m.conditions)
-    assert 0 < r.S['sources']['gfz_kp']['age_min'] < 3 * 24 * 60
+    assert r.S['sources']['gfz_kp']['age_min'] == 120
+    # за концом архива GFZ (последний интервал 30.06 21:00–24:00Z) — устарело по давности от t0
+    t1 = datetime(2024, 7, 1, 12, 0, tzinfo=UTC)
+    r1 = run('history_review', t1, 360, 720, [0, 240], fetched=_fetched(), now=now)
+    kpf1 = next(f for f in r1.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
+    assert kpf1.coverage.value == 'partial' and 'устарело' in kpf1.limits_note
+    assert r1.S['sources']['gfz_kp']['age_min'] == 720
 
 
 # ----------------------------------------------------------------------------- О4/О5: объяснения для каждого окна

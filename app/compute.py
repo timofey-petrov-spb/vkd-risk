@@ -219,9 +219,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         if disabled.get('kp') == 'off':
             kp_src_note = 'источник исключён пользователем — данных нет'
         elif kp is None:
-            kp_src_note = ('строгий режим: наблюдений Kp с доказанной публикацией до отсечки в архиве нет (Kp карточек GST DONKI '
-                           'публикуется без собственного времени)' if mode == 'history_forecast'
-                           else 'разбор: наблюдений Kp в карточках GST DONKI до %s нет (Kp есть только в дни бурь)' % t0.strftime('%Y-%m-%d %H:%MZ'))
+            kp_src_note = ('строгий режим: наблюдений Kp с доказанной публикацией до отсечки в архиве нет (окончательный ряд GFZ '
+                           'и Kp карточек GST DONKI не имеют собственного времени публикации по интервалам)' if mode == 'history_forecast'
+                           else 'разбор: наблюдений Kp в архиве (ряд GFZ %s — %s, резерв — карточки GST DONKI) до %s нет' % (
+                               DONKI_ARCHIVE_DEFAULT[0].strftime('%d.%m.%Y'), (DONKI_ARCHIVE_DEFAULT[1] - timedelta(minutes=1)).strftime('%d.%m.%Y'),
+                               t0.strftime('%Y-%m-%d %H:%MZ')))
         if mode == 'history_review':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
             kp_obs = sorted({(s.valid_from_utc, s.valid_to_utc, s.value) for s in h_samples
                              if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
@@ -252,7 +254,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             summary += ('Kp %s с %s, максимум %s' % (('%.2f' % first_storm[1]).replace('.', ','), first_storm[0].strftime('%d.%m %H:%MZ'),
                                                      ('%.2f' % kp_max).replace('.', ',')) if first_storm
                         else ('максимум Kp %s, бури Kp ≥ %.0f не было' % (('%.2f' % kp_max).replace('.', ','), th.kp_check) if kp_max is not None
-                              else 'наблюдений Kp в архиве карточек GST на горизонте нет (Kp публикуется в DONKI только в дни бурь)'))
+                              else 'наблюдений Kp в архиве (ряд GFZ, резерв — карточки GST DONKI) на горизонте нет'))
             seps = [e for e in ev_after if e.kind_of_event == 'SEP']
             if seps:
                 summary += '; протонное событие: первая публикация %s' % min(e.published_utc for e in seps).strftime('%d.%m %H:%MZ')
@@ -402,11 +404,13 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         sources['noaa_swpc_goes'] = {'role': 'протоны ≥10 МэВ', 'status': 'архива наблюдений GOES за 2024 в реестре нет — канал без данных; '
                                                                            'живой источник в историческом режиме отключён',
                                      'live_ok': None, 'from_cache': None, 'origin': 'нет данных', 'fetched_utc': None, 'data_utc': None, 'age_min': None}
-        sources['gfz_kp'] = {'role': 'Kp (в истории — из карточек GST DONKI, наблюдение NOAA)',
-                             'status': (kp_src_note or 'разбор: Kp из карточек GST DONKI, запись %s' % kp.raw_record_id) if not (kp and kp.source_id == 'scenario')
+        kp_origin = {'gfz_kp_archive': 'архив GFZ (окончательный ряд Kp по 3-часовым интервалам, без времени публикации)',
+                     'nasa_donki_gst': 'архив DONKI (карточки GST)'}.get(kp.source_id if kp else '', 'архив (%s)' % kp.source_id if kp else 'нет данных')
+        sources['gfz_kp'] = {'role': 'Kp (в истории — окончательный ряд GFZ; резерв — карточки GST DONKI)',
+                             'status': (kp_src_note or 'разбор: Kp из %s, запись %s' % (kp_origin.split(' (')[0], kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
                              else 'сценарий «что если»: моделируемое значение',
                              'live_ok': None, 'from_cache': None,
-                             'origin': 'архив DONKI (карточки GST)' if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
+                             'origin': kp_origin if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
                              'fetched_utc': None,
                              'data_utc': iso(kp.t_utc) if kp and kp.source_id != 'scenario' else None,
                              'age_min': round((t0 - kp.t_utc).total_seconds() / 60) if kp and kp.source_id != 'scenario' else None}
