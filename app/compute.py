@@ -38,7 +38,7 @@ from app.fetch_guard import fetch_live_sources
 from app.ui import dt_ru, sup
 from vkd.assess.cutoff import apply_cutoff
 from vkd.assess.magcoords import belt_coordinates
-from vkd.assess.meteoroids import meteoroid_hits_track
+from vkd.assess.seasonal import seasonal_hits_track, MODEL_ID, CATALOGUE_ID, METHOD_ID
 from vkd.assess.trapped import BeltTable
 from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
@@ -65,7 +65,7 @@ SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → с�
 HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.8.0'  # 0.7.0 + объявленная область вывода вердикта при частичном покрытии (CONTRACT §4 п. 1, решение владельца 19.09)
+ALGO_VERSION = '0.10.0'  # 0.7.0 + объявленная область вывода вердикта при частичном покрытии (CONTRACT §4 п. 1, решение владельца 19.09)
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -707,20 +707,27 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     belts = BeltTable('min')
     windows = apply_to_windows([Window(t0 + timedelta(minutes=o), duration_min) for o in window_offsets_min], scenario)
 
-    # метеороиды по ECSS (B2 по спецификации A5): по фактической высоте трассы, концы окна включены
+    # Full directional seasonal calculation, once per window (not per radiation threshold).
+    # Parameters define the agreed reference target, not the area of a spacesuit.
+    seasonal_results = {}
     def _mmod(w: Window):
         end = w.start_utc + timedelta(minutes=w.duration_min)
         pts = [p for p in traj if w.start_utc <= p.t_utc <= end]
-        if len(pts) < 2:
-            return None, 'расчёт невозможен: нет трассы окна', 0.0
-        frac = (pts[-1].t_utc - pts[0].t_utc).total_seconds() / (60.0 * w.duration_min)
         try:
-            r = meteoroid_hits_track([p.t_utc for p in pts], [p.alt_km for p in pts], 1.0, 1e-3)
-            return r.N, r.rule, frac
-        except ValueError as e:
-            return None, 'вне области применимости ECSS: %s' % e, frac
+            if len(pts) < 2 or pts[0].t_utc != w.start_utc or pts[-1].t_utc != end:
+                raise ValueError('орбита не покрывает оба конца окна')
+            result = seasonal_hits_track(
+                [p.t_utc for p in pts], [p.alt_km for p in pts],
+                (orb.provenance or {}).get('inertial_states') or {}, 1.0, 1e-3)
+            seasonal_results[w.start_utc.isoformat()] = result.as_dict()
+            return result.N, result.rule, result.coverage_fraction
+        except ValueError as exc:
+            reason = 'Сезонный расчёт метеороидов недоступен: %s' % exc
+            seasonal_results[w.start_utc.isoformat()] = {
+                'N': None, 'streams_included': False, 'error': reason, 'method_status': 'unavailable'}
+            return None, reason, 0.0
 
-    mmod = {w.start_utc: _mmod(w) for w in windows}      # один раз на окно
+    mmod = {w.start_utc: _mmod(w) for w in windows}
 
     event_facts = {rid: meta.get('content_audit', {}).get('facts', {})
                    for records in history_proof.get('source_versions', {}).values() for rid, meta in records.items()}
@@ -731,6 +738,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         return assess_window(w, tr, belts, goes, kp, [], th_i, ref_now, events=events, catalog_coverage=catalog,
                              mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1],
                              mmod_cov_fraction=mmod[w.start_utc][2], forecasts=forecasts,
+                             mmod_seasonal=seasonal_results[w.start_utc.isoformat()],
                              trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc,
                              goes_observations=goes_observations, event_facts=event_facts, goes_absent_ru=goes_absent_ru,
                              numerical_report=numerical_reports.setdefault(w.start_utc.isoformat(), {}))
@@ -740,7 +748,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         return [_assess(w, tr, th_i) for w in windows]
 
     def _decide(A_i, kw):
-        return recommend(A_i, replace(th, **kw))
+        return recommend(A_i, replace(th, **kw), mmod_sensitivity=seasonal_results)
 
     rob = robustness(traj, windows, _assess_all, _decide,
                      thr_grid=[th.saa_B_threshold_nT - 2000, th.saa_B_threshold_nT, th.saa_B_threshold_nT + 2000],
@@ -748,7 +756,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                      min_tol_min=1.0, min_tol_ratio=th.fluence_equiv_ratio)
     th = replace(th, equiv_tol_min=rob.tol_min, fluence_equiv_ratio=rob.tol_ratio)
     assessments = [_assess(w, traj, th) for w in windows]
-    rec = recommend(assessments, th)
+    rec = recommend(assessments, th, mmod_sensitivity=seasonal_results)
     def _pair_txt(pair):
         if not pair:
             return ''
@@ -962,11 +970,13 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'ost1044_belts': {'role': 'захваченные протоны', 'status': '%s; файл %s, sha256 %s…; запись %s' % (
             belts.source, belts.file, belts.sha256[:12], belts.raw_record_id), 'live_ok': None, 'from_cache': None,
             'state': 'builtin', 'origin': 'таблица стандарта в репозитории', 'record_ids': [belts.raw_record_id]},
-        'ecss_grun': {'role': 'метеороиды', 'status': 'ECSS-E-ST-10-04C Rev.1: Grün (10-1), Table J-6 по высоте трассы, '
-                                                      'интеграл по dt (спецификация A5, grun-ecss-2020-v1); потоки даты — только признак '
-                                                      'по календарю IMO; контроль 5,609728e-7 на 400 км/1 м²/6 ч воспроизведён',
-                      'live_ok': None, 'from_cache': None, 'state': 'builtin', 'origin': 'модель стандарта в репозитории',
-                      'record_ids': []},
+        'ecss_grun': {'role': 'природные метеороиды',
+                      'status': 'ECSS Grün + сезонная модель 49 потоков C-2; направленная геометрия, '
+                                'тень Земли, скорость МКС, исключение двойного учёта среднего вклада; '
+                                'инженерная оценка с анализом чувствительности, не модель повреждения скафандра',
+                      'live_ok': None, 'from_cache': None, 'state': 'builtin',
+                      'origin': 'ECSS 2020 и явно объявленные гипотезы сезонной модели',
+                      'record_ids': ['ecss_grun:grun-ecss-2020-v1', CATALOGUE_ID, METHOD_ID]},
         '_layers': {'role': 'слои', 'status': 'орбита: %s; источники: %s; история: %s' % (ORBIT_SRC, SRC_LAYER, HIST_SRC)},
     })
     for line in fc_lines:
@@ -991,7 +1001,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                   'is_reconstruction': None, 'field_model': None})
     effective_config = {'thresholds': th.__dict__, 'thresholds_requested': (thresholds or Thresholds.from_settings()).__dict__,
                         'history': _cfg_section('history'), 'sources': _cfg_section('sources'), 'ui': _cfg_section('ui'),
-                        'settings_path': settings_path(), 'mmod': {'area_m2': 1.0, 'm_min_g': 1e-3, 'solar_activity': 'min'},
+                        'settings_path': settings_path(), 'mmod': {'area_m2': 1.0, 'm_min_g': 1e-3, 'solar_activity': 'min',
+                        'model_id': MODEL_ID, 'integration_step_s': 10.0, 'annual_reference_year': 2024},
                         'robustness_grid': {'thr_nT': list(rob.grid[0]), 'e_min_MeV': list(rob.grid[1])}}
     S = {
         'schema_version': SCHEMA_VERSION, 'algorithm_version': ALGO_VERSION, 'computed_utc': now.isoformat(),
@@ -1003,6 +1014,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'effective_config': effective_config,
         'source_versions': source_versions,
         'numerical_integration': numerical_reports,
+        'meteoroids': seasonal_results,
         'coverage_map': coverage_map,
         'trajectory_meta': {**meta_dict, 'orbit_module': ORBIT_SRC, 'status': orb.status_ru, 'strictness': orb.strictness,
                             'error': orb.error, 'n_points': len(traj), 'provenance': provenance_summary(orb.provenance),

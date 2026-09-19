@@ -376,6 +376,29 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
                                     ('; выпуск от %s%s' % (_dt(line['published_utc'], '%Y-%m-%d %H:%MZ'),
                                                            (' — ' + u) if u else '')) if line.get('release_id')
                                     else ('; ' + phrase_ru(line['reason']) if line.get('reason') else '')))
+    if S.get('meteoroids'):
+        L += ['', '## Сезонная оценка метеороидов', '',
+              'Масса ≥0,001 г, односторонняя случайно ориентированная пластина 1 м². '
+              'Результат — ожидаемое число попаданий, не повреждение скафандра.', '']
+        for start, model in S['meteoroids'].items():
+            L.append('### Окно с %s' % _dt(start))
+            if not model.get('streams_included'):
+                L.append(model.get('error', 'Расчёт недоступен.'))
+                continue
+            L.append('Итого %s = скорректированный фон %s + потоки даты %s попаданий.' % (
+                fmt(model['N']), fmt(model['N_sporadic_adjusted']), fmt(model['N_streams'])))
+            L.append('Средняя модель без сезонного перераспределения: %s (к итогу не прибавляется).' %
+                     fmt(model['N_mean_background']))
+            L.append('Основной вклад потоков: ' + '; '.join('%s — %s' %
+                     (x['name'], fmt(x['expected_hits'])) for x in model['contributions'][:3]) + '.')
+            sensitivity = model['sensitivity']
+            L.append('Альтернативные гипотезы: %s…%s попаданий; это не доверительный интервал. '
+                     'Изменение при уменьшении шага вдвое: %.4g %%.' % (
+                     fmt(sensitivity['min_N']), fmt(sensitivity['max_N']),
+                     100*sensitivity['half_step_relative_change']))
+            L.append(model['limits'])
+        L += ['', 'Полный вклад 49 потоков, гипотезы и происхождение расчёта: `meteoroids.json`; '
+              'каталог и реализация с хешами: `raw/` и `manifest.json`.']
     # проверка после отсечки
     ver = S.get('verification')
     if ver:
@@ -459,6 +482,8 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('recommendation.json', _j(S['recommendation']))
         z.writestr('cards.json', _j(S['cards']))
         z.writestr('sources.json', _j(S['sources']))
+        if S.get('meteoroids') is not None:
+            z.writestr('meteoroids.json', _j(S['meteoroids']))
         if S.get('numerical_integration'):
             z.writestr('numerical_integration.json', _j(S['numerical_integration']))
         if S.get('verification') is not None:

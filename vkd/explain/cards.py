@@ -34,6 +34,8 @@ PRESENCE_RU = {Presence.DETECTED: 'воздействие есть', Presence.NO
                Presence.UNKNOWN: 'неизвестно (данных нет)'}
 QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
 SOURCE_RU = {
+    'ecss_streams:c2-2020': 'ECSS-E-ST-10-04C Rev.1 (2020), таблица C-2: 49 метеорных потоков',
+    'ecss_seasonal:ecss-seasonal-engineering-v1': 'ECSS, сезонная инженерная оценка: геометрия, скорость, тень и годовое вычитание; гипотезы указаны в отчёте',
     'ecss_grun:grun-ecss-2020-v1': 'ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); '
                                    'спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md)',
     'imo_calendar': 'календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR',

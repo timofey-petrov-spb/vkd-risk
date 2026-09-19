@@ -43,8 +43,10 @@ MECH_RU = {'spaceweather': 'космопогода на траектории', '
 KP_UNIT = ''                                     # Kp безразмерен (CONTRACT раздел 1)
 NOAA_S_PFU = ((1, 10.0), (2, 100.0), (3, 1000.0), (4, 1e4), (5, 1e5))   # NOAA SWPC Space Weather Scales, ≥10 МэВ
 M_P_MEV = 938.272                                # масса протона, МэВ (CODATA 2018)
-MMOD_ROLE_RU = ('линия метеороидов различает окна только по высоте и длительности; при равной длительности '
-                'на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна')
+SEASONAL_ROLE_RU = ('сезонная оценка зависит от даты, направления потоков и движения МКС; '
+                'различимость окон проверяется при альтернативных гипотезах модели')
+MMOD_ROLE_RU = ('средняя линия метеороидов без сезонного вклада различает окна по высоте и длительности; '
+                'роль — абсолютная оценка и охват; календарь не даёт количественного прогноза')
 MAG_STATUS_RU = {'ok': 'в сетке таблицы', 'no_model_L': 'L вне сетки 1,14…9 (сильное поле вне аномалии)',
                  'beyond_mirror': 'выше точки отражения — поток 0', 'inconsistent_BB0': 'B/B0 < 1, помечено',
                  'approximation': 'эксцентричный диполь (объявленное приближение)', 'outside_model': 'вне модели координат'}
@@ -176,7 +178,8 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                   goes_observations: Optional[Sequence[EnvironmentSample]] = None,
                   event_facts: Optional[dict] = None,
                   goes_absent_ru: Optional[str] = None,
-                  numerical_report: Optional[dict] = None) -> WindowAssessment:
+                  numerical_report: Optional[dict] = None,
+                  mmod_seasonal: Optional[dict] = None) -> WindowAssessment:
     """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
     спецификации A5). None — линия не подключена, покрытие NONE.
     events: события с интервалами (в т. ч. моделируемые); пересечение окна
@@ -555,6 +558,36 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         blocking_notes=(('метеороиды: расчёт невозможен — нет трассы окна',) if mmod_hits is None else ()),
     )
 
+    if mmod_seasonal is not None:
+        from vkd.assess.seasonal import CATALOGUE_ID, METHOD_ID, LIMITS_RU
+        available = bool(mmod_seasonal.get('streams_included')) and mmod_hits is not None
+        model_records = ('ecss_grun:grun-ecss-2020-v1', CATALOGUE_ID, METHOD_ID) + traj_ids
+        issue = mmod_seasonal.get('error') or LIMITS_RU
+        def mm_factor(name, value, explanation):
+            return FactorValue(name, value, 'шт', Kind.OWN_CALCULATION,
+                               Presence.UNKNOWN if value is None else Presence.DETECTED,
+                               Coverage.PARTIAL if available else Coverage.NONE,
+                               model_records, mmod_rule, explanation)
+        mm_factors = [mm_factor('ожидаемое число попаданий, пластина 1 м²', mmod_hits, issue)]
+        if available:
+            mm_factors += [
+                mm_factor('спорадическая составляющая после исключения среднего вклада потоков',
+                          mmod_seasonal['N_sporadic_adjusted'], 'Фон и потоки приведены к одной геометрии и массе ≥0,001 г.'),
+                mm_factor('сезонная составляющая метеорных потоков', mmod_seasonal['N_streams'],
+                          'Сумма 49 профилей с тенью Земли и относительной скоростью; входит в итоговое число.'),
+                mm_factor('средняя модель Grün без сезонного перераспределения (для сравнения)',
+                          mmod_seasonal['N_mean_background'], 'Контрольная величина; к итогу повторно не прибавляется.')]
+        m2 = MechanismAssessment(
+            mechanism_id='mmod_stat', mandatory=True, factors=tuple(mm_factors),
+            coverage=Coverage.PARTIAL if available else Coverage.NONE, needs_check=False,
+            coverage_fraction=mmod_cov_fraction if available else 0.0,
+            coverage_gaps=(CoverageGap(
+                'неопределённость нормировки и эпохи каталога; модель инженерная' if available else issue,
+                float(win.duration_min)),),
+            coverage_notes=(('метеороиды: сезонный вклад рассчитан; нормировка каталога и эпоха радиантов '
+                             'остаются гипотезами, годовые всплески не предсказываются') if available else issue,),
+            blocking_notes=() if available else (issue,))
+
     # --- линия 3: сближения, необязательная ----------------------------------
     in_win = [c for c in conj if win.start_utc <= c.tca_utc < end]
     conj_conds = tuple(Condition('CONJ', 'limiting',
@@ -737,12 +770,15 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                           + (('сближения SOCRATES',) if conj else ()),
         coverage_missing=(('статистика метеороидов — не подключена',) if mmod_hits is None else ())
                          + (() if conj else ('сближения SOCRATES — нет данных',))
-                         + ('вклад метеорных потоков даты в число попаданий — не рассчитан (календарь даёт только признак активности)',
-                            'техногенный мусор статистически — не включён'),
+                         + (('сезонный вклад рассчитан как инженерная оценка; неопределённость каталога не устранена',)
+                            if mmod_seasonal and mmod_seasonal.get('streams_included') else
+                            ('вклад метеорных потоков даты в число попаданий — не рассчитан',))
+                         + ('техногенный мусор статистически — не включён',),
     )
 
 
-def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recommendation:
+def recommend(assessments: Sequence[WindowAssessment], th: Thresholds,
+              mmod_sensitivity: Optional[dict] = None) -> Recommendation:
     idx = {id(a): i + 1 for i, a in enumerate(assessments)}
 
     def lab(a):
@@ -899,9 +935,34 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
                                 if 100 * rel > equal_pct else
                                 'окна не различаются: разница %s %% ниже порога различимости %s %% '
                                 '(%s; порог задан в config/settings.toml); %s'
-                                % (('%.3f' % (100 * rel)).replace('.', ','), fmt_ru(equal_pct), TEAM_RULE_RU, MMOD_ROLE_RU))
+                                % (('%.3f' % (100 * rel)).replace('.', ','), fmt_ru(equal_pct), TEAM_RULE_RU, SEASONAL_ROLE_RU if mmod_sensitivity else MMOD_ROLE_RU))
             # 4. сведение: противоречие механизмов вне допуска → компромисс
             conflict = 100 * rel > equal_pct and best is not None and best_mm.window.start_utc != best.window.start_utc
+    mm_unstable = False
+    mm_selected = False
+    if mmod_sensitivity and len(candidates) >= 2:
+        from vkd.assess.seasonal import comparison_sensitivity
+        stability = comparison_sensitivity(
+            [mmod_sensitivity.get(a.window.start_utc.isoformat(), {}) for a in candidates],
+            th.meteoroid_equal_pct)
+        mm_unstable = not stability['stable']
+        per['mmod_stat'] = per.get('mmod_stat', '') + '; ' + stability['note_ru']
+        if not mm_unstable and not sw_conflict:
+            # Fusion must also work when radiation alone sees equivalent windows.
+            # Retain only windows acceptable to both independent mechanisms.
+            radiation_options = equiv_set or ([best] if best is not None else [])
+            values = {id(a): _mm_val(a) for a in candidates}
+            if radiation_options and all(v is not None for v in values.values()):
+                minimum = min(values.values())
+                meteor_options = {id(a) for a in candidates
+                                  if values[id(a)] <= minimum*(1+th.meteoroid_equal_pct/100)}
+                common = [a for a in radiation_options if id(a) in meteor_options]
+                conflict = not common
+                if len(common) == 1:
+                    mm_selected = bool(equiv_set)
+                    best, equiv_set = common[0], []
+                elif common:
+                    equiv_set = common
     tol = 'допуск %.0f мин по минутам и ×%.2f по флюенсу — инженерная настройка, до анализа чувствительности' % (th.equiv_tol_min, th.fluence_equiv_ratio)
     note_partial = tuple(partial_l)
 
@@ -928,6 +989,11 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
                    rule_applied='п.1: отсутствует покрытие обязательной линии — ' + '; '.join(missing_l),
                    per_mechanism_comparison=per_ins, reasons=tuple(per_ins.values()) + note_partial + cond_reasons,
                    missing=tuple(missing_l))
+    if mm_unstable:
+        return out(preferred=None, verdict='trade_off',
+                   rule_applied='сезонная линия: сравнительный вывод меняется при гипотезах модели; '
+                                'однозначное предпочтение окна не установлено',
+                   reasons=tuple(per.values()) + note_partial + cond_reasons)
     if sw_conflict:
         return out(preferred=None, verdict='trade_off',
                    rule_applied='п.3: внутри механизма космопогоды минуты в аномалии и флюенс указывают на разные окна — '
@@ -970,6 +1036,12 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
         return out(preferred=c.window, verdict='preferred', rule_applied=rule,
                    per_mechanism_comparison=per_one,
                    reasons=tuple(per_one.values()) + cond_reasons + note_partial)
+    if mm_selected:
+        return out(preferred=best.window, verdict='preferred',
+                   rule_applied='п.4–5: космопогода не различает кандидатов в допуске; '
+                                '%s имеет меньшую сезонную оценку метеороидов, '
+                                'сравнение устойчиво при проверенных гипотезах' % lab(best),
+                   reasons=tuple(per.values()) + note_partial + cond_reasons)
     if equiv_set:
         return out(preferred=None, verdict='equivalent',
                    rule_applied='п.5: %s равнозначны — разница минут и флюенса внутри допуска (%.0f мин, ×%.2f)' % (
