@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ВКД-Риск — прототип глобуса (макет, синтетическая трасса)</title>
+<!--
+  ПРОТОТИП. Отдельный файл, приложение его не подключает.
+  Всё, что нарисовано, здесь СИНТЕТИЧЕСКОЕ: круговая орбита i = 51,6°, h = 417 км,
+  область аномалии — заданный вручную овал. В сервисе трасса приходит из vkd/orbit
+  (SGP4 или OEM), а область аномалии считается по IGRF (|B| ниже порога).
+  Назначение файла — измерить вес, скорость и читаемость, а не показать реальные данные.
+  Текстура: NASA Blue Marble (public domain), копия в пакете three-globe (MIT) на jsdelivr.
+-->
+<style>
+  :root{
+    --bg:#060a12; --panel:#0d1320cc; --line:#1a2640; --text:#e2e8f0; --dim:#8896b0;
+    --accent:#0ea5e9; --alarm:#f87171; --win1:#38bdf8; --win2:#a78bfa; --track:#94a3b8;
+  }
+  body.light{
+    --bg:#eef1f5; --panel:#ffffffdd; --line:#d7dbdf; --text:#1a1f2b; --dim:#5b6675;
+    --accent:#1f4e79; --alarm:#c0392b; --win1:#1f4e79; --win2:#5dade2; --track:#7f8c8d;
+  }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;font-size:13px;overflow:hidden}
+  #scene{position:absolute;inset:0}
+  .panel{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;backdrop-filter:blur(4px)}
+  #legend{left:12px;top:12px;max-width:290px}
+  #ctl{right:12px;top:12px;width:250px}
+  #stat{left:12px;bottom:12px;max-width:430px;font-size:11px;color:var(--dim);line-height:1.5}
+  h1{font-size:12px;margin:0 0 8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+  .row{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .sw{width:14px;height:4px;border-radius:2px;flex:none}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  label{display:block;margin:9px 0 3px;color:var(--dim);font-size:11px}
+  input[type=range]{width:100%}
+  button{background:transparent;color:var(--text);border:1px solid var(--line);border-radius:6px;
+    padding:5px 9px;cursor:pointer;font-size:12px;font-family:inherit}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  select{width:100%;background:transparent;color:var(--text);border:1px solid var(--line);
+    border-radius:6px;padding:4px;font-family:inherit;font-size:12px}
+  select option{background:#0d1320;color:#e2e8f0}
+  body.light select option{background:#fff;color:#1a1f2b}
+  .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  .note{color:var(--dim);font-size:11px;line-height:1.45;margin-top:8px}
+  #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:32px;
+    text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div class="panel" id="legend">
+  <h1>Окна ВКД на трассе</h1>
+  <div class="row"><span class="sw" style="background:var(--track)"></span><span>трасса, шаг 1 мин (макет)</span></div>
+  <div class="row"><span class="sw" style="background:var(--win1)"></span><span>окно 1 — 10:00–16:00 UTC</span></div>
+  <div class="row"><span class="sw" style="background:var(--win2)"></span><span>окно 2 — 14:00–20:00 UTC</span></div>
+  <div class="row"><span class="dot" style="background:var(--alarm)"></span><span>точки трассы в аномалии</span></div>
+  <div class="row"><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span><span>станция, <span id="clock" class="val">00:00</span> UTC</span></div>
+  <div class="note">Высота 417 км показана в истинном масштабе — 6,5 % радиуса Земли.
+    Освещение равномерное: терминатор не рисуется, чтобы не выдавать оформление за расчёт.</div>
+</div>
+
+<div class="panel" id="ctl">
+  <h1>Управление</h1>
+  <label>Текстура Земли</label>
+  <select id="tex">
+    <option value="4k">4K, 4096×2048, 1,4 МБ (jsDelivr)</option>
+    <option value="2k">2K, 2048×1024, 0,5 МБ (three.js)</option>
+    <option value="8k">8K, 8192×4096, 4,4 МБ (локальный файл)</option>
+  </select>
+  <label>Скорость времени: <span id="spd" class="val">×60</span></label>
+  <input type="range" id="speed" min="0" max="4" step="1" value="2">
+  <div class="row" style="margin-top:10px">
+    <button id="play">Пауза</button>
+    <button id="spin">Вращение: вкл</button>
+  </div>
+  <div class="row">
+    <button id="theme">Светлая тема</button>
+    <button id="stars">Звёзды: вкл</button>
+  </div>
+  <div class="note">Мышь: перетаскивание — поворот, колесо — приближение.</div>
+</div>
+
+<div class="panel" id="stat">загрузка…</div>
+<div id="err"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+"use strict";
+// ------------------------------------------------------------------ параметры макета
+var TEXTURES = {
+  // CORS: Access-Control-Allow-Origin: * — обязательное условие для текстуры WebGL.
+  "4k": {url: "https://cdn.jsdelivr.net/npm/three-globe@2.42.4/example/img/earth-blue-marble.jpg",
+         px: "4096×2048", bytes: 1461877, need: 4096},
+  "2k": {url: "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+         px: "2048×1024", bytes: 512606, need: 2048},
+  // 8K лежит только локально (CC BY 4.0 Solar System Scope): публичного адреса с CORS нет.
+  // В сервисе он раздавался бы своим же origin: /app/static/earth_8k.jpg — тогда CORS не нужен.
+  "8k": {url: "earth_8k.jpg", px: "8192×4096", bytes: 4565076, need: 8192}
+};
+var R_E = 6371.0, ALT = 417.0, INC = 51.6, PERIOD = 92.9, N = 1921; // 1921 точка = горизонт 1440 + 480 мин
+var SAA = {lat0: -26.0, lon0: -53.0, dlat: 17.0, dlon: 33.0};       // овал «аномалии», макет
+var WINDOWS = [{from: 600, to: 960, color: "win1"}, {from: 840, to: 1200, color: "win2"}];
+var SPEEDS = [1, 10, 60, 300, 1800];
+
+// ------------------------------------------------------------------ синтетическая трасса
+function track() {
+  var pts = [], i, t, arg, lat, lon, node;
+  for (i = 0; i < N; i++) {
+    t = i;                                   // минуты от начала периода
+    arg = 2 * Math.PI * t / PERIOD;          // аргумент широты
+    lat = Math.asin(Math.sin(INC * Math.PI / 180) * Math.sin(arg)) * 180 / Math.PI;
+    node = -t * 360 / 1436.07;               // вращение Земли под орбитой (звёздные сутки)
+    lon = Math.atan2(Math.cos(INC * Math.PI / 180) * Math.sin(arg), Math.cos(arg)) * 180 / Math.PI + node;
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+    pts.push({t: t, lat: lat, lon: lon, saa: inSaa(lat, lon)});
+  }
+  return pts;
+}
+function inSaa(lat, lon) {
+  var dx = (((lon - SAA.lon0 + 180) % 360 + 360) % 360 - 180) / SAA.dlon, dy = (lat - SAA.lat0) / SAA.dlat;
+  return dx * dx + dy * dy <= 1.0;
+}
+// Положение на сфере THREE.SphereGeometry: uv совпадает с равнопромежуточной текстурой.
+function toVec(lat, lon, r) {
+  var theta = (90 - lat) * Math.PI / 180, phi = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(-r * Math.cos(phi) * Math.sin(theta), r * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta));
+}
+
+// ------------------------------------------------------------------ сцена
+var scene, camera, renderer, globe, iss, starfield, raf = 0;
+var TRACK = track(), playing = true, spinning = true, speedIdx = 2, simMin = 0, lastFrame = 0;
+var camR = 3.0, camLat = 18 * Math.PI / 180, camLon = 0.6, dragging = false, px = 0, py = 0, idle = 0;
+var fps = 0, texInfo = "", maxTex = 0;
+
+function fail(msg) {
+  var e = document.getElementById("err");
+  e.style.display = "flex";
+  e.innerHTML = msg;
+}
+
+function init() {
+  if (typeof THREE === "undefined") { fail("Библиотека three.js не загрузилась с cdnjs.<br>Прототип требует сети."); return; }
+  var host = document.getElementById("scene");
+  try {
+    renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
+  } catch (e) { renderer = null; }
+  if (!renderer || !renderer.getContext()) {
+    fail("WebGL недоступен в этом браузере.<br>В сервисе в таком случае остаётся плоская карта — вкладка «Карта».");
+    return;
+  }
+  maxTex = renderer.getContext().getParameter(renderer.getContext().MAX_TEXTURE_SIZE);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(host.clientWidth, host.clientHeight);
+  host.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(42, host.clientWidth / host.clientHeight, 0.05, 100);
+
+  globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64),
+                         new THREE.MeshBasicMaterial({color: 0x24313f}));
+  scene.add(globe);
+  scene.add(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(1.0005, 24, 12)),
+            new THREE.LineBasicMaterial({color: 0x3b4a5f, transparent: true, opacity: 0.18})));
+
+  buildSaa();
+  buildTrack();
+  buildStars();
+
+  iss = new THREE.Mesh(new THREE.SphereGeometry(0.018, 16, 12), new THREE.MeshBasicMaterial({color: 0x0ea5e9}));
+  scene.add(iss);
+
+  loadTexture(document.getElementById("tex").value);
+  bind();
+  window.addEventListener("resize", onResize);
+  lastFrame = performance.now();
+  animate();
+}
+
+function buildSaa() {
+  var i, a, lat, lon, ring = [], centre = toVec(SAA.lat0, SAA.lon0, 1.004), geo, pos = [], idx = [];
+  for (i = 0; i <= 96; i++) {
+    a = 2 * Math.PI * i / 96;
+    lat = SAA.lat0 + SAA.dlat * Math.sin(a);
+    lon = SAA.lon0 + SAA.dlon * Math.cos(a);
+    ring.push(toVec(lat, lon, 1.004));
+  }
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ring),
+            new THREE.LineBasicMaterial({color: 0xf87171, transparent: true, opacity: 0.85})));
+  pos.push(centre.x, centre.y, centre.z);
+  for (i = 0; i < ring.length; i++) pos.push(ring[i].x, ring[i].y, ring[i].z);
+  for (i = 1; i < ring.length; i++) idx.push(0, i, i + 1);
+  geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  scene.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color: 0xf87171, transparent: true,
+            opacity: 0.22, side: THREE.DoubleSide, depthWrite: false})));
+}
+
+function colorOf(i) {
+  var k, w;
+  for (k = 0; k < WINDOWS.length; k++) {
+    w = WINDOWS[k];
+    if (i >= w.from && i <= w.to) return k === 0 ? 0x38bdf8 : 0xa78bfa;
+  }
+  return 0x94a3b8;
+}
+
+function buildTrack() {
+  var r = (R_E + ALT) / R_E, i, seg = [], cur = colorOf(0), saaPts = [], v;
+  for (i = 0; i < TRACK.length; i++) {
+    v = toVec(TRACK[i].lat, TRACK[i].lon, r);
+    if (colorOf(i) !== cur && seg.length) {
+      addSeg(seg, cur);
+      seg = [seg[seg.length - 1]];
+      cur = colorOf(i);
+    }
+    seg.push(v);
+    if (TRACK[i].saa) saaPts.push(v.x, v.y, v.z);
+  }
+  if (seg.length) addSeg(seg, cur);
+  if (saaPts.length) {
+    var g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(saaPts, 3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({color: 0xf87171, size: 0.022})));
+  }
+  // метки начала окон
+  WINDOWS.forEach(function (w, k) {
+    var p = toVec(TRACK[w.from].lat, TRACK[w.from].lon, r),
+        m = new THREE.Mesh(new THREE.SphereGeometry(0.014, 12, 10),
+            new THREE.MeshBasicMaterial({color: k === 0 ? 0x38bdf8 : 0xa78bfa}));
+    m.position.copy(p);
+    scene.add(m);
+  });
+}
+function addSeg(pts, color) {
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+            new THREE.LineBasicMaterial({color: color, transparent: true,
+                                         opacity: color === 0x94a3b8 ? 0.45 : 1.0,
+                                         linewidth: 1})));
+}
+
+function buildStars() {
+  var n = 900, pos = [], i, u, v, th, ph, r = 40;
+  for (i = 0; i < n; i++) {
+    u = Math.random(); v = Math.random();
+    th = 2 * Math.PI * u; ph = Math.acos(2 * v - 1);
+    pos.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph));
+  }
+  var g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  starfield = new THREE.Points(g, new THREE.PointsMaterial({color: 0xffffff, size: 0.12, sizeAttenuation: true,
+                                                            transparent: true, opacity: 0.65}));
+  scene.add(starfield);
+}
+
+function loadTexture(key) {
+  var cfg = TEXTURES[key], t0 = performance.now();
+  if (cfg.need > maxTex) {
+    texInfo = "текстура " + cfg.px + " не поддержана: предел этого устройства " + maxTex + " пикселей — выбран запасной вариант 2K";
+    key = "2k"; cfg = TEXTURES["2k"];
+  }
+  var loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+  loader.load(cfg.url, function (tex) {
+    tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    globe.material = new THREE.MeshBasicMaterial({map: tex});
+    globe.material.needsUpdate = true;
+    texInfo = "текстура " + cfg.px + ", " + (cfg.bytes / 1048576).toFixed(2) + " МБ, загружена за " +
+              ((performance.now() - t0) / 1000).toFixed(2) + " с";
+  }, undefined, function () {
+    texInfo = "текстура не загрузилась (" + cfg.url.slice(0, 48) + "…): нет сети, нет файла или нет заголовка CORS. " +
+              "Глобус остаётся без карты — в сервисе это повод показать плоскую карту.";
+  });
+}
+
+// ------------------------------------------------------------------ управление
+function bind() {
+  var el = renderer.domElement;
+  el.addEventListener("mousedown", function (e) { dragging = true; px = e.clientX; py = e.clientY; idle = 0; });
+  window.addEventListener("mouseup", function () { dragging = false; });
+  window.addEventListener("mousemove", function (e) {
+    if (!dragging) return;
+    camLon -= (e.clientX - px) * 0.005;
+    camLat = Math.max(-1.4, Math.min(1.4, camLat + (e.clientY - py) * 0.005));
+    px = e.clientX; py = e.clientY; idle = 0;
+  });
+  el.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    camR = Math.max(1.35, Math.min(8, camR * (1 + (e.deltaY > 0 ? 0.08 : -0.08))));
+  }, {passive: false});
+  document.getElementById("play").onclick = function () {
+    playing = !playing; this.textContent = playing ? "Пауза" : "Пуск";
+  };
+  document.getElementById("spin").onclick = function () {
+    spinning = !spinning; this.textContent = "Вращение: " + (spinning ? "вкл" : "выкл");
+  };
+  document.getElementById("stars").onclick = function () {
+    starfield.visible = !starfield.visible; this.textContent = "Звёзды: " + (starfield.visible ? "вкл" : "выкл");
+  };
+  document.getElementById("theme").onclick = function () {
+    document.body.classList.toggle("light");
+    this.textContent = document.body.classList.contains("light") ? "Тёмная тема" : "Светлая тема";
+  };
+  document.getElementById("speed").oninput = function () {
+    speedIdx = parseInt(this.value, 10);
+    document.getElementById("spd").textContent = "×" + SPEEDS[speedIdx];
+  };
+  document.getElementById("tex").onchange = function () { texInfo = "загрузка текстуры…"; loadTexture(this.value); };
+}
+
+function onResize() {
+  var host = document.getElementById("scene");
+  if (!renderer) return;
+  camera.aspect = host.clientWidth / host.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(host.clientWidth, host.clientHeight);
+}
+
+function animate() {
+  raf = requestAnimationFrame(animate);
+  var now = performance.now(), dt = Math.min(0.1, (now - lastFrame) / 1000);
+  lastFrame = now;
+  fps = fps ? fps * 0.9 + (1 / Math.max(dt, 1e-3)) * 0.1 : 1 / Math.max(dt, 1e-3);
+  idle += dt;
+  if (playing) {
+    simMin = (simMin + dt * SPEEDS[speedIdx] / 60) % (N - 1);
+    var i = Math.floor(simMin), f = simMin - i,
+        a = toVec(TRACK[i].lat, TRACK[i].lon, (R_E + ALT) / R_E),
+        b = toVec(TRACK[Math.min(i + 1, N - 1)].lat, TRACK[Math.min(i + 1, N - 1)].lon, (R_E + ALT) / R_E);
+    iss.position.copy(a.lerp(b, f));
+    iss.material.color.setHex(TRACK[i].saa ? 0xf87171 : 0x0ea5e9);
+    document.getElementById("clock").textContent =
+      String(Math.floor(simMin / 60) % 24).padStart(2, "0") + ":" + String(Math.floor(simMin) % 60).padStart(2, "0");
+  }
+  if (spinning && !dragging && idle > 2.0) camLon += dt * 0.035;   // ≈ 2°/с, медленно
+  camera.position.set(camR * Math.cos(camLat) * Math.sin(camLon), camR * Math.sin(camLat),
+                      camR * Math.cos(camLat) * Math.cos(camLon));
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+  if (Math.floor(now / 500) !== Math.floor((now - dt * 1000) / 500)) status();
+}
+
+function status() {
+  var saaMin = TRACK.filter(function (p) { return p.saa; }).length;
+  document.getElementById("stat").innerHTML =
+    "<b>Прототип, данные синтетические.</b> Круговая орбита i = 51,6°, h = 417 км, шаг 1 мин, " + N + " точек; " +
+    "овал аномалии задан вручную (в сервисе — |B| по IGRF ниже порога). " +
+    "Минут в «аномалии» на всей трассе: " + saaMin + ".<br>" +
+    texInfo + " · предел текстуры устройства " + maxTex + " пикселей · " + fps.toFixed(0) + " кадров/с · " +
+    "полезные данные трассы в JSON — 24 КБ (4,5 КБ после сжатия).";
+}
+
+init();
+</script>
+</body>
+</html>
