@@ -972,3 +972,262 @@ def test_otchyot_govorit_slovami_ekrana(mode_id, args):
                               else 'объявленная реконструкция') in md or 'строгость: недоступна' in md
     if mode_id == 'live':
         assert 'до отсечк' not in md, [l for l in md.split('\n') if 'отсечк' in l]
+
+
+# ================================================================= пятый круг: экран не спорит сам с собой
+def _strip_tags(s: str) -> str:
+    """Текст без разметки: закрывается только настоящий тег, иначе «|B| < 24 000 нТл» съедало
+    полстроки и любая проверка по скобкам давала ложное срабатывание."""
+    return re.sub(r'</?[a-zA-Z][^>]*>', ' ', str(s))
+
+
+def verdict_html(at: AppTest) -> str:
+    """Разметка панели вердикта — самый читаемый блок экрана."""
+    return next(m.value for m in at.markdown if 'class="verdict' in m.value)
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_istochnik_ne_nazyvaetsya_isklyuchyonnym_bez_isklyucheniya(mode):
+    """R4-11 (критическая находка): «исключён пользователем» печаталось в режиме «Сейчас» всегда.
+
+    Слой источников штатно дописывает в текст статуса Kp слова «незавершённый Kp-nowcast исключён»
+    (текущий 3-часовой интервал почти всегда не закончен), а экран искал подстроку «исключён» по
+    всей строке. Признак исключения берётся из запроса, а не из текста."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = '\n'.join([w.value for w in at.warning] + [table_text(at)])
+    assert 'исключён пользователем' not in body, [l for l in body.split('\n') if 'исключён пользователем' in l]
+
+
+def test_source_short_chitaet_priznak_a_ne_tekst():
+    """Тот же дефект прямым вызовом: живой ответ с «…исключён» в тексте — не исключение."""
+    from app.ui import source_short, source_state
+    live = {'status': 'получено по сети, давность данных 102,7 мин; незавершённый Kp-nowcast исключён',
+            'live_ok': True, 'from_cache': False}
+    assert source_state(live, False) is None
+    assert source_short(live, False) == ('живой запрос', 'ok')
+    off = {'status': 'источник исключён пользователем — данных нет', 'live_ok': False, 'from_cache': False}
+    assert source_state(off, 'off') == 'off'
+    assert source_short(off, 'off') == ('исключён пользователем', 'crit')
+    # признак из снимка сильнее запроса: когда слой расчёта начнёт класть state, экран возьмёт его
+    assert source_state({'state': 'off'}, False) == 'off'
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_v_tele_ekrana_net_neparnyh_skobok(mode):
+    """R4-1 и R4-13: bullet_short_ru резал строку по первому «;», а он стоял ВНУТРИ скобок, и на
+    экране оставалась незакрытая скобка без точки; вместе с ней пропадало происхождение порога 5 %."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    bad = [l for l in _strip_tags(_body_bez_metodiki(at)).split('\n') if l.count('(') != l.count(')')]
+    assert not bad, [l.strip()[:200] for l in bad[:3]]
+
+
+def test_bullet_short_ru_ne_teryaet_proishozhdenie_poroga():
+    """Тот же дефект прямым вызовом: короткая форма сохраняет и скобку, и происхождение числа."""
+    from app.ui import bullet_short_ru
+    src = ('окна не различаются: разница 0,003 % ниже порога различимости 5 % '
+           '(правило команды, не норма; настройка config/settings.toml); '
+           'линия метеороидов различает окна только по высоте и длительности; при равной длительности '
+           'на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна')
+    out = bullet_short_ru(src)
+    assert out.count('(') == out.count(')') == 1, out
+    assert 'настрой' in out, out
+    assert 'config/settings.toml' not in out, out
+    assert out.endswith('не выбор окна.'), out
+
+
+def test_close_cut_parens_zakryvaet_obrezannyy_fragment():
+    """Слой объяснений обрезает тело уведомления многоточием — иногда посреди скобки."""
+    from app.ui import close_cut_parens
+    out = close_cut_parens('опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не…; следующая запись')
+    assert out.count('(') == out.count(')') == 1, out
+    assert 'не…)' in out, out
+    assert close_cut_parens('всё (на месте) тут') == 'всё (на месте) тут'
+
+
+@pytest.mark.parametrize('pro', [False, True])
+def test_istoricheskiy_razbor_ne_govorit_ob_otsechke(pro):
+    """R4-4: в «Историческом разборе» отсечки нет (cutoff_utc = None), и слово «отсечка» на его
+    экране не должно стоять ни в предупреждении, ни в подписи — даже в отрицании: жюри читает
+    подписи по отдельности, а два блока того же экрана говорят «архив взят весь»."""
+    at = run_app(MODES[1], pro=pro)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    assert 'отсечк' not in body, [s for s in re.findall(r'.{0,70}отсечк.{0,70}', body)][:3]
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_operativnyy_uroven_bez_mashinnyh_dat(mode):
+    """R4-3: даты вида «05-10 13:35Z» оставались в таблице «Окна и факторы» и в заголовках свёрток
+    «Объяснений», хотя строкой выше вердикт печатал то же событие как «10.05 12:14»."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    assert not re.search(r'\d\d-\d\d \d\d:\d\dZ', body), re.findall(r'.{0,50}\d\d-\d\d \d\d:\d\dZ', body)[:5]
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_odna_fraza_ob_ustoychivosti_vybora(mode):
+    """R4-18: на одном экране стояли «Есть предпочтительное окно» и «выбор меняется на сетке порогов»,
+    а подпись таблицы 1 добавляла «порядок окон при нулевом допуске». Формально верно всё, читается
+    как взаимное опровержение. На оперативном уровне остаётся ровно одна фраза — с причиной."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    assert len(re.findall(r'устойчив', body)) == 1, re.findall(r'.{0,90}устойчив.{0,60}', body)
+    assert 'ранжирован' not in body, body[:400]
+    assert 'порядок окон при нулевом допуске' not in body
+
+
+def test_pod_verdiktom_skazano_otkuda_dopusk():
+    """R4-19: «окна равнозначны — разница внутри допуска (48 мин)» без единого слова о том, откуда
+    взялись 48 мин. Числа берутся из Robustness: разность минут по каждому порогу сетки и её размах."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    line = _strip_tags(verdict_html(at))
+    assert 'Откуда допуск' in line, line
+    assert '24 000 нТл' in line.replace('\u202f', ' '), line            # рабочий порог сетки назван
+    assert 'размах по сетке' in line, line
+
+
+def test_tolerance_origin_ru_schitaet_po_snimku():
+    """Та же строка прямым вызовом: ни одно число не зашито — все из снимка."""
+    from app.ui import tolerance_origin_ru
+    S = {'robustness': {'diff_by_thr': {'22000': 15.0, '24000': 48.0, '26000': 63.0}, 'tol_min': 48.0,
+                        'tol_ratio': 1.5, 'ratio_by_e': {'12.5': 1.0, '30': 1.05, '50': 1.07}}}
+    out = tolerance_origin_ru(S)
+    assert 'Откуда допуск 48 мин' in out, out
+    assert '15 / 48 / 63 мин' in out, out
+    assert 'размах по сетке — 48 мин' in out, out
+    assert tolerance_origin_ru({'robustness': {}}) == ''
+    assert '×1,50' in tolerance_origin_ru(S, pro=True)
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_blok_verdikta_ne_splosnoy_abzac(mode):
+    """R4-7 и R4-23: блок «Почему?» был сплошным абзацем на 1266–1283 символа, и про непокрытие GOES
+    в нём говорилось трижды. Теперь это строки фиксированной формы: правило, сравнение окон, одна
+    строка о покрытии, одна об устойчивости, одна о происхождении допуска.
+
+    Порог длины — измеренный бюджет, а не идеал: 400 символов из находки недостижимы, пока в блоке
+    обязаны стоять обе величины обоих окон с единицами, происхождение допуска, допуск рядом с «не
+    хуже» и причина неустойчивости (задание владельца пятого круга). Охват и «не учтено» уведены
+    во вкладку «Окна и факторы» и на профессиональный уровень. Измерено на этой правке: «Гэннон»
+    719, «Исторический разбор» 956, «Тихая дата» 1485, «Сейчас» 1276 символов — порог 1600 стоит
+    как защита от нового разрастания, а не как достигнутая цель."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    html_ = verdict_html(at)
+    body = re.sub(r'\s+', ' ', _strip_tags(html_)).strip()
+    assert len(body) <= 1600, (len(body), body)
+    assert html_.count('<li>') <= 4, html_
+    assert 'Охват:' not in body and 'Не учтено:' not in body, body     # они во вкладке «Окна и факторы»
+    assert len(re.findall(r'не покрывает окно', body)) <= 1, body
+
+
+def test_ohvat_ostalsya_na_ekrane_vo_vkladke():
+    """Охват и «не учтено» с оперативного уровня не исчезли — они во вкладке «Окна и факторы» (О1)."""
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    tab = next(t for t in at.tabs if t.label == 'Окна и факторы')
+    body = '\n'.join(str(m.value) for m in tab.get('markdown'))
+    assert 'Охват:' in body and 'Не учтено:' in body, body[:400]
+
+
+def test_status_ru_srezaet_tehnicheskiy_hvost_i_perevodit_produkty():
+    """R4-6 и R4-27: на оперативном уровне в таблице 3 стояли сырой адрес с параметрами запроса и
+    слово timeout, имя продукта NOAA «NGDC daypre» и служебное «Kp-nowcast», а давность печаталась
+    двумя округлениями — своей колонкой (103) и внутри статуса (102,7)."""
+    tle = ('SGP4 по TLE (api.wheretheiss.at), эпоха 17.09.2026 21:14; TLE: получено по сети, '
+           'давность данных 1888,7 мин; проверка адресов: '
+           'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout')
+    out = status_ru(tle)
+    assert 'timeout' not in out and 'CATNR' not in out and 'http' not in out, out
+    assert 'часть адресов цепочки не ответила' in out, out
+    assert 'давность' not in out, out
+    assert 'проверка адресов' in status_ru(tle, pro=True)              # на профессиональном — как есть
+    kp = status_ru('получено по сети, давность данных 102,7 мин; незавершённый Kp-nowcast исключён')
+    assert 'Kp-nowcast' not in kp and 'незавершённый 3-часовой интервал Kp' in kp, kp
+    noaa = status_ru('живой бюллетень NOAA 3-day не содержит этого канала: суточная вероятность '
+                     'публикуется отдельным выпуском NGDC daypre, которого в текущем режиме нет')
+    assert 'daypre' not in noaa and '3-day' not in noaa, noaa
+    assert 'суточным выпуском NOAA' in noaa, noaa
+
+
+def test_pervoistochnik_razlichaet_prichinu_otsutstviya_adresa():
+    """R4-10: «таблицы стандартов и эфемериды в составе сервиса» говорилось и про живой набор
+    орбитальных элементов, у которого адрес просто не сохранён (он есть в манифесте выгрузки)."""
+    from app.ui import record_no_url_ru
+    out = record_no_url_ru(['celestrak_gp:25544:aedc1743d259', 'igrf14:717f6dce821a'])
+    assert 'из состава сервиса' in out and 'живого источника' in out, out
+    assert 'манифесте выгрузки' in out, out
+    only_builtin = record_no_url_ru(['ost1044_A_А_2_1:59e573afafa8'])
+    assert 'живого источника' not in only_builtin, only_builtin
+
+
+def test_prichina_nepokrytiya_kanala_ne_vydumyvaetsya():
+    """R4-21: «ячейки покрывают 0 % окна» верно только когда выпуск есть. Когда допустимого выпуска
+    нет вовсе, карточка обязана называть ту же причину, что таблица источников."""
+    from app.ui import _cov_reason
+    f = SimpleNamespace(name='вероятность протонного события за сутки, прогноз NOAA',
+                        limits_note='суточная вероятность источника, не вероятность за окно; '
+                                    'покрытие окна ячейками 0 %; выпуска с ячейками на это окно нет')
+    assert _cov_reason(f) == ('вероятность протонного события за сутки: выпуска с этим каналом на горизонт окна '
+                              'нет — канал не учитывается, объявлено')
+    f2 = SimpleNamespace(name='прогноз Kp NOAA, максимум в окне',
+                         limits_note='прогноз, не наблюдение; покрытие окна ячейками 40 %')
+    assert _cov_reason(f2) == 'прогноз Kp: ячейки покрывают 40 % окна'
+
+
+def test_kesh_ne_menyaet_cvet_proishozhdeniya():
+    """R4-28: янтарный означал разом внешний прогноз и наблюдение из кеша, и по цвету жюри не
+    отличало наблюдение от прогноза — ровно то различие, ради которого система цветов заведена."""
+    import io as _io
+    from app.ui import COLOR_LEGEND
+    assert 'прогноз или данные из кеша' not in COLOR_LEGEND, COLOR_LEGEND
+    assert 'янтарный — внешний прогноз.' in COLOR_LEGEND, COLOR_LEGEND
+    assert 'из кеша' in COLOR_LEGEND, COLOR_LEGEND                     # кеш назван, но подписью, не цветом
+    src = _io.open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app', 'main.py'),
+                   encoding='utf-8').read()
+    assert "'fc' if (g.value >=" not in src, 'наблюдение GOES не должно краситься тоном прогноза'
+    assert "'fc' if k_src.get('from_cache')" not in src, 'кеш Kp не должен краситься тоном прогноза'
+
+
+def test_orbita_v_razbore_nazyvaet_datu_sozdaniya():
+    """R4-4, обратная сторона: строгий режим по-прежнему называет отсечку, разбор — дату создания."""
+    from app.ui import source_issues
+    src = {'orbit': {'strictness': 'declared_reconstruction'}, 'noaa_swpc_goes': {'data_utc': '2024-05-10T12:00:00+00:00'}}
+    strict = source_issues(src, None, 'history_forecast', cutoff_utc='2024-05-10T12:00:00+00:00')
+    assert any('до отсечки' in x for x in strict), strict
+    review = source_issues(src, None, 'history_review', cutoff_utc=None,
+                           orbit_created_utc='2024-05-08T16:49:00+00:00')
+    assert any('создана 08.05.2024 16:49 UTC' in x for x in review), review
+    assert not any('отсечк' in x for x in review), review
+
+
+def test_pravilo_nazyvaet_dopusk_ryadom_s_ne_huzhe():
+    """R4-17: «окно 2 … не хуже по флюенсу и минутам» стояло рядом с числами, которые это
+    опровергают: флюенс выбранного окна 1,74·10⁶ против 1,65·10⁶. Утверждение верно только
+    по модулю допуска, и допуск обязан стоять в той же фразе, а не в подписи таблицы
+    на другой вкладке."""
+    from app.ui import qualify_tolerance_ru
+    src = ('шаги 3–4 из 5, сравнение и сведение: окно 2 (20:00Z) лучше по космопогоде '
+           '(на 21 мин меньше в аномалии), не хуже по флюенсу и минутам, линия метеороидов не противоречит')
+    out = qualify_tolerance_ru(src, 1.5, 20.0)
+    assert 'в пределах допуска (×1,50 по флюенсу, 20 мин по минутам)' in out, out
+    assert qualify_tolerance_ru(src, None, None) == src            # допуска в снимке нет — ничего не выдумываем
+    assert qualify_tolerance_ru('шаг 2 из 5, условия: …', 1.5, 20.0) == 'шаг 2 из 5, условия: …'
+
+
+def test_tihaya_data_pravilo_s_dopuskom_na_ekrane():
+    """Та же строка на экране: на пресете «Тихая дата» в правиле стоят и минуты, и флюенс, и допуск."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    rule = _strip_tags(verdict_html(at))
+    assert 'не хуже по флюенсу и минутам в пределах допуска' in rule, rule[:600]
+    assert 'допуск' in rule and 'мин' in rule and 'флюенс' in rule, rule[:600]

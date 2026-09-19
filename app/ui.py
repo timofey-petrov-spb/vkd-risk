@@ -8,10 +8,12 @@
 Цветовая система — монотонная, академическая (PROPOSAL_A п. 2 в редакции задания):
 цвет означает происхождение величины, а не «хорошо/плохо». Четыре тона и один служебный:
   синий  --calc — наш расчёт;
-  зелёный --obs — наблюдение;
-  янтарный --fc — внешний прогноз, а также данные из кеша (объявленное устаревание);
+  зелёный --obs — наблюдение (в том числе взятое из кеша: давность объявляется подписью, а не цветом);
+  янтарный --fc — внешний прогноз, и только он;
   красный --cond — условие проверки, аномалия, отказ источника;
   серый  --none — данных нет.
+Кеш цвет не меняет (R4-28): иначе наблюдение из кеша и внешний прогноз в полосе состояния идут
+одним тоном, и различие происхождений, ради которого система и заведена, на экране не читается.
 Светофора на экране нет: «условий проверки нет» — серым, а не зелёным; предпочтительное окно —
 синим (это наш расчёт), а не зелёным. Ни градиентов, ни эмодзи: на проекторе они дают грязь,
 а эмодзи по-разному рисуются в Windows, macOS и на телефоне.
@@ -142,9 +144,19 @@ MECH_RU = {'spaceweather': 'космопогода', 'mmod_stat': 'метеор�
 KIND_PILL = {'observation': ('наблюдение', 'obs'), 'external_forecast': ('внешний прогноз', 'fc'), 'own_calculation': ('наш расчёт', 'calc')}
 # уровень предупреждения — текстом, без эмодзи (одинаково в Windows, macOS и на телефоне)
 SEV_RU = {'critical': 'КРИТИЧНО', 'limiting': 'ВНИМАНИЕ', 'info': '—'}
-# одна строка, объясняющая цвет: он означает происхождение величины, а не «безопасно/опасно»
-COLOR_LEGEND = ('Цвет означает происхождение: синий — наш расчёт, зелёный — наблюдение, янтарный — внешний прогноз '
-                'или данные из кеша, красный — условие проверки, аномалия или отказ источника, серый — данных нет.')
+# одна строка, объясняющая цвет: он означает происхождение величины, а не «безопасно/опасно».
+# Три происхождения названы без союза «или» (R4-28): кеш — это давность наблюдения, а не прогноз.
+COLOR_LEGEND = ('Цвет означает происхождение: синий — наш расчёт, зелёный — наблюдение источника (в том числе взятое '
+                'из кеша: давность стоит подписью), янтарный — внешний прогноз. Красный — условие проверки, аномалия '
+                'или отказ источника; серый — данных нет.')
+# Причина, по которой на сетке порогов нет предпочтительного окна, — короткой вставкой в одну фразу
+# об устойчивости (R4-18). Отличается от NO_PICK_ON_GRID_RU падежом и тем, что не повторяет «на сетке».
+NO_PICK_REASON_RU = {
+    'all_need_check': 'у каждого окна есть условие проверки, автоматический выбор не делается',
+    'equivalent': 'окна остаются равнозначными',
+    'trade_off': 'минуты в аномалии и флюенс указывают на разные окна',
+    'insufficient': 'обязательной линии не хватает покрытия',
+}
 
 # --- словари перевода идентификаторов модулей (О5: без английских идентификаторов на экране) ---
 METHOD_RU = {'sgp4': 'SGP4 по TLE', 'oem_interp': 'OEM NASA/JSC (интерполяция)'}
@@ -254,6 +266,28 @@ def record_url(rec) -> str | None:
         if isinstance(v, str) and v.strip():
             return v.strip()
     return None
+
+
+# Записи, которые сервис везёт с собой: таблицы стандартов, коэффициенты поля, календарь потоков
+# и эфемериды NASA/JSC из репозитория. У них сетевого адреса нет и быть не должно. Всё остальное
+# без адреса — живая запись, у которой слой источников адрес не сохранил: адрес получения есть
+# в манифесте выгрузки, и называть её «в составе сервиса» неправда (R4-10).
+BUILTIN_RECORD_PREFIXES = ('igrf', 'ost1044', 'ecss', 'imo_', 'nasa_jsc_oem', 'orbit_provenance')
+
+
+def record_no_url_ru(rids) -> str:
+    """Почему у записей нет ссылки — раздельно по причине, без общего «в составе сервиса»."""
+    builtin = [r for r in rids if str(r).split(':')[0].startswith(BUILTIN_RECORD_PREFIXES)]
+    live = [r for r in rids if r not in builtin]
+    parts = []
+    if builtin:
+        parts.append('%d %s из состава сервиса (таблицы стандартов, коэффициенты поля, эфемериды) — сами записи '
+                     'в выгрузке, папка raw/'
+                     % (len(builtin), plural_ru(len(builtin), ('запись', 'записи', 'записей'))))
+    if live:
+        parts.append('%d %s живого источника — адрес записи не сохранён слоем источников, адрес получения есть '
+                     'в манифесте выгрузки' % (len(live), plural_ru(len(live), ('запись', 'записи', 'записей'))))
+    return 'без сетевого адреса: ' + '; '.join(parts) if parts else ''
 
 
 def pill(text, kind='none') -> str:
@@ -390,7 +424,7 @@ def panel(rows) -> str:
     return ''.join(out)
 
 
-def rule_ru(rule_applied: str) -> str:
+def rule_ru(rule_applied: str, basis: bool = True) -> str:
     """«п.5: разница 48 мин меньше допуска 49 мин» → «шаг 5 из 5, допуск равнозначности: разница …».
 
     Для шагов 3–4 и 5 печатается ВЫЧИСЛЕННОЕ правило, а не заготовленная фраза: заготовка на шаге
@@ -398,13 +432,16 @@ def rule_ru(rule_applied: str) -> str:
     которая у выбранного окна может быть выше (найдено третьим кругом на пресете «Тихая дата»).
     Основание допуска на шаге 5 — разброс РАЗНОСТИ минут между двумя лучшими окнами (формула (9)),
     а не разброс абсолютных минут одного окна: порог сдвигает оба окна синфазно.
+
+    `basis=False` снимает хвост об основании допуска: на оперативном уровне он стоит отдельной
+    строкой под вердиктом, уже с числами сетки, и в правиле повторялся бы вторым сообщением об одном.
     """
     for prefix, text in RULE_RU:
         if rule_applied.startswith(prefix):
             tail = rule_applied.partition(': ')[2].strip()
             if prefix == 'п.5':
-                return text + (': ' + tail if tail else '') + \
-                    '; допуск — разброс разности минут между двумя лучшими окнами по сетке порогов'
+                return text + (': ' + tail if tail else '') + (
+                    '; допуск — разброс разности минут между двумя лучшими окнами по сетке порогов' if basis else '')
             if prefix == 'п.3–4':
                 return 'шаги 3–4 из 5, сравнение и сведение: ' + tail if tail else text
             return text
@@ -452,9 +489,25 @@ _CONTRACT_RE = re.compile(r'CONTRACT\.md(\s+v[\d.]+)?')
 # слоя A4) — без него на оперативном уровне печатался 64-значный хеш
 _RELEASE_RE = re.compile(r'выпуск\s+[\w:\-]*[A-Za-z][\w:\-]*\s+от\b')
 _CHECK_RE = re.compile(r'[;,]?\s*контроль\s+[^;]+воспроизведён')
+# Перебор адресов цепочки TLE: «проверка адресов: https://…?CATNR=25544&FORMAT=TLE: timeout».
+# На оперативном уровне это техническая строка с параметрами запроса (бриф §9.8) — она режется
+# целиком и остаётся на профессиональном уровне и в манифесте (R4-6, R4-27).
+_PROBE_TAIL_RE = re.compile(r'[;,]?\s*проверка адресов:.*$', re.S)
+_PROBE_FAIL_RE = re.compile(r'(?:%s|timeout|time-out)' % _NET_ALT, re.I)
 # обороты слоёв программы, которым на оперативном уровне нужен русский (U2)
 PHRASE_RU = [('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
+             # «настройка config/settings.toml» стоит в скобке рядом с порогом различимости окон по
+             # линии метеороидов: имя файла зрителю ничего не говорит, а происхождение числа — говорит
+             ('настройка config/settings.toml', 'порог задан в настройках сервиса'),
              ('в config/settings.toml', 'в настройках сервиса'), ('config/settings.toml', 'настройки сервиса'),
+             # английские обрывки слоя источников на оперативном уровне (R4-6): имя продукта NOAA и
+             # служебное имя канала Kp переводятся, длинное — раньше короткого
+             ('живой бюллетень NOAA 3-day', 'живой трёхсуточный бюллетень NOAA'),
+             ('бюллетень NOAA 3-day', 'трёхсуточный бюллетень NOAA'),
+             ('NOAA 3-day', 'трёхсуточный бюллетень NOAA'),
+             ('отдельным выпуском NGDC daypre', 'отдельным суточным выпуском NOAA (архивным)'),
+             ('NGDC daypre', 'отдельный суточный выпуск NOAA (архивный)'),
+             ('незавершённый Kp-nowcast исключён', 'незавершённый 3-часовой интервал Kp в расчёт не взят'),
              # имена ключей настроек: на профессиональном уровне как есть, на оперативном — по-русски.
              # Ключи всегда стоят после слова «настройка/настройке/настройкой», поэтому заменяем само имя.
              ('sep_valid_hours', 'срока действия уведомления о протонном событии'),
@@ -489,11 +542,23 @@ def net_error_ru(name: str) -> str:
 
 def status_ru(text, pro: bool = False) -> str:
     """Статус источника для экрана (U2). На профессиональном уровне — как есть, только числа
-    приводятся к единому виду. На оперативном — без имён отказов, путей модулей, файлов, хешей
-    и идентификаторов записей: их место — профессиональный уровень и выгрузка."""
+    приводятся к единому виду. На оперативном — без имён отказов, путей модулей, файлов, хешей,
+    идентификаторов записей, перебора адресов и давности: их место — профессиональный уровень,
+    отдельная колонка «давность, мин» и выгрузка.
+
+    Давность вырезается здесь по той же причине, что и в карточках окон (PROPOSAL_A п. 3): в
+    таблице 3 она уже стоит своей колонкой, и два округления одной величины в одной строке
+    («давность, мин» = 103 и «давность данных 102,7 мин») читаются как два разных числа (R4-27)."""
     s = frac_ru(str(text or '')).replace('из архив ', 'из архива ')
     if pro or not s:
         return s
+    m_probe = _PROBE_TAIL_RE.search(s)
+    if m_probe:
+        tail = m_probe.group(0)
+        s = s[:m_probe.start()].rstrip(' ;,')
+        if _PROBE_FAIL_RE.search(tail):
+            s += '; часть адресов цепочки не ответила — взят тот, что назван выше'
+    s = drop_age(s)
     s = re.sub(r'([\w.\-]+): (%s)\b' % _NET_ALT, lambda m: '%s — %s' % (m.group(1), net_error_ru(m.group(2))), s)
     s = re.sub(r'\((%s)\)' % _NET_ALT, lambda m: '(%s)' % net_error_ru(m.group(1)), s)
     s = re.sub(r'ответ не разбирается \([^)]*\)', 'ответ источника не разобран', s)
@@ -519,6 +584,30 @@ def status_ru(text, pro: bool = False) -> str:
     return screen_text(s.rstrip(' ;,'))
 
 
+def close_cut_parens(text) -> str:
+    """Закрыть скобку у фрагмента, обрезанного многоточием, и в конце строки (R4-13).
+
+    Слой объяснений обрезает длинное тело уведомления многоточием, и обрез иногда приходится на
+    середину скобки: «опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не…». На
+    экране это незакрытая скобка в самом читаемом месте карточки. Текст фрагмента здесь не
+    меняется — добавляется только закрывающая скобка там, где его оборвали.
+    """
+    s = str(text or '')
+    if s.count('(') == s.count(')'):
+        return s
+    out, depth = [], 0
+    for ch in s:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth = max(0, depth - 1)
+        out.append(ch)
+        if ch == '…' and depth > 0:
+            out.append(')')
+            depth -= 1
+    return ''.join(out) + ')' * depth
+
+
 def dedup_clauses(text) -> str:
     """Повторяющиеся через «;» части одной подписи показываем один раз (U5).
     Слой объяснений собирает источник по каждому фактору, и одна и та же фраза о траектории
@@ -533,10 +622,35 @@ def dedup_clauses(text) -> str:
     return '; '.join(out)
 
 
-def source_short(v: dict) -> tuple[str, str]:
-    """Короткий статус источника для полосы состояния: (текст, kind)."""
+# Ключ источника в снимке → ключ управления «Источники» в боковой панели. По нему берётся
+# ЗАПРОШЕННОЕ состояние источника (S['request']['disabled']), а не подстрока в тексте статуса.
+DISABLED_KEY = {'noaa_swpc_goes': 'goes', 'gfz_kp': 'kp', 'noaa_swpc_3day_forecast': 'noaa'}
+
+
+def source_state(v: dict | None, requested=None) -> str | None:
+    """Состояние источника: 'off' (исключён пользователем) | 'cache' (объявленный отказ) | None.
+
+    Читается ТОЛЬКО из явного признака: сначала из снимка источника (ключ `state`, если слой расчёта
+    его положит), затем из запроса — `S['request']['disabled']`. Из текста статуса состояние не
+    выводится ни при каких условиях: слой источников штатно дописывает в него слово «исключён»
+    («незавершённый Kp-nowcast исключён» — почти в каждом живом прогоне), и поиск подстроки объявлял
+    исключённым пользователем источник, который отвечал по сети (R4-11, критическая находка).
+    """
+    st_ = (v or {}).get('state')
+    if st_ in ('off', 'cache'):
+        return st_
+    if requested in ('off', 'cache'):
+        return requested
+    if requested is True:
+        return 'off'
+    return None
+
+
+def source_short(v: dict, requested=None) -> tuple[str, str]:
+    """Короткий статус источника для полосы состояния и таблицы 3: (текст, kind).
+    `requested` — состояние из `S['request']['disabled']` для этого источника."""
     st_ = (v.get('status') or '').lower()
-    if 'исключён' in st_:
+    if source_state(v, requested) == 'off':
         return 'исключён пользователем', 'crit'
     if v.get('live_ok') is False and v.get('from_cache'):
         age = v.get('age_min')
@@ -548,16 +662,30 @@ def source_short(v: dict) -> tuple[str, str]:
     return status_ru(v.get('status') or 'нет данных'), 'none'
 
 
+def orbit_created_ru(created) -> str:
+    """«08.05.2024 16:49 UTC» из даты создания эфемериды; год обязателен — речь об архиве 2024 года."""
+    if isinstance(created, str):
+        try:
+            created = datetime.fromisoformat(created)
+        except ValueError:
+            return created
+    if not isinstance(created, datetime):
+        return ''
+    return created.strftime('%d.%m.%Y %H:%M') + ' UTC'
+
+
 def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_fetch: str | None = None,
-                  pro: bool = False) -> list[str]:
+                  pro: bool = False, disabled: dict | None = None, cutoff_utc=None,
+                  orbit_created_utc=None) -> list[str]:
     """Проблемы источников для одного st.warning под полосой состояния (О5-2): исключён, кеш, устарел.
-    Ничего не решает — переводит статусы снимка в предложения для пользователя."""
+    Ничего не решает — переводит явные признаки снимка в предложения для пользователя."""
     out = []
+    disabled = disabled or {}
     if mode == 'live':
         for sid, name in (('noaa_swpc_goes', 'GOES ≥10 МэВ (NOAA SWPC)'), ('gfz_kp', 'Kp (GFZ)')):
             v = src.get(sid) or {}
-            st_ = (v.get('status') or '').lower()
-            if 'исключён' in st_:
+            state = source_state(v, disabled.get(DISABLED_KEY[sid]))
+            if state == 'off':
                 out.append('%s: исключён пользователем — %s' % (
                     name, 'обязательная линия без покрытия, рекомендации не будет' if sid == 'noaa_swpc_goes'
                     else 'условие по наблюдению Kp не проверяется, покрытие объявлено'))
@@ -573,8 +701,12 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                            % age_ru(v['age_min'], th.goes_max_age_min))
         o = src.get('orbit') or {}
         if o.get('live_ok') is False and o.get('from_cache'):
-            out.append('Элементы орбиты: живого ответа нет — орбита построена по %s (%s)' % (
-                'снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу', tle_origin(tle_fetch)))
+            # «по кешу (кеш, давность 31 ч)» дублировало слово и оставляло пустые скобки, когда
+            # происхождение снимка неизвестно (R4-27): давность берётся из той же строки один раз
+            _, _, _age = tle_origin(tle_fetch).partition(', ')
+            out.append('Элементы орбиты: живого ответа нет — орбита построена по проверенному %s%s'
+                       % ('снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу',
+                          (', ' + _age) if _age.startswith('давность') else ''))
         if o.get('age_h') is not None and o['age_h'] > 24:
             out.append('Элементы орбиты: эпоха старше суток (%s) — точность положения снижается, предел %s сут задан порогом'
                        % (age_ru(o['age_h'] * 60), fmt(th.tle_max_age_days) if th is not None else '—'))
@@ -590,8 +722,16 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                        % status_ru(g.get('status') or 'причина в записи источника не указана', pro))
         o = src.get('orbit') or {}
         if o.get('strictness') == 'declared_reconstruction':
-            out.append('Орбита: OEM NASA/JSC создан до отсечки, но его публичная доступность в тот момент не доказана — '
-                       'объявленная реконструкция')
+            # Слово «отсечка» уместно только там, где отсечка есть. В «Историческом разборе»
+            # cutoff_utc = None, и прежняя безусловная фраза противоречила двум другим блокам
+            # того же экрана (R4-4): полосе состояния и вкладке «Данные».
+            if cutoff_utc:
+                out.append('Орбита: OEM NASA/JSC создан до отсечки, но его публичная доступность в тот момент '
+                           'не доказана — объявленная реконструкция')
+            else:
+                _c = orbit_created_ru(orbit_created_utc)
+                out.append('Орбита: эфемерида OEM NASA/JSC%s; её публичная доступность в тот момент документально '
+                           'не доказана — объявленная реконструкция' % ((' создана ' + _c) if _c else ''))
     return out
 
 
@@ -613,11 +753,19 @@ def _wins_ru(nums: list[int]) -> str:
     return 'окна ' + ' и '.join(str(n) for n in nums) if len(nums) == 2 else 'окна ' + ', '.join(str(n) for n in nums)
 
 
-def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: int = 6) -> tuple[list[str], int]:
+def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: int = 6,
+                    max_other: int | None = None) -> tuple[list[str], int]:
     """Список условий панели вердикта с указанием окна и без дубликатов (О3-3).
-    Возвращает (строки, сколько не показано)."""
+    Возвращает (строки, сколько не показано).
+
+    `max_other` — сколько строк НЕ о сравнении механизмов оставить (бриф §9.1 и §9.7). Сообщения о
+    неполном покрытии слой расчёта даёт и общей строкой, и отдельно по каждому окну; в блоке «Почему?»
+    это три формулировки об одном и том же, а полностью они стоят в карточках окон и в таблице 1.
+    Строки сравнения (обе величины обоих окон) не режутся никогда — ради них блок и существует.
+    """
     mech_ru = mech_ru or MECH_RU
     out: list[str] = []
+    is_cmp: list[bool] = []
     if rec.verdict == 'all_need_check' and assessments:
         by: dict[str, list[int]] = {}
         for i, a in enumerate(assessments):
@@ -626,6 +774,7 @@ def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: in
                     by.setdefault(_short_reason(r), []).append(i + 1)
         for text, nums in by.items():
             out.append('%s: %s' % (_wins_ru(nums), text))
+            is_cmp.append(True)          # сами условия — это и есть ответ на «почему», их не режем
     else:
         seen = set()
         per = dict(getattr(rec, 'per_mechanism_comparison', None) or {})
@@ -644,12 +793,27 @@ def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: in
                 else:
                     txt = '%s: %s' % (mech_ru.get(mech, mech), txt)
             out.append(txt)
+            is_cmp.append(bool(mech))
+    if max_other is not None:
+        kept, others = [], 0
+        for txt, cmp_ in zip(out, is_cmp):
+            if cmp_ or others < max_other:
+                kept.append(txt)
+                others += 0 if cmp_ else 1
+        dropped = len(out) - len(kept)
+        if len(kept) > max_items:
+            return kept[:max_items], dropped + len(kept) - max_items
+        return kept, dropped
     if len(out) > max_items:
         return out[:max_items], len(out) - max_items
     return out, 0
 
 
 _MMOD_ROLE_RU = 'роль линии: абсолютная оценка и охват, не выбор окна'
+# Точка с запятой ВНЕ скобок: «(правило команды, не норма; настройка …)» — одно целое, резать по
+# внутренней точке с запятой нельзя. Раньше резали по первой любой, и на экране оставалась
+# незакрытая скобка без точки, а вместе с ней пропадало происхождение порога 5 % (R4-1, R4-13).
+_SEMI_OUTSIDE_PARENS_RE = re.compile(r';\s*(?![^()]*\))')
 
 
 def bullet_short_ru(text: str) -> str:
@@ -657,13 +821,17 @@ def bullet_short_ru(text: str) -> str:
 
     Сокращается только пояснение про линию метеороидов: полностью оно повторяется во вкладке
     «Методика», формула (6), и в карточке окна. Сравнение по космопогоде не трогается — в нём
-    стоят обе величины обоих окон, ради которых блок «Почему?» и существует."""
+    стоят обе величины обоих окон, ради которых блок «Почему?» и существует.
+
+    Происхождение порога различимости остаётся в короткой форме: имя файла настроек переводится
+    словами (PHRASE_RU), а не отрезается вместе с закрывающей скобкой."""
     s = str(text or '')
     if 'линия метеороидов' not in s and 'линии метеороидов' not in s:
         return s
-    head_ = s.split(';')[0].strip().rstrip('.')
-    head_ = re.sub(r'\s*\(([^()]*?)\s+меньше\s+[\d.,]+\s*%\)', r' (\1)', head_)
-    return head_ + ' — ' + _MMOD_ROLE_RU
+    head_ = _SEMI_OUTSIDE_PARENS_RE.split(s)[0].strip().rstrip('.')
+    for a, b in PHRASE_RU:
+        head_ = head_.replace(a, b)
+    return head_ + ' — ' + _MMOD_ROLE_RU + '.'
 
 
 def robustness_pill(rec, rob: dict) -> str:
@@ -681,18 +849,147 @@ def robustness_pill(rec, rob: dict) -> str:
     return pill('выбор меняется на сетке порогов' if rec.preferred is not None else 'ранжирование меняется на сетке порогов', 'warn')
 
 
+def _win_no_by_iso(S: dict) -> dict:
+    """Номер окна по времени начала в виде ISO — как окна записаны в снимке."""
+    return {w['start_utc']: str(w['index']) for w in (S.get('windows') or [])}
+
+
+def _cells_ru(n: int) -> str:
+    return plural_ru(n, ('ячейки', 'ячеек', 'ячеек'))
+
+
+def robustness_line_ru(rec, S: dict, thr_nT, e_min_MeV) -> str:
+    """Одна понятная фраза об устойчивости выбора — с причиной и с рабочими порогами (R4-18).
+
+    До неё на одном экране стояли три формулировки об одном: плашка «выбор меняется на сетке порогов»
+    под вердиктом «Есть предпочтительное окно» и подпись таблицы 1 про «порядок окон при нулевом
+    допуске». Формально каждая верна, но вместе они читаются как взаимное опровержение, а слова
+    «ранжирование» и «порядок» на оперативном уровне не разведены и за три минуты не разбираются.
+    Здесь печатается ровно одно предложение; ранжирование остаётся на вкладке «Устойчивость и нормы».
+
+    Ничего не досчитывается: и рабочие пороги, и исход каждой ячейки берутся из снимка.
+    """
+    rob = S.get('robustness') or {}
+    grid = rob.get('preferred_by_grid') or {}
+    nums = _win_no_by_iso(S)
+    where = 'рабочих порогах (%s нТл, от %s МэВ)' % (nbsp_thousands(thr_nT), fmt(float(e_min_MeV)))
+    n = len(grid)
+    pref_iso = rec.preferred.start_utc.isoformat() if rec.preferred is not None else None
+    if pref_iso is not None:
+        head_ = 'Окно %s выбрано на %s' % (nums.get(pref_iso, '—'), where)
+        if not n:
+            return head_ + '; сетка порогов не считалась, устойчивость выбора не проверена.'
+        same = sum(1 for v in grid.values() if v == pref_iso)
+        if same == n:
+            return head_ + ' и остаётся предпочтительным во всех %d %s сетки порогов — выбор устойчив.' \
+                % (n, plural_ru(n, ('ячейке', 'ячейках', 'ячейках')))
+        none_cells = sum(1 for v in grid.values() if not v)
+        other = n - same - none_cells
+        parts = []
+        if other:
+            parts.append('в %d из %d %s сетки правило называет другое окно' % (other, n, _cells_ru(n)))
+        if none_cells:
+            parts.append('в %d из %d %s сетки правило лучшее окно не называет — разница внутри допуска'
+                         % (none_cells, n, _cells_ru(n)))
+        return head_ + '; ' + ', '.join(parts) + ', поэтому выбор считается неустойчивым.'
+    if not n:
+        return 'Предпочтительного окна нет; сетка порогов не считалась, устойчивость ответа не проверена.'
+    named = [v for v in grid.values() if v]
+    reason = NO_PICK_REASON_RU.get(rec.verdict, 'правило лучшее окно не называет')
+    if not named:
+        return ('Предпочтительного окна нет ни на %s, ни в одной из %d %s сетки порогов: %s — ответ устойчив.'
+                % (where, n, _cells_ru(n), reason))
+    wins = ' и '.join(sorted({nums.get(v, '—') for v in named}))
+    return ('На %s предпочтительного окна нет (%s), но в %d из %d %s сетки правило называет окно %s — '
+            'ответ неустойчив к настройке порога.' % (where, reason, len(named), n, _cells_ru(n), wins))
+
+
+def tolerance_origin_ru(S: dict, pro: bool = False) -> str:
+    """Откуда взялся допуск равнозначности — одной строкой под вердиктом (R4-19).
+
+    Допуск по минутам не задан числом: это размах РАЗНОСТИ минут между двумя лучшими окнами по оси
+    порога аномалии (формула (9)). Без этой строки на главном экране стояло «окна равнозначны —
+    разница внутри допуска 48 мин» при разнице 41 мин, и откуда взялись 48 мин, сказано не было.
+    Все числа — из `S['robustness']`, ничего не зашито.
+    """
+    rob = S.get('robustness') or {}
+    diff = rob.get('diff_by_thr') or {}
+    if not diff:
+        return ''
+
+    keys = sorted(diff, key=lambda k: float(k))
+    thr_s = ' / '.join(nbsp_thousands(float(k)) for k in keys)
+    val_s = ' / '.join(_minus(fmt(round(float(diff[k])))) for k in keys)
+    span = max(float(v) for v in diff.values()) - min(float(v) for v in diff.values())
+    tol = float(rob.get('tol_min') or 0.0)
+    s = ('Откуда допуск %s мин: при порогах аномалии %s нТл разность минут между двумя лучшими окнами равна '
+         '%s мин, её размах по сетке — %s мин.' % (fmt(round(tol)), thr_s, val_s, fmt(round(span))))
+    s += (' Настолько разность двигает одна настройка порога, поэтому меньшую разницу мы не считаем '
+          'преимуществом окна.') if round(tol) <= round(span) else \
+         (' Допуск не опускается ниже %s мин — это нижняя граница настройки.' % fmt(round(tol)))
+    if pro:
+        ratio = rob.get('ratio_by_e') or {}
+        if ratio:
+            ek = sorted(ratio, key=lambda k: float(k))
+            rs = max(float(v) for v in ratio.values()) / min(float(v) for v in ratio.values())
+            s += (' Допуск по флюенсу ×%s: разброс отношения флюенсов по каналам %s МэВ — ×%s%s.'
+                  % (ratio_ru(rob.get('tol_ratio')), ' / '.join(fmt(float(k)) for k in ek), ratio_ru(rs),
+                     '' if float(rob.get('tol_ratio') or 0) <= rs else ', ниже границы настройки'))
+    return s
+
+
+def _minus(s: str) -> str:
+    """Знак минуса у отрицательного числа — типографский, а не дефис."""
+    return s.replace('-', '−')
+
+
+def ratio_ru(v) -> str:
+    """Допуск по флюенсу — всегда двумя знаками («×1,50»), как он записан в основании допуска."""
+    return ('%.2f' % float(v or 0)).replace('.', ',')
+
+
+_NOT_WORSE_RE = re.compile(r'не хуже по флюенсу и минутам')
+
+
+def qualify_tolerance_ru(text: str, tol_ratio, tol_min) -> str:
+    """Назвать допуск там, где правило говорит «не хуже» (R4-17).
+
+    На пресете «Тихая дата» строка правила утверждает «окно 2 … не хуже по флюенсу и минутам»,
+    а строкой ниже в том же блоке стоит «окно 1: флюенс 1,65·10⁶; окно 2: флюенс 1,74·10⁶» —
+    у выбранного окна флюенс ВЫШЕ. Утверждение верно только по модулю допуска, и допуск обязан
+    стоять рядом с ним, а не в подписи таблицы на другой вкладке. Числа — из снимка (Robustness);
+    сама формулировка приходит из слоя сравнения окон и здесь не переписывается, только уточняется.
+    """
+    if not tol_ratio or not _NOT_WORSE_RE.search(str(text or '')):
+        return text
+    return _NOT_WORSE_RE.sub('не хуже по флюенсу и минутам в пределах допуска (×%s по флюенсу, %s мин по минутам)'
+                             % (ratio_ru(tol_ratio), fmt(round(float(tol_min or 0)))), text)
+
+
+def coverage_scope_ru(S: dict) -> str:
+    """Охват расчёта одной строкой: что учтено и что нет (О1). Стоит во вкладке «Окна и факторы»
+    на обоих уровнях и в панели вердикта — на профессиональном."""
+    return 'Охват: %s. Не учтено: %s.' % (', '.join(S.get('coverage_declared', []) or ['—']),
+                                          ', '.join(S.get('coverage_missing', []) or ['—']))
+
+
 def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = False,
-                  plan_change: str | None = None, missing_ru=None, policy_short: str | None = None) -> str:
+                  plan_change: str | None = None, missing_ru=None, policy_short: str | None = None,
+                  thr_nT=None, e_min_MeV=None) -> str:
     v = rec.verdict
     title = VERDICT_TITLE.get(v, v)
-    rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied))) + \
+    # Основание допуска на оперативном уровне не повторяется в строке правила: под вердиктом стоит
+    # отдельная строка «Откуда допуск …» с числами сетки (бриф §9.7: нет двух сообщений об одном).
+    rob = S.get('robustness') or {}
+    rule = 'Правило: ' + esc(qualify_tolerance_ru(frac_ru(rule_ru(rec.rule_applied, basis=pro)),
+                                                  rob.get('tol_ratio'), rob.get('tol_min'))) + \
            ' · формальная запись — вкладка «Методика», формулы (8) и (9)'
     if pro:
         rule += ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
     lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title), '<div class="rule">%s</div>' % rule]
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
-    bullets, more = verdict_reasons(rec, assessments)
+    bullets, more = verdict_reasons(rec, assessments, max_other=None if pro else 1)
     if not pro:
         bullets = [bullet_short_ru(b) for b in bullets]
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
@@ -700,17 +997,25 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     if bullets:
         lis = ''.join('<li>%s</li>' % esc(screen_text(b)) for b in bullets)
         if more:
-            lis += '<li class="more">… ещё %d, см. карточки окон и вкладку «Окна и факторы»</li>' % more
+            lis += '<li class="more">… ещё %d о покрытии, см. карточки окон и вкладку «Окна и факторы»</li>' % more
         lines.append('<ul>' + lis + '</ul>')
     if plan_change:
         lines.append('<div class="plan">%s</div>' % esc(plan_change))
     if policy_short:
         lines.append('<div class="policy">%s</div>' % esc(policy_short))
-    rob = S.get('robustness') or {}
-    lines.append('<div class="cov">%s %s Охват: %s. Не учтено: %s.</div>' % (
-        robustness_pill(rec, rob),
-        pill('сценарий «что если»', 'warn') if S.get('is_simulated') else '',
-        esc(', '.join(S.get('coverage_declared', []))), esc(', '.join(S.get('coverage_missing', [])))))
+    sim = pill('сценарий «что если»', 'warn') if S.get('is_simulated') else ''
+    if thr_nT is not None and e_min_MeV is not None:
+        lines.append('<div class="cov">%s%s</div>'
+                     % (sim, esc(screen_text(robustness_line_ru(rec, S, thr_nT, e_min_MeV)))))
+    else:                                  # порогов не передали — печатаем прежнюю плашку, не выдумывая
+        lines.append('<div class="cov">%s %s</div>' % (robustness_pill(rec, rob), sim))
+    # Допуск равнозначности участвует только в сравнении окон. Там, где до сравнения не дошло
+    # (у каждого окна условие; нет покрытия обязательной линии), строка о нём была бы лишней.
+    tol = tolerance_origin_ru(S, pro) if v in ('preferred', 'equivalent', 'trade_off') else ''
+    if tol:
+        lines.append('<div class="policy">%s</div>' % esc(screen_text(tol)))
+    if pro:                                # охват на оперативном уровне — во вкладке «Окна и факторы»
+        lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))
     lines.append('</div>')
     return ''.join(lines)
 
@@ -727,7 +1032,8 @@ _win_span = win_span     # прежнее имя
 
 _ISO_DT_RE = re.compile(r'(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?Z?')
 _MD_DT_RE = re.compile(r'(?<![\d.\-])(\d{2})-(\d{2}) (\d{2}):(\d{2})Z')
-_AGE_CLAUSE_RE = re.compile(r'[,;]?\s*давность\s+\d+(?:[.,]\d+)?\s*(?:мин|ч|сут)\b')
+_AGE_CLAUSE_RE = re.compile(r'[,;]?\s*давность(?:\s+данных)?\s+\d+(?:[.,]\d+)?\s*(?:мин|ч|сут)\b'
+                            r'(?:\s*\(предел[^)]*\))?')
 # разряды тысяч в готовых строках модулей: «24000 нТл» → «24 000 нТл» (единица обязательна, год не трогаем)
 _THOUSANDS_RE = re.compile(r'(?<![\d,.])(\d{4,})(?=\s*(?:нТл|мин\b|км\b|сут\b|Зв\b|част\.|пфу\b|pfu\b))')
 
@@ -813,6 +1119,11 @@ def _cov_reason(f) -> str | None:
     if m3:
         return 'метеороиды: трасса покрывает %s %% окна' % m3.group(1)
     m4 = re.search(r'покрытие окна ячейками (\d+) %', note)
+    # «ячейки покрывают 0 % окна» верно только тогда, когда выпуск есть, а его ячейки до окна не
+    # дошли. Когда допустимого выпуска нет вовсе, слой расчёта прямо пишет это в ограничении, и
+    # карточка обязана называть ту же причину, что таблица источников (R4-21).
+    if m4 and 'выпуска с ячейками на это окно нет' in note:
+        return '%s: выпуска с этим каналом на горизонт окна нет — канал не учитывается, объявлено' % name.split(',')[0]
     if m4 and name.startswith('прогноз'):
         return 'прогноз Kp: ячейки покрывают %s %% окна' % m4.group(1)
     if m4:
@@ -921,18 +1232,24 @@ def source_name_ru(sid: str, mode: str | None = None) -> str:
     return name
 
 
+# давность в строке слоя источников бывает дробной и с оборотом «данных»: «давность данных 1888,7 мин».
+# Прежнее выражение ловило только целое без «данных», и на экране оставалось «кеш» без числа (R4-27).
+_TLE_AGE_RE = re.compile(r'давность(?:\s+данных)?\s+(\d+)(?:[.,]\d+)?\s*мин')
+
+
 def tle_origin(tle_fetch_status: str | None) -> str:
-    """«получено живьём с celestrak.org» / «кеш, давность N мин» / «снимок репозитория, давность N мин»."""
+    """«получено живьём с celestrak.org» / «кеш, давность 31 ч» / «снимок репозитория, давность 31 ч».
+    Давность печатается в одних единицах с приборной полосой (age_ru), а не в минутах и часах вперемешку."""
     s = tle_fetch_status or ''
     m = re.search(r'живьём с ([\w.\-]+)', s)
     if m:
         return 'живьём с ' + m.group(1)
+    m2 = _TLE_AGE_RE.search(s)
+    age = (', ' + age_ru(int(m2.group(1)))) if m2 else ''
     if 'снимок репозитория' in s:
-        m2 = re.search(r'давность (\d+) мин', s)
-        return 'снимок репозитория' + (', давность %s ч' % round(int(m2.group(1)) / 60) if m2 else '')
+        return 'снимок репозитория' + age
     if 'кеш' in s:
-        m2 = re.search(r'давность (\d+) мин', s)
-        return 'кеш' + (', давность %s мин' % m2.group(1) if m2 else '')
+        return 'кеш' + age
     if 'воспроизведение' in s:
         return 'из сохранённого расчёта'
     return s or '—'
