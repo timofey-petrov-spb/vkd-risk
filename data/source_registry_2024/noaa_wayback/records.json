@@ -1,0 +1,2026 @@
+{
+  "schema_version": 1,
+  "source": "noaa_wayback_3day_forecast",
+  "records": [
+    {
+      "url": "https://web.archive.org/web/20240515175721id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240515175721.txt",
+      "sha256": "6ff177361349cae8b807e555a71b1d49e7e628c945fc163915c4579245b2e5c8",
+      "bytes": 2015,
+      "fetched_utc": "2026-09-19T15:52:23.962912+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240515175721",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240515175721:6ff177361349",
+      "created_utc": null,
+      "published_utc": "2024-05-15T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 15 1230 UTC"
+      },
+      "available_utc": "2024-05-15T17:57:21+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:6ff177361349cae8b807e555a71b1d49e7e628c945fc163915c4579245b2e5c8",
+      "valid_from_utc": "2024-05-15T00:00:00+00:00",
+      "valid_to_utc": "2024-05-18T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-15T00:00:00+00:00",
+          "valid_to_utc": "2024-05-18T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-15T00:00:00+00:00",
+          "valid_to_utc": "2024-05-18T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-15T00:00:00+00:00",
+          "valid_to_utc": "2024-05-18T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-15T00:00:00+00:00",
+          "valid_to_utc": "2024-05-18T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240515175721",
+      "cdx_payload_digest": "MTOXNTJN4ZUZFKBFIOHNZKGY4SNJ6QOO",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240516065157id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240516065157.txt",
+      "sha256": "7411bf515f35d6b0cf728571697c7c0e2e433ac00199a66aa9fde673878d4161",
+      "bytes": 2128,
+      "fetched_utc": "2026-09-19T15:52:24.957356+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240516065157",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240516065157:7411bf515f35",
+      "created_utc": null,
+      "published_utc": "2024-05-16T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 16 0030 UTC"
+      },
+      "available_utc": "2024-05-16T06:51:57+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:7411bf515f35d6b0cf728571697c7c0e2e433ac00199a66aa9fde673878d4161",
+      "valid_from_utc": "2024-05-16T00:00:00+00:00",
+      "valid_to_utc": "2024-05-19T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240516065157",
+      "cdx_payload_digest": "LI2ISFNZGWTHVJD6YB5PAMNFGOHIS76I",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240516201654id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240516201654.txt",
+      "sha256": "066f7712815a80f2c714147397af117893bf0c532615e67f8a6d20e0c4cc525d",
+      "bytes": 2119,
+      "fetched_utc": "2026-09-19T15:52:23.995862+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240516201654",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240516201654:066f7712815a",
+      "created_utc": null,
+      "published_utc": "2024-05-16T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 16 1230 UTC"
+      },
+      "available_utc": "2024-05-16T20:16:54+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:066f7712815a80f2c714147397af117893bf0c532615e67f8a6d20e0c4cc525d",
+      "valid_from_utc": "2024-05-16T00:00:00+00:00",
+      "valid_to_utc": "2024-05-19T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-16T00:00:00+00:00",
+          "valid_to_utc": "2024-05-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240516201654",
+      "cdx_payload_digest": "NX67WLSI3MUK6YNGBD47CAAT6GQQPTMP",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240517091344id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240517091344.txt",
+      "sha256": "2562f6432f8b4948e891266b2c95325ce9f9fc3fb0b56329ed120916c6c2aa39",
+      "bytes": 2000,
+      "fetched_utc": "2026-09-19T15:52:25.410647+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240517091344",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240517091344:2562f6432f8b",
+      "created_utc": null,
+      "published_utc": "2024-05-17T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 17 0030 UTC"
+      },
+      "available_utc": "2024-05-17T09:13:44+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:2562f6432f8b4948e891266b2c95325ce9f9fc3fb0b56329ed120916c6c2aa39",
+      "valid_from_utc": "2024-05-17T00:00:00+00:00",
+      "valid_to_utc": "2024-05-20T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240517091344",
+      "cdx_payload_digest": "SU72KJYUVFECUWKYNH7L2DVBAUM5GKDE",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240517210624id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240517210624.txt",
+      "sha256": "a20a1eaf0f4923999232930764e6f923dfe665cb86fb947516f62b6bb3661749",
+      "bytes": 1939,
+      "fetched_utc": "2026-09-19T15:52:25.224170+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240517210624",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240517210624:a20a1eaf0f49",
+      "created_utc": null,
+      "published_utc": "2024-05-17T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 17 1230 UTC"
+      },
+      "available_utc": "2024-05-17T21:06:24+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:a20a1eaf0f4923999232930764e6f923dfe665cb86fb947516f62b6bb3661749",
+      "valid_from_utc": "2024-05-17T00:00:00+00:00",
+      "valid_to_utc": "2024-05-20T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-17T00:00:00+00:00",
+          "valid_to_utc": "2024-05-20T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240517210624",
+      "cdx_payload_digest": "4SML52W67THPZWD7GCRGZ3A2X3WHBTTK",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240518100621id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240518100621.txt",
+      "sha256": "753e8607c3d9f77787a1a5676c6dcddc13088def80f1bc0f97a98f2d42ca815f",
+      "bytes": 2124,
+      "fetched_utc": "2026-09-19T15:52:26.210703+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240518100621",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240518100621:753e8607c3d9",
+      "created_utc": null,
+      "published_utc": "2024-05-18T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 18 0030 UTC"
+      },
+      "available_utc": "2024-05-18T10:06:21+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:753e8607c3d9f77787a1a5676c6dcddc13088def80f1bc0f97a98f2d42ca815f",
+      "valid_from_utc": "2024-05-18T00:00:00+00:00",
+      "valid_to_utc": "2024-05-21T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240518100621",
+      "cdx_payload_digest": "XZR2ZETY2DLF3N2NN7PM5UCSV6Y5EEI7",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240518232807id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240518232807.txt",
+      "sha256": "ddbe9d5df1ea116fe0490cf82d73898e8d84ec503870763c051f8c30ef2e35ed",
+      "bytes": 2022,
+      "fetched_utc": "2026-09-19T15:52:26.447111+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240518232807",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240518232807:ddbe9d5df1ea",
+      "created_utc": null,
+      "published_utc": "2024-05-18T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 18 1230 UTC"
+      },
+      "available_utc": "2024-05-18T23:28:07+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:ddbe9d5df1ea116fe0490cf82d73898e8d84ec503870763c051f8c30ef2e35ed",
+      "valid_from_utc": "2024-05-18T00:00:00+00:00",
+      "valid_to_utc": "2024-05-21T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-18T00:00:00+00:00",
+          "valid_to_utc": "2024-05-21T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240518232807",
+      "cdx_payload_digest": "PRXUBM7K2WWAFP5A2OFU24XQPYEDEY7L",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240519133041id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240519133041.txt",
+      "sha256": "5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae",
+      "bytes": 1815,
+      "fetched_utc": "2026-09-19T15:52:26.359687+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240519133041",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240519133041:5496c0957a62",
+      "created_utc": null,
+      "published_utc": "2024-05-19T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 19 1230 UTC"
+      },
+      "available_utc": "2024-05-19T13:30:41+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae",
+      "valid_from_utc": "2024-05-19T00:00:00+00:00",
+      "valid_to_utc": "2024-05-22T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-19T00:00:00+00:00",
+          "valid_to_utc": "2024-05-22T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-19T00:00:00+00:00",
+          "valid_to_utc": "2024-05-22T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-19T00:00:00+00:00",
+          "valid_to_utc": "2024-05-22T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-19T00:00:00+00:00",
+          "valid_to_utc": "2024-05-22T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240519133041",
+      "cdx_payload_digest": "PRBFLXJSPMMLTYP56N27OIUICW7IIP33",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240520004448id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240520004448.txt",
+      "sha256": "d2f3f2717fa2dd1c54aaed3534968592dcc9ebe9a8f51e58fd4a7dfa38d4329d",
+      "bytes": 1908,
+      "fetched_utc": "2026-09-19T15:52:27.488085+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240520004448",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240520004448:d2f3f2717fa2",
+      "created_utc": null,
+      "published_utc": "2024-05-20T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 20 0030 UTC"
+      },
+      "available_utc": "2024-05-20T00:44:48+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:d2f3f2717fa2dd1c54aaed3534968592dcc9ebe9a8f51e58fd4a7dfa38d4329d",
+      "valid_from_utc": "2024-05-20T00:00:00+00:00",
+      "valid_to_utc": "2024-05-23T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240520004448",
+      "cdx_payload_digest": "O4RUPCGLQ5S7BQCXOG7LI3PYSXJW7CCN",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240520152328id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240520152328.txt",
+      "sha256": "255e9191cb190cd6bfdf7a9c0809ed9954be50d6a80b0dc8acf316ad0ab0a075",
+      "bytes": 2033,
+      "fetched_utc": "2026-09-19T15:52:28.377684+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240520152328",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240520152328:255e9191cb19",
+      "created_utc": null,
+      "published_utc": "2024-05-20T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 20 1230 UTC"
+      },
+      "available_utc": "2024-05-20T15:23:28+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:255e9191cb190cd6bfdf7a9c0809ed9954be50d6a80b0dc8acf316ad0ab0a075",
+      "valid_from_utc": "2024-05-20T00:00:00+00:00",
+      "valid_to_utc": "2024-05-23T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-20T00:00:00+00:00",
+          "valid_to_utc": "2024-05-23T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240520152328",
+      "cdx_payload_digest": "WLPMSXSVX225CFVC7ELMUOOWJ2TXDHVN",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240521160651id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240521160651.txt",
+      "sha256": "f6dc8849b8d25e450d41d3dd595f5b8bb0b4cc48e0fa605411c972f4bd72f33b",
+      "bytes": 1891,
+      "fetched_utc": "2026-09-19T15:52:30.705205+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240521160651",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240521160651:f6dc8849b8d2",
+      "created_utc": null,
+      "published_utc": "2024-05-21T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 21 1230 UTC"
+      },
+      "available_utc": "2024-05-21T16:06:51+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:f6dc8849b8d25e450d41d3dd595f5b8bb0b4cc48e0fa605411c972f4bd72f33b",
+      "valid_from_utc": "2024-05-21T00:00:00+00:00",
+      "valid_to_utc": "2024-05-24T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-21T00:00:00+00:00",
+          "valid_to_utc": "2024-05-24T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-21T00:00:00+00:00",
+          "valid_to_utc": "2024-05-24T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-21T00:00:00+00:00",
+          "valid_to_utc": "2024-05-24T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-21T00:00:00+00:00",
+          "valid_to_utc": "2024-05-24T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240521160651",
+      "cdx_payload_digest": "4P2SI66CQFSIMMY4ECYZX7XTV46LJJTI",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240522202956id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240522202956.txt",
+      "sha256": "61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868",
+      "bytes": 2092,
+      "fetched_utc": "2026-09-19T15:52:28.510216+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240522202956",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240522202956:61ca44f63e29",
+      "created_utc": null,
+      "published_utc": "2024-05-22T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 22 1230 UTC"
+      },
+      "available_utc": "2024-05-22T20:29:56+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868",
+      "valid_from_utc": "2024-05-22T00:00:00+00:00",
+      "valid_to_utc": "2024-05-25T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-22T00:00:00+00:00",
+          "valid_to_utc": "2024-05-25T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-22T00:00:00+00:00",
+          "valid_to_utc": "2024-05-25T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-22T00:00:00+00:00",
+          "valid_to_utc": "2024-05-25T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-22T00:00:00+00:00",
+          "valid_to_utc": "2024-05-25T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240522202956",
+      "cdx_payload_digest": "BKPGSH5I5FEA6VJ6VI34VO6IOUAWZPS4",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240523060536id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240523060536.txt",
+      "sha256": "c3513f3c5f8611190143bde2404844a84a317d071c7c374d8d82f0498420cff7",
+      "bytes": 2082,
+      "fetched_utc": "2026-09-19T15:52:29.451236+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240523060536",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240523060536:c3513f3c5f86",
+      "created_utc": null,
+      "published_utc": "2024-05-23T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 23 0030 UTC"
+      },
+      "available_utc": "2024-05-23T06:05:36+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:c3513f3c5f8611190143bde2404844a84a317d071c7c374d8d82f0498420cff7",
+      "valid_from_utc": "2024-05-23T00:00:00+00:00",
+      "valid_to_utc": "2024-05-26T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240523060536",
+      "cdx_payload_digest": "NXIEKRX4TSBQSZWC67SDFJFUNM42G5JS",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240523231400id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240523231400.txt",
+      "sha256": "2250337e2cd94f488f85db8f40378f3b388d8de4f56f67eb75c9260be41b1262",
+      "bytes": 2035,
+      "fetched_utc": "2026-09-19T15:52:30.535294+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240523231400",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240523231400:2250337e2cd9",
+      "created_utc": null,
+      "published_utc": "2024-05-23T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 23 1230 UTC"
+      },
+      "available_utc": "2024-05-23T23:14:00+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:2250337e2cd94f488f85db8f40378f3b388d8de4f56f67eb75c9260be41b1262",
+      "valid_from_utc": "2024-05-23T00:00:00+00:00",
+      "valid_to_utc": "2024-05-26T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-23T00:00:00+00:00",
+          "valid_to_utc": "2024-05-26T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240523231400",
+      "cdx_payload_digest": "475QAQ5SUCDG7GD5NSMJ3XDANS7DECHZ",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240526140723id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240526140723.txt",
+      "sha256": "c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b",
+      "bytes": 1889,
+      "fetched_utc": "2026-09-19T15:52:32.101744+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240526140723",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240526140723:c510b3ffa6b6",
+      "created_utc": null,
+      "published_utc": "2024-05-26T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 26 1230 UTC"
+      },
+      "available_utc": "2024-05-26T14:07:23+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b",
+      "valid_from_utc": "2024-05-26T00:00:00+00:00",
+      "valid_to_utc": "2024-05-29T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-26T00:00:00+00:00",
+          "valid_to_utc": "2024-05-29T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-26T00:00:00+00:00",
+          "valid_to_utc": "2024-05-29T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-26T00:00:00+00:00",
+          "valid_to_utc": "2024-05-29T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-26T00:00:00+00:00",
+          "valid_to_utc": "2024-05-29T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240526140723",
+      "cdx_payload_digest": "OFRW2P2YVQCBYHKAYKU65VKZDO23774W",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240527171638id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240527171638.txt",
+      "sha256": "c7c927abcc27ab61d4a597d09a6a1dd86f73ff8f2514d3f369e5f6c1580c362c",
+      "bytes": 1962,
+      "fetched_utc": "2026-09-19T15:52:32.611361+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240527171638",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240527171638:c7c927abcc27",
+      "created_utc": null,
+      "published_utc": "2024-05-27T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 27 1230 UTC"
+      },
+      "available_utc": "2024-05-27T17:16:38+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:c7c927abcc27ab61d4a597d09a6a1dd86f73ff8f2514d3f369e5f6c1580c362c",
+      "valid_from_utc": "2024-05-27T00:00:00+00:00",
+      "valid_to_utc": "2024-05-30T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-27T00:00:00+00:00",
+          "valid_to_utc": "2024-05-30T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-27T00:00:00+00:00",
+          "valid_to_utc": "2024-05-30T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-27T00:00:00+00:00",
+          "valid_to_utc": "2024-05-30T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-27T00:00:00+00:00",
+          "valid_to_utc": "2024-05-30T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240527171638",
+      "cdx_payload_digest": "H4PZGJBOVHHFEVDVY4B46P6BVBQH2X66",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240530171119id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240530171119.txt",
+      "sha256": "9a2ac2224ec4070cdde19fb2e99bd52ff034136cb32387648181b05ccb127b9d",
+      "bytes": 1936,
+      "fetched_utc": "2026-09-19T15:52:33.159732+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240530171119",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240530171119:9a2ac2224ec4",
+      "created_utc": null,
+      "published_utc": "2024-05-30T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 May 30 1230 UTC"
+      },
+      "available_utc": "2024-05-30T17:11:19+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:9a2ac2224ec4070cdde19fb2e99bd52ff034136cb32387648181b05ccb127b9d",
+      "valid_from_utc": "2024-05-30T00:00:00+00:00",
+      "valid_to_utc": "2024-06-02T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-05-30T00:00:00+00:00",
+          "valid_to_utc": "2024-06-02T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-30T00:00:00+00:00",
+          "valid_to_utc": "2024-06-02T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-30T00:00:00+00:00",
+          "valid_to_utc": "2024-06-02T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-05-30T00:00:00+00:00",
+          "valid_to_utc": "2024-06-02T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240530171119",
+      "cdx_payload_digest": "QQZUPH2JCWCEDZVNTXU6AUMJNKPJYAX5",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240601175347id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240601175347.txt",
+      "sha256": "793d06073e10b1ae4c406744fbdc5773f904f541ce5826bb53aa023d1e97bc8d",
+      "bytes": 1818,
+      "fetched_utc": "2026-09-19T15:52:33.990141+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240601175347",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240601175347:793d06073e10",
+      "created_utc": null,
+      "published_utc": "2024-06-01T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 Jun 01 1230 UTC"
+      },
+      "available_utc": "2024-06-01T17:53:47+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:793d06073e10b1ae4c406744fbdc5773f904f541ce5826bb53aa023d1e97bc8d",
+      "valid_from_utc": "2024-06-01T00:00:00+00:00",
+      "valid_to_utc": "2024-06-04T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-06-01T00:00:00+00:00",
+          "valid_to_utc": "2024-06-04T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-01T00:00:00+00:00",
+          "valid_to_utc": "2024-06-04T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-01T00:00:00+00:00",
+          "valid_to_utc": "2024-06-04T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-01T00:00:00+00:00",
+          "valid_to_utc": "2024-06-04T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240601175347",
+      "cdx_payload_digest": "SDRH7CPVCWKPFVAYKKVZDLLW6P6UG52H",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240612225440id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240612225440.txt",
+      "sha256": "7f9a93a467f6b5b9de81fabe6d82fc97453757b79424523c67dceb76f7e68e87",
+      "bytes": 1933,
+      "fetched_utc": "2026-09-19T15:52:34.997491+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240612225440",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240612225440:7f9a93a467f6",
+      "created_utc": null,
+      "published_utc": "2024-06-12T12:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 Jun 12 1230 UTC"
+      },
+      "available_utc": "2024-06-12T22:54:40+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:7f9a93a467f6b5b9de81fabe6d82fc97453757b79424523c67dceb76f7e68e87",
+      "valid_from_utc": "2024-06-12T00:00:00+00:00",
+      "valid_to_utc": "2024-06-15T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-06-12T00:00:00+00:00",
+          "valid_to_utc": "2024-06-15T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-12T00:00:00+00:00",
+          "valid_to_utc": "2024-06-15T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-12T00:00:00+00:00",
+          "valid_to_utc": "2024-06-15T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-12T00:00:00+00:00",
+          "valid_to_utc": "2024-06-15T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240612225440",
+      "cdx_payload_digest": "EZKN6B2EA57NRBFXXOUABTYQ2ADJC7K6",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    },
+    {
+      "url": "https://web.archive.org/web/20240616092116id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "raw_path": "data/source_registry_2024/noaa_wayback/raw/20240616092116.txt",
+      "sha256": "fb1e630aef8236ac8d5c1e9f33c7462b7447fd4c62ab207225bc7f575cb76ec1",
+      "bytes": 1804,
+      "fetched_utc": "2026-09-19T15:52:35.422343+00:00",
+      "http_last_modified": null,
+      "source_id": "noaa_wayback_3day_forecast",
+      "release_id": "wayback_20240616092116",
+      "raw_record_id": "noaa_wayback_3day_forecast:20240616092116:fb1e630aef82",
+      "created_utc": null,
+      "published_utc": "2024-06-16T00:30:00+00:00",
+      "publication_evidence": {
+        "kind": "internal_issued_header",
+        "text": ":Issued: 2024 Jun 16 0030 UTC"
+      },
+      "available_utc": "2024-06-16T09:21:16+00:00",
+      "availability_evidence": "Internet Archive timestamped capture; original payload SHA-1 matches CDX digest; availability conservatively starts at capture",
+      "version": "sha256:fb1e630aef8236ac8d5c1e9f33c7462b7447fd4c62ab207225bc7f575cb76ec1",
+      "valid_from_utc": "2024-06-16T00:00:00+00:00",
+      "valid_to_utc": "2024-06-19T00:00:00+00:00",
+      "channels": [
+        {
+          "channel_id": "noaa_kp",
+          "unit": "1",
+          "valid_from_utc": "2024-06-16T00:00:00+00:00",
+          "valid_to_utc": "2024-06-19T00:00:00+00:00",
+          "temporal_resolution": "3h",
+          "kind": "external_forecast",
+          "description": "Planetary Kp forecast in three-hour UTC bins; distinct from local k.",
+          "table_validation": {
+            "rows_found": 8,
+            "forecast_date_columns": 3,
+            "numeric_cells": 24,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "s1_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-16T00:00:00+00:00",
+          "valid_to_utc": "2024-06-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of S1 or greater; not an event or hourly probability.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r1_r2_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-16T00:00:00+00:00",
+          "valid_to_utc": "2024-06-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R1-R2 radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        },
+        {
+          "channel_id": "r3_or_greater_probability",
+          "unit": "%",
+          "valid_from_utc": "2024-06-16T00:00:00+00:00",
+          "valid_to_utc": "2024-06-19T00:00:00+00:00",
+          "temporal_resolution": "24h",
+          "kind": "external_forecast",
+          "description": "Daily probability of R3 or greater radio blackouts.",
+          "table_validation": {
+            "rows_found": 1,
+            "forecast_date_columns": 3,
+            "numeric_cells": 3,
+            "missing_markers_detected": false
+          }
+        }
+      ],
+      "strict_replay_eligibility": "dated_official_bulletin",
+      "limitations": [
+        "Available only from archive capture, never backdated to earlier Issued",
+        "Capture is evidence of this archived edition, not exhaustive NOAA release history",
+        "Forecast probabilities keep daily support; no conversion to EVA-window probability"
+      ],
+      "unindexed_fields_note": "Full original bulletin preserved. Narrative retrospective observations, A indices, polar-cap text and region-specific tables are not normalized by this A1 registry.",
+      "etag": null,
+      "archive_timestamp": "20240616092116",
+      "cdx_payload_digest": "543JAHSRXBTV2RDPAPJB3FVSCRFIJDSM",
+      "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "response_refs": [
+        {
+          "raw_path": "data/source_registry_2024/noaa_wayback/listings/cdx.json",
+          "sha256": "e26d2e532222c045c07cf910337ee8262a727a15b27e460596e800d98571638e"
+        }
+      ]
+    }
+  ]
+}

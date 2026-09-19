@@ -11,7 +11,7 @@
     "from_utc": "2024-05-01T00:00:00Z",
     "to_utc_exclusive": "2024-07-01T00:00:00Z"
   },
-  "record_count": 390,
+  "record_count": 410,
   "sources": {
     "noaa_ngdc_3day_forecast": {
       "status": "collected_initial_snapshot",
@@ -2161,6 +2161,114 @@
           "record_index": 246,
           "release_id": "20240630-AL-002",
           "sha256": "94f5b8c9e2f2bfde63a743e15cd1e650e0d4e431c18f16d1c9eab90648ead631"
+        }
+      }
+    },
+    "noaa_wayback_3day_forecast": {
+      "status": "captured_originals_verified_against_cdx",
+      "records_path": "data/source_registry_2024/noaa_wayback/records.json",
+      "records_sha256": "e59b7a21fbe2ce9d5c75415f86cad81557be2e23fe94a9fdfeace5f2e20e5f36",
+      "record_count": 20,
+      "records": {
+        "noaa_wayback_3day_forecast:20240515175721:6ff177361349": {
+          "record_index": 0,
+          "release_id": "wayback_20240515175721",
+          "sha256": "6ff177361349cae8b807e555a71b1d49e7e628c945fc163915c4579245b2e5c8"
+        },
+        "noaa_wayback_3day_forecast:20240516065157:7411bf515f35": {
+          "record_index": 1,
+          "release_id": "wayback_20240516065157",
+          "sha256": "7411bf515f35d6b0cf728571697c7c0e2e433ac00199a66aa9fde673878d4161"
+        },
+        "noaa_wayback_3day_forecast:20240516201654:066f7712815a": {
+          "record_index": 2,
+          "release_id": "wayback_20240516201654",
+          "sha256": "066f7712815a80f2c714147397af117893bf0c532615e67f8a6d20e0c4cc525d"
+        },
+        "noaa_wayback_3day_forecast:20240517091344:2562f6432f8b": {
+          "record_index": 3,
+          "release_id": "wayback_20240517091344",
+          "sha256": "2562f6432f8b4948e891266b2c95325ce9f9fc3fb0b56329ed120916c6c2aa39"
+        },
+        "noaa_wayback_3day_forecast:20240517210624:a20a1eaf0f49": {
+          "record_index": 4,
+          "release_id": "wayback_20240517210624",
+          "sha256": "a20a1eaf0f4923999232930764e6f923dfe665cb86fb947516f62b6bb3661749"
+        },
+        "noaa_wayback_3day_forecast:20240518100621:753e8607c3d9": {
+          "record_index": 5,
+          "release_id": "wayback_20240518100621",
+          "sha256": "753e8607c3d9f77787a1a5676c6dcddc13088def80f1bc0f97a98f2d42ca815f"
+        },
+        "noaa_wayback_3day_forecast:20240518232807:ddbe9d5df1ea": {
+          "record_index": 6,
+          "release_id": "wayback_20240518232807",
+          "sha256": "ddbe9d5df1ea116fe0490cf82d73898e8d84ec503870763c051f8c30ef2e35ed"
+        },
+        "noaa_wayback_3day_forecast:20240519133041:5496c0957a62": {
+          "record_index": 7,
+          "release_id": "wayback_20240519133041",
+          "sha256": "5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae"
+        },
+        "noaa_wayback_3day_forecast:20240520004448:d2f3f2717fa2": {
+          "record_index": 8,
+          "release_id": "wayback_20240520004448",
+          "sha256": "d2f3f2717fa2dd1c54aaed3534968592dcc9ebe9a8f51e58fd4a7dfa38d4329d"
+        },
+        "noaa_wayback_3day_forecast:20240520152328:255e9191cb19": {
+          "record_index": 9,
+          "release_id": "wayback_20240520152328",
+          "sha256": "255e9191cb190cd6bfdf7a9c0809ed9954be50d6a80b0dc8acf316ad0ab0a075"
+        },
+        "noaa_wayback_3day_forecast:20240521160651:f6dc8849b8d2": {
+          "record_index": 10,
+          "release_id": "wayback_20240521160651",
+          "sha256": "f6dc8849b8d25e450d41d3dd595f5b8bb0b4cc48e0fa605411c972f4bd72f33b"
+        },
+        "noaa_wayback_3day_forecast:20240522202956:61ca44f63e29": {
+          "record_index": 11,
+          "release_id": "wayback_20240522202956",
+          "sha256": "61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868"
+        },
+        "noaa_wayback_3day_forecast:20240523060536:c3513f3c5f86": {
+          "record_index": 12,
+          "release_id": "wayback_20240523060536",
+          "sha256": "c3513f3c5f8611190143bde2404844a84a317d071c7c374d8d82f0498420cff7"
+        },
+        "noaa_wayback_3day_forecast:20240523231400:2250337e2cd9": {
+          "record_index": 13,
+          "release_id": "wayback_20240523231400",
+          "sha256": "2250337e2cd94f488f85db8f40378f3b388d8de4f56f67eb75c9260be41b1262"
+        },
+        "noaa_wayback_3day_forecast:20240526140723:c510b3ffa6b6": {
+          "record_index": 14,
+          "release_id": "wayback_20240526140723",
+          "sha256": "c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b"
+        },
+        "noaa_wayback_3day_forecast:20240527171638:c7c927abcc27": {
+          "record_index": 15,
+          "release_id": "wayback_20240527171638",
+          "sha256": "c7c927abcc27ab61d4a597d09a6a1dd86f73ff8f2514d3f369e5f6c1580c362c"
+        },
+        "noaa_wayback_3day_forecast:20240530171119:9a2ac2224ec4": {
+          "record_index": 16,
+          "release_id": "wayback_20240530171119",
+          "sha256": "9a2ac2224ec4070cdde19fb2e99bd52ff034136cb32387648181b05ccb127b9d"
+        },
+        "noaa_wayback_3day_forecast:20240601175347:793d06073e10": {
+          "record_index": 17,
+          "release_id": "wayback_20240601175347",
+          "sha256": "793d06073e10b1ae4c406744fbdc5773f904f541ce5826bb53aa023d1e97bc8d"
+        },
+        "noaa_wayback_3day_forecast:20240612225440:7f9a93a467f6": {
+          "record_index": 18,
+          "release_id": "wayback_20240612225440",
+          "sha256": "7f9a93a467f6b5b9de81fabe6d82fc97453757b79424523c67dceb76f7e68e87"
+        },
+        "noaa_wayback_3day_forecast:20240616092116:fb1e630aef82": {
+          "record_index": 19,
+          "release_id": "wayback_20240616092116",
+          "sha256": "fb1e630aef8236ac8d5c1e9f33c7462b7447fd4c62ab207225bc7f575cb76ec1"
         }
       }
     }

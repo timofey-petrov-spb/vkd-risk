@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "demo_start_utc": "2026-09-19T14:33:00+00:00",
+  "scope": "active + names containing DEB + names containing R/B; excludes some inactive payloads, restricted and uncatalogued objects; NOT complete public catalogue",
+  "records": [
+    {
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=csv",
+      "available_utc": "2026-09-19T14:32:05.873961+00:00",
+      "availability_proof": "Downloaded by this session; bound recorded after successful receipt",
+      "sha256": "eefc5a4ab9c951f659c0c8c822b9da66fa4b07cfb953ce6a7c399d1569ca7c88",
+      "file": "active.csv.gz",
+      "source_id": "celestrak_catalogue_active",
+      "scope": "Действующие аппараты; не весь каталог и не весь мусор",
+      "bytes": 2500686,
+      "compressed_sha256": "3087862c5f065a7d616753f2695c504fa6a9873d103f8650ae702a776d31d2ea"
+    },
+    {
+      "url": "https://celestrak.org/NORAD/elements/gp.php?NAME=DEB&FORMAT=csv",
+      "available_utc": "2026-09-19T14:32:08.115870+00:00",
+      "availability_proof": "Direct HTTP receipt of exact entity bytes",
+      "sha256": "0d05b17657d18d437452dfc17a3468fc656ab0cbbecaee075bcd92612885c250",
+      "http_headers": {
+        "Date": "Sat, 19 Sep 2026 14:32:19 GMT"
+      },
+      "file": "debris.csv.gz",
+      "source_id": "celestrak_catalogue_debris",
+      "scope": "Объекты с DEB в имени; не весь каталог мусора",
+      "bytes": 1535157,
+      "compressed_sha256": "fe94f74016f02faa281b4fc689210d3806ca7b64c13b04c429adaad7abe01864"
+    },
+    {
+      "url": "https://celestrak.org/NORAD/elements/gp.php?NAME=R%2FB&FORMAT=csv",
+      "available_utc": "2026-09-19T14:32:09.731048+00:00",
+      "availability_proof": "Direct HTTP receipt of exact entity bytes",
+      "sha256": "179ed4d226165d16e85eba03ba0ff1cdbf6194869ed0d03aa5b91337886b0e5c",
+      "http_headers": {
+        "Date": "Sat, 19 Sep 2026 14:32:21 GMT"
+      },
+      "file": "rocket_bodies.csv.gz",
+      "source_id": "celestrak_catalogue_rocket_bodies",
+      "scope": "Объекты с R/B в имени; не все неработающие аппараты",
+      "bytes": 314167,
+      "compressed_sha256": "675e75520ed0c00d9f2203f329ae7e4917b0a6033e9dc94a81b1cdb5e623c63c"
+    }
+  ]
+}

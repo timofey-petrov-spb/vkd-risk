@@ -1,0 +1,44 @@
+[
+  {
+    "capture": "20240520002856",
+    "url": "https://web.archive.org/web/20240520002856id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  },
+  {
+    "capture": "20240522205236",
+    "url": "https://web.archive.org/web/20240522205236id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  },
+  {
+    "capture": "20240524214701",
+    "url": "https://web.archive.org/web/20240524214701id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "74c12d67bf6c5e71c7d0074c8ac2510619a01e694b8e5efef028a8cc37291d3b",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  },
+  {
+    "capture": "20240527000959",
+    "url": "https://web.archive.org/web/20240527000959id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  },
+  {
+    "capture": "20240531164638",
+    "url": "https://web.archive.org/web/20240531164638id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "bbaccbc477e0b5eb966e14c9d6432e66e31c71c8ff3429ca0ff216434a0f2c64",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  },
+  {
+    "capture": "20240607151936",
+    "url": "https://web.archive.org/web/20240607151936id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "sha256": "7df3db5f1c1c57c14c2879138588a1dbb50f51c1dcb16bb8ba38a826eb9c9645",
+    "reason": "Wayback payload disagrees with archived CDX digest",
+    "strict_replay_admitted": false
+  }
+]
