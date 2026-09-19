@@ -65,7 +65,11 @@ class PdfNotBuilt(Exception):
 # правое 15 мм, верхнее и нижнее по 20 мм. Полоса набора при этом 165 мм, и ширины всех
 # таблиц ниже в сумме дают ровно её.
 MARGIN_LEFT_MM, MARGIN_RIGHT_MM, MARGIN_TOP_MM, MARGIN_BOTTOM_MM = 30.0, 15.0, 20.0, 20.0
-TEXT_WIDTH_MM = 210.0 - MARGIN_LEFT_MM - MARGIN_RIGHT_MM      # A4 шириной 210 мм → полоса 165 мм
+PAGE_WIDTH_MM = 210.0                                         # A4 по ГОСТ 9327: 210 x 297 мм
+TEXT_WIDTH_MM = PAGE_WIDTH_MM - MARGIN_LEFT_MM - MARGIN_RIGHT_MM      # полоса набора 165 мм
+# Колонтитул стоит в нижнем поле, на 12 мм от края листа: текст кончается на 20 мм, и 8 мм
+# просвета отделяют служебную строку от текста, не пуская её к самому обрезу.
+FOOTER_BASELINE_MM = 12.0
 
 # Кегли. ГОСТ 7.32 предполагает 12–14 пт для сплошного текста; здесь 10 пт, потому что документ
 # читают с экрана и он на треть состоит из таблиц, где 12 пт не помещается в колонку. Кегли
@@ -864,8 +868,8 @@ def _numbered_canvas(font_name: str, left_text: str):
                 if number > 1:
                     self.setFont(font_name, SIZE_SMALL)
                     self.setFillGray(0.35)      # колонтитул светлее текста: он служебный
-                    self.drawString(MARGIN_LEFT_MM * mm, 12 * mm, left_text)
-                    self.drawRightString((210 - MARGIN_RIGHT_MM) * mm, 12 * mm,
+                    self.drawString(MARGIN_LEFT_MM * mm, FOOTER_BASELINE_MM * mm, left_text)
+                    self.drawRightString((PAGE_WIDTH_MM - MARGIN_RIGHT_MM) * mm, FOOTER_BASELINE_MM * mm,
                                          'стр. %d из %d' % (number, total))
                     self.setFillGray(0)
                 super().showPage()
