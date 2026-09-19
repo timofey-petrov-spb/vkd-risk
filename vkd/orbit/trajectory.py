@@ -17,7 +17,8 @@ from skyfield.positionlib import Geocentric
 from vkd.sources.registry import SourceRegistry, iso_utc, utc
 from vkd.types import MagMethod, TrajectoryMeta, TrajectoryPoint
 from .magnetic import magnetic_coordinates
-from .oem import OrbitDataError, parse_oem
+from .oem import OrbitDataError, parse_oem, validate_continuous_coverage
+from .states import make_state_payload
 
 ROOT = Path(__file__).resolve().parents[2]
 # Engineering admissibility limit, not a physical guarantee of TLE accuracy.
@@ -76,13 +77,16 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
                                max_tle_age_days: float = MAX_TLE_AGE_DAYS,
                                tle_path: str | Path | None = None,
                                oem_raw_record_id: str | None = None,
-                               expected_record_hashes: dict[str, str] | None = None):
+                               expected_record_hashes: dict[str, str] | None = None,
+                               include_inertial_states: bool = False):
     """Same solution plus per-source records for the shared export Manifest.
 
     Optional finer grids serve convergence checks. No implicit network requests,
     coefficient extrapolation, cached global output or silent source fallback.
     """
     start = utc(start_utc)
+    if type(include_inertial_states) is not bool:
+        raise ValueError('include_inertial_states must be a boolean')
     if type(minutes) is not int or not 1 <= minutes <= 1920:
         raise ValueError('minutes must be an integer in [1, 1920]')
     if type(step_seconds) is not int or not 1 <= step_seconds <= 600:
@@ -106,7 +110,7 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
         raise ValueError('Historical cutoff cannot be after forecast start')
     ts = load.timescale(builtin=True)
     t = ts.from_datetimes(times)
-    provenance = {'algorithm_version': 'orbit-a3-v1', 'mode': mode, 'step_seconds': step_seconds,
+    provenance = {'algorithm_version': 'orbit-a3-v2', 'mode': mode, 'step_seconds': step_seconds,
                   'cutoff_utc': iso_utc(cutoff) if mode == 'history_forecast' else None,
                   'records': {}, 'segments': [], 'limitations': [],
                   'output_frame': 'ITRS / WGS84 geodetic latitude, longitude, altitude',
@@ -133,8 +137,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
             raise OrbitDataError('No OEM covering the full interval with required historical availability; reconstruction is a separate mode')
         record = max(candidates, key=lambda r: (utc(r['created_utc']), r['release_id']))
         header, segments = parse_oem(registry.raw_bytes(record['raw_record_id']))
+        validate_continuous_coverage(segments, start, end)
         position_km, velocity_km_s = np.empty((len(times), 3)), np.empty((len(times), 3))
         assigned = np.zeros(len(times), dtype=bool)
+        state_assignments = np.full(len(times), -1, dtype=int)
         for segment in segments:
             lo = utc(segment.metadata.get('USEABLE_START_TIME', segment.metadata['START_TIME']))
             hi = utc(segment.metadata.get('USEABLE_STOP_TIME', segment.metadata['STOP_TIME']))
@@ -143,6 +149,7 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
                 continue
             p, v = segment.interpolate([times[i] for i in indices])
             position_km[indices], velocity_km_s[indices], assigned[indices] = p, v, True
+            state_assignments[indices] = len(provenance['segments'])
             provenance['segments'].append({'raw_record_id': record['raw_record_id'],
                                            'from_utc': iso_utc(times[indices[0]]), 'to_utc': iso_utc(times[indices[-1]]),
                                            'frame': 'EME2000', 'interpolation': 'piecewise cubic Hermite, position and velocity'})
@@ -176,7 +183,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
                       'fetched_utc': iso_utc(fetched), 'available_utc': None,
                       'evidence': 'Caller-supplied TLE bytes; checksum/identity/epoch verified. Historical publication is not established.'}
             record['release_id'] = record['sha256']
-        satellite = satellite_from_tle(path.read_bytes())
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != record['sha256'] or len(raw) != record['bytes']:
+            raise OrbitDataError('TLE bytes changed before propagation; input hash no longer matches')
+        satellite = satellite_from_tle(raw)
         epoch = satellite.epoch.utc_datetime()
         if max(abs((start - epoch).total_seconds()), abs((end - epoch).total_seconds())) > max_tle_age_days * 86400:
             raise OrbitDataError('TLE outside declared age limit over the full requested interval; refresh the source')
@@ -189,6 +199,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
         source, method, frame = 'celestrak_gp', 'sgp4', 'TEME'
         raw_id = 'celestrak_gp:25544:' + record['sha256'][:12]
         provenance['records'][raw_id] = dict(record, raw_record_id=raw_id, epoch_utc=iso_utc(epoch))
+        if include_inertial_states:
+            position_km = (ICRS_to_J2000 @ position.position.km).T
+            velocity_km_s = (ICRS_to_J2000 @ position.velocity.km_per_s).T
+            state_assignments = np.zeros(len(times), dtype=int)
         provenance['max_tle_age_days'] = max_tle_age_days
         provenance['limitations'].append('TLE age limit is an engineering guard, not a position-error guarantee; manoeuvres are not predicted.')
     geo = wgs84.geographic_position_of(position)
@@ -219,4 +233,10 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
               bool(field['B_nT'][i] < saa_B_threshold_nT)) for i, when in enumerate(times)]
     meta = TrajectoryMeta(source, method, frame, epoch, start, end, created, available, fetched,
                           reconstruction, 'IGRF-13' if model == 'IGRF13.shc' else 'IGRF-14')
+    if include_inertial_states:
+        state_segments = provenance['segments'] if method == 'oem_interp' else [
+            {'raw_record_id': raw_id, 'from_utc': iso_utc(start), 'to_utc': iso_utc(end),
+             'frame': 'TEME', 'interpolation': 'none; SGP4 at each requested time'}]
+        provenance['inertial_states'] = make_state_payload(times, position_km, velocity_km_s,
+            state_assignments, state_segments, provenance['records'], ts, method, reconstruction)
     return meta, points, provenance
