@@ -4,3 +4,6 @@
 *.sh text eol=lf
 *.pdf binary
 *.docx binary
+
+# Hashed seasonal catalogue and controls must be identical on Windows and macOS.
+data/meteoroids/*.json text eol=lf

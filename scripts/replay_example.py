@@ -77,10 +77,12 @@ def load_snapshot(path: str) -> dict:
                         raise ValueError(f'Replay SHA-256 mismatch: {rid}')
             return {'request': j('request.json'), 'recommendation': j('recommendation.json'), 'windows': j('factors.json'),
                     'mode_id': man.get('mode'), 'algorithm_version': man.get('algorithm_version'), 'git_commit': man.get('git_commit'),
+                    'meteoroids': j('meteoroids.json') if 'meteoroids.json' in z.namelist() else None,
                     'computed_utc': man.get('computed_utc'), 'trajectory_meta': meta, 'raw': raw, 'sources': j('sources.json')}
     S = json.load(io.open(path, encoding='utf-8'))
     return {'request': S['request'], 'recommendation': S['recommendation'], 'windows': S['windows'],
             'mode_id': S.get('mode_id') or MODE_IDS[S['mode']], 'algorithm_version': S.get('algorithm_version'), 'git_commit': S.get('git_commit'),
+            'meteoroids': S.get('meteoroids'),
             'computed_utc': S.get('computed_utc'), 'trajectory_meta': S.get('trajectory_meta') or {}, 'raw': {}, 'sources': S.get('sources') or {}}
 
 
@@ -183,6 +185,9 @@ def main(path: str) -> int:
               ('условия по окнам', _conditions(S['windows']), _conditions(r.S['windows'])),
               ('значения и покрытие факторов', json.loads(json.dumps(S['windows'], default=str)),
                json.loads(json.dumps(r.S['windows'], default=str)))]
+    if S.get('meteoroids') is not None:
+        checks.append(('сезонная модель и гипотезы', S['meteoroids'],
+                       json.loads(json.dumps(r.S.get('meteoroids'), default=str))))
     same = True
     for name, a, b in checks:
         ok = a == b

@@ -218,7 +218,8 @@ def test_meteoroid_threshold_comes_from_settings_and_prints_its_origin():
     mm = r.S['recommendation']['per_mechanism'].get('mmod_stat', '')
     assert 'порога различимости' in mm and 'правило команды' in mm and 'config/settings.toml' in mm
     assert 'меньше 5 %)' not in mm                 # прежняя формулировка без происхождения
-    assert 'абсолютная оценка и охват, не выбор окна' in mm
+    # Seasonal N now participates in comparison; the former mean-only role is obsolete.
+    assert 'сезонная оценка' in mm and 'гипотез' in mm
 
 
 def test_meteoroid_threshold_is_actually_applied_from_thresholds():

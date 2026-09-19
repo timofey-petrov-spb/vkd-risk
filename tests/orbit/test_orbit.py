@@ -22,7 +22,7 @@ FIXTURES = Path(__file__).parent / 'fixtures'
 
 class Sgp4Tests(unittest.TestCase):
     def test_published_vallado_near_earth_and_deep_space_vectors(self):
-        lines = (FIXTURES / 'SGP4-VER.TLE').read_text().splitlines()
+        lines = (FIXTURES / 'SGP4-VER.TLE').read_text(encoding='utf-8').splitlines()
         satellites = {}
         for i, line in enumerate(lines):
             if line.startswith('1 ') and int(line[2:7]) in (5, 4632):
@@ -30,7 +30,7 @@ class Sgp4Tests(unittest.TestCase):
                     (line[:69] + '\n' + lines[i + 1][:69]).encode(), expected_norad=None)
         satellite = None
         tested = 0
-        for line in (FIXTURES / 'tcppver.out').read_text().splitlines():
+        for line in (FIXTURES / 'tcppver.out').read_text(encoding='utf-8').splitlines():
             if line.endswith('xx'):
                 satellite = satellites.get(int(line.split()[0])); continue
             if satellite is None or not line.strip():
@@ -89,7 +89,7 @@ class OemTests(unittest.TestCase):
 
 class MagneticTests(unittest.TestCase):
     def test_independent_igrf13_reference(self):
-        reference = json.loads((FIXTURES/'igrf13_reference.json').read_text())
+        reference = json.loads((FIXTURES/'igrf13_reference.json').read_text(encoding='utf-8'))
         ts = load.timescale(builtin=True)
         for case in reference['cases']:
             when=utc(case['time_utc'])

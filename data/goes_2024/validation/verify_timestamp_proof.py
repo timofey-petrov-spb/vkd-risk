@@ -30,8 +30,8 @@ def verify(with_h5py: bool = False) -> dict:
     for name, expected in EXPECTED_SHA256.items():
         digest = hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
         require(digest == expected, f"SHA-256 mismatch: {name}")
-    proof = json.loads((ROOT / "timestamp-proof.json").read_text())
-    raw = json.loads((ROOT / proof["hapi_raw_path"]).read_text())
+    proof = json.loads((ROOT / "timestamp-proof.json").read_text(encoding='utf-8'))
+    raw = json.loads((ROOT / proof["hapi_raw_path"]).read_text(encoding='utf-8'))
     require(proof["proof_version"] == "1.0", "Unknown proof version")
     require(proof["hapi_dataset"] == "goesp_part_flux_P5M", "Unexpected dataset")
     require(proof["crosscheck_sha256"] == EXPECTED_SHA256[proof["crosscheck_path"]],
