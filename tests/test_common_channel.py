@@ -97,7 +97,11 @@ def test_fon_daet_verdikt_i_obyavlennuyu_oblast(belts):
     for phrase in (PHRASE_NO_FORECAST, PHRASE_UNKNOWN_IN_WINDOW):
         assert phrase in r.scope_ru, (phrase, r.scope_ru)
         assert phrase in r.scope_detail_ru
-    assert 'фон по наблюдению' in r.scope_ru and 'ниже S1' in r.scope_ru
+    assert 'фон по наблюдению' in r.scope_ru
+    # Числа уровня и давности стоят у самой величины, а не повторяются в области вывода:
+    # оперативный блок вердикта ограничен по длине, и дублировать в нём карточку фактора нельзя.
+    f = next(x for a in A for m in a.mechanisms for x in m.factors if x.name.startswith('поток протонов GOES'))
+    assert 'ниже S1' in f.limits_note and 'давность' in f.limits_note
     facts = dict(r.scope_facts)
     assert 'общие каналы, окна не различающие' in facts
     # канал объявлен общим у КАЖДОГО окна: он одинаков для них по построению
@@ -122,7 +126,7 @@ def test_uroven_vyshe_fona_eto_uslovie_vsem_oknam_a_ne_otkaz(belts):
     for a in A:                                       # условие стоит у КАЖДОГО окна, а не у первого
         conds = [c for m in a.mechanisms for c in m.conditions if c.kind == 'GOES']
         assert conds, a.window.start_utc
-    assert 'ВЫШЕ фона' in r.scope_ru
+    assert 'выше фона, условие проверки поставлено всем окнам' in r.scope_ru
     assert proton_channel_state(goes(20.0), T0, th)[0] == 'above_background'
 
 
@@ -174,7 +178,7 @@ def test_bez_vypuska_NOAA_pravilo_vsyo_ravno_srabatyvaet(belts):
     r = recommend(A, th)
     assert r.verdict != 'insufficient'
     assert PHRASE_NO_FORECAST in r.scope_ru
-    assert 'выпуска NOAA с суточной вероятностью протонного события на это окно нет' in r.scope_ru
+    assert 'выпуска NOAA с суточной вероятностью нет' in r.scope_ru
     assert 'на вывод это не влияет' in r.scope_ru
 
 
@@ -185,8 +189,8 @@ def test_sutochnaya_veroyatnost_pechataetsya_kak_est_i_ne_pereschityvaetsya(belt
     A, th = _windows(belts, goes(0.2), forecasts=(_daily(1.0),))
     r = recommend(A, th)
     assert r.verdict != 'insufficient'
-    assert 'ЗА СУТКИ' in r.scope_ru, r.scope_ru
-    assert 'в вероятность за окно она не пересчитывается' in r.scope_ru
+    assert 'СУТОЧНАЯ' in r.scope_ru, r.scope_ru
+    assert 'в вероятность за окно не пересчитывается' in r.scope_ru
     # число напечатано тем же, каким пришло: 1 % суток не превращается в 0,25 % за шестичасовое окно
     assert '1 %' in r.scope_ru
     assert '0,25' not in r.scope_ru and '0.25' not in r.scope_ru

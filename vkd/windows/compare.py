@@ -129,30 +129,28 @@ def proton_channel_state(goes: Optional[EnvironmentSample], now_utc, th: Thresho
     return ('background' if goes.value < S1_PFU else 'above_background'), age_min
 
 
-def proton_channel_common_ru(goes: EnvironmentSample, state: str, age_min: float,
-                             th: Thresholds, daily_ru: str = '') -> str:
+def proton_channel_common_ru(goes: EnvironmentSample, state: str, daily_ru: str = '') -> str:
     """Фраза объявленной области для ОБЩЕГО канала протонных событий (R14).
 
     Отвечает ровно на то, о чём вывод молчать не имеет права: что именно не сравнивается,
-    почему это не лечится данными, каков уровень последнего наблюдения и его время, и что
-    наличие события ВНУТРИ окна остаётся неизвестным. Ни одна вероятность здесь не
+    почему это не лечится данными, каков уровень последнего наблюдения и когда оно сделано, и
+    что наличие события ВНУТРИ окна остаётся неизвестным. Ни одна вероятность здесь не
     пересчитывается: суточная величина источника печатается суточной (см. `proton_daily_ru`).
+
+    Фраза КОРОТКАЯ намеренно. Она стоит на оперативном уровне рядом с вердиктом, где на весь
+    блок отведено 1250 знаков (`tests/test_ui_app.py`), и длинная версия этот бюджет съедала.
+    Числа, которых здесь нет, никуда не делись и не «упрощены»: уровень в pfu, давность и
+    предел стоят у самой величины — в карточке фактора «поток протонов GOES ≥10 МэВ», в её
+    ограничениях, в отчёте и в снимке. Повторять их в области вывода незачем.
     """
     head = ('протонные события в сравнение не входят — прогноза потока с разрешением по окну '
             'не существует ни у одного источника; ')
     tail = '; наличие события внутри окна неизвестно'
-    # Уровень подставляется БЕЗ вложенной скобки: s_level_ru сам печатает «фон (ниже S1)», и в
-    # шаблоне «наблюдение (… %s, давность …)» получалась скобка в скобке (находка пятого круга).
     if state == 'background':
-        body = ('на момент расчёта фон по наблюдению %s — %s pfu, ниже S1 = %s pfu, давность %.0f мин '
-                'при пределе %.0f мин; канал одинаков для всех сравниваемых окон и их не различает'
-                % (goes.t_utc.strftime('%H:%MZ'), fmt_ru(float(goes.value)), fmt_ru(S1_PFU),
-                   age_min, th.goes_max_age_min))
+        body = 'на момент расчёта фон по наблюдению %s' % goes.t_utc.strftime('%H:%MZ')
     else:
-        body = ('последнее наблюдение %s ВЫШЕ фона — %s pfu, уровень %s, давность %.0f мин при пределе '
-                '%.0f мин: обстановка уже нештатная, условие проверки поставлено всем сравниваемым окнам'
-                % (goes.t_utc.strftime('%H:%MZ'), fmt_ru(float(goes.value)), s_level_ru(goes.value),
-                   age_min, th.goes_max_age_min))
+        body = ('последнее наблюдение %s выше фона, условие проверки поставлено всем окнам'
+                % goes.t_utc.strftime('%H:%MZ'))
     return head + body + tail + daily_ru
 
 
@@ -171,10 +169,10 @@ def proton_daily_ru(forecasts: Sequence[EnvironmentSample], win: Window,
                      win.start_utc, win.duration_min)
     val = max((s.value for s in hits if s.value is not None), default=None)
     if val is None:
-        return ('; выпуска NOAA с суточной вероятностью протонного события на это окно %s — '
-                'на вывод это не влияет' % ('до отсечки нет' if cutoff_utc is not None else 'нет'))
-    return ('; по выпуску NOAA вероятность события S1 и выше %s %% ЗА СУТКИ — это суточная величина '
-            'источника, в вероятность за окно она не пересчитывается' % fmt_ru(float(val)))
+        return ('; выпуска NOAA с суточной вероятностью %s — на вывод это не влияет'
+                % ('до отсечки нет' if cutoff_utc is not None else 'нет'))
+    return ('; суточная вероятность S1 по NOAA %s %% — она СУТОЧНАЯ и в вероятность за окно '
+            'не пересчитывается' % fmt_ru(float(val)))
 
 
 def _goes_cells_in_window(goes_observations: Sequence[EnvironmentSample], start: datetime, end: datetime) -> list:
@@ -744,7 +742,7 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
             # механизма, а не в «чего не хватает». Суточная вероятность NOAA дописывается как
             # есть и в вероятность за окно не пересчитывается; её отсутствие правилу не мешает.
             declared_common.append(proton_channel_common_ru(
-                goes, proton_state, age_min, th, proton_daily_ru(forecasts, win, cutoff_utc)))
+                goes, proton_state, proton_daily_ru(forecasts, win, cutoff_utc)))
     elif any(e.kind_of_event == 'SEP' and e.published_utc is not None for e in events):
         # архива GOES нет, но есть датированные уведомления о протонных событиях: частичное покрытие канала
         goes_cov = Coverage.PARTIAL
