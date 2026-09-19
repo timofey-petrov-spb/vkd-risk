@@ -258,6 +258,11 @@ var R_E = 6371.0;
 var scene, camera, renderer, globe, texInfo = "текстура загружается…", maxTex = 0;
 var camR = 2.9, camLat = 0.30, camLon = 0.6, dragging = false, px = 0, py = 0, idle = 0;
 var spinning = true, lastFrame = 0;
+/* Инерция вращения: скорость, набранная перетаскиванием, затухает по экспоненте.
+   DAMP = 2.2 1/с — скорость падает вдвое примерно за 0,3 с, шар не «улетает».
+   V_MAX ограничивает рывок, чтобы резкое движение мышью не раскручивало сцену. */
+var vLon = 0, vLat = 0, lastMove = 0;
+var DAMP = 2.2, V_MAX = 3.0, V_STOP = 1e-4;
 
 function fail(title, body) {
   var e = document.getElementById("err");
@@ -443,14 +448,31 @@ function status() {
 
 function bind() {
   var el = renderer.domElement;
-  el.addEventListener("mousedown", function (e) { dragging = true; px = e.clientX; py = e.clientY; idle = 0; });
-  window.addEventListener("mouseup", function () { dragging = false; });
-  window.addEventListener("mousemove", function (e) {
+  function grab(x, y) {
+    dragging = true; px = x; py = y; idle = 0;
+    vLon = 0; vLat = 0;                       /* захват гасит инерцию: шар слушается руки сразу */
+    lastMove = performance.now();
+  }
+  function move(x, y) {
     if (!dragging) return;
-    camLon -= (e.clientX - px) * 0.005;
-    camLat = Math.max(-1.4, Math.min(1.4, camLat + (e.clientY - py) * 0.005));
-    px = e.clientX; py = e.clientY; idle = 0;
-  });
+    var dLon = -(x - px) * 0.005, dLat = (y - py) * 0.005;
+    camLon += dLon;
+    camLat = Math.max(-1.4, Math.min(1.4, camLat + dLat));
+    var now = performance.now(), dt = Math.max(0.008, (now - lastMove) / 1000);
+    vLon = Math.max(-V_MAX, Math.min(V_MAX, dLon / dt));
+    vLat = Math.max(-V_MAX, Math.min(V_MAX, dLat / dt));
+    px = x; py = y; idle = 0; lastMove = now;
+  }
+  el.addEventListener("mousedown", function (e) { grab(e.clientX, e.clientY); });
+  window.addEventListener("mouseup", function () { dragging = false; });
+  window.addEventListener("mousemove", function (e) { move(e.clientX, e.clientY); });
+  el.addEventListener("touchstart", function (e) {
+    if (e.touches.length === 1) { grab(e.touches[0].clientX, e.touches[0].clientY); }
+  }, {passive: true});
+  window.addEventListener("touchend", function () { dragging = false; });
+  el.addEventListener("touchmove", function (e) {
+    if (dragging && e.touches.length === 1) { e.preventDefault(); move(e.touches[0].clientX, e.touches[0].clientY); }
+  }, {passive: false});
   el.addEventListener("wheel", function (e) {
     e.preventDefault();
     camR = Math.max(1.35, Math.min(8, camR * (1 + (e.deltaY > 0 ? 0.08 : -0.08))));
@@ -472,6 +494,14 @@ function animate() {
   requestAnimationFrame(animate);
   var now = performance.now(), dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now; idle += dt;
+  if (!dragging && (Math.abs(vLon) > V_STOP || Math.abs(vLat) > V_STOP)) {
+    /* докат по инерции; пока он идёт, отсчёт покоя сброшен — автоповорот не вмешивается */
+    camLon += vLon * dt;
+    camLat = Math.max(-1.4, Math.min(1.4, camLat + vLat * dt));
+    var k = Math.exp(-DAMP * dt);
+    vLon *= k; vLat *= k;
+    idle = 0;
+  }
   if (spinning && !dragging && idle > 1.5) camLon += dt * 0.035;   /* около 2 градусов в секунду */
   camera.position.set(camR * Math.cos(camLat) * Math.sin(camLon), camR * Math.sin(camLat),
                       camR * Math.cos(camLat) * Math.cos(camLon));
