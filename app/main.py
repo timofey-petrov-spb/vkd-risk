@@ -118,6 +118,10 @@ with st.sidebar:
         sc_kp = st.slider('Kp при скачке', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
+    if mode == 'history_forecast':
+        if sc_delay or sc_sep_on or sc_kp_on:
+            st.info('Сценарий «Что если» отключён для строгого прогноза. Для моделирования выберите исторический разбор или текущую обстановку.')
+        scenario = Scenario('none')
     TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
     if pro:
         with st.expander('Пороги и настройки', expanded=False):
@@ -153,16 +157,15 @@ if mode == 'live' and auto_min:
 
 # ================================================================= расчёт: один снимок на рендер
 @st.cache_data(ttl=300, show_spinner=False)
-def _fetch_all(dis_goes: bool, dis_kp: bool, nonce: int):
+def _fetch_all(dis_goes: bool | str, dis_kp: bool | str, nonce: int):
     """Кеш 5 мин против повторных запросов при каждом движении ползунка; nonce — счётчик обновления сессии."""
     return goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False)
 
 
 horizon_min = search_min + duration_min
-if mode != 'live' and t0 + timedelta(minutes=horizon_min) > ARCHIVE_TO:
-    st.warning('Горизонт до %s UTC выходит за границу архива 30.06.2024 — покрытие обязательной линии за пределами архива '
-               'отсутствует, рекомендации не будет. Сократите период поиска или длительность либо выберите более раннюю дату.'
-               % (t0 + timedelta(minutes=horizon_min)).strftime('%d.%m.%Y %H:%M'))
+if mode != 'live' and t0 + timedelta(minutes=horizon_min + scenario.work_delay_min) > ARCHIVE_TO:
+    st.warning('Горизонт выходит за основной период кейса (май–июнь 2024). Покрытие проверяется по фактическим '
+               'интервалам каждого источника; наличие нескольких соседних суток не гарантирует полноту всех линий.')
 try:                              # границы постановки проверяются до любого запроса (Т7): сообщение зрителю, расчёта нет
     validate_request(mode, t0, duration_min, search_min, offsets)
 except ValueError as e:
@@ -171,7 +174,7 @@ except ValueError as e:
 try:
     if mode == 'live':
         with st.spinner('Источники: GOES, Kp, TLE — до 6 с на адрес при живом запросе, затем резервы и кеш…'):
-            fetched = _fetch_all(bool(disabled['goes']), bool(disabled['kp']), int(st.session_state['fetch_nonce']))
+            fetched = _fetch_all(disabled['goes'], disabled['kp'], int(st.session_state['fetch_nonce']))
     else:
         fetched = None            # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
     with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
@@ -403,16 +406,22 @@ with tabs[3]:
         if obs_fig is not None:
             st.plotly_chart(obs_fig, width='stretch')
             st.caption('Наблюдения источников за последние дни, не расчёт. Пороги — шкалы NOAA S и G; GOES меряет на '
-                       'геостационарной орбите и переносится на станцию только через геомагнитное обрезание.')
+                       'геостационарной орбите. Обрезание показано отдельно; локальный поток на МКС не рассчитывается.')
         else:
             st.write('Рядов наблюдений нет: источники отключены или недоступны.')
     else:
+        archive_goes = S.get('history', {}).get('goes_observations', [])
+        if archive_goes:
+            st.scatter_chart([{'UTC': datetime.fromisoformat(x['t_utc']), 'GOES ≥10 МэВ, pfu': x['value']}
+                              for x in archive_goes], x='UTC', y='GOES ≥10 МэВ, pfu')
+            st.caption('Исторический разбор: наблюдённые 5-минутные средние GOES iSWA. Пропуски не заполняются; '
+                       'время исторической публикации неизвестно, в строгом прогнозе этот ряд не используется.')
         fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min)
         if fc_fig is not None:
             st.plotly_chart(fc_fig, width='stretch')
         for line in S.get('forecasts', []):
             if line['release_id']:
-                u = (R.raw_records.get(line['record']) or {}).get('url') if line.get('record') else None
+                u = (R.raw_records.get(line['record']) or {}).get('metadata', R.raw_records.get(line['record']) or {}).get('url') if line.get('record') else None
                 pub = (line['published_utc'] or '')[:16].replace('T', ' ')
                 rel = ('[выпуск от %s UTC](%s)' % (pub, u)) if u else 'выпуск от %s UTC' % pub
             else:

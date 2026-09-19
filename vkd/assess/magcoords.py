@@ -23,6 +23,7 @@ from functools import lru_cache
 
 import numpy as np
 import ppigrf
+from skyfield.api import wgs84
 
 from vkd.types import MagMethod, TrajectoryPoint
 
@@ -68,9 +69,8 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
     axis, B_eq, off = eccentric_dipole(coeff_path, when)
     out, n_incons, n_nomodel = [], 0, 0
     for p in points:
-        la, lo = math.radians(p.lat_deg), math.radians(p.lon_deg)
-        r_re = (R_E_KM + p.alt_km) / R_E_KM
-        pos = r_re * np.array([math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)]) - off
+        # A3 supplies geodetic WGS84 latitude and ellipsoidal height.
+        pos = wgs84.latlon(p.lat_deg, p.lon_deg, elevation_m=p.alt_km*1000).itrs_xyz.km / R_E_KM - off
         rr = float(np.linalg.norm(pos))
         s = float(np.dot(pos / rr, axis))
         cos2 = 1.0 - s * s
@@ -84,7 +84,7 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
         status = 'approximation' if ratio >= 1.0 else 'inconsistent_BB0'
         n_incons += status == 'inconsistent_BB0'
         out.append(replace(p, L=L, B_over_B0=ratio, mag_method=MagMethod.DIPOLE, mag_status=status))
-    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(),
+    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(), 'position_conversion': 'WGS84 geodetic to ECEF',
                  'offset_km': [float(x) * R_E_KM for x in off], 'B_eq_nT': B_eq, 'n': len(points),
                  'n_inconsistent_BB0': n_incons, 'n_outside_model': n_nomodel,
                  'note': 'L и B0 от смещённого центра диполя (Fraser-Smith 1987), B — полный IGRF точки (A3); '

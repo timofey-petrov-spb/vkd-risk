@@ -187,6 +187,11 @@ def _traj_line(tm: dict) -> str:
 
 def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
     buf = io.BytesIO()
+    import hashlib
+    raw_files = {rid: 'raw/%s_%s.json' % (rid.replace('/', '_').replace('#', '_').replace(':', '-'), hashlib.sha256(rid.encode()).hexdigest()[:8]) for rid in raw_records}
+    # Retain the legacy TLE name for tools that read this one well-known payload.
+    if 'iss.tle' in raw_files:
+        raw_files['iss.tle'] = 'raw/iss.tle.json'
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('report.md', report_md(S))
         z.writestr('request.json', _j(S['request']))
@@ -200,8 +205,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('manifest.json', _j({
             'schema_version': S.get('schema_version'), 'algorithm_version': S['algorithm_version'],
             'computed_utc': S['computed_utc'], 'mode': S.get('mode_id', S['mode']),
+            'raw_record_files': raw_files,
             'cutoff_utc': S['request'].get('cutoff_utc'), 'is_simulated': S.get('is_simulated', False),
-            'source_versions': S['sources'], 'raw_record_ids': sorted(raw_records),
+            'source_versions': S.get('source_versions', {}),
+            'coverage_map': S.get('coverage_map', {}), 'raw_record_ids': sorted(raw_records),
             'effective_config': S.get('effective_config') or {'thresholds': S['request']['thresholds']},
             'excluded_by_cutoff': S.get('history', {}).get('excluded_by_cutoff', []),
             'events_used': S.get('history', {}).get('events_used', []),
@@ -209,5 +216,5 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))
         for rid, rec in raw_records.items():
-            z.writestr('raw/%s.json' % rid.replace('/', '_').replace('#', '_').replace(':', '-'), _j(rec))
+            z.writestr(raw_files[rid], _j(rec))
     return buf.getvalue()

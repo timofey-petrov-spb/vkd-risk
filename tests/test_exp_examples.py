@@ -57,14 +57,23 @@ def test_snapshot_and_zip_agree_and_manifest_is_versioned(path):
         man = json.loads(z.read('manifest.json').decode('utf-8'))
         rec = json.loads(z.read('recommendation.json').decode('utf-8'))
         names = z.namelist()
-        goes = (json.loads(z.read(next(n for n in names if n.startswith('raw/goes_p10_'))).decode('utf-8'))
-                if any(n.startswith('raw/goes_p10_') for n in names) else None)
+        raw = [json.loads(z.read(n)) for n in names if n.startswith('raw/') and n.endswith('.json')]
+        goes = next((r for r in raw if r.get('metadata', {}).get('source_id') == 'noaa_swpc_goes'), None)
+        if goes is None:
+            goes = (json.loads(z.read(next(n for n in names if n.startswith('raw/goes_p10_'))).decode('utf-8'))
+                    if any(n.startswith('raw/goes_p10_') for n in names) else None)
     assert man['algorithm_version'] == S['algorithm_version'] and man['git_commit']
     assert rec == S['recommendation']
     if S['mode_id'] == 'live':
         # текущий режим воспроизводим только с сырыми записями источников
-        assert goes is not None and 'raw/iss.tle.json' in names
-        assert goes.get('url') and 'fetched_basis' in goes
+        assert 'raw/iss.tle.json' in names
+        if S['sources']['noaa_swpc_goes'].get('data_utc') is not None:
+            assert goes is not None
+        if goes is not None:
+            if 'metadata' in goes:
+                assert goes['metadata']['url'] and goes['content_base64']
+            else:
+                assert goes.get('url') and 'fetched_basis' in goes
 
 
 def test_index_names_t5_pair_and_lists_every_example():

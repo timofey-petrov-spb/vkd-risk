@@ -58,36 +58,28 @@ def test_tolerance_is_spread_of_difference_and_consistent_with_grid():
 
 
 def test_future_archive_records_do_not_change_strict_snapshot(monkeypatch):
-    """CONTRACT §8, строки 1–2, на уровне app.compute.run: дописанные в архив уведомление GST (19:30 10.05, Kp 9),
-    прогон ENLIL с завершением после отсечки и наблюдение Kp за 11.05 не меняют строгий снимок 19:00 10.05
-    и попадают в список исключённых отсечкой."""
-    import experiments.stub_history as sh
+    """Inject an actual late provider release at the real A2 registry boundary."""
+    import vkd.history.bundle as hb
+    from vkd.sources.registry import SourceRegistry
     from tests.test_integration import _fetched
-    t0 = datetime(2024, 5, 10, 19, 0, tzinfo=timezone.utc)
+    reg = SourceRegistry(ROOT)
+    sid = 'nasa_donki_notification'
+    late = next(r for r in reg.records(sid) if r['release_id'] == '20240510-AL-004')
+    class FilteredRegistry:
+        source_ids = reg.source_ids
+        def records(self, source):
+            return [r for r in reg.records(source) if r['raw_record_id'] != late['raw_record_id']]
+        def raw_bytes(self, rid):
+            return reg.raw_bytes(rid)
+    t0 = datetime(2024, 5, 10, 12, tzinfo=timezone.utc)
+    monkeypatch.setattr(hb, '_registry', lambda root, supplied: FilteredRegistry())
     before = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
-    orig_load = sh._load
-
-    def patched(kind):
-        data = [dict(x) for x in orig_load(kind)]
-        if kind == 'gst':
-            data.append({'gstID': '2024-05-10T19:00:00-GST-999', 'startTime': '2024-05-10T19:00Z', 'versionId': 1,
-                         'submissionTime': '2024-05-10T19:30Z',
-                         'allKpIndex': [{'observedTime': '2024-05-11T00:00Z', 'kpIndex': 9.0, 'source': 'NOAA'}],
-                         'sentNotifications': [{'messageID': '20240510-AL-999', 'messageIssueTime': '2024-05-10T19:30Z',
-                                                'messageURL': 'https://example.invalid/999'}]})
-        if kind == 'cme':
-            data.append({'activityID': '2024-05-10T19:00:00-CME-999', 'startTime': '2024-05-10T19:00Z',
-                         'cmeAnalyses': [{'submissionTime': '2024-05-10T20:00Z', 'speed': 1500.0,
-                                          'enlilList': [{'modelCompletionTime': '2024-05-10T21:00Z', 'estimatedShockArrivalTime': '2024-05-10T23:00Z',
-                                                         'estimatedDuration': 6.0, 'kp_90': 9.0, 'kp_180': 9.0, 'isEarthGB': False}]}]})
-        return data
-    monkeypatch.setattr(sh, '_load', patched)
+    monkeypatch.setattr(hb, '_registry', lambda root, supplied: reg)
     after = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
-    assert _strip(before.S)['windows'] == _strip(after.S)['windows']
+    assert before.S['windows'] == after.S['windows']
     assert before.S['recommendation'] == after.S['recommendation']
-    ex = ' '.join(after.excluded)
-    assert 'donki_msg#20240510-AL-999' in ex and 'donki_enlil#2024-05-10T19:00:00-CME-999' in ex and '2024-05-11T00:00' in ex
-    assert not any('999' in e.event_id for e in after.events)
-    # в разборе (без отсечки) новые записи, напротив, видны — режимы различимы
+    assert any(late['raw_record_id'] in s and 'not_available_at_cutoff' in s for s in after.excluded)
+    assert not any(e.raw_record_id == late['raw_record_id'] for e in after.events)
+    assert late['raw_record_id'] not in after.raw_records
     review = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
-    assert any('999' in e.event_id for e in review.events)
+    assert any(e.raw_record_id == late['raw_record_id'] for e in review.events)

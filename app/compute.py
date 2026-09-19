@@ -17,10 +17,13 @@ run(params) собирает один снимок расчёта. Его исп
 from __future__ import annotations
 
 import io
+import base64
+import hashlib
+from copy import deepcopy
 import json
 import os
 import re
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -30,15 +33,16 @@ from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
+from vkd.integration.manifest import collect_records
 from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
-from vkd.types import SCHEMA_VERSION, Window
+from vkd.types import SCHEMA_VERSION, Request, Window
 from vkd.windows.compare import Thresholds, assess_window, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
 try:
-    from vkd.sources import goes_latest, kp_latest, tle_latest   # type: ignore  # A4 — когда появится
+    from vkd.sources import Fetch, goes_latest, kp_latest, tle_latest   # type: ignore  # A4 — когда появится
     SRC_LAYER = 'vkd.sources'
 except ImportError:
     from experiments.stub_sources import Fetch, goes_latest, kp_latest, tle_latest
@@ -51,7 +55,7 @@ except ImportError:
     HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.5.0'      # 19.09: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ, строгая отсечка карточек SEP
+ALGO_VERSION = '0.6.0'      # 19.09: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ, строгая отсечка карточек SEP
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -94,9 +98,9 @@ def validate_request(mode: str, t0: datetime, duration_min: int, search_min: int
         raise ValueError('неизвестный режим %r; допустимы %s' % (mode, ', '.join(MODES)))
     if not isinstance(t0, datetime) or t0.tzinfo is None or t0.utcoffset() is None:
         raise ValueError('начало периода t0 должно быть datetime с часовым поясом (UTC)')
-    if not (DURATION_MIN_RANGE[0] <= int(duration_min) <= DURATION_MIN_RANGE[1]):
+    if type(duration_min) is not int or not (DURATION_MIN_RANGE[0] <= int(duration_min) <= DURATION_MIN_RANGE[1]):
         raise ValueError('длительность ВКД %s мин вне границ постановки %d…%d мин' % (duration_min, *DURATION_MIN_RANGE))
-    if not (0 <= int(search_min) <= SEARCH_MIN_MAX):
+    if type(search_min) is not int or not (0 <= int(search_min) <= SEARCH_MIN_MAX):
         raise ValueError('период поиска начала %s мин вне границ постановки 0…%d мин' % (search_min, SEARCH_MIN_MAX))
     offs = list(window_offsets_min)
     if not (WINDOWS_RANGE[0] <= len(offs) <= WINDOWS_RANGE[1]):
@@ -104,7 +108,7 @@ def validate_request(mode: str, t0: datetime, duration_min: int, search_min: int
     if len(set(offs)) != len(offs):
         raise ValueError('сдвиги окон должны различаться: одинаковые окна сравнивать бессмысленно (%s)' % offs)
     for o in offs:
-        if not (0 <= int(o) <= int(search_min)):
+        if type(o) is not int or not (0 <= int(o) <= int(search_min)):
             raise ValueError('сдвиг окна %s мин вне периода поиска 0…%s мин' % (o, search_min))
 
 
@@ -162,7 +166,7 @@ def _with_sep_levels(events: list) -> list:
 
 
 def _empty_fetch(source_id: str, why: str):
-    return Fetch(source_id, None, None, None, None, why, None, None) if 'Fetch' in globals() else None
+    return Fetch(source_id, None, None, None, None, why, None, None)
 
 
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
@@ -174,14 +178,21 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     строится по сохранённому TLE, а не по текущему (Т8). В исторических режимах орбита
     берётся из архива OEM (A1/A3) и от TLE не зависит; живые источники не вызываются."""
     validate_request(mode, t0, duration_min, search_min, window_offsets_min)
-    disabled = disabled or {'goes': False, 'kp': False}
+    t0 = t0.astimezone(timezone.utc)
+    disabled = {'goes': False, 'kp': False, **(disabled or {})}
     th = thresholds or Thresholds.from_settings()
     scenario = scenario or Scenario('none')
     now = now or datetime.now(timezone.utc)
     ref_now = now if mode == 'live' else t0          # момент, от которого считаются давности: в истории — t0
     cutoff_utc = t0 if mode == 'history_forecast' else None
     horizon_min = search_min + duration_min
+    if type(scenario.work_delay_min) is not int or not 0 <= scenario.work_delay_min <= 180:
+        raise ValueError('задержка работ должна быть целым числом минут 0…180')
+    orbit_start = t0 + timedelta(minutes=scenario.work_delay_min)
     is_sim = bool(scenario.work_delay_min or scenario.sep_onset_offset_min is not None or scenario.kp_override is not None)
+
+    if mode == 'history_forecast' and is_sim:
+        raise ValueError('сценарий Что если нельзя выдавать за строгий прогноз из прошлого')
 
     # ------------------------------------------------------------ источники
     if mode == 'live':
@@ -206,13 +217,28 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs, verification = [], {}, [], [], {}, [], [], None
     catalog = None
+    history_proof = {}
+    goes_observations = None
     kp_src_note = None
     if mode != 'live':
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
         catalog = (c0, c1)
-        h_samples, h_events, hist_raw = history_bundle()
+        request = Request(mode, t0, duration_min, search_min, cutoff_utc,
+                          work_delay_min=scenario.work_delay_min)
+        h_samples, h_events, hist_raw = history_bundle(request)
+        history_proof = hist_raw.get('_history', {})
         cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
-        excluded = list(cut.excluded)
+        excluded = list(cut.excluded) + [
+            '%s: %s' % (x['raw_record_id'], x['reason'])
+            for x in history_proof.get('excluded', [])]
+        if mode == 'history_review':
+            goes_observations = [s for s in cut.samples if s.channel_id == 'goes_p_ge10MeV']
+            if disabled.get('goes') == 'off':
+                goes_observations = []
+            prior_goes = [s for s in goes_observations if (s.valid_to_utc or s.t_utc) <= t0]
+            goes = max(prior_goes, key=lambda s: s.t_utc, default=None)
+            goes_raw = {s.raw_record_id: hist_raw[s.raw_record_id] for s in goes_observations}
+
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
         kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and disabled.get('kp') != 'off') else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
@@ -224,7 +250,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                            else 'разбор: наблюдений Kp в архиве (ряд GFZ %s — %s, резерв — карточки GST DONKI) до %s нет' % (
                                DONKI_ARCHIVE_DEFAULT[0].strftime('%d.%m.%Y'), (DONKI_ARCHIVE_DEFAULT[1] - timedelta(minutes=1)).strftime('%d.%m.%Y'),
                                t0.strftime('%Y-%m-%d %H:%MZ')))
-        if mode == 'history_review':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
+        if mode == 'history_review' and disabled.get('kp') != 'off':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
             kp_obs = sorted({(s.valid_from_utc, s.valid_to_utc, s.value) for s in h_samples
                              if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
                              and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min + 180)})
@@ -235,18 +261,21 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             if a0 is None:
                 return True
             a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=th.sep_valid_hours))
-            return a0 <= t0 + timedelta(minutes=horizon_min) and a1 >= t0 - timedelta(hours=6)
+            return a0 <= orbit_start + timedelta(minutes=horizon_min) and a1 >= t0 - timedelta(hours=6)
         events = [e for e in cut.events if _touches(e)]
         # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
-        fc_lines, fc_raw = noaa_forecasts(t0, t0, t0 + timedelta(minutes=horizon_min))
+        fc_lines, fc_raw = noaa_forecasts(t0, orbit_start, orbit_start + timedelta(minutes=horizon_min))
         forecasts = [s for line in fc_lines for s in line.samples]
         if mode == 'history_forecast':
             # проверка после отсечки: что наблюдалось потом — В РАСЧЁТ НЕ ВХОДИТ, только сопоставление (Т4, О6)
-            h_end = t0 + timedelta(minutes=horizon_min)
-            kp_after = sorted({(s.valid_from_utc, s.valid_to_utc, s.value, s.raw_record_id) for s in h_samples
+            h_end = orbit_start + timedelta(minutes=horizon_min)
+            # Separate retrospective data. Never overwrite the strict input bundle.
+            verification_samples, verification_events, _ = history_bundle(
+                replace(request, mode='history_review', cutoff_utc=None))
+            kp_after = sorted({(s.valid_from_utc, s.valid_to_utc, s.value, s.raw_record_id) for s in verification_samples
                                if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
                                and s.valid_to_utc > t0 and s.valid_from_utc < h_end})
-            ev_after = [e for e in h_events if e.published_utc and e.published_utc > cutoff_utc and e.published_utc <= h_end
+            ev_after = [e for e in verification_events if e.published_utc and e.published_utc > cutoff_utc and e.published_utc <= h_end
                         and e.kind_of_event in ('SEP', 'GST')]
             first_storm = next(((a, v) for a, b, v, _ in kp_after if v >= th.kp_check), None)
             kp_max = max((v for _, _, v, _ in kp_after), default=None)
@@ -267,22 +296,24 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                 'summary': summary,
             }
         events = _with_sep_levels(events)
+    if disabled.get('goes') == 'off':
+        goes_observations = []
     kp = simulated_kp(kp, t0, scenario)
     events = events + simulated_events(t0, scenario)
 
     # ------------------------------------------------------------ траектория (A3 через мост Б)
-    if tle_override_path:
+    if tle_override_path and mode == 'live':
         tle_text = open(tle_override_path, encoding='utf-8').read()
         f_tle = replace(f_tle, status_ru='TLE из сохранённого расчёта (воспроизведение)', ok=False, from_cache=True)
     tle_fetched = getattr(f_tle, 'fetched_utc', None)
     # момент расчёта в текущем режиме — не раньше момента получения TLE: иначе A3 честно ставит
     # «реконструкция» рядом со статусом «строго» (Т2)
     live_cutoff = max(now, t0, tle_fetched) if tle_fetched else max(now, t0)
-    orb = build_orbit(mode, t0, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
+    orb = build_orbit(mode, orbit_start, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
                       tle_fetched_utc=tle_fetched, tle_available_utc=tle_fetched,
                       tle_url=(getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN),
                       tle_evidence=getattr(f_tle, 'status_ru', ''), max_tle_age_days=th.tle_max_age_days,
-                      cutoff_utc=(cutoff_utc if mode != 'live' else live_cutoff))
+                      cutoff_utc=(t0 if mode != 'live' else live_cutoff))
     meta = orb.meta
     # координаты для таблиц ОСТ — эксцентричный диполь (Б): центральный диполь A3 в ядре аномалии
     # даёт L ниже сетки и нулевой поток на всей трассе (см. vkd/assess/magcoords.py); |B| — от A3
@@ -323,11 +354,15 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
 
     mmod = {w.start_utc: _mmod(w) for w in windows}      # один раз на окно
 
+    event_facts = {rid: meta.get('content_audit', {}).get('facts', {})
+                   for records in history_proof.get('source_versions', {}).values() for rid, meta in records.items()}
+
     def _assess(w, tr, th_i):
         return assess_window(w, tr, belts, goes, kp, [], th_i, ref_now, events=events, catalog_coverage=catalog,
                              mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1],
                              mmod_cov_fraction=mmod[w.start_utc][2], forecasts=forecasts,
-                             trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc)
+                             trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc,
+                             goes_observations=goes_observations, event_facts=event_facts)
 
     def _assess_all(tr, kw):
         th_i = replace(th, **kw)
@@ -366,7 +401,17 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                       'выбор устойчив' if rob.stable else 'ВЫБОР МЕНЯЕТСЯ на сетке'))
     samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
                **{s.raw_record_id: s for s in forecasts}}
-    cards_by_window = {a.window.start_utc: cards_for_window(a, samples, events=events, window_index=i + 1, meta=meta,
+    def window_samples(a):
+        current = dict(samples)
+        end = a.window.start_utc + timedelta(minutes=a.window.duration_min)
+        for sample in goes_observations or []:
+            if sample.valid_from_utc < end and sample.valid_to_utc > a.window.start_utc:
+                previous = current.get(sample.raw_record_id)
+                if previous is None or previous.value < sample.value:
+                    current[sample.raw_record_id] = sample
+        return current
+
+    cards_by_window = {a.window.start_utc: cards_for_window(a, window_samples(a), events=events, window_index=i + 1, meta=meta,
                                                             trajectory_ids=orbit_ids, cutoff_utc=cutoff_utc)
                        for i, a in enumerate(assessments)}
     cards = [c for a in assessments for c in cards_by_window[a.window.start_utc]]
@@ -374,11 +419,35 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     # ------------------------------------------------------------ снимок
     iso = lambda v: v.isoformat() if hasattr(v, 'isoformat') else v
     ev_raw = {e.raw_record_id: hist_raw[e.raw_record_id] for e in events if e.raw_record_id in hist_raw}
-    raw_records = {**(goes_raw or {}), **(kp_raw or {}), **ev_raw, **fc_raw,
+    raw_records = {**fc_raw, **{k:v for k,v in hist_raw.items() if k != '_history'},
+                   **(goes_raw or {}), **(kp_raw or {}), **ev_raw,
                    'orbit_provenance': orb.provenance}
     if mode == 'live':
+        if getattr(f_tle, 'raw', None) is not None:
+            from vkd.sources.live_cache import raw_record
+            raw_records.update(raw_record(f_tle))
         raw_records['iss.tle'] = {'text': tle_text, 'epoch_utc': iso(meta.epoch_utc) if meta and meta.epoch_utc else None,
                                   'fetch': getattr(f_tle, 'status_ru', None), 'url': getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN}
+
+    off_sources = ({'nasa_iswa_goes_primary_p5m', 'nasa_iswa_goes_primary_p5m_schema', 'noaa_swpc_goes'} if disabled.get('goes') == 'off' else set())
+    if disabled.get('kp') == 'off':
+        off_sources.add('gfz_kp_archive')
+    raw_records = {rid: item for rid, item in raw_records.items()
+                   if item.get('metadata', {}).get('source_id') not in off_sources}
+    history_proof['source_versions'] = {sid: records for sid, records in history_proof.get('source_versions', {}).items()
+                                        if sid not in off_sources}
+    for item in [e for e in events if e.is_simulated] + ([kp] if kp and kp.source_id == 'scenario' else []):
+        content = json.dumps(asdict(item), default=lambda v: iso(v), sort_keys=True).encode()
+        sha = hashlib.sha256(content).hexdigest()
+        raw_records[item.raw_record_id] = {'metadata': {'source_id': 'scenario', 'raw_record_id': item.raw_record_id,
+            'sha256': sha, 'version': 'sha256:'+sha, 'bytes': len(content), 'is_simulated': True,
+            'quality': 'model', 'published_utc': None, 'availability_proof': None},
+            'encoding': 'base64', 'content_base64': base64.b64encode(content).decode()}
+    coverage_map = deepcopy(history_proof.get('coverage_map', {}))
+    for key in list(coverage_map):
+        if (disabled.get('goes') == 'off' and key.startswith('goes_')) or (disabled.get('kp') == 'off' and key in ('kp:observations', 'gfz_kp_archive:observations')):
+            coverage_map[key] = {'status': 'disabled', 'coverage_fraction': 0.0, 'reason': 'explicitly_excluded_by_user'}
+    source_versions = collect_records(raw_records, history_proof.get('source_versions', {}), orb.provenance, belts, ROOT)
 
     def _src(f, role, sample=None):
         return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
@@ -401,13 +470,20 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         sources['gfz_kp'] = _src(f_kp, 'Kp', kp if (kp and kp.source_id != 'scenario') else None)
     else:
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
-        sources['noaa_swpc_goes'] = {'role': 'протоны ≥10 МэВ', 'status': 'архива наблюдений GOES за 2024 в реестре нет — канал без данных; '
-                                                                           'живой источник в историческом режиме отключён',
-                                     'live_ok': None, 'from_cache': None, 'origin': 'нет данных', 'fetched_utc': None, 'data_utc': None, 'age_min': None}
+        goes_status = ('строгий режим: публикация численного архива GOES в 2024 не доказана; '
+                       'архив доступен только для разбора' if mode == 'history_forecast' else
+                       'разбор: численный архив GOES iSWA, 5-минутные интервалы; качество инструмента неизвестно')
+        if disabled.get('goes') == 'off':
+            goes_status = 'источник исключён пользователем — данных нет'
+        sources['noaa_swpc_goes'] = {'role': 'протоны ≥10 МэВ', 'status': goes_status,
+            'live_ok': None, 'from_cache': None, 'origin': 'архив iSWA (GOES)' if goes_observations else 'нет допустимых наблюдений',
+            'fetched_utc': iso(goes.fetched_utc) if goes else None,
+            'data_utc': iso(goes.t_utc) if goes else None, 'age_min': None}
         kp_origin = {'gfz_kp_archive': 'архив GFZ (окончательный ряд Kp по 3-часовым интервалам, без времени публикации)',
-                     'nasa_donki_gst': 'архив DONKI (карточки GST)'}.get(kp.source_id if kp else '', 'архив (%s)' % kp.source_id if kp else 'нет данных')
+                     'nasa_donki_gst': 'архив DONKI (карточки GST)',
+                     'nasa_donki_notification': 'датированное уведомление DONKI'}.get(kp.source_id if kp else '', 'архив (%s)' % kp.source_id if kp else 'нет данных')
         sources['gfz_kp'] = {'role': 'Kp (в истории — окончательный ряд GFZ; резерв — карточки GST DONKI)',
-                             'status': (kp_src_note or 'разбор: Kp из %s, запись %s' % (kp_origin.split(' (')[0], kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
+                             'status': (kp_src_note or '%s: Kp из %s, запись %s' % ('строгий режим' if mode == 'history_forecast' else 'разбор', kp_origin.split(' (')[0], kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
                              else 'сценарий «что если»: моделируемое значение',
                              'live_ok': None, 'from_cache': None,
                              'origin': kp_origin if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
@@ -459,6 +535,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                     'thresholds': th.__dict__, 'disabled': disabled, 'cutoff_utc': cutoff_utc.isoformat() if cutoff_utc else None,
                     'T_months': T_months, 'scenario': scenario.__dict__ if is_sim else None},
         'effective_config': effective_config,
+        'source_versions': source_versions,
+        'coverage_map': coverage_map,
         'trajectory_meta': {**meta_dict, 'orbit_module': ORBIT_SRC, 'status': orb.status_ru, 'strictness': orb.strictness,
                             'error': orb.error, 'n_points': len(traj), 'provenance': provenance_summary(orb.provenance),
                             'belt_coordinates': belt_coords, 'record_ids': list(orbit_ids),
@@ -491,7 +569,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'is_simulated': is_sim,
         'history': {'provider': HIST_SRC if mode != 'live' else None, 'excluded_by_cutoff': excluded,
                     'catalog_coverage': ({'from_utc': iso(catalog[0]), 'to_utc': iso(catalog[1])} if catalog else None),
-                    'events_used': [{'id': e.event_id, 'kind': e.kind_of_event, 'published_utc': iso(e.published_utc),
+                    'adapter_version': history_proof.get('adapter_version'),
+                    'limitations': history_proof.get('limitations', []),
+                    'goes_observations': [{'t_utc': iso(s.t_utc), 'value': s.value,
+                        'valid_to_utc': iso(s.valid_to_utc), 'raw_record_id': s.raw_record_id}
+                        for s in (goes_observations or [])],
+                    'events_used': [{'id': e.event_id, 'raw_record_id': e.raw_record_id, 'source_id': e.source_id, 'kind': e.kind_of_event, 'published_utc': iso(e.published_utc),
                                      'start_utc': iso(e.start_utc), 'simulated': e.is_simulated} for e in events]},
         'verification': verification,
         'robustness': {'stable': rob.stable, 'ranking_stable': rob.ranking_stable, 'diff_spread_min': rob.diff_spread_min,
