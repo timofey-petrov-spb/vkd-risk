@@ -638,20 +638,23 @@ if _acc_target is None and scan_cand is None:
                         if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
                        (R.assessments[0] if R.assessments else None))
 _dose = dose_factor(_acc_target) if _acc_target is not None else None
-c_main, c_btn = st.columns([6, 1.5])
+# Блок ответа идёт ВО ВСЮ ШИРИНУ содержимого. Прежде он стоял в колонке 6 из 7,5, а справа
+# от него — кнопка отчёта, и главный элемент экрана читался как карточка сбоку, а не как ответ.
+# Кнопка переехала ПОД полосу решения: она нужна после ответа, а не рядом с ним.
 if scan is not None:
-    c_main.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
-                                         duration_min=duration_min, dose=_dose), unsafe_allow_html=True)
+    st.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
+                                     duration_min=duration_min, dose=_dose), unsafe_allow_html=True)
     if plan_change:
-        c_main.info(plan_change)
+        st.info(plan_change)
 else:
     # Перебора нет: на месте рекомендации стоит вердикт по вручную заданным окнам — ровно то,
     # что сервис действительно посчитал, — и одна строка о том, что перебор не выполнялся.
-    c_main.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
-                                  missing_ru=missing_ru, policy_short=policy_short,
-                                  thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
-                    unsafe_allow_html=True)
-    c_main.caption(scan_absent_ru())
+    st.markdown(verdict_panel(rec, S, windows_ru, assessments=R.assessments, pro=pro, plan_change=plan_change,
+                              missing_ru=missing_ru, policy_short=policy_short,
+                              thr_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, mode=mode),
+                unsafe_allow_html=True)
+    st.caption(scan_absent_ru())
+c_btn, _c_rest = st.columns([2, 6])
 c_btn.download_button('Скачать отчёт (ZIP)', _zip, file_name=_fname + '.zip', mime='application/zip', width='stretch', key='dl_top')
 c_btn.caption('отчёт, запрос, факторы, сырые записи')
 # Пункт 1 двенадцатого круга. Здесь стояла плашка «Проверка после отсечки»: владелец о ней —

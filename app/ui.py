@@ -3586,18 +3586,29 @@ def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None, dose=None) -> 
         rows.append(('Флюенс', fmt_fluence(flu),
                      'част./см²' + e_ru + (' · худшее %s' % fmt_fluence(w) if isinstance(w, (int, float)) else ''),
                      'calc'))
-    # Доза — третьим числом: из всех наших величин она понятнее человеку. Худшего значения
-    # рядом с ней нет и быть не может: дозу считает полная оценка окна, а перебор её не
-    # считает ни для одного другого начала. Пустое место честнее правдоподобного числа.
+    # Доза — ТРЕТЬИМ числом: из всех наших величин она понятнее человеку, и это воздействие,
+    # а не показатель процесса. Худшего значения рядом с ней нет и быть не может: дозу считает
+    # полная оценка окна, а перебор её не считает ни для одного другого начала. Пустое место
+    # честнее правдоподобного числа, и высчитывать дозу из отношения флюенсов запрещено.
     dv = getattr(dose, 'value', None)
     if isinstance(dv, (int, float)):
         _u = str(getattr(dose, 'unit', '') or '')
         rows.append(('Доза за защитой', fmt(dv), (_u + ' · скафандр 1 г/см²') if _u else 'скафандр 1 г/см²', 'calc'))
-    n = int(scan.get('n_candidates') or len(cands))
-    step = scan.get('step_min')
-    rows.append(('Перебрано начал', nbsp_thousands(n),
-                 ('шаг %s мин' % fmt(step)) if step else '', 'calc'))
+    # «Перебрано начал» в ряду крупных чисел не стоит: это доказательство того, что сервис искал,
+    # а не воздействие, и рядом с минутами и флюенсом оно читалось как четвёртая величина.
+    # Число никуда не делось — оно стоит мелкой строкой под рядом (`scan_searched_short_ru`).
     return [rows]
+
+
+def scan_searched_short_ru(scan: dict) -> str:
+    """«73 начала · шаг 10 мин» — доказательство поиска ярлыком, а не фразой.
+
+    Полная фраза со сроком поиска остаётся раскрытием в том же блоке и в выгрузке.
+    """
+    n = int(scan.get('n_candidates') or len(scan.get('candidates') or []))
+    step = scan.get('step_min')
+    return '%s %s%s' % (nbsp_thousands(n), plural_ru(n, ('начало', 'начала', 'начал')),
+                        (' · шаг %s мин' % fmt(step)) if step else '')
 
 
 def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'live',
@@ -3645,10 +3656,11 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
             if kind == 'interval':
                 _d = timedelta(minutes=dur)
                 b2 = _iso_dt((ans.get('last') or {}).get('end_utc'))                     or ((ans.get('to') + _d) if ans.get('to') else None)
-                lines.append('<div class="searched">окно %s · работы до %s</div>'
-                             % (esc(dur_txt), esc(dt_ru(b2))))
+                _tail = 'окно %s · работы до %s' % (dur_txt, dt_ru(b2))
             else:
-                lines.append('<div class="searched">окно %s</div>' % esc(dur_txt))
+                _tail = 'окно %s' % dur_txt
+            lines.append('<div class="searched">%s · %s</div>'
+                         % (esc(_tail), esc(scan_searched_short_ru(scan))))
     # --- условия проверки: короткими плашками, полный текст — раскрытием ниже
     _cands_all = scan.get('candidates') or []
     _group = [_cands_all[i] for i in scan_best_indices(scan)] if kind in ('interval', 'tradeoff') else [cand]
