@@ -948,6 +948,24 @@ def ratio_ru(v) -> str:
     return ('%.2f' % float(v or 0)).replace('.', ',')
 
 
+_NOT_WORSE_RE = re.compile(r'не хуже по флюенсу и минутам')
+
+
+def qualify_tolerance_ru(text: str, tol_ratio, tol_min) -> str:
+    """Назвать допуск там, где правило говорит «не хуже» (R4-17).
+
+    На пресете «Тихая дата» строка правила утверждает «окно 2 … не хуже по флюенсу и минутам»,
+    а строкой ниже в том же блоке стоит «окно 1: флюенс 1,65·10⁶; окно 2: флюенс 1,74·10⁶» —
+    у выбранного окна флюенс ВЫШЕ. Утверждение верно только по модулю допуска, и допуск обязан
+    стоять рядом с ним, а не в подписи таблицы на другой вкладке. Числа — из снимка (Robustness);
+    сама формулировка приходит из слоя сравнения окон и здесь не переписывается, только уточняется.
+    """
+    if not tol_ratio or not _NOT_WORSE_RE.search(str(text or '')):
+        return text
+    return _NOT_WORSE_RE.sub('не хуже по флюенсу и минутам в пределах допуска (×%s по флюенсу, %s мин по минутам)'
+                             % (ratio_ru(tol_ratio), fmt(round(float(tol_min or 0)))), text)
+
+
 def coverage_scope_ru(S: dict) -> str:
     """Охват расчёта одной строкой: что учтено и что нет (О1). Стоит во вкладке «Окна и факторы»
     на обоих уровнях и в панели вердикта — на профессиональном."""
@@ -962,7 +980,9 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     title = VERDICT_TITLE.get(v, v)
     # Основание допуска на оперативном уровне не повторяется в строке правила: под вердиктом стоит
     # отдельная строка «Откуда допуск …» с числами сетки (бриф §9.7: нет двух сообщений об одном).
-    rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied, basis=pro))) + \
+    rob = S.get('robustness') or {}
+    rule = 'Правило: ' + esc(qualify_tolerance_ru(frac_ru(rule_ru(rec.rule_applied, basis=pro)),
+                                                  rob.get('tol_ratio'), rob.get('tol_min'))) + \
            ' · формальная запись — вкладка «Методика», формулы (8) и (9)'
     if pro:
         rule += ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
@@ -983,7 +1003,6 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         lines.append('<div class="plan">%s</div>' % esc(plan_change))
     if policy_short:
         lines.append('<div class="policy">%s</div>' % esc(policy_short))
-    rob = S.get('robustness') or {}
     sim = pill('сценарий «что если»', 'warn') if S.get('is_simulated') else ''
     if thr_nT is not None and e_min_MeV is not None:
         lines.append('<div class="cov">%s%s</div>'

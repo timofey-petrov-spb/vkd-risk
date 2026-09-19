@@ -1113,14 +1113,16 @@ def test_blok_verdikta_ne_splosnoy_abzac(mode):
     строка о покрытии, одна об устойчивости, одна о происхождении допуска.
 
     Порог длины — измеренный бюджет, а не идеал: 400 символов из находки недостижимы, пока в блоке
-    обязаны стоять обе величины обоих окон с единицами, происхождение допуска и причина
-    неустойчивости (задание владельца пятого круга). Охват и «не учтено» уведены во вкладку
-    «Окна и факторы» и на профессиональный уровень."""
+    обязаны стоять обе величины обоих окон с единицами, происхождение допуска, допуск рядом с «не
+    хуже» и причина неустойчивости (задание владельца пятого круга). Охват и «не учтено» уведены
+    во вкладку «Окна и факторы» и на профессиональный уровень. Измерено на этой правке: «Гэннон»
+    719, «Исторический разбор» 956, «Тихая дата» 1485, «Сейчас» 1276 символов — порог 1600 стоит
+    как защита от нового разрастания, а не как достигнутая цель."""
     at = run_app(mode)
     assert not at.exception, at.exception
     html_ = verdict_html(at)
     body = re.sub(r'\s+', ' ', _strip_tags(html_)).strip()
-    assert len(body) <= 1500, (len(body), body)
+    assert len(body) <= 1600, (len(body), body)
     assert html_.count('<li>') <= 4, html_
     assert 'Охват:' not in body and 'Не учтено:' not in body, body     # они во вкладке «Окна и факторы»
     assert len(re.findall(r'не покрывает окно', body)) <= 1, body
@@ -1204,3 +1206,28 @@ def test_orbita_v_razbore_nazyvaet_datu_sozdaniya():
                            orbit_created_utc='2024-05-08T16:49:00+00:00')
     assert any('создана 08.05.2024 16:49 UTC' in x for x in review), review
     assert not any('отсечк' in x for x in review), review
+
+
+def test_pravilo_nazyvaet_dopusk_ryadom_s_ne_huzhe():
+    """R4-17: «окно 2 … не хуже по флюенсу и минутам» стояло рядом с числами, которые это
+    опровергают: флюенс выбранного окна 1,74·10⁶ против 1,65·10⁶. Утверждение верно только
+    по модулю допуска, и допуск обязан стоять в той же фразе, а не в подписи таблицы
+    на другой вкладке."""
+    from app.ui import qualify_tolerance_ru
+    src = ('шаги 3–4 из 5, сравнение и сведение: окно 2 (20:00Z) лучше по космопогоде '
+           '(на 21 мин меньше в аномалии), не хуже по флюенсу и минутам, линия метеороидов не противоречит')
+    out = qualify_tolerance_ru(src, 1.5, 20.0)
+    assert 'в пределах допуска (×1,50 по флюенсу, 20 мин по минутам)' in out, out
+    assert qualify_tolerance_ru(src, None, None) == src            # допуска в снимке нет — ничего не выдумываем
+    assert qualify_tolerance_ru('шаг 2 из 5, условия: …', 1.5, 20.0) == 'шаг 2 из 5, условия: …'
+
+
+def test_tihaya_data_pravilo_s_dopuskom_na_ekrane():
+    """Та же строка на экране: на пресете «Тихая дата» в правиле стоят и минуты, и флюенс, и допуск."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    rule = _strip_tags(verdict_html(at))
+    assert 'не хуже по флюенсу и минутам в пределах допуска' in rule, rule[:600]
+    assert 'допуск' in rule and 'мин' in rule and 'флюенс' in rule, rule[:600]
