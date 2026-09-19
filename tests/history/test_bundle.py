@@ -160,7 +160,8 @@ class BundleTests(unittest.TestCase):
 
     def test_legacy_interface_and_independent_snapshots(self):
         samples,events,raw = history_bundle(registry=self.registry)
-        self.assertEqual(len(samples),21)
+        self.assertEqual(len([s for s in samples if s.source_id == DONKI]),21)
+        self.assertEqual(len([s for s in samples if s.source_id == 'gfz_kp_archive']),488)
         self.assertEqual(len(events),166)
         self.assertEqual(raw['_history']['mode'],'legacy_notification_catalog')
         self.assertTrue(all(s.channel_id=='kp' for s in samples))

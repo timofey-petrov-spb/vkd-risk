@@ -15,12 +15,14 @@ from vkd.sources.donki import NotificationParseError, SOURCE_ID as DONKI, parse_
 from vkd.sources.noaa import SOURCE_3DAY, SOURCE_DAYPRE
 from vkd.sources.goes_archive import (REGISTRY_PATH as GOES_REGISTRY_PATH,
     archive_snapshot as goes_archive_snapshot, interval_coverage as goes_coverage)
+from vkd.sources.gfz_archive import (REGISTRY_PATH as GFZ_REGISTRY_PATH,
+    SOURCE_ID as GFZ, archive_snapshot as gfz_archive_snapshot)
 from vkd.sources.registry import RegistryError, SourceRegistry, iso_utc, utc
-from vkd.types import EnvironmentSample, Kind, Request
+from vkd.types import EnvironmentSample, Kind, Request, SCHEMA_VERSION
 from .replay import replay_forecast
 
 ROOT = Path(__file__).resolve().parents[2]
-ADAPTER_VERSION = 'history-a2-v3'
+ADAPTER_VERSION = 'history-a2-v4'
 
 
 class HistoryDataError(ValueError):
@@ -52,7 +54,7 @@ def _attach(snapshot, registry, record):
 
 
 def _empty_snapshot():
-    return {'adapter_version': ADAPTER_VERSION, 'schema_version': '2.1',
+    return {'adapter_version': ADAPTER_VERSION, 'schema_version': SCHEMA_VERSION,
             'samples': [], 'events': [], 'raw_records': {}, 'source_versions': {},
             'coverage_map': {}, 'excluded': [], 'notification_audit': [],
             'limitations': [
@@ -166,7 +168,9 @@ def _coverage(snapshot, start=None, end=None):
                         if s.channel_id == 'kp' and s.kind == Kind.OBSERVATION})
     kp_coverage = {'status': 'sparse' if intervals else 'missing', 'kind': 'observation',
                    'intervals': [{'valid_from_utc': iso_utc(a), 'valid_to_utc': iso_utc(b)} for a, b in intervals],
-                   'reason': 'only synoptic intervals explicitly reported in admitted notifications'}
+                   'reason': ('verified GFZ cells and explicitly reported notification intervals'
+                              if any(s.source_id == GFZ for s in snapshot['samples'])
+                              else 'only synoptic intervals explicitly reported in admitted notifications')}
     if start is not None:
         cursor, gaps = start, []
         for a, b in intervals:
@@ -181,6 +185,7 @@ def _coverage(snapshot, start=None, end=None):
         missing = sum((b-a).total_seconds() for a, b in gaps)
         kp_coverage.update(coverage_fraction=1-missing/(end-start).total_seconds(),
             gaps=[{'valid_from_utc': iso_utc(a), 'valid_to_utc': iso_utc(b)} for a, b in gaps])
+        kp_coverage['status'] = 'full' if missing == 0 else ('partial' if missing < (end-start).total_seconds() else 'missing')
     snapshot['coverage_map']['kp:observations'] = kp_coverage
     snapshot['coverage_map']['donki:notifications'] = {
         'status': 'inventory_only', 'physical_coverage_fraction': None,
@@ -189,9 +194,36 @@ def _coverage(snapshot, start=None, end=None):
         'reason': 'no notification is not a declaration of no SEP/GST; ends and monitoring gaps may be unknown'}
 
 
+def _gfz(snapshot, root, supplied, start, end, mode):
+    if supplied is None and not (Path(root)/GFZ_REGISTRY_PATH).is_file():
+        snapshot['coverage_map']['gfz_kp_archive:observations'] = {
+            'status': 'missing', 'coverage_fraction': 0.0, 'reason': 'GFZ archive absent'}
+        return
+    try:
+        registry = supplied if supplied is not None else SourceRegistry(root, GFZ_REGISTRY_PATH)
+        result = gfz_archive_snapshot(registry, start_utc=start, end_utc=end, mode=mode)
+    except (OSError, RegistryError, KeyError, ValueError) as exc:
+        raise HistoryDataError(f'Historical GFZ archive unavailable or invalid: {exc}') from exc
+    # Preserve dated notification facts for strict cutoff even in legacy mode.
+    # Equal-time final GFZ cells are sorted first for max(..., key=t_utc).
+    snapshot['samples'].extend(result['samples'])
+    snapshot['raw_records'].update(result['raw_records'])
+    snapshot['source_versions'].update(result['source_versions'])
+    snapshot['excluded'].extend(result['excluded'])
+    snapshot['coverage_map']['gfz_kp_archive:observations'] = result['coverage']
+    snapshot['gfz_archive_audit'] = result['audit']
+    snapshot['limitations'].append('Final GFZ Kp is review-only; local import time is not historical publication.')
+
+
+def _sort_samples(snapshot):
+    snapshot['samples'].sort(key=lambda s: (s.t_utc, s.source_id != GFZ,
+                                           s.source_id, s.channel_id, s.raw_record_id))
+
+
 def history_snapshot(request: Request, *, repo_root: str | Path = ROOT,
                      registry: SourceRegistry | None = None, lookback_hours: int = 48,
-                     goes_registry: SourceRegistry | None = None) -> dict:
+                     goes_registry: SourceRegistry | None = None,
+                     gfz_registry: SourceRegistry | None = None) -> dict:
     """Typed samples/events, exact raw bytes, source versions and per-channel gaps.
 
     For review, observations may use later publications, while the NOAA forecast
@@ -250,21 +282,31 @@ def history_snapshot(request: Request, *, repo_root: str | Path = ROOT,
         snapshot['coverage_map']['goes_p_ge10MeV:observations'] = coverage
         snapshot['goes_archive_audit'] = goes['record_audit']
         snapshot['limitations'].append('GOES iSWA numerical archive is review-only; no historic publication receipts or instrument quality flags.')
+    _gfz(snapshot, repo_root, gfz_registry, start-timedelta(hours=lookback_hours), end, request.mode)
+    # GFZ's context report is useful separately; the window report must exclude
+    # the lookback interval from its denominator.
+    if 'gfz_archive_audit' in snapshot:
+        reason = snapshot['coverage_map']['gfz_kp_archive:observations']['reason']
+        snapshot['coverage_map']['gfz_kp_archive:observations'] = {
+            **goes_coverage([s for s in snapshot['samples'] if s.source_id == GFZ], start, end),
+            'reason': reason}
+        snapshot['coverage_map']['gfz_kp_archive:observations']['strict_eligible'] = False
     _coverage(snapshot, start, end)
     # Source disabling controls acquisition, not erasure of an already verified
     # offline archive. No network is used and no shared cache is mutated here.
     snapshot['archive_access'] = 'verified_offline_cache; disabling network acquisition preserves admissible cached data'
-    snapshot['samples'].sort(key=lambda s: (s.t_utc, s.source_id, s.channel_id, s.raw_record_id))
+    _sort_samples(snapshot)
     snapshot['events'].sort(key=lambda e: (e.start_utc, e.raw_record_id))
     snapshot['raw_record_ids'] = sorted(snapshot['raw_records'])
     return snapshot
 
 
 def history_bundle(request: Request | None = None, *, repo_root: str | Path = ROOT,
-                   registry: SourceRegistry | None = None, goes_registry: SourceRegistry | None = None):
+                   registry: SourceRegistry | None = None, goes_registry: SourceRegistry | None = None,
+                   gfz_registry: SourceRegistry | None = None):
     """B1 tuple interface; pass Request to include the correct NOAA releases.
 
-    Legacy no-argument mode supplies the audited notification catalog only.
+    Legacy no-argument mode supplies audited notifications and final GFZ Kp.
     It never guesses a forecast cutoff. B1 may then apply its own cutoff to
     these independently dated entries. Metadata is under raw['_history'].
     """
@@ -274,10 +316,14 @@ def history_bundle(request: Request | None = None, *, repo_root: str | Path = RO
         snapshot.update(mode='legacy_notification_catalog', cutoff_utc=None,
             limitations=_empty_snapshot()['limitations'] + ['NOAA forecast selection requires an explicit Request.'])
         _notifications(snapshot, registry, None)
+        _gfz(snapshot, repo_root, gfz_registry, utc('2024-05-01T00:00Z'),
+             utc('2024-07-01T00:00Z'), 'history_review')
+        _sort_samples(snapshot)
         _coverage(snapshot)
         snapshot['raw_record_ids'] = sorted(snapshot['raw_records'])
     else:
-        snapshot = history_snapshot(request, repo_root=repo_root, registry=registry, goes_registry=goes_registry)
+        snapshot = history_snapshot(request, repo_root=repo_root, registry=registry,
+                                    goes_registry=goes_registry, gfz_registry=gfz_registry)
     raw = deepcopy(snapshot['raw_records'])
     raw['_history'] = {key: deepcopy(value) for key, value in snapshot.items()
                        if key not in ('samples', 'events', 'raw_records')}
