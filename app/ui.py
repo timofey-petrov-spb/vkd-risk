@@ -142,8 +142,30 @@ def pill(text, kind='none') -> str:
     return '<span class="pill pill-%s">%s</span>' % (kind, esc(text))
 
 
+_SUP = {'0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+        '-': '⁻', '+': ''}
+_POW_RE = re.compile(r'10\^([+-]?\d+)')
+_EXP_RE = re.compile(r'(?<![\w.])(\d+(?:[.,]\d+)?)[eE]([+-]?\d+)(?![\w])')
+# дробь с точкой, но не дата (01.05.2024), не «10.05 12:00» и не номер версии (v3.1)
+_FRAC_RE = re.compile(r'(?<![\d.A-Za-zА-Яа-я])(\d+)\.(\d+)(?=\s*(?:[А-Яа-я%·)\],;]|$))')
+
+
+def sup(text) -> str:
+    """Степени надстрочными цифрами: «3,36·10^6» → «3,36·10⁶», «5,64·10^-7» → «5,64·10⁻⁷» (U4)."""
+    return _POW_RE.sub(lambda m: '10' + ''.join(_SUP.get(c, c) for c in m.group(1)), str(text))
+
+
+def frac_ru(text) -> str:
+    """Единый формат чисел в готовых строках: дробь с запятой, порядок надстрочными цифрами.
+    Даты вида 01.05.2024 и 10.05 12:00 не трогаются."""
+    s = _EXP_RE.sub(lambda m: '%s·10^%s' % (m.group(1).replace('.', ','), int(m.group(2))), str(text))
+    s = _FRAC_RE.sub(lambda m: '%s,%s' % (m.group(1), m.group(2)), s)
+    return sup(s)
+
+
 def fmt(v, unit='') -> str:
-    """Число по-русски: запятая, порядок как 10^n; безразмерная единица «1» не печатается."""
+    """Число по-русски: запятая, порядок надстрочными цифрами (10⁶, 10⁻⁷);
+    безразмерная единица «1» не печатается."""
     if v is None:
         return '—'
     if isinstance(v, float):
@@ -151,7 +173,7 @@ def fmt(v, unit='') -> str:
             s = '0'
         elif abs(v) >= 1e5 or abs(v) < 1e-2:
             m, e = ('%.2e' % v).split('e')
-            s = '%s·10^%d' % (m.replace('.', ','), int(e))
+            s = sup('%s·10^%d' % (m.replace('.', ','), int(e)))
         elif abs(v) >= 100:
             s = '%.0f' % v
         else:
@@ -159,6 +181,22 @@ def fmt(v, unit='') -> str:
     else:
         s = str(v)
     return s + (' ' + unit if unit and unit not in ('1',) else '')
+
+
+def spread_offsets(offsets, search_min: int, step: int = 30) -> list[int]:
+    """Развести совпавшие сдвиги окон внутри периода поиска (U1): последнее окно — в конец
+    периода, предыдущие на шаг раньше. Раскладка ползунков, а не оценка риска: экран из-за
+    сжатия периода не должен останавливаться. Различные сдвиги возвращаются как есть."""
+    out = sorted(int(o) for o in offsets)
+    n = len(out)
+    if n == 0 or len(set(out)) == n:
+        return out
+    if search_min >= (n - 1) * step:
+        return [int(search_min) - (n - 1 - i) * step for i in range(n)]
+    if search_min >= n - 1:                      # период короче шага: разводим равномерно
+        k = int(search_min) // (n - 1)
+        return [i * k for i in range(n)]
+    return out                                    # развести нечем — решает проверка запроса
 
 
 def head(title: str, sub: str) -> str:
@@ -188,6 +226,104 @@ def rule_ru(rule_applied: str) -> str:
     return rule_applied
 
 
+def _timeout_s() -> str:
+    """Тайм-аут живого запроса из config/settings.toml — чтобы «за 6 с» не было зашито в текст."""
+    try:
+        from vkd.config import section as _sec
+        return fmt(float(_sec('sources').get('timeout_s', 6)))
+    except Exception:            # noqa: BLE001 — настройка недоступна: печатаем общую фразу
+        return '6'
+
+
+# Имена отказов сети из ответа источника — словами пользователя (U2). Значение с «%s» получает тайм-аут.
+NET_ERR_RU = {
+    'ReadTimeout': 'сервер не ответил за %s с',
+    'ConnectTimeout': 'соединение не установлено за %s с',
+    'Timeout': 'сервер не ответил за %s с',
+    'ConnectionError': 'соединение с сервером не установлено',
+    'ConnectionResetError': 'соединение разорвано сервером',
+    'NewConnectionError': 'соединение с сервером не установлено',
+    'HTTPError': 'сервер вернул ошибку',
+    'SSLError': 'защищённое соединение не установлено',
+    'TooManyRedirects': 'сервер перенаправляет запрос без конца',
+    'JSONDecodeError': 'ответ не разобран',
+    'ValueError': 'ответ не разобран',
+    'KeyError': 'в ответе нет нужного поля',
+    'RequestException': 'запрос к серверу не выполнен',
+}
+_NET_ALT = '|'.join(sorted(NET_ERR_RU, key=len, reverse=True))
+_MODULE_RE = re.compile(r'\s*\((?:vkd|experiments|app|scripts|tests)\.[\w.]+\)')
+_MODULE_BARE_RE = re.compile(r'(?:vkd|experiments|app|scripts|tests)\.[\w.]+')
+_HASH_RE = re.compile(r'[;,]?\s*(?:sha256|SHA-256)\s+[0-9a-fA-F]+…?', re.I)
+_FILE_RE = re.compile(r'[;,]?\s*файл\s+[^\s;,]+')
+_RECORD_RE = re.compile(r'[;,]?\s*запис[ьи]\s+(?=[A-Za-z0-9])[\w:#.\-]*')   # «запись donki_msg#…», не «записи не указан»
+_RECORDS_TAIL_RE = re.compile(r'[;,]?\s*запис[ьи]:\s.*$', re.S)     # перечень записей — ниже, ссылками
+_SRCID_RE = re.compile(r'\s*\([a-z][a-z0-9]*_[a-z0-9_]+\)')          # (celestrak_gp), (nasa_jsc_oem)
+_CONTRACT_RE = re.compile(r'CONTRACT\.md(\s+v[\d.]+)?')
+_RELEASE_RE = re.compile(r'выпуск\s+[\w\-]*[A-Za-z][\w\-]*\s+от\b')
+_CHECK_RE = re.compile(r'[;,]?\s*контроль\s+[^;]+воспроизведён')
+# обороты слоёв программы, которым на оперативном уровне нужен русский (U2)
+PHRASE_RU = [('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
+             ('в config/settings.toml', 'в настройках сервиса'), ('config/settings.toml', 'настройки сервиса'),
+             ('настройке sep_valid_hours', 'настройке срока действия уведомления')]
+_INNER_ID_RE = re.compile(r',\s*[a-z][a-z0-9]*(?:[-_][a-z0-9]+)+(?=\))')
+_CLEAN_RE = re.compile(r'\s{2,}')
+
+
+def net_error_ru(name: str) -> str:
+    """«ReadTimeout» → «сервер не ответил за 6 с»; неизвестное имя — общая фраза без кода."""
+    t = NET_ERR_RU.get(name)
+    if t is None:
+        return 'источник не ответил'
+    return (t % _timeout_s()) if '%s' in t else t
+
+
+def status_ru(text, pro: bool = False) -> str:
+    """Статус источника для экрана (U2). На профессиональном уровне — как есть, только числа
+    приводятся к единому виду. На оперативном — без имён отказов, путей модулей, файлов, хешей
+    и идентификаторов записей: их место — профессиональный уровень и выгрузка."""
+    s = frac_ru(str(text or '')).replace('из архив ', 'из архива ')
+    if pro or not s:
+        return s
+    s = re.sub(r'([\w.\-]+): (%s)\b' % _NET_ALT, lambda m: '%s — %s' % (m.group(1), net_error_ru(m.group(2))), s)
+    s = re.sub(r'\((%s)\)' % _NET_ALT, lambda m: '(%s)' % net_error_ru(m.group(1)), s)
+    s = re.sub(r'ответ не разбирается \([^)]*\)', 'ответ источника не разобран', s)
+    s = s.replace(', HTTP 200', '').replace('HTTP 200', 'получено')
+    s = re.sub(r'\s*\(ответ сохранён[^)]*\)', '', s)
+    s = _MODULE_RE.sub('', s)
+    s = _MODULE_BARE_RE.sub('расчёт сервиса', s)
+    s = _HASH_RE.sub('', s)
+    s = _FILE_RE.sub('', s)
+    s = _RECORDS_TAIL_RE.sub('', s)
+    s = _RECORD_RE.sub('', s)
+    s = _SRCID_RE.sub('', s)
+    s = _CONTRACT_RE.sub('договор команды,', s)
+    s = _RELEASE_RE.sub('выпуск от', s)
+    s = _CHECK_RE.sub('', s)
+    s = _INNER_ID_RE.sub('', s)
+    for a, b in PHRASE_RU:
+        s = s.replace(a, b)
+    s = re.sub(r'\s*\(\s*[;,]?\s*\)', '', s)        # скобки, опустевшие после удаления записи
+    s = re.sub(r'[;,]\s*(?=[;,])', '', s)
+    s = re.sub(r'договор команды,\s*,', 'договор команды,', s)
+    s = _CLEAN_RE.sub(' ', s).strip()
+    return s.rstrip(' ;,')
+
+
+def dedup_clauses(text) -> str:
+    """Повторяющиеся через «;» части одной подписи показываем один раз (U5).
+    Слой объяснений собирает источник по каждому фактору, и одна и та же фраза о траектории
+    попадает в карточку дважды."""
+    parts, seen, out = str(text or '').split('; '), set(), []
+    for p in parts:
+        k = p.strip().rstrip('.').lower()
+        if k and k in seen:
+            continue
+        seen.add(k)
+        out.append(p)
+    return '; '.join(out)
+
+
 def source_short(v: dict) -> tuple[str, str]:
     """Короткий статус источника для полосы состояния: (текст, kind)."""
     st_ = (v.get('status') or '').lower()
@@ -200,10 +336,11 @@ def source_short(v: dict) -> tuple[str, str]:
         return 'нет ответа и кеша — данных нет', 'crit'
     if v.get('live_ok'):
         return 'живой запрос', 'ok'
-    return (v.get('status') or 'нет данных'), 'none'
+    return status_ru(v.get('status') or 'нет данных'), 'none'
 
 
-def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_fetch: str | None = None) -> list[str]:
+def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_fetch: str | None = None,
+                  pro: bool = False) -> list[str]:
     """Проблемы источников для одного st.warning под полосой состояния (О5-2): исключён, кеш, устарел.
     Ничего не решает — переводит статусы снимка в предложения для пользователя."""
     out = []
@@ -220,7 +357,7 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                 out.append('%s: живого ответа нет, взят кеш%s — покрытие частичное, объявлено'
                            % (name, (', давность %d мин' % round(age)) if age is not None else ''))
             elif v.get('live_ok') is False:
-                out.append('%s: %s' % (name, v.get('status') or 'нет данных'))
+                out.append('%s: %s' % (name, status_ru(v.get('status') or 'нет данных', pro)))
             elif sid == 'noaa_swpc_goes' and v.get('age_min') is not None and th is not None \
                     and v['age_min'] > th.goes_max_age_min:
                 out.append('GOES ≥10 МэВ: наблюдение устарело (%d мин при допустимых %.0f) — для будущих участков '
@@ -321,7 +458,7 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
     bullets += ['Чего не хватает: ' + x for x in missing]
     if bullets:
-        lis = ''.join('<li>%s</li>' % esc(b) for b in bullets)
+        lis = ''.join('<li>%s</li>' % esc(frac_ru(b)) for b in bullets)
         if more:
             lis += '<li class="more">… ещё %d, см. карточки окон и вкладку «Окна и факторы»</li>' % more
         lines.append('<ul>' + lis + '</ul>')
@@ -422,7 +559,8 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
     else:
         rows.append(('прогноз Kp NOAA, макс. в окне', fmt(kpf.value if kpf else None), False))
     kv = ''.join('<div class="k">%s</div><div class="v%s">%s</div>' % (esc(k), ' big' if big else '', esc(v)) for k, v, big in rows)
-    conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(_short_reason(r))) for r in reasons[:4])
+    conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(frac_ru(_short_reason(r))))
+                    for r in reasons[:4])
     if len(reasons) > 4:
         conds += '<div class="small">… ещё %d</div>' % (len(reasons) - 4)
     if not reasons:
@@ -430,7 +568,7 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
     cov = ' '.join(pill('%s: %s' % (MECH_RU.get(m.mechanism_id, m.mechanism_id), COV_RU[m.coverage.value]), COV_KIND[m.coverage.value])
                    for m in a.mechanisms if m.mandatory or m.coverage.value != 'none')
     why = coverage_reasons(a)
-    why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc('; '.join(why))) if why else ''
+    why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(frac_ru('; '.join(why)))) if why else ''
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
             '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div>%s</div>'
             % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv, conds, cov, why_html))

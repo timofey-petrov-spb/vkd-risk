@@ -14,12 +14,17 @@ from datetime import datetime, timedelta
 import numpy as np
 import plotly.graph_objects as go
 
+from app.ui import fmt
+
 BLUE, RED, GREY, WIN = '#1f4e79', '#c0392b', '#7f8c8d', '#5dade2'
 GREEN = '#1e8449'
 EVENT_SYM = {'SEP': ('triangle-up', RED, 'протонное событие'), 'GST': ('diamond', '#b9770e', 'геомагнитная буря'),
              'CME_ARRIVAL': ('star', '#8e44ad', 'прогноз прихода выброса'), 'FLR': ('circle', GREY, 'вспышка'),
              'CME': ('circle-open', GREY, 'выброс')}
 EVENT_ORDER = ['SEP', 'GST', 'CME_ARRIVAL', 'FLR', 'CME']
+# правая ось GOES — логарифмическая: метки задаём сами, по-русски, без «192,3432» (U4)
+GOES_TICKVALS = [0.1, 1, 10, 100, 1000]
+GOES_TICKTEXT = ['0,1', '1', '10', '100', '1000']
 
 
 def style(fig: go.Figure, height: int, legend_top: bool = True) -> go.Figure:
@@ -120,7 +125,9 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
         fig.add_trace(go.Scatter(x=[t for t, _ in goes_obs], y=[v for _, v in goes_obs], name='GOES ≥10 МэВ, pfu (наблюдение, правая ось)',
                                  line=dict(width=1.2, color=GREEN), hovertemplate='%{y:.3g} pfu<extra></extra>'),
                       row=2, col=1, secondary_y=True)
-        fig.update_yaxes(type='log', title_text='pfu', range=[-1, 4.2], showgrid=False, row=2, col=1, secondary_y=True)
+        # метки правой оси задаём сами: иначе на логарифмической оси печатаются числа вида 192,3432 (U4)
+        fig.update_yaxes(type='log', title_text='pfu', range=[-1, 4.2], showgrid=False, row=2, col=1, secondary_y=True,
+                         tickmode='array', tickvals=GOES_TICKVALS, ticktext=GOES_TICKTEXT)
     if traj:
         ts = [p.t_utc for p in traj]
         fig.add_trace(go.Scatter(x=ts, y=[p.B_nT for p in traj], name='|B| на трассе, нТл (наш расчёт по IGRF)',
@@ -216,9 +223,11 @@ def window_bars(assessments) -> go.Figure:
                                  mode='markers', marker=dict(size=14, color=GREY, symbol='diamond'), yaxis='y2'))
     for n, v in zip(names, mm):
         if v is not None:
-            fig.add_annotation(x=n, y=0, yshift=-28, text='метеороиды: N = %.2g' % v, showarrow=False, font=dict(size=11, color=GREY))
+            fig.add_annotation(x=n, y=0, yshift=-28, text='метеороиды: %s попаданий на 1 м²' % fmt(float(v)),
+                               showarrow=False, font=dict(size=11, color=GREY))
     fig.update_layout(barmode='group', yaxis=dict(title='минут в аномалии, мин'),
-                      yaxis2=dict(title='флюенс, част./см²', overlaying='y', side='right', type='log', showgrid=False))
+                      yaxis2=dict(title='флюенс, част./см²', overlaying='y', side='right', type='log', showgrid=False,
+                                  exponentformat='power'))
     fig = style(fig, 360)
     fig.update_layout(margin=dict(l=10, r=10, t=36, b=64), hovermode='closest')
     return fig
