@@ -303,8 +303,16 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
         if entry is None:
             entry, legacy_bad = _read_receipt(source_folder, product, now)
             corrupt = corrupt or legacy_bad
-        if entry is None and use_bundled:
-            entry = _bundled_tle(product, now)
+        if use_bundled:
+            # Снимок орбиты из репозитория берётся не «когда кеша нет», а когда он СВЕЖЕЕ кеша.
+            # Прежнее условие (`if entry is None`) 19.09 показывало на развёрнутом сервисе эпоху
+            # 17.09 21:14, хотя в репозитории лежал набор с эпохой 18.09 03:25: орбита считалась
+            # по элементам на шесть часов старше доступных, потому что в кеше просто ЧТО-ТО было.
+            # Сравниваются времена самих данных (`data_utc` — эпоха элементов), а не наличие
+            # файла и не время получения: получить старые элементы можно и позже новых.
+            bundled = _bundled_tle(product, now)
+            if bundled is not None and (entry is None or bundled[1]['data_utc'] > entry[1]['data_utc']):
+                entry = bundled
         if mode == 'cache':
             return _result(product, entry, now, origin='disabled', corrupt=corrupt)
         with _gate(gate_folder) as locked:
@@ -312,7 +320,11 @@ def acquire(product: Product, *, disabled=False, cache_dir=None, now=None, trans
                 return _result(product, entry, now, origin='busy', corrupt=corrupt)
             # Another process may have completed while this call opened the gate.
             current, bad = _read_receipt(folder, product, now)
-            entry, corrupt = current or entry, corrupt or bad
+            # Тем же правилом, что и выше: свежесть решают времена самих данных. При равенстве
+            # предпочитается принятая по сети квитанция — у неё есть доказательство получения.
+            if current is not None and (entry is None or current[1]['data_utc'] >= entry[1]['data_utc']):
+                entry = current
+            corrupt = corrupt or bad
             attempt = {}
             try:
                 attempt_path = gate_folder / 'attempt.json'
