@@ -1763,6 +1763,14 @@ def test_css_bez_znakov_vne_pechatnogo_diapazona():
     assert not bad, bad
     assert '\x00' not in CSS and '\x15' not in CSS
     assert 'summary::before' in CSS
+    # Тринадцатый круг, найдено глазами в браузере. Таблица стилей уходит в st.markdown ОДНИМ
+    # блоком разметки, а блок HTML в разметке заканчивается на первой же ПУСТОЙ строке. Стоило
+    # разбить длинный комментарий пустой строкой — и всё, что стояло после неё, печаталось на
+    # экране обычным текстом: две трети таблицы стилей поверх ответа, а сами стили не
+    # применялись. Проверки смотрели на знаки и не видели пустоты, поэтому ловушка и сработала.
+    inner = CSS.strip('\n')
+    empty = [i for i, ln in enumerate(inner.split('\n'), 1) if not ln.strip()]
+    assert not empty, ('пустая строка внутри CSS обрывает блок HTML в разметке', empty)
 
 
 def test_raw_record_nahodit_zapis_po_imeni_istochnika():
@@ -2264,7 +2272,9 @@ BLOCK_MARKS = [('ВКД-Риск', 'заголовок'),
                # по которой блок узнаётся в дампе.
                ('Где набираются минуты', 'глобус'),
                # Двенадцатый круг, пункт 3: два графика ленты заменены одним «профилем воздействия».
-               ('Профиль воздействия на сроке поиска', 'профиль воздействия'),
+               # Тринадцатый: заголовок называет назначение рисунка, а не его содержимое, — как и
+               # у блока глобуса. Порядок блоков не менялся, изменилась только метка узнавания.
+               ('Когда на сроке воздействие наименьшее', 'профиль воздействия'),
                # Пункт 1: «и что нет» уехало во вкладку «Методика», и в названии блока его больше нет.
                ('Что учтено', 'что учтено'),
                ('Состояние источников: чем считали', 'состояние источников')]
@@ -3055,8 +3065,12 @@ def test_tipografika_verdikta_sovpadaet_s_rekomendaciey():
     assert size('.verdict h2') == size('.reco h2'), (size('.verdict h2'), size('.reco h2'))
     assert size('.verdict li') == size('.reco .why'), (size('.verdict li'), size('.reco .why'))
     body = CSS.split(':root {')[1]
-    assert not re.findall(r'font-size:\s*[\d.]+rem', body), re.findall(r'font-size:\s*[\d.]+rem', body)
-    assert len(set(re.findall(r'font-size:var\(--(fs-\d)\)', CSS))) == 3, set(re.findall(r'font-size:var\(--(fs-\d)\)', CSS))
+    assert not re.findall(r'font-size:\s*[\d.]+(?:rem|px)', body), re.findall(r'font-size:\s*[\d.]+(?:rem|px)', body)
+    # Кеглей на экране ЧЕТЫРЕ, и четвёртый появился по прямому указанию: полоса решения обязана
+    # быть заметно крупнее даже крупных чисел, иначе главного на экране не видно. Больше четырёх
+    # быть не должно — именно так к двенадцатому кругу и завелось пятнадцать разных кеглей.
+    used = set(re.findall(r'font-size:var\(--(fs-\d)\)', CSS))
+    assert used == {'fs-0', 'fs-1', 'fs-2', 'fs-3'}, used
     assert 'max-width:96ch' in re.search(r'\.verdict ul \{[^}]*\}', CSS).group(0)
     assert 'max-width:96ch' in re.search(r'\.reco \.why \{[^}]*\}', CSS).group(0)
 
