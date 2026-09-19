@@ -8,6 +8,13 @@ from scripts.validate_physical_models import read_reference, zhr_mass_flux_2019
 from vkd.assess.seasonal import solar_longitude_deg
 
 
+def test_tradeoff_title_does_not_assert_a_conflict_between_mechanisms():
+    from app.ui import VERDICT_TITLE
+
+    # trade_off also represents an unstable SAME-mechanism physical hypothesis.
+    assert VERDICT_TITLE["trade_off"] == "Однозначного выбора нет"
+
+
 def test_published_hourly_solar_coordinates_not_just_six_selected_dates():
     manifest, rows = read_reference()
     assert manifest["usage"].startswith("validation only")
