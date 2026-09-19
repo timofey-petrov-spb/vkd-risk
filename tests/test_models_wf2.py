@@ -101,8 +101,14 @@ def test_same_overlap_rule_in_compare_and_compute():
 # ------------------------------------------------------- M3: наблюдение GOES не покрывает окно
 def test_goes_observation_outside_window_is_unknown_not_not_detected(belts):
     """Горизонт наблюдения GOES кончился до начала окна: «не выявлено» писать нельзя —
-    наличие события в окне неизвестно. Нулевое пересечение даёт NONE,
-    рекомендация блокируется при неполном обязательном охвате."""
+    наличие события в окне неизвестно. Нулевое пересечение даёт NONE у САМОЙ ВЕЛИЧИНЫ.
+
+    ИЗМЕНЕНО в круге 11 (R14): покрытие МЕХАНИЗМА при этом остаётся частичным, а не отсутствует.
+    Прогноза потока протонов с разрешением по окну не существует ни у одного источника, поэтому
+    канал объявляется общим для всех сравниваемых окон и обязательную линию не обнуляет — сказанное
+    о нём уходит в объявленную область вывода. Проверка не ослаблена: величина по-прежнему
+    неизвестна (presence UNKNOWN), её покрытие по-прежнему NONE, заметка про непокрытое окно
+    по-прежнему на месте, и всё это проверяется здесь же строками ниже."""
     th = Thresholds()
     tr = traj(30 * 60, lambda i: i < 60)
     late = Window(T0 + timedelta(hours=20), 360)
@@ -113,7 +119,9 @@ def test_goes_observation_outside_window_is_unknown_not_not_detected(belts):
     assert 'ниже S1' in f.limits_note and '2024-05-03 11:55Z' in f.limits_note   # уровень и время наблюдения остались
     assert any('наблюдение GOES не покрывает окно' in n and 'до его начала' in n
                for n in a.mechanisms[0].coverage_notes)
-    assert a.mechanisms[0].coverage == Coverage.NONE
+    assert a.mechanisms[0].coverage == Coverage.PARTIAL          # R14: объявленный общий канал
+    assert a.mechanisms[0].declared_common_ru and 'неизвестно' in a.mechanisms[0].declared_common_ru[0]
+    assert not any('GOES' in n for n in a.mechanisms[0].blocking_notes)
     # окно внутри горизонта: наличие определяется как прежде
     near = Window(T0, 50)
     b = assess_window(near, tr, belts, goes(0.2), kp_sample(3.0, age_min=30), [], th, T0, mmod_hits=1e-6)
@@ -144,19 +152,17 @@ def test_missing_kp_is_declared_in_coverage_and_never_improves_verdict(belts):
     # без Kp вердикт не может быть благоприятнее, чем с Kp
     rank = {'insufficient': 0, 'all_need_check': 1, 'trade_off': 2, 'equivalent': 3, 'preferred': 4}
     assert rank[r_off.verdict] <= rank[r_on.verdict]
-    # Вердикт-отказ называет ПРИЧИНУ отказа по каналу. Формулировка правила изменена 19.09
-    # (решение владельца по разбору Codex п. 1): полный отказ даёт только ОТСУТСТВИЕ покрытия,
-    # и правило называет именно пустой канал. Здесь пустой канал — GOES (наблюдение кончилось
-    # до начала окна), а отсутствие Kp остаётся ОБЪЯВЛЕННЫМ частичным покрытием: оно стоит в
-    # причинах (проверено выше) и в заметках механизма, но отказ не из-за него.
-    assert r_off.verdict == 'insufficient'
-    # Десятый круг: правило называет отсутствие покрытия своими словами («отсутствует
-    # покрытие обязательной линии»), потому что прежняя фраза «не покрыта совсем» стояла
-    # в одной строке с долей покрытия другого окна и ею опровергалась.
-    assert 'отсутствует покрытие обязательной линии' in r_off.rule_applied, r_off.rule_applied
-    assert 'GOES' in r_off.rule_applied, r_off.rule_applied
-    # и ни одна строка отказа не утверждает отсутствия там, где рядом стоит доля покрытия
-    assert not any('покрывает 8' in m or 'покрывает 7' in m for m in r_off.missing), r_off.missing
+    # ИЗМЕНЕНО в круге 11 (R14). Прежде здесь стоял `insufficient`, но отказ приходил НЕ от Kp,
+    # а от пустого канала GOES у второго окна: наблюдение кончалось до его начала. Теперь этот
+    # канал объявлен общим и обязательную линию не обнуляет, поэтому отказа нет.
+    # Суть проверки — «без Kp вердикт не благоприятнее, чем с Kp» — осталась и проверена выше
+    # по шкале rank. Ослабления нет: отсутствие Kp по-прежнему ОБЪЯВЛЕНО и в причинах вердикта,
+    # и в заметках механизма, а не растворяется в уверенном выводе.
+    assert any('Kp' in x for x in r_off.reasons)
+    assert all(any(n.startswith('Kp: наблюдения нет') for m in a.mechanisms for n in m.coverage_notes)
+               for a in A_off)
+    # Полный отказ по пустому каналу никуда не делся: он проверяется там, где канал ДЕЙСТВИТЕЛЬНО
+    # пуст — наблюдения нет вовсе или оно устарело сверх предела (tests/test_common_channel.py).
 
 
 def test_strict_mode_without_kp_declares_the_cutoff_reason():

@@ -50,6 +50,7 @@ from vkd.sources import Fetch, goes_latest, kp_latest, noaa_latest, tle_latest
 from vkd.types import Request, SCHEMA_VERSION, Window
 from vkd.integration.manifest import collect_records
 from vkd.windows.compare import Thresholds, action_span, assess_window, overlaps, recommend
+from vkd.windows.scan import STEP_MIN_DEFAULT, scan_windows
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
@@ -65,7 +66,10 @@ SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → с�
 HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.8.0'  # 0.7.0 + объявленная область вывода вердикта при частичном покрытии (CONTRACT §4 п. 1, решение владельца 19.09)
+# 0.8.0 + перебор начал выхода (ключ `scan` снимка) и общий канал протонных событий R14:
+# правило вердикта изменилось, поэтому версия расчёта поднята — повтор сохранённого примера,
+# собранного версией 0.8.0, обязан объявить себя воспроизведением ДРУГОЙ версией, а не совпасть молча.
+ALGO_VERSION = '0.9.0'
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -100,6 +104,8 @@ class Result:
     kp_obs: list = None        # исторический разбор: наблюдения Kp (от, до, значение) для ленты
     cards_by_window: dict = None   # start_utc -> карточки окна
     verification: dict = None      # прогноз из прошлого: что наблюдалось после отсечки (в расчёт не входит)
+    scan: Any = None               # ScanResult перебора начал; None — перебор не выполнялся
+    scan_cards: dict = None        # start_utc -> карточки ПОКАЗЫВАЕМЫХ кандидатов перебора
 
 
 def validate_request(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min) -> None:
@@ -401,7 +407,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         disabled: Optional[dict] = None, thresholds: Optional[Thresholds] = None,
         scenario: Optional[Scenario] = None, T_months: int = 6,
         fetched: Optional[tuple] = None, now: Optional[datetime] = None,
-        tle_override_path: Optional[str] = None, fetch_note: Optional[str] = None) -> Result:
+        tle_override_path: Optional[str] = None, fetch_note: Optional[str] = None,
+        scan: bool = True, scan_step_min: Optional[int] = None) -> Result:
     """tle_override_path — воспроизведение сохранённого расчёта текущего режима: орбита
     строится по сохранённому TLE, а не по текущему (Т8). В исторических режимах орбита
     берётся из архива OEM (A1/A3) и от TLE не зависит; живые источники не вызываются.
@@ -409,12 +416,24 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     fetch_note — причина отказа живых источников по ОБЩЕМУ пределу получения, если источники
     получал вызывающий (экран получает их своим кешированным вызовом). Когда их получает сам
     run, причина берётся у app.fetch_guard. Причина стоит и в статусе каждого источника, и
-    отдельным ключом снимка `sources['_live_fetch']` — чтобы выгрузка и примеры не гадали."""
+    отдельным ключом снимка `sources['_live_fetch']` — чтобы выгрузка и примеры не гадали.
+
+    scan — делать ли перебор начал выхода на горизонте (ТЗ круга 11, раздел 1). Результат
+    попадает в снимок ключом `scan`; если перебор не делался или делать его не из чего (нет
+    трассы), ключа в снимке НЕТ ВОВСЕ — пустой перебор и несделанный перебор разные вещи.
+    scan_step_min — шаг перебора в минутах; None означает «из config/settings.toml [ui]»."""
     validate_request(mode, t0, duration_min, search_min, window_offsets_min)
     t0 = t0.astimezone(timezone.utc)
     disabled = {'goes': False, 'kp': False, **(disabled or {})}
     th = thresholds or Thresholds.from_settings()
     scenario = scenario or Scenario('none')
+    # Шаг перебора — настройка вне кода (Т7). Проверяется ДО расчёта: неверный шаг должен быть
+    # виден сразу сообщением, а не через полминуты в середине перебора.
+    scan_step = int(scan_step_min if scan_step_min is not None
+                    else _cfg_section('ui').get('scan_step_min', STEP_MIN_DEFAULT))
+    if scan and not (0 < scan_step <= max(1, int(search_min) or 1)):
+        raise ValueError('шаг перебора начал %s мин вне границ запроса 1…%s мин'
+                         % (scan_step, max(1, int(search_min) or 1)))
     now = now or datetime.now(timezone.utc)
     ref_now = now if mode == 'live' else t0          # момент, от которого считаются давности: в истории — t0
     cutoff_utc = t0 if mode == 'history_forecast' else None
@@ -662,8 +681,13 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'archive_ru': _ev_archive_ru,
     }
     # Строка охвата: то же самое словами аналитика, рядом с остальным «не учтено».
+    # Глагол здесь тот же, что в `app.ui.LIVE_NO_EVENTS_RU`, и это не косметика: экран
+    # подставляет свою фразу про DONKI только тогда, когда её нет в этом списке, — то есть про
+    # один и тот же факт на экране печатается ровно одно предложение. Пока глаголы расходились
+    # («не опрашиваются» здесь против «не запрашиваются» там), читатель видел фразу этого слоя,
+    # а проверка экрана искала фразу своего (найдено слиянием круга 11).
     coverage_missing_extra = ((
-        'события и уведомления (NASA DONKI) в текущем режиме не опрашиваются — %s, он доступен только в '
+        'события и уведомления (NASA DONKI) в текущем режиме не запрашиваются — %s, он доступен только в '
         'исторических режимах' % _ev_archive_ru,) if mode == 'live' else ())
 
     # ------------------------------------------------------------ траектория (A3 через мост Б)
@@ -722,18 +746,30 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
 
     mmod = {w.start_utc: _mmod(w) for w in windows}      # один раз на окно
 
+    def _mmod_of(w: Window):
+        """То же значение для окна, посчитанное один раз. Полная оценка кандидата перебора
+        приходит сюда за своим числом попаданий — считать его дважды незачем."""
+        if w.start_utc not in mmod:
+            mmod[w.start_utc] = _mmod(w)
+        return mmod[w.start_utc]
+
     event_facts = {rid: meta.get('content_audit', {}).get('facts', {})
                    for records in history_proof.get('source_versions', {}).values() for rid, meta in records.items()}
 
     numerical_reports = {}
 
-    def _assess(w, tr, th_i):
+    def _assess(w, tr, th_i, numerical: bool = True):
+        m = _mmod_of(w)
         return assess_window(w, tr, belts, goes, kp, [], th_i, ref_now, events=events, catalog_coverage=catalog,
-                             mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1],
-                             mmod_cov_fraction=mmod[w.start_utc][2], forecasts=forecasts,
+                             mmod_hits=m[0], mmod_rule=m[1],
+                             mmod_cov_fraction=m[2], forecasts=forecasts,
                              trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc,
                              goes_observations=goes_observations, event_facts=event_facts, goes_absent_ru=goes_absent_ru,
-                             numerical_report=numerical_reports.setdefault(w.start_utc.isoformat(), {}))
+                             # отчёт о численном интегрировании ведётся по СРАВНИВАЕМЫМ окнам:
+                             # окна перебора в него не дописываются, иначе один и тот же ключ
+                             # снимка означал бы то два окна, то семьдесят три
+                             numerical_report=(numerical_reports.setdefault(w.start_utc.isoformat(), {})
+                                               if numerical else None))
 
     def _assess_all(tr, kw):
         th_i = replace(th, **kw)
@@ -760,6 +796,25 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                   tolerance_basis=tolerance_caption(
                       th, rob, rec.preferred,
                       max(1.0, (thresholds or Thresholds.from_settings()).fluence_equiv_ratio), _pair_txt))
+    # ------------------------------------------------- перебор начал выхода (ТЗ круга 11, раздел 1)
+    # Сервис отвечает на вопрос «когда выходить», а не проверяет два окна, которые человек
+    # расставил сам. Перебираются ВСЕ начала от начала срока поиска до «конец горизонта минус
+    # длительность» с шагом из настроек; поточечные величины считаются один раз на весь горизонт.
+    # Допуск равнозначности берётся ТОТ ЖЕ, что и у сравнения окон (после анализа
+    # чувствительности), иначе на одном экране «равнозначно» значило бы два разных числа.
+    scan_res = None
+    if scan and traj:
+        _tol_parts = [p.strip() for p in str(rec.tolerance_basis or '').split('; ')
+                      if p.strip().startswith('допуск ×')]
+        scan_res = scan_windows(
+            traj, belts, th,
+            search_from_utc=orbit_start, search_to_utc=orbit_start + timedelta(minutes=horizon_min),
+            duration_min=int(duration_min), step_min=scan_step, now_utc=ref_now,
+            full_assess=lambda w: _assess(w, traj, th, numerical=False),
+            goes=goes, goes_observations=goes_observations, kp=kp, events=events, forecasts=forecasts,
+            event_facts=event_facts, cutoff_utc=cutoff_utc,
+            tolerance_basis_ru=('основание — ' + _tol_parts[0]) if _tol_parts else '')
+
     samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
                **{s.raw_record_id: s for s in forecasts}}
     def window_samples(a):
@@ -776,6 +831,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                                             trajectory_ids=orbit_ids, cutoff_utc=cutoff_utc)
                        for i, a in enumerate(assessments)}
     cards = [c for a in assessments for c in cards_by_window[a.window.start_utc]]
+    # Карточки показываемых кандидатов перебора — теми же словами и тем же кодом, что карточки
+    # сравниваемых окон. Номер окна им не присваивается (window_index=None): «окно 1» на экране
+    # означает окно сравнения, и кандидат перебора этим номером назваться не может.
+    scan_cards = {a.window.start_utc: cards_for_window(a, window_samples(a), events=events, meta=meta,
+                                                       trajectory_ids=orbit_ids, cutoff_utc=cutoff_utc)
+                  for a in (scan_res.assessments.values() if scan_res else ())}
     if verification is not None:
         # Т5: вердикт по собственному прогнозу. Виды поставленных условий берутся из расчёта,
         # а не угадываются по тексту: GST — буря, SEP/GOES — протонная линия.
@@ -1072,8 +1133,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'verdict_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in (rob.verdict_by_grid or {}).items()},
                        'ranking_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.ranking_by_grid.items()}},
     }
+    if scan_res is not None:
+        # Договор с экраном (ТЗ круга 11, раздел 1a): форма ключа фиксирована и не меняется.
+        # Ключ появляется ТОЛЬКО когда перебор действительно сделан; несделанный перебор — это
+        # отсутствие ключа, а не пустой список кандидатов и не None.
+        S['scan'] = scan_res.to_snapshot()
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
                   {'goes': f_goes, 'kp': f_kp, 'tle': f_tle,
                    'noaa': f_noaa or _empty_fetch('noaa_swpc_3day_forecast', 'в историческом режиме живой прогноз не запрашивается')},
                   forecasts=fc_lines, orbit=orb, kp_obs=kp_obs,
-                  cards_by_window=cards_by_window, verification=verification)
+                  cards_by_window=cards_by_window, verification=verification,
+                  scan=scan_res, scan_cards=scan_cards)
