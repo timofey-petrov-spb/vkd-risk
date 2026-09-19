@@ -65,25 +65,36 @@ def observations_figure(tg, vg, tk, vk, t0: datetime, goes_title: str, kp_title:
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                         subplot_titles=(goes_title, kp_title))
+    # диапазон логарифмической оси — по данным, а не фиксированный до 10 000 pfu: при потоке
+    # в доли pfu линия ложилась на дно и читать было нечего. Первый порог шкалы (S1) в поле
+    # зрения остаётся всегда — иначе непонятно, насколько далеко до него
+    pos = [v for v in vg if v and v > 0]
+    y_lo = math.log10(min(pos)) - 0.3 if pos else -2.0
+    y_hi = max(math.log10(max(pos)) + 0.3, math.log10(S_LEVELS[0][0]) + 0.2) if pos else 1.2
     if tg:
         fig.add_trace(go.Scatter(x=tg, y=vg, name='GOES ≥10 МэВ, pfu', line=dict(color=GREEN, width=1.5),
                                  hovertemplate='%{y:.3g} pfu<extra></extra>'), row=1, col=1)
         for thr, name in S_LEVELS:
             # на логарифмической оси координата линии — log10 значения, иначе 1000 читается как 10^1000
-            fig.add_hline(y=math.log10(thr), line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
+            # рисуем только те пороги, что попали в диапазон: линия за краем оси не видна, а место занимает
+            if y_lo <= math.log10(thr) <= y_hi:
+                fig.add_hline(y=math.log10(thr), line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
     if tk:
-        fig.add_trace(go.Bar(x=tk, y=vk, name='Kp', marker_color=[RED if v >= 7 else GREEN for v in vk],
+        # цвет означает происхождение (зелёный — наблюдение), а не «хорошо/плохо»:
+        # насколько Kp велик, говорят линии порогов G1/G3/G5, а не заливка столбца
+        fig.add_trace(go.Bar(x=tk, y=vk, name='Kp', marker_color=GREEN,
                              hovertemplate='Kp %{y:.2f}<extra></extra>'), row=2, col=1)
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
     fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text=mark_ru, showarrow=False, xanchor='left', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
-    lo = min([v for v in vg if v > 0] or [0.1])
     # метки логарифмической оси задаём сами: иначе печатаются числа вида 192,3432 (U4)
-    fig.update_yaxes(type='log', title_text='поток, pfu', range=[math.log10(lo) - 0.5, 4.2], row=1, col=1,
-                     tickmode='array', tickvals=PFU_TICKVALS, ticktext=PFU_TICKTEXT)
-    fig.update_yaxes(range=[0, 9], title_text='Kp', row=2, col=1)
+    keep = [(tv, tt) for tv, tt in zip(PFU_TICKVALS, PFU_TICKTEXT) if y_lo - 0.3 <= math.log10(tv) <= y_hi + 0.3]
+    fig.update_yaxes(type='log', title_text='поток ≥10 МэВ, pfu', range=[y_lo, y_hi], row=1, col=1,
+                     tickmode='array', tickvals=[tv for tv, _ in keep] or PFU_TICKVALS,
+                     ticktext=[tt for _, tt in keep] or PFU_TICKTEXT)
+    fig.update_yaxes(range=[0, 9.8], title_text='Kp (безразмерный)', row=2, col=1)
     fig.update_xaxes(title_text='время, UTC', row=2, col=1)
     fig = style(fig, 440)
     fig.update_layout(margin=dict(l=10, r=10, t=48, b=10), showlegend=False)
@@ -109,8 +120,9 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int,
     if kp:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
         w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]
+        # янтарный и штриховка — внешний прогноз; тот же вид, что и на ленте времени
         fig.add_trace(go.Bar(x=x, y=[c['value'] for c in kp], width=w, name='прогноз Kp, 3-часовые интервалы',
-                             marker_color=[RED if c['value'] >= 7 else AMBER for c in kp],
+                             marker=dict(color=AMBER, pattern=dict(shape='/', size=5, solidity=0.25, fgcolor='white')),
                              hovertemplate='прогноз Kp %{y:.2f}<extra></extra>'), row=1, col=1)
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
@@ -129,7 +141,7 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int,
     fig.add_vrect(x0=t0, x1=t0 + timedelta(minutes=horizon_min), fillcolor='steelblue', opacity=0.06, line_width=0)
     fig.add_annotation(x=t0 + timedelta(minutes=horizon_min / 2), y=1.0, xref='x', yref='paper', text='горизонт окон', showarrow=False,
                        xanchor='center', yanchor='bottom', font=dict(size=10, color='#7f8c8d'))
-    fig.update_yaxes(range=[0, 9], title_text='Kp', row=1, col=1)
+    fig.update_yaxes(range=[0, 9.8], title_text='Kp (безразмерный)', row=1, col=1)
     fig.update_yaxes(range=[0, 100], title_text='вероятность, %', row=2, col=1)
     fig.update_xaxes(title_text='время, UTC', row=2, col=1)
     fig = style(fig, 420)
