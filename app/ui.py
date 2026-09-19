@@ -602,7 +602,8 @@ _CHECK_RE = re.compile(r'[;,]?\s*контроль\s+[^;]+воспроизвед�
 _PROBE_TAIL_RE = re.compile(r'[;,]?\s*проверка адресов:.*$', re.S)
 _PROBE_FAIL_RE = re.compile(r'(?:%s|timeout|time-out)' % _NET_ALT, re.I)
 # обороты слоёв программы, которым на оперативном уровне нужен русский (U2)
-PHRASE_RU = [('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
+PHRASE_RU = [('request_incomplete', 'предыдущий запрос не завершён'),
+             ('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
              # «настройка config/settings.toml» стоит в скобке рядом с порогом различимости окон по
              # линии метеороидов: имя файла зрителю ничего не говорит, а происхождение числа — говорит
              ('настройка config/settings.toml', 'порог задан в настройках сервиса'),
@@ -1013,9 +1014,11 @@ def bullet_short_ru(text: str) -> str:
     head_ = _SEMI_OUTSIDE_PARENS_RE.split(s)[0].strip().rstrip('.')
     for a, b in PHRASE_RU:
         head_ = head_.replace(a, b)
-    role = (_MMOD_ROLE_RU if 'сезонная оценка' in s else
-            'роль линии: абсолютная оценка и охват, не выбор окна')
-    return head_ + ' — ' + role + '.'
+    if 'сезонная оценка' in s:
+        # The comparison and its threshold stay visible. Assumptions are already
+        # disclosed in the full verdict and in the seasonal component panel.
+        return head_ + '.'
+    return head_ + ' — роль линии: абсолютная оценка и охват, не выбор окна.'
 
 
 def robustness_pill(rec, rob: dict) -> str:

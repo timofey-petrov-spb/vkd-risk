@@ -193,3 +193,11 @@ def test_scan_uses_both_mechanisms_and_preserves_rank_uncertainty():
     models[cands[0].start_utc] = model(1e-6, 5e-6)
     _, best, selected, verdict = _rank_candidates(cands, 5, 1.5, models, 5)
     assert verdict == "equivalent" and selected is None and len(best) == 2
+
+
+def test_incomplete_request_status_is_readable_on_screen_and_in_export():
+    from app.ui import status_ru, screen_text
+    text = 'пауза запросов; request_incomplete'
+    assert 'request_incomplete' not in status_ru(text)
+    assert 'не завершён' in status_ru(text)
+    assert 'request_incomplete' not in screen_text(text)
