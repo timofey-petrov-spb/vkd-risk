@@ -51,7 +51,7 @@ except ImportError:
     HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.5.0-models'
+ALGO_VERSION = '0.5.0'      # 19.09: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ, строгая отсечка карточек SEP
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))

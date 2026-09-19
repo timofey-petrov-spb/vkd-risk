@@ -101,6 +101,7 @@ EVENT_KIND_RU = {'SEP': 'протонное событие', 'GST': 'геома�
 SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
              'ost1044_belts': 'таблицы ОСТ 134-1044-2007 (захваченные протоны)',
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
+             'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
              'noaa_forecast_kp_forecast': 'прогноз Kp NOAA (выпуск до отсечки)',
              'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
              'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки'}
