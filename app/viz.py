@@ -3,9 +3,16 @@
 
 Цвет означает происхождение величины, как и на всём экране: синий — наш расчёт,
 зелёный — наблюдение, янтарный — внешний прогноз, красный — условие или аномалия,
-серый — вспомогательные линии. Единый стиль всех графиков — style(): шаблон
-plotly_white, легенда сверху не длиннее четырёх строк, подписи осей с единицами,
+серый — вспомогательные линии. Единый стиль всех графиков — style(): тёмная подложка
+в тон странице, легенда сверху не длиннее четырёх строк, подписи осей с единицами,
 заголовок говорит, ЧТО показано и ОТКУДА.
+
+Тёмная подложка и цвета величин заданы в разных местах, и это не небрежность.
+Оттенки самих величин (BLUE, RED, GREEN, AMBER, GREY) остаются светлотемными: их
+пересчитывает в тёмные пары `app.ui.dark_figure` по точной таблице соответствий, и
+перекрасить их здесь значит разойтись с той таблицей. Здесь задаётся только то, до чего
+dark_figure не достаёт и что иначе осталось бы белым прямоугольником на тёмной странице:
+подложка поля, сетка, шрифт, заливки фигур разметки и картографическая подложка карты.
 
 Лента отвечает на вопрос аналитика «почему это окно лучше», а не показывает сырое поле:
 верхний ряд — накопленные минуты в аномалии по каждому окну (ступенями, от начала окна),
@@ -28,6 +35,25 @@ from app.ui import event_kind_ru      # имена типов событий п�
 
 BLUE, RED, GREY, WIN = '#1f4e79', '#c0392b', '#7f8c8d', '#5dade2'
 GREEN, AMBER = '#1e8449', '#b9770e'
+# Тёмная подложка экрана: ровно те же значения, что в теме Streamlit (.streamlit/config.toml)
+# и в :root app/ui.py. Это НЕ цвета величин — это бумага, сетка и шрифт, на которых величины
+# нарисованы. Тёмные пары самих величин берёт app/ui.dark_figure.
+BG, PANEL, RULE = '#0e1117', '#161b26', '#242b38'
+INK, MUTED = '#e8ebf2', '#a7b0c0'
+# Одна гарнитура на весь экран: та же, что у страницы и у подписей внутри глобуса.
+FONT = 'Inter, Segoe UI, Roboto, Arial, sans-serif'
+# Тёмные пары для заливок: dark_figure подставляет тёмный оттенок только по точному совпадению
+# строки цвета, а заливка задаётся с прозрачностью (rgba) и мимо той таблицы проходит.
+RED_FILL = 'rgba(245,139,127,0.16)'          # аномалия: красный тёмной темы (#f58b7f) вполсилы
+PAST_FILL = '#161b26'                        # прошлое на ленте: та же подложка, только плотнее
+# Тёмные пары цветов величин. Нужны там, где цвет попадает в ЗАЛИВКУ фигуры разметки (vrect):
+# app/ui.dark_figure правит цвет линии фигуры, а до заливки не достаёт, и тёмно-синяя полоса окна
+# на тёмном фоне пропадала совсем. Таблица — та же, что DARK_TRACE_COLORS в app/ui.py; совпадение
+# проверяется тестом (tests/test_viz_visual.py), чтобы две таблицы не разошлись молча.
+DARK_PAIR = {'#1f4e79': '#7ab8f5', '#5dade2': '#4f8fc0', '#85c1e9': '#3f6f97',
+             '#1e8449': '#5ed39a', '#b9770e': '#e7b45c', '#c0392b': '#f58b7f',
+             '#7f8c8d': '#9aa5b5', '#9aa0a6': '#9aa5b5'}
+
 # цвета окон — оттенки синего (окно, как и трасса, наш расчёт); первое окно самое тёмное
 WIN_COLORS = (BLUE, WIN, '#85c1e9')
 # панель инструментов скрыта, график не масштабируется мышью: экран читают, а не крутят
@@ -51,11 +77,13 @@ KP_G3 = 7.0
 # и «24 000» в тексте того же экрана (бриф §9.8: дроби с запятой). Первый знак — десятичный,
 # второй — разряды тысяч.
 SEPARATORS = ', '
-# заголовок ленты говорит, ЧТО показано и ОТКУДА — по режиму, одной строкой
+# Заголовок ленты говорит, ЧТО показано и ОТКУДА — по режиму, одной короткой строкой.
+# Подробности (какой именно ряд GFZ, какой выпуск прогноза) стоят в подписи под рисунком:
+# заголовок в две строки читается дольше, чем сам рисунок.
 TIMELINE_TITLE = {
-    'live': 'Экспозиция по окнам — наш расчёт по IGRF; Kp и поток GOES ≥10 МэВ — наблюдения GFZ и NOAA SWPC',
-    'history_review': 'Экспозиция по окнам — наш расчёт по IGRF; Kp — наблюдения окончательного ряда GFZ (разбор после факта)',
-    'history_forecast': 'Экспозиция по окнам — наш расчёт по IGRF; Kp — внешний прогноз NOAA из выпуска до отсечки',
+    'live': 'Экспозиция окон — наш расчёт по IGRF; Kp и поток GOES — наблюдения GFZ и NOAA',
+    'history_review': 'Экспозиция окон — наш расчёт по IGRF; Kp — наблюдения GFZ (разбор после факта)',
+    'history_forecast': 'Экспозиция окон — наш расчёт по IGRF; Kp — внешний прогноз NOAA до отсечки',
 }
 
 
@@ -64,19 +92,35 @@ def win_color(i: int) -> str:
     return WIN_COLORS[i % len(WIN_COLORS)]
 
 
+def dark_pair(color: str) -> str:
+    """Тёмная пара цвета величины; незнакомый цвет остаётся собой — портить нечего."""
+    return DARK_PAIR.get(str(color).lower(), color)
+
+
 def style(fig: go.Figure, height: int, legend_top: bool = True, title: str | None = None) -> go.Figure:
-    """Единый стиль: plotly_white, заголовок «что и откуда», легенда сверху, сетка светлая, шрифт экрана."""
-    fig.update_layout(template='plotly_white', height=height, margin=dict(l=10, r=10, t=36, b=10),
-                      font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
-                      hovermode='x unified', paper_bgcolor='white', plot_bgcolor='white',
-                      separators=SEPARATORS)
+    """Единый стиль: тёмная подложка в тон странице, заголовок «что и откуда», легенда сверху.
+
+    Что убрано намеренно. Рамка поля и вертикальная сетка времени ничего не отделяют и ничего
+    не помогают прочесть: значение читают по горизонтали, а моменты времени на ленте отмечены
+    своими линиями. Осталась одна горизонтальная сетка цветом разделителя — она тише подписей
+    и не спорит с линиями данных. Подписи осей крупнее делений: ось без единицы нечитаема, и
+    единицу нужно видеть, не приглядываясь.
+    """
+    fig.update_layout(template='plotly_dark', height=height, margin=dict(l=10, r=10, t=36, b=10),
+                      font=dict(family=FONT, size=13, color=INK),
+                      hovermode='x unified', paper_bgcolor=BG, plot_bgcolor=BG,
+                      separators=SEPARATORS,
+                      hoverlabel=dict(bgcolor=PANEL, bordercolor=RULE, font=dict(family=FONT, size=12, color=INK)))
     if title:
-        fig.update_layout(title=dict(text=title, x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
+        fig.update_layout(title=dict(text=title, x=0, xanchor='left', font=dict(size=14, color=INK)),
                           margin=dict(l=10, r=10, t=76, b=10))
     if legend_top:
-        fig.update_layout(legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0, font=dict(size=11)))
-    fig.update_xaxes(showgrid=True, gridcolor='#eef0f3', zeroline=False, showline=True, linecolor='#d7dbdf')
-    fig.update_yaxes(showgrid=True, gridcolor='#eef0f3', zeroline=False, showline=True, linecolor='#d7dbdf')
+        fig.update_layout(legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0,
+                                      font=dict(size=12, color=MUTED), bgcolor='rgba(0,0,0,0)'))
+    fig.update_xaxes(showgrid=False, zeroline=False, showline=False, ticks='outside', ticklen=4, tickcolor=RULE,
+                     tickfont=dict(size=12, color=MUTED), title_font=dict(size=13, color=MUTED))
+    fig.update_yaxes(showgrid=True, gridcolor=RULE, gridwidth=1, zeroline=False, showline=False,
+                     tickfont=dict(size=12, color=MUTED), title_font=dict(size=13, color=MUTED))
     return fig
 
 
@@ -177,15 +221,16 @@ def ground_track(traj, windows, thr_nT: float, when: datetime, step_lon: float =
     polys = saa_contour(alt_km, thr_nT, when, step_lon=step_lon, step_lat=step_lat)
     for k, (plon, plat) in enumerate(polys):
         fig.add_trace(go.Scattergeo(lon=plon, lat=plat, mode='lines', fill='toself',
-                                    fillcolor='rgba(192,57,43,0.14)', line=dict(color=RED, width=1),
-                                    name='аномалия: |B| ниже %s нТл на высоте %s' % (_nbsp_int(thr_nT), alt_ru),
+                                    fillcolor=RED_FILL, line=dict(color=RED, width=1.4),
+                                    name='аномалия: |B| ниже %s нТл, %s' % (_nbsp_int(thr_nT), alt_ru),
                                     showlegend=(k == 0), hoverinfo='skip'))
     lon_l, lat_l = _split_dateline([p.lon_deg for p in traj], [p.lat_deg for p in traj])
-    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='трасса, шаг 1 мин', line=dict(color=GREY, width=1), hoverinfo='skip'))
+    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='трасса, шаг 1 мин',
+                                line=dict(color=GREY, width=1.2), opacity=0.55, hoverinfo='skip'))
     in_saa_pts = [p for p in traj if p.in_saa]
     if in_saa_pts:
         fig.add_trace(go.Scattergeo(lon=[p.lon_deg for p in in_saa_pts], lat=[p.lat_deg for p in in_saa_pts], mode='markers',
-                                    name='точки трассы в аномалии', marker=dict(size=3, color=RED), hoverinfo='skip'))
+                                    name='трасса в аномалии', marker=dict(size=3.5, color=RED), hoverinfo='skip'))
     for i, w in enumerate(windows):
         end = w.start_utc + timedelta(minutes=w.duration_min)
         seg = [p for p in traj if w.start_utc <= p.t_utc < end]
@@ -197,16 +242,23 @@ def ground_track(traj, windows, thr_nT: float, when: datetime, step_lon: float =
                                     hovertemplate='окно %d<br>%%{lat:.1f}°, %%{lon:.1f}°<extra></extra>' % (i + 1)))
         fig.add_trace(go.Scattergeo(lon=[seg[0].lon_deg], lat=[seg[0].lat_deg], mode='markers+text', text=['старт %d' % (i + 1)],
                                     textposition='top center', marker=dict(size=9, color=win_color(i), symbol='circle'),
+                                    textfont=dict(family=FONT, size=12, color=MUTED),
                                     showlegend=False, hoverinfo='skip'))
-    fig.update_geos(projection_type='equirectangular', showcountries=False, showcoastlines=True, coastlinecolor='#bbb',
-                    showland=True, landcolor='#f7f7f7', showocean=True, oceancolor='#ffffff', lataxis_range=[-75, 75])
-    fig.update_layout(template='plotly_white', height=440, margin=dict(l=0, r=0, t=76, b=0),
-                      title=dict(text='Область аномалии и трасса МКС — наш расчёт |B| по IGRF на высоте %s '
-                                      '(средняя по трассе); времена UTC' % alt_ru,
-                                 x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
-                      font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
-                      separators=SEPARATORS,
-                      legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0, font=dict(size=11)))
+    # Подложка карты тёмная, в тон странице: белый океан на тёмном экране читался как дыра в вёрстке.
+    # Суша чуть светлее океана и без границ государств — она здесь только затем, чтобы по трассе
+    # было видно, над чем идёт станция; береговая линия приглушена до цвета вспомогательных линий.
+    fig.update_geos(projection_type='equirectangular', showcountries=False, showcoastlines=True, coastlinecolor=RULE,
+                    coastlinewidth=1, showland=True, landcolor=PANEL, showocean=True, oceancolor=BG,
+                    showframe=False, bgcolor=BG, lataxis_range=[-75, 75])
+    fig.update_layout(template='plotly_dark', height=440, margin=dict(l=0, r=0, t=76, b=0),
+                      title=dict(text='Трасса МКС и область аномалии — наш расчёт |B| по IGRF, '
+                                      'высота %s, время UTC' % alt_ru,
+                                 x=0, xanchor='left', font=dict(size=14, color=INK)),
+                      font=dict(family=FONT, size=13, color=INK),
+                      paper_bgcolor=BG, plot_bgcolor=BG, separators=SEPARATORS,
+                      hoverlabel=dict(bgcolor=PANEL, bordercolor=RULE, font=dict(family=FONT, size=12, color=INK)),
+                      legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0,
+                                  font=dict(size=12, color=MUTED), bgcolor='rgba(0,0,0,0)'))
     return fig
 
 
@@ -255,10 +307,14 @@ def _saa_spans(traj):
 
 def _row_title(fig: go.Figure, row: int, text: str) -> None:
     """Имя ряда внутри самого ряда, слева сверху: над верхним рядом стоит легенда,
-    и подписи make_subplots столкнулись бы с ней."""
+    и подписи make_subplots столкнулись бы с ней.
+
+    Имя короткое — два-три слова: ряд объясняют подписанные оси, а не фраза над ним.
+    Плашка под именем тёмная, в тон подложке: белая читалась на тёмной странице как наклейка."""
     fig.add_annotation(x=0.005, y=0.99, xref='x domain', yref='y domain', row=row, col=1, secondary_y=False,
                        text=text, showarrow=False, xanchor='left', yanchor='top',
-                       font=dict(size=11, color='#5b6470'), bgcolor='rgba(255,255,255,0.8)')
+                       font=dict(family=FONT, size=12, color=MUTED), bgcolor='rgba(14,17,23,0.72)',
+                       borderpad=3)
 
 
 def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes, kp, events, forecasts: list,
@@ -299,7 +355,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
                                else [[{'secondary_y': True}], [{'secondary_y': True}]]))
     kp_row = 2
     # имя ряда стоит внутри самого ряда, а не над ним: над верхним рядом стоит легенда
-    _row_title(fig, 1, 'Экспозиция по окнам: сколько минут в аномалии набирает каждое окно')
+    _row_title(fig, 1, 'Экспозиция по окнам')
     _row_title(fig, kp_row, 'Внешняя обстановка')
     if ev_row:
         _row_title(fig, ev_row, 'События и прогнозы')
@@ -307,21 +363,24 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
 
     # --- ряд 1: прошлое затенено и подписано — пусто там не по ошибке, а по определению
     if (t0 - x_from) >= timedelta(hours=2):
-        fig.add_vrect(x0=x_from, x1=t0, fillcolor='#f2f4f6', opacity=0.6, line_width=0, layer='below', row=1, col=1)
+        fig.add_vrect(x0=x_from, x1=t0, fillcolor=PAST_FILL, opacity=0.55, line_width=0, layer='below', row=1, col=1)
         fig.add_annotation(x=x_from + (t0 - x_from) / 2, y=0.45, xref='x', yref='y domain', row=1, col=1,
                            secondary_y=False, text='работ в прошлом нет: экспозиция считается<br>от начала каждого окна',
-                           showarrow=False, align='center', font=dict(size=10, color=GREY))
+                           showarrow=False, align='center', font=dict(family=FONT, size=11, color=GREY))
 
     # --- ряд 1: полосы пролётов аномалии и полосы окон
+    # Заливки полос берут тёмные пары цветов: на тёмной подложке тёмно-синяя и тёмно-карминовая
+    # полосы исчезали совсем, и пролёты аномалии было не различить.
     for a, b in _saa_spans(traj):
-        fig.add_vrect(x0=a, x1=b, fillcolor=RED, opacity=0.13, line_width=0, layer='below', row=1, col=1)
+        fig.add_vrect(x0=a, x1=b, fillcolor=dark_pair(RED), opacity=0.16, line_width=0, layer='below', row=1, col=1)
     for i, w in enumerate(windows):
         x1 = w.start_utc + timedelta(minutes=w.duration_min)
         for r in range(1, rows + 1):
-            fig.add_vrect(x0=w.start_utc, x1=x1, fillcolor=win_color(i), opacity=0.09, line_width=0, layer='below', row=r, col=1)
+            fig.add_vrect(x0=w.start_utc, x1=x1, fillcolor=dark_pair(win_color(i)), opacity=0.10,
+                          line_width=0, layer='below', row=r, col=1)
         fig.add_annotation(x=w.start_utc, y=0.86, xref='x', yref='y domain', row=1, col=1, secondary_y=False,
-                           text='окно %d' % (i + 1), showarrow=False,
-                           xanchor='left', yanchor='top', font=dict(size=11, color=win_color(i)))
+                           text='окно %d' % (i + 1), showarrow=False, xanchor='left', yanchor='top',
+                           font=dict(family=FONT, size=12, color=win_color(i)))
 
     # --- ряд 1: накопленные минуты по каждому окну; подпись итога стоит на конце ступени,
     # поэтому в легенду окна не идут (легенда не длиннее четырёх строк)
@@ -342,11 +401,13 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
                                  marker=dict(size=7, color=win_color(i)),
                                  text=['окно %d: %s мин' % (i + 1, _nbsp_int(total))],
                                  textposition='top left' if near_edge else 'middle right',
-                                 textfont=dict(size=11, color=win_color(i))), row=1, col=1, secondary_y=False)
+                                 # цвет ПОДПИСИ ряда (textfont) dark_figure не правит — берём тёмную пару сами
+                                 textfont=dict(family=FONT, size=12, color=dark_pair(win_color(i)))),
+                      row=1, col=1, secondary_y=False)
     if traj:
         # сырое поле: линия есть, но свёрнута в легенде — кому надо, тот развернёт одним нажатием
         fig.add_trace(go.Scatter(x=[p.t_utc for p in traj], y=[p.B_nT for p in traj], visible='legendonly',
-                                 name='|B| на трассе, нТл — наш расчёт (нажмите, чтобы показать)',
+                                 name='|B| на трассе, нТл — наш расчёт',
                                  line=dict(width=1.2, color=BLUE), hovertemplate='%{y:.0f} нТл<extra></extra>'),
                       row=1, col=1, secondary_y=True)
         # ось скрыта: пока линия свёрнута, пустая ось справа была бы тем же, за что ругали ось потока;
@@ -371,12 +432,12 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     if cells:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in cells]
         wd = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.92 for c in cells]
-        fig.add_trace(go.Bar(x=x, y=[c['value'] for c in cells], width=wd, name='прогноз Kp — внешний прогноз',
+        fig.add_trace(go.Bar(x=x, y=[c['value'] for c in cells], width=wd, name='Kp — внешний прогноз',
                              marker=dict(color=AMBER, opacity=0.85, pattern=dict(shape='/', size=5, solidity=0.25,
-                                                                                 fgcolor='white')),
+                                                                                 fgcolor=BG)),
                              hovertemplate='прогноз Kp %{y:.2f}<extra></extra>'), row=kp_row, col=1, secondary_y=False)
     fig.add_hline(y=KP_G3, line_dash='dot', line_color=RED, line_width=1, row=kp_row, col=1, secondary_y=False,
-                  annotation_text='порог Kp 7 (буря G3)', annotation_position='top left', annotation_font_size=10,
+                  annotation_text='порог Kp 7 (буря G3)', annotation_position='top left', annotation_font_size=11,
                   annotation_font_color=RED)
 
     # --- ряд 2: поток GOES. Ось рисуется только тогда, когда по ней есть что читать
@@ -385,7 +446,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     if g_pts and g_max >= S1_PFU:
         y_lo = np.log10(min(v for _, v in g_pts)) - 0.2
         y_hi = max(np.log10(g_max) + 0.2, np.log10(S1_PFU) + 0.15)
-        fig.add_trace(go.Scatter(x=[t for t, _ in g_pts], y=[v for _, v in g_pts], name='поток GOES ≥10 МэВ — наблюдение',
+        fig.add_trace(go.Scatter(x=[t for t, _ in g_pts], y=[v for _, v in g_pts], name='поток GOES — наблюдение',
                                  line=dict(width=1.4, color=GREEN, dash='dot'),
                                  hovertemplate='%{y:.3g} pfu<extra></extra>'), row=kp_row, col=1, secondary_y=True)
         # границы шкалы NOAA S подписаны прямо на делениях оси: отдельная линия на вторичной оси
@@ -412,7 +473,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
             # тип события подписан на оси ряда 3 — в легенду он не идёт: легенда не длиннее четырёх строк
             fig.add_trace(go.Scatter(x=[a for a, _ in lst], y=[nm] * len(lst), mode='markers', showlegend=False,
                                      name=nm + (' (сценарий)' if any(e.is_simulated for _, e in lst) else ''),
-                                     marker=dict(size=10, color=c, symbol=s, line=dict(width=1, color='white')),
+                                     marker=dict(size=11, color=c, symbol=s, line=dict(width=1, color=BG)),
                                      text=[(e.note or e.event_id)[:110] for _, e in lst], hovertemplate='%{text}<extra>' + nm + '</extra>'),
                           row=ev_row, col=1)
         fig.update_yaxes(title_text='событие, тип', type='category', categoryorder='array',
@@ -424,7 +485,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     # --- отметки времени: каждая ровно один раз и внизу, чтобы не лезть на метки осей
     bottom = rows
     now_ru = 'сейчас' if mode == 'live' else ('отсечка' if mode == 'history_forecast' else 'начало периода')
-    _vmark(fig, t0, now_ru, '#1a1f2b', 'solid', 'left')
+    _vmark(fig, t0, now_ru, INK, 'solid', 'left')
     if search_min:
         _vmark(fig, t0 + timedelta(minutes=search_min),
                'конец периода поиска начала (%s ч)' % _num_ru(search_min / 60.0), GREY, 'dash', 'right')
@@ -442,7 +503,8 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     plot_px = max(height - 86 - b, 1)
     for i, line in enumerate(foot):
         fig.add_annotation(x=0, y=-(44.0 + 18.0 * i) / plot_px, xref='paper', yref='paper', text=line,
-                           showarrow=False, xanchor='left', yanchor='top', font=dict(size=10, color=GREY))
+                           showarrow=False, xanchor='left', yanchor='top',
+                           font=dict(family=FONT, size=11, color=GREY))
     return fig
 
 
@@ -455,5 +517,5 @@ def _vmark(fig: go.Figure, when: datetime, text: str, color: str, dash: str, sid
     fig.add_shape(type='line', x0=when, x1=when, xref='x', y0=0, y1=1, yref='paper',
                   line=dict(color=color, width=1.2, dash=dash), layer='above')
     fig.add_annotation(x=when, y=0, xref='x', yref='paper', text=text, showarrow=False,
-                       xanchor=side, yanchor='bottom', font=dict(size=10, color=color),
-                       bgcolor='rgba(255,255,255,0.75)')
+                       xanchor=side, yanchor='bottom', font=dict(family=FONT, size=11, color=color),
+                       bgcolor='rgba(14,17,23,0.78)', borderpad=3)
