@@ -1,0 +1,15 @@
+# Engineering choices, not operating limits or a collision-probability model.
+# Kept separate to avoid simultaneous edits to B's settings.toml.
+[screening]
+report_distance_km = 50.0
+check_distance_km = 5.0
+coarse_step_s = 60.0
+refine_step_s = 5.0
+tca_tolerance_s = 0.001
+radial_margin_km = 100.0
+relative_acceleration_bound_km_s2 = 0.04
+max_element_age_days = 3.0
+max_catalogue_age_hours = 24.0
+max_horizon_hours = 72.0
+batch_size = 128
+use_radial_filter = true
