@@ -7,3 +7,13 @@
 
 # Hashed seasonal catalogue and controls must be identical on Windows and macOS.
 data/meteoroids/*.json text eol=lf
+
+# Любой файл данных, по которому считается контрольная сумма, обязан иметь ОДИНАКОВЫЕ байты
+# на всех системах. Правило `* text=auto eol=crlf` выше переводит JSON в виндовые переводы строк
+# при выгрузке на Windows, и тогда один и тот же файл даёт две разные суммы: одну у модуля,
+# который читает байты с диска, другую у закреплённой записи, снятой на системе с юниксовыми
+# переводами. 19.09 это дало три падения проверок на Windows при исправном коде.
+data/**/*.json text eol=lf
+data/**/*.csv text eol=lf
+data/**/*.tle text eol=lf
+data/**/*.shc text eol=lf
