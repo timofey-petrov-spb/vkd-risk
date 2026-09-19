@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import html
+import math
 import re
 from datetime import datetime, timedelta
 
@@ -97,12 +98,17 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .k-none { border-left-color:var(--none-line); } .k-none .cv { color:var(--ink); }
 .verdict { border-radius:12px; padding:16px 20px; border:1px solid var(--line); border-left:3px solid var(--none);
            background:var(--bg); margin:4px 0 14px 0; }
-.verdict h2 { margin:0 0 4px 0; font-size:1.35rem; }
-.verdict .rule { color:var(--muted); font-size:0.92rem; margin-bottom:8px; }
+/* Типографика блока вердикта — ТА ЖЕ, что у блока рекомендации наверху (замечание владельца по
+   снимкам 20 и 21: «выглядит как вырви глаз»; здесь текст был мельче — 1,35/0,92/0,93 rem против
+   1,55/0,95 в рекомендации, и два блока об одном и том же читались как разные по важности).
+   Ширина строки ограничена одинаково в обоих блоках: сплошная строка в 1400 px не читается —
+   глаз теряет начало следующей. 96ch при 0,95 rem — около 740 px. */
+.verdict h2 { margin:0 0 4px 0; font-size:1.55rem; }
+.verdict .rule { color:var(--muted); font-size:0.95rem; margin-bottom:8px; max-width:96ch; }
 .verdict .rule .orig { color:var(--muted); font-size:0.84rem; }
 .verdict .win { font-size:1.05rem; font-weight:600; }
-.verdict ul { margin:6px 0 0 18px; padding:0; }
-.verdict li { margin:2px 0; font-size:0.93rem; }
+.verdict ul { margin:6px 0 0 18px; padding:0; max-width:96ch; }
+.verdict li { margin:3px 0; font-size:0.95rem; }
 .verdict li.more { color:var(--muted); list-style:none; margin-left:-18px; font-size:0.86rem; }
 .verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
                  background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
@@ -164,7 +170,10 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
         border-left:3px solid var(--calc); margin:4px 0 14px 0; }
 .reco h2 { margin:0 0 2px 0; font-size:1.55rem; color:var(--calc); }
 .reco .when { font-size:1.05rem; font-weight:600; margin-bottom:6px; }
-.reco .why { font-size:0.95rem; margin:4px 0 2px 0; }
+.reco .why { font-size:0.95rem; margin:4px 0 2px 0; max-width:96ch; }
+/* Популярное объяснение: ровно два предложения обычными словами под крупным ответом.
+   Чуть крупнее служебных строк и без приглушения — это то, что читают первым после заголовка. */
+.reco .plain { font-size:1.0rem; line-height:1.45; margin:6px 0 2px 0; max-width:96ch; color:var(--ink); }
 .reco .searched { font-size:0.84rem; color:var(--muted); margin:4px 0 0 0; }
 .reco .stop { margin:8px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--cond);
               background:var(--cond-bg); color:var(--cond); font-size:0.9rem; }
@@ -212,6 +221,13 @@ NO_PICK_ON_GRID_RU = {
 # происхождение величины. Минуты в аномалии и флюенс считает сервис, поэтому оба ряда ленты синие.
 # Значение — светлый синий тёмной темы: на фоне #0e1117 тёмно-синий #1f4e79 светлой темы не читается.
 CALC_BLUE = '#7ab8f5'
+# Заливка полосы-подложки: тот же синий с прозрачностью 0,22 — подложка обязана читаться как фон
+# под кривой, а не как второй такой же ряд. Значение прозрачности подобрано так, чтобы контраст
+# самой заливки к фону панели оставался различимым, но не спорил с линией профиля.
+CALC_BLUE_FILL = 'rgba(122,184,245,0.22)'
+# Пик профиля — тем же красным, которым на всём экране помечается условие проверки и аномалия
+# (--cond, #f58b7f): это единственное место графика, где красный означает «худшее время».
+PEAK_RED = '#f58b7f'
 COV_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'нет'}
 # покрытие — свойство нашего расчёта, а не «хорошо/плохо»: полное синим, частичное янтарём, нет — серым
 COV_KIND = {'full': 'calc', 'partial': 'warn', 'none': 'none'}
@@ -1447,7 +1463,11 @@ def sentence_ru(text: str) -> str:
 
 
 _FORMAL_RU = 'формальная запись — вкладка «Методика», формулы (8) и (9)'
-_VMORE_SUMMARY = 'Как это посчитано: правило целиком, откуда допуск и что даёт сетка порогов'
+_VMORE_SUMMARY = 'Как это посчитано: правило целиком, область вывода подробно и остальные пояснения'
+# Заголовок второй свёртки блока вердикта. Происхождение допуска — это три абзаца с числами сетки
+# порогов; внутри общей свёртки они тонули среди прочих строк, а на поверхности занимали столько же
+# места, сколько сам вердикт (замечание владельца по снимкам 20 и 21).
+_TOL_SUMMARY = 'Откуда допуск: числа сетки порогов и отношение флюенсов'
 # Сколько знаков перечней записей блок вердикта держит на поверхности. Перечень — это «откуда
 # известно»: у каждого условия он называет каждое уведомление со своим временем публикации и своим
 # Kp, и резать его по одной записи нельзя (число и ссылка обязаны приходить из одной записи).
@@ -1548,8 +1568,14 @@ def next_step_ru(rec, S: dict, assessments=None, mode: str = 'live') -> str:
         rob = S.get('robustness') or {}
         # О неустойчивости выбора сказано строкой устойчивости выше — второго сообщения об одном
         # и том же здесь быть не должно (бриф §9.7); меняется только оговорка к действию.
+        #
+        # Двенадцатый круг: намерение было записано, но не выполнено — слово «неустойчивость»
+        # стояло и здесь, и в строке устойчивости, и в самом заголовке блока, то есть один и тот
+        # же вывод повторялся на поверхности ТРИЖДЫ (воспроизводится на пресете «Тихая дата»).
+        # Строка «Что дальше» говорит о ДЕЙСТВИИ и отсылает к уже прочитанной оговорке, а не
+        # пересказывает её.
         act = 'можно выносить на согласование' if rob.get('stable') \
-            else 'выносится на согласование только с оговоркой о неустойчивости выбора'
+            else 'выносится на согласование только вместе с оговоркой выше'
         return ('Что дальше: %sокно %s %s; отчёт — кнопкой «Скачать отчёт»; %s.'
                 % (span, n or '—', act, when))
     if v in ('equivalent', 'trade_off'):
@@ -1570,7 +1596,13 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     выбора — стоит на один клик глубже, в свёртке внутри того же блока. Ничего не выброшено:
     каждая строка либо видна, либо лежит в свёртке, и обе проверяются `tests/test_ui_app.py`.
 
-    На ПРОФЕССИОНАЛЬНОМ уровне блок остаётся сплошным: там читают целиком и свёртка мешает.
+    На ПРОФЕССИОНАЛЬНОМ уровне блок до двенадцатого круга оставался сплошным — «там читают
+    целиком». На снимках 20 и 21 стало видно, чем это кончается: 4 091 знак подряд, из них
+    330 — дословный повтор правила, семь буллетов и три абзаца о происхождении допуска.
+    Владелец: «выглядит как вырви глаз». Теперь свёртка одна и та же на обоих уровнях, только
+    на профессиональном на поверхности остаются три буллета (сравнение по космопогоде, сравнение
+    по метеороидам, покрытие), а не четыре коротких. Происхождение допуска — своей свёрткой
+    «Откуда допуск», чтобы его не искали среди прочих строк.
     """
     v = rec.verdict
     rob = S.get('robustness') or {}
@@ -1581,12 +1613,23 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     unstable = v == 'preferred' and rob.get('stable') is False
     title = 'Предпочтительное окно есть, но выбор неустойчив' if unstable else VERDICT_TITLE.get(v, v)
     lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title)]
-    more: list[str] = []                   # то, что уезжает в свёртку (только оперативный уровень)
+    more: list[str] = []                   # то, что уезжает в свёртку — на обоих уровнях (пункт 2)
 
     if pro:
-        rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied, basis=True))) + ' · ' + _FORMAL_RU \
-            + ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
-        lines.append('<div class="rule">%s</div>' % rule)
+        # Двенадцатый круг, пункт 2. Здесь стоял ДОСЛОВНЫЙ ПОВТОР: `rule_ru` заменяет только
+        # приставку «п.3–4:» на «шаги 3–4 из 5, сравнение и сведение:», а хвост оставляет как есть,
+        # и он же печатался вторым разом в скобке `(п.3–4: …)`. На пресете «Тихая дата» это
+        # 330 знаков слово в слово подряд — не оформление, а ошибка. В скобке остаётся только
+        # НОМЕР пункта договора, ради которого она и заводилась; если правило неизвестное и
+        # `rule_ru` вернуло вход без изменений, скобки нет вовсе — она была бы вторым повтором.
+        _full_rule = frac_ru(rule_ru(rec.rule_applied, basis=True))
+        _point = str(rec.rule_applied or '').partition(':')[0].strip()
+        _orig = (' <span class="orig">(%s)</span>' % esc(frac_ru(_point))) \
+            if (_point and _full_rule != frac_ru(rec.rule_applied)) else ''
+        lines.append('<div class="rule">Правило: %s%s</div>' % (esc(_full_rule), _orig))
+        # Формальная запись — в свёртку: на поверхности блока нужны вердикт, окно, «почему»
+        # с числами и условия, а ссылка на номера формул читается один раз и на клик глубже.
+        more.append(_FORMAL_RU[0].upper() + _FORMAL_RU[1:] + '.')
     else:
         shown_rule, hidden_rule = rule_operational_ru(rec, S)
         lines.append('<div class="rule">Правило: %s</div>' % esc(screen_text(shown_rule)))
@@ -1604,14 +1647,13 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     scope_detail = R.get('scope_detail') or getattr(rec, 'scope_detail_ru', '')
     if scope:
         lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
-    # Подробная форма — та же область, с именами факторов и пропусками по причинам. На
-    # профессиональном уровне она стоит сразу, на оперативном уезжает в свёртку: короткая форма
-    # уже на экране, а два развёрнутых текста об одном и том же — два сообщения об одном (бриф §9.7).
+    # Подробная форма — та же область, с именами факторов и пропусками по причинам. Она уезжает
+    # в свёртку на ОБОИХ уровнях: короткая форма уже на экране строкой выше, а два развёрнутых
+    # текста об одном и том же — два сообщения об одном (бриф §9.7). До двенадцатого круга на
+    # профессиональном уровне она стояла сразу: на снимке 20 это 470 знаков вплотную под
+    # 140-знаковой строкой о том же самом. Ничего не потеряно — свёртка в этом же блоке.
     if scope_detail and scope_detail != scope:
-        if pro:
-            lines.append('<div class="policy">%s</div>' % esc(sentence_ru(screen_text(scope_detail))))
-        else:
-            more.append('Область вывода подробно: ' + screen_text(scope_detail) + '.')
+        more.append('Область вывода подробно: ' + screen_text(scope_detail) + '.')
 
     items = verdict_items(rec, assessments)
     # О3: при отказе рекомендовать строка сравнения не имеет права называть лучшее окно, а причина
@@ -1633,7 +1675,21 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     items = (need_items + items) if v == 'insufficient' else (items + need_items)
     cut_cond = False
     if pro:
-        shown, hidden = items, []          # профессиональный уровень читают целиком, ничего не режем
+        # Двенадцатый круг, пункт 2. Было: «профессиональный уровень читают целиком, ничего не
+        # режем» — и на снимках 20 и 21 под вердиктом стояли семь буллетов подряд, 2 100 знаков.
+        # Владелец о них: «выглядит как вырви глаз». Правило владельца: на поверхности три
+        # строки — сравнение по космопогоде, сравнение по метеороидам и покрытие; условия окон
+        # идут впереди сравнения, потому что от них зависит сам вердикт. Остальное — в свёртке
+        # этого же блока, целиком и без сокращений: аналитик открывает её одним щелчком.
+        # При отказе «оснований недостаточно» причина отказа важнее сравнения и в тройку входит
+        # раньше него (О3, находка №6): под заголовком, отказавшим рекомендовать, первой видимой
+        # строкой не должно стоять сравнение окон — оно читается как рекомендация.
+        _ORDER = {'cond': 0, 'need': 1, 'cmp': 2, 'other': 3} if v == 'insufficient' \
+            else {'cond': 0, 'cmp': 1, 'need': 2, 'other': 3}
+        _rank = sorted(range(len(items)), key=lambda i: (_ORDER.get(items[i]['kind'], 4), i))
+        _keep = set(_rank[:3])
+        shown = [it for i, it in enumerate(items) if i in _keep]
+        hidden = [it for i, it in enumerate(items) if i not in _keep]
     else:
         # перечни записей остаются на поверхности, только если умещаются в бюджет — все сразу
         conds = [it for it in items if it['kind'] == 'cond']
@@ -1695,26 +1751,31 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     # это заголовок, увереннее расчёта (проверено на пресете «Тихая дата»: 21 мин при допуске 20).
     lines.append(robust_html)
     step = next_step_ru(rec, S, assessments, mode)
+    # Двенадцатый круг, пункт 2: свёртка теперь одинакова на ОБОИХ уровнях. Прежде на
+    # профессиональном её не было вовсе, и блок шёл сплошной стеной: правило, семь буллетов,
+    # подробная область вывода, три абзаца о происхождении допуска, охват, «Что дальше».
+    # Ни одна строка не выброшена — каждая либо видна, либо лежит на клик глубже в этом же блоке.
+    body = ['<summary>%s</summary>' % esc(_VMORE_SUMMARY)]
+    # Строки свёртки — отдельными <div class="vm">, а не пунктами списка: список внутри свёртки
+    # смешивался с видимыми пунктами блока, и бюджет «не более пяти пунктов» переставал мерить
+    # то, ради чего он стоит, — длину ВИДИМОЙ части. Точка в конце каждой строки остаётся
+    # (находка шестого круга: строки свёртки идут подряд и склеивались в одно предложение).
+    if hidden:
+        body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(it['text']))) for it in hidden]
+    body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(x))) for x in more]
+    if policy_short:
+        body.append('<div class="vm">%s</div>' % esc(policy_short))
     if pro:
-        if policy_short:
-            lines.append('<div class="policy">%s</div>' % esc(policy_short))
-        if tol:
-            lines.append('<div class="policy">%s</div>' % esc(screen_text(tol)))
-        lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))  # охват — только здесь
-    else:
-        body = ['<summary>%s</summary>' % esc(_VMORE_SUMMARY)]
-        # Строки свёртки — отдельными <div class="vm">, а не пунктами списка: список внутри свёртки
-        # смешивался с видимыми пунктами блока, и бюджет «не более пяти пунктов» переставал мерить
-        # то, ради чего он стоит, — длину ВИДИМОЙ части. Точка в конце каждой строки остаётся
-        # (находка шестого круга: строки свёртки идут подряд и склеивались в одно предложение).
-        if hidden:
-            body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(it['text']))) for it in hidden]
-        body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(x))) for x in more]
-        if policy_short:
-            body.append('<div class="vm">%s</div>' % esc(policy_short))
-        if tol:
-            body.append('<div class="vm">%s</div>' % esc(screen_text(tol)))
-        lines.append('<details class="vmore">' + ''.join(body) + '</details>')
+        # Охват и перечень неучтённого — на клик глубже и здесь: главный экран не должен читаться
+        # как список наших недочётов (пункт 1 техзадания). Полностью они остаются во вкладке
+        # «Окна и факторы», в отчёте и в выгрузке.
+        body.append('<div class="vm">%s</div>' % esc(coverage_scope_ru(S)))
+    lines.append('<details class="vmore">' + ''.join(body) + '</details>')
+    # Происхождение допуска — отдельной свёрткой «Откуда допуск»: это три абзаца с числами сетки,
+    # и внутри общей свёртки они тонули. Заголовок называет ровно то, что внутри (пункт 2).
+    if tol:
+        lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
+                     % (esc(_TOL_SUMMARY), esc(screen_text(tol))))
     # Последняя видимая строка блока — что делать дальше (сквозное замечание аналитика):
     # что проверить, до какого момента действует условие, когда пересчитать.
     if step:
@@ -2555,6 +2616,14 @@ def map_caption(pro: bool = False) -> str:
 # так и говорит, не подставляя выдуманных чисел.
 TASK_HINT_RU = ('Поля пересчитываются сразу: кнопка повторяет поиск на тех же данных. '
                 'Времена на экране — UTC.')
+# Пункт 1 двенадцатого круга. Владелец: «то, что сервис не учёл, мы скажем отдельно, в программе
+# не надо прописывать»; «что не даёт глобус, тоже не надо писать»; «вообще недочёты не надо
+# указывать в программе, подчисти это». Критерии оценки при этом требуют, чтобы ограничения охвата
+# были видны В СЕРВИСЕ (О1, О2, О4, Т1), поэтому сделано не «удалить», а «собрать в одном месте»:
+# всё уехало во вкладку «Методика», раздел «Границы применимости», а на главном экране осталась
+# ОДНА нейтральная строка со ссылкой — без перечисления и без покаянного тона.
+SCOPE_TAB_HINT_RU = 'Область применимости и принятые допущения — вкладка «Методика».'
+LIMITS_SECTION_RU = 'Границы применимости'
 SCAN_VERDICT_TITLE = {
     'recommended': 'Есть рекомендованное окно',
     'equivalent': 'Несколько начал равнозначны',
@@ -2569,6 +2638,9 @@ LOWER_IS_BETTER_RU = 'ниже — лучше'
 # семидесяти трёх проверенных начал, и первым экраном это не читается.
 WHY_BUDGET = 320
 WHY_MORE_RU = 'Почему целиком: все проверенные начала и их условия'
+# Заголовок свёртки с правилом перебора и допуском равнозначности. Сам текст пишет движок, и он
+# длинный по существу: правило состоит из пяти условий, каждое из которых надо назвать целиком.
+RULE_MORE_RU = 'По какому правилу выбрано: правило перебора и допуск равнозначности'
 
 
 def scan_of(S: dict):
@@ -2733,7 +2805,15 @@ def _rank_key(c: dict):
 
 
 def scan_best_rows(scan: dict, limit: int = 5) -> list[dict]:
-    """Короткая таблица лучших кандидатов: начало, минуты в аномалии, флюенс, условия.
+    """Короткая таблица лучших кандидатов: начало, минуты в аномалии, флюенс и — только если они
+    есть хоть у одного показанного начала — условия проверки.
+
+    Двенадцатый круг, пункт 4. Владелец о прежнем виде: «что значит условия проверки и почему
+    там везде нет, нет, нет — либо убирай эту графу, либо исправляй». Колонка из одних «нет»
+    ничего не сообщает и занимает треть ширины таблицы; когда условий нет ни у одного начала,
+    колонки нет вовсе, а под таблицей стоит одна строка (`scan_conditions_note_ru`). Когда
+    условие есть хотя бы у одного — колонка печатается и содержит НАЗВАНИЕ условия, а «нет»
+    остаётся только у тех начал, где его действительно нет: там это уже различие, а не шум.
 
     Строк не больше пяти. Безразмерных баллов и нормировок в таблице нет: складывать минуты
     в аномалии с флюенсом нельзя, это разные величины.
@@ -2742,34 +2822,104 @@ def scan_best_rows(scan: dict, limit: int = 5) -> list[dict]:
     best = [i for i in (scan.get('best') or []) if isinstance(i, int) and 0 <= i < len(cands)]
     rest = sorted((i for i in range(len(cands)) if i not in best),
                   key=lambda i: (_rank_key(cands[i]), str(cands[i].get('start_utc') or '')))
+    idx = (best + rest)[:max(0, int(limit))]
+    conds_by_i = {i: [screen_text(x) for x in (cands[i].get('conditions') or [])] for i in idx}
+    any_cond = any(conds_by_i[i] for i in idx)
     rows = []
-    for i in (best + rest)[:max(0, int(limit))]:
+    for i in idx:
         c = cands[i]
-        conds = [screen_text(x) for x in (c.get('conditions') or [])]
-        rows.append({'начало выхода': dt_ru(_iso_dt(c.get('start_utc'))),
-                     'минут в аномалии': fmt(c.get('saa_min')),
-                     'флюенс, част./см²': fmt_fluence(c.get('fluence')),
-                     'условия проверки': '; '.join(conds) if conds else 'нет'})
+        row = {'начало выхода': dt_ru(_iso_dt(c.get('start_utc'))),
+               'минут в аномалии': fmt(c.get('saa_min')),
+               'флюенс, част./см²': fmt_fluence(c.get('fluence'))}
+        if any_cond:
+            row['условия проверки'] = '; '.join(conds_by_i[i]) if conds_by_i[i] else 'нет'
+        rows.append(row)
     return rows
 
 
-def ribbon_caption_ru(scan: dict, e_min_MeV=None) -> str:
-    """Подпись ленты окон — ОДНА строка: что в каком графике и как читать.
+def scan_conditions_note_ru(rows: list[dict] | None) -> str:
+    """Строка под таблицей лучших начал, когда колонки условий в ней нет (пункт 4).
 
-    Подробности о том, как считаны обе величины, стоят в подписях осей («ниже — лучше») и во
-    вкладке «Методика»; приглушённая подпись на блок — не длиннее одной строки.
+    Молчание вместо колонки было бы хуже колонки из «нет»: читатель не узнал бы, проверялись
+    условия вообще или нет. Поэтому факт называется словами, одной строкой на всю таблицу.
     """
-    e_ru = ('≥%s МэВ' % fmt(e_min_MeV)) if e_min_MeV is not None else 'выбранного канала'
-    return ('Сверху минуты в аномалии, снизу флюенс %s за окно с этим началом; у обоих %s, '
-            'синяя полоса — рекомендованное начало.' % (e_ru, LOWER_IS_BETTER_RU))
+    if not rows:
+        return ''
+    return '' if 'условия проверки' in rows[0] else 'Ни одно из показанных начал не требует отдельной проверки.'
 
 
-def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 320):
-    """Лента окон: два графика, делящих ось времени начала выхода.
+def ribbon_caption_ru(scan: dict, duration_min=None) -> str:
+    """Подпись профиля воздействия — ОДНА строка обычными словами (пункт 3 двенадцатого круга).
 
-    Наверху — минуты в аномалии за окно, начинающееся в этот момент; внизу — флюенс захваченных
-    протонов за такое же окно. Ни третьей оси, ни безразмерных баллов, ни нормировки: складывать
-    минуты с флюенсом нельзя, а «суммарный балл воздействия» был бы выдумкой.
+    Владелец о прежнем рисунке: «этот график мне совершенно не ясен… совершенно непонятно,
+    зачем он». Подпись отвечает ровно на это: что означает кривая, что означает полоса и что
+    означает точка. Ни единицы, ни канала, ни порядка величин здесь нет — они названы на самих
+    осях рисунка, и повторять их подписью значило бы писать одно и то же дважды.
+
+    Про полосу сказано только тогда, когда полоса на рисунке ЕСТЬ: при споре величин и при
+    условии у каждого начала сервис окна не называет, полосы нет, и обещать её подписью нельзя.
+    """
+    dur = int(duration_min or scan.get('requested_duration_min') or 0)
+    dur_ru = ('за %s ч работы' % fmt(round(dur / 60.0, 1))) if dur else 'за окно'
+    band = scan_answer(scan).get('kind') in ('point', 'interval')
+    return ('Чем ниже кривая, тем меньше набранный поток частиц %s; %sточка — худшее время '
+            'на сроке.' % (dur_ru, 'синяя полоса — рекомендованный промежуток, ' if band else ''))
+
+
+def _hour_tick_ms(x) -> int:
+    """Шаг часовых отметок оси времени в миллисекундах — по длине показанного срока.
+
+    Владелец просил «обычные часовые отметки». На сроке до восьми часов это буквально каждый час;
+    дальше подписи начинают наезжать друг на друга, и шаг растёт до двух, трёх и шести часов —
+    отметки остаются круглыми часами, просто реже. Границы выбраны из ширины подписи «чч:мм»
+    (около 44 пикселей при 12 px шрифта) и ширины блока (около 1 300 пикселей на ноутбуке):
+    больше шестнадцати подписей на такой ширине уже сливаются.
+    """
+    hours = 12.0
+    if x:
+        hours = max(1.0, (max(x) - min(x)).total_seconds() / 3600.0)
+    step_h = 1 if hours <= 8 else 2 if hours <= 16 else 3 if hours <= 30 else 6
+    return int(step_h * 3600 * 1000)
+
+
+def _decade_ticks(lo: float, hi: float) -> tuple[list[float], list[str]]:
+    """Круглые степени десяти, накрывающие диапазон: 10³, 10⁴, 10⁵, 10⁶.
+
+    Пункт 3 двенадцатого круга. Прежде подписями оси служили САМИ ЗНАЧЕНИЯ ДАННЫХ — «34·10⁶,
+    56·10⁶, 81·10⁵, 2619», — то есть перечень точек, а не шкала: прочитать такой график нельзя.
+    Отметки берутся круглые и подписываются нашим видом записи (надстрочная степень): собственные
+    подписи Plotly — латинские сокращения, а на экране рядом стоит «2,43·10⁶».
+    Восемь подписей — предел читаемости оси высотой около 260 пикселей; дальше шаг через порядок.
+    """
+    k0, k1 = int(math.floor(math.log10(lo))), int(math.ceil(math.log10(hi)))
+    if k1 <= k0:
+        k1 = k0 + 1
+    step = 1 if (k1 - k0) <= 7 else 2
+    ks = list(range(k0, k1 + 1, step))
+    if ks[-1] != k1:
+        ks.append(k1)
+    return [10.0 ** k for k in ks], [sup('10^%d' % k) for k in ks]
+
+
+def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 360, duration_min=None):
+    """Профиль воздействия на сроке поиска — ОДИН читаемый график (пункт 3 двенадцатого круга).
+
+    Владелец о прежнем виде: «этот график мне совершенно не ясен, его лучше убрать, он очень
+    странный и совершенно непонятно, зачем он». Разбор снимка 12 показал, в чём дело: подписи
+    оси Y были не шкалой, а перечнем значений данных, и ломаных было две, каждая в своём
+    масштабе. Здесь график один:
+
+      * ось X — время начала выхода, круглые часовые отметки;
+      * ось Y — набранный за окно флюенс, ЛОГАРИФМИЧЕСКАЯ шкала с круглыми отметками 10ᵏ:
+        на сроке суток флюенс меняется на три порядка, и на линейной шкале весь профиль,
+        кроме пика, ложится в линию у нуля;
+      * рекомендованный промежуток — залитая полоса;
+      * максимум профиля — точка с подписанным временем: это и есть «пиковое значение
+        приходится на такое-то время»;
+      * минуты в аномалии — не вторым графиком, а тонкой полосой-подложкой под тем же временем.
+
+    Нормировки и безразмерных баллов нет по-прежнему: складывать минуты в аномалии с флюенсом
+    нельзя, и «суммарный балл воздействия» был бы выдумкой. Каждая величина в своих единицах.
 
     Рисунок живёт здесь, а не в `app/viz.py`: в этом круге правка ограничена `app/main.py` и
     `app/ui.py`, а `app/viz.py` правят параллельно. Plotly импортируется ВНУТРИ функции, чтобы
@@ -2781,61 +2931,100 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 320):
 
     cands = list(scan.get('candidates') or [])
     xs = [_iso_dt(c.get('start_utc')) for c in cands]
-    keep = [i for i, x in enumerate(xs) if x is not None]
+    keep = [i for i, t in enumerate(xs) if t is not None]
     x = [xs[i] for i in keep]
     saa = [cands[i].get('saa_min') for i in keep]
     flu = [cands[i].get('fluence') for i in keep]
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.09)
-    fig.add_trace(go.Scatter(x=x, y=saa, mode='lines+markers', name='минут в аномалии за окно',
-                             line={'color': CALC_BLUE, 'width': 2}, marker={'size': 4, 'color': CALC_BLUE},
-                             hovertemplate='начало %{x|%d.%m %H:%M} · %{y} мин<extra></extra>'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=x, y=flu, mode='lines+markers', name='флюенс за окно',
+    good_flu = [v for v in flu if isinstance(v, (int, float))]
+    # Логарифмическая шкала определена только для положительных значений, а Plotly точку вне
+    # области определения молча выбрасывает. Молчаливого выбрасывания в сервисе быть не может
+    # (CONTRACT.md, раздел 7, правило о молчаливых клампах): при нуле или отрицательном значении
+    # шкала остаётся линейной, и подпись оси называет это прямо.
+    log_ok = bool(good_flu) and min(good_flu) > 0
+    # Границы оси берутся РОВНО по круглым отметкам, а не автоподбором: тогда залитая полоса
+    # рекомендации рисуется во всю высоту поля и читается как полоса, а не как висящий
+    # посреди графика прямоугольник.
+    tickvals, ticktext = _decade_ticks(min(good_flu), max(good_flu)) if log_ok else ([], [])
+    # Поле чуть шире крайних отметок: точка, лежащая ровно на нижней отметке, наполовину уходила
+    # за ось и читалась как обрыв кривой. 0,06 порядка — примерно 15 % высоты одной декады.
+    _LOG_PAD = 0.06
+    y_range = [math.log10(tickvals[0]) - _LOG_PAD, math.log10(tickvals[-1]) + _LOG_PAD] if log_ok else None
+    # Доли высоты: профиль занимает почти всё, полоса-подложка — тонкая лента снизу.
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05,
+                        row_heights=[0.82, 0.18])
+    # --- залитая полоса рекомендованного промежутка. Нарисована рядом данных, а не фигурой
+    # разметки: у фигур разметки Plotly разных версий по-разному принимает время на оси, и пустая
+    # полоса на защите дороже лишнего ряда.
+    # Полоса рисуется ТОЛЬКО там, где сервис действительно называет окно: ответ точкой или
+    # промежутком. При споре величин («лучшее по минутам одно, по флюенсу другое») и при условии
+    # у каждого начала сервис окна не выбирает, и залитая полоса с подписью «рекомендованный
+    # промежуток» была бы рекомендацией, в которой заголовок блока выше как раз отказал.
+    ans = scan_answer(scan)
+    a_from = a_to = None
+    if ans.get('kind') in ('point', 'interval'):
+        a_from = ans.get('from') or _iso_dt((ans.get('first') or {}).get('start_utc'))
+        a_to = ans.get('to') or _iso_dt((ans.get('last') or {}).get('start_utc'))
+    if a_from is not None and a_to is not None and good_flu:
+        # Ответ точкой — это одно начало: полоса рисуется шириной в один шаг перебора, иначе
+        # вырождается в невидимую линию нулевой ширины.
+        if a_from == a_to:
+            half = timedelta(minutes=float(scan.get('step_min') or 10) / 2.0)
+            a_from, a_to = a_from - half, a_to + half
+        lo_y, hi_y = (10.0 ** y_range[0], 10.0 ** y_range[1]) if log_ok else (0.0, max(good_flu) * 1.1)
+        fig.add_trace(go.Scatter(x=[a_from, a_from, a_to, a_to], y=[lo_y, hi_y, hi_y, lo_y],
+                                 mode='lines', fill='toself', name='рекомендованный промежуток',
+                                 line={'color': 'rgba(0,0,0,0)'}, fillcolor=CALC_BLUE, opacity=0.16,
+                                 hoverinfo='skip'), row=1, col=1)
+    # --- сам профиль
+    fig.add_trace(go.Scatter(x=x, y=flu, mode='lines+markers', name='набрано за окно',
                              line={'color': CALC_BLUE, 'width': 2}, marker={'size': 4, 'color': CALC_BLUE},
                              customdata=[fmt_fluence(v) for v in flu],
                              hovertemplate='начало %{x|%d.%m %H:%M} · %{customdata} част./см²<extra></extra>'),
-                  row=2, col=1)
-    # Лучшие кандидаты — открытыми кружками: они названы и в таблице под графиками, и здесь
-    # видно, где они стоят на сроке.
-    best = [i for i in (scan.get('best') or []) if isinstance(i, int) and i in keep]
-    if best:
-        bx = [xs[i] for i in best]
-        fig.add_trace(go.Scatter(x=bx, y=[cands[i].get('saa_min') for i in best], mode='markers',
-                                 name='лучшие кандидаты', legendgroup='best',
-                                 marker={'size': 11, 'color': 'rgba(0,0,0,0)', 'line': {'color': CALC_BLUE, 'width': 2}},
-                                 hoverinfo='skip'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=bx, y=[cands[i].get('fluence') for i in best], mode='markers',
-                                 name='лучшие кандидаты', legendgroup='best', showlegend=False,
-                                 marker={'size': 11, 'color': 'rgba(0,0,0,0)', 'line': {'color': CALC_BLUE, 'width': 2}},
-                                 hoverinfo='skip'), row=2, col=1)
-    # Рекомендованное начало — вертикальной полосой. Полоса нарисована рядом данных, а не фигурой
-    # разметки: у фигур разметки Plotly разных версий по-разному принимает время на оси, и пустая
-    # полоса на защите дороже лишнего ряда.
-    rec_i = scan.get('recommended_index')
-    if isinstance(rec_i, int) and rec_i in keep:
-        xr = xs[rec_i]
-        for row, vals in ((1, saa), (2, flu)):
-            good = [v for v in vals if v is not None]
-            lo, hi = (min(good), max(good)) if good else (0.0, 1.0)
-            if hi == lo:
-                lo, hi = lo - 1.0, hi + 1.0
-            fig.add_trace(go.Scatter(x=[xr, xr], y=[lo, hi], mode='lines', name='рекомендованное начало',
-                                     legendgroup='rec', showlegend=(row == 1),
-                                     line={'color': CALC_BLUE, 'width': 6}, opacity=0.22,
-                                     hoverinfo='skip'), row=row, col=1)
-    fig.update_yaxes(title_text='минут в аномалии за окно, мин (%s)' % LOWER_IS_BETTER_RU, row=1, col=1)
-    good_flu = [v for v in flu if v is not None]
+                  row=1, col=1)
+    # --- подписанный пик: худшее время на сроке. В подписи стоит ВРЕМЯ, а не значение: значение
+    # читается по шкале, а часовой отметки ровно под пиком может не оказаться.
     if good_flu:
-        lo, hi = min(good_flu), max(good_flu)
-        # Деления оси флюенса подписаны сами: иначе Plotly рисует сокращения на латинице рядом
-        # с «2,43·10⁶» в тексте того же экрана.
-        vals = sorted({lo + (hi - lo) * k / 3.0 for k in range(4)}) if hi > lo else [lo]
-        fig.update_yaxes(tickmode='array', tickvals=vals, ticktext=[fmt_fluence(v) for v in vals], row=2, col=1)
-    fig.update_yaxes(title_text='флюенс за окно, част./см² (%s)' % LOWER_IS_BETTER_RU, row=2, col=1)
-    fig.update_xaxes(title_text='время начала выхода', row=2, col=1)
+        i_pk = max((i for i in range(len(flu)) if isinstance(flu[i], (int, float))), key=lambda i: flu[i])
+        fig.add_trace(go.Scatter(x=[x[i_pk]], y=[flu[i_pk]], mode='markers', name='пик на сроке',
+                                 marker={'size': 10, 'color': PEAK_RED},
+                                 hovertemplate='пик %{x|%d.%m %H:%M}<extra></extra>'), row=1, col=1)
+        fig.add_annotation(x=x[i_pk], y=flu[i_pk], row=1, col=1,
+                           text='пик %s' % _peak_label_ru(x[i_pk], x[0] if x else None),
+                           showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=PEAK_RED,
+                           ax=0, ay=-26, font={'size': 12, 'color': PEAK_RED})
+    # --- полоса-подложка: минуты в аномалии под тем же временем, своей заливкой и своей шкалой.
+    fig.add_trace(go.Scatter(x=x, y=saa, mode='lines', name='минут в аномалии', fill='tozeroy',
+                             line={'color': CALC_BLUE, 'width': 1}, fillcolor=CALC_BLUE_FILL,
+                             hovertemplate='начало %{x|%d.%m %H:%M} · %{y} мин в аномалии<extra></extra>'),
+                  row=2, col=1)
+    # Канал назван в подписи оси, а не под рисунком: величина без канала неполна — «протоны ≥ 30 МэВ»
+    # и «протоны ≥ 50 МэВ» дают разные числа, и по голому «част./см²» различить их нечем.
+    _e_ru = ('протоны ≥%s МэВ, ' % fmt(e_min_MeV)) if e_min_MeV is not None else ''
+    _y_title = 'набрано за окно: %sчаст./см² (%s)' % (_e_ru, LOWER_IS_BETTER_RU)
+    if log_ok:
+        fig.update_yaxes(type='log', tickmode='array', tickvals=tickvals, ticktext=ticktext,
+                         range=y_range, title_text=_y_title, row=1, col=1)
+    else:
+        # Шкала названа прямо: при нулевом значении логарифмическая не определена, и молчать об этом
+        # нельзя: одна и та же кривая выглядит по-разному на двух шкалах.
+        fig.update_yaxes(title_text=_y_title.replace(' (%s)' % LOWER_IS_BETTER_RU,
+                                                     ', шкала линейная (%s)' % LOWER_IS_BETTER_RU),
+                         row=1, col=1)
+    # Подложка: две отметки — ноль и круглый верх. Третья на ленте в 18 % высоты не помещается.
+    good_saa = [v for v in saa if isinstance(v, (int, float))]
+    if good_saa:
+        top = max(good_saa)
+        step = 10.0 if top > 20 else 5.0 if top > 5 else 1.0
+        top = step * (int(top / step) + (1 if top % step else 0) or 1)
+        fig.update_yaxes(tickmode='array', tickvals=[0, top], ticktext=['0', fmt(top)],
+                         range=[0, top * 1.05], row=2, col=1)
+    fig.update_yaxes(title_text='в аномалии, мин', row=2, col=1)
+    fig.update_xaxes(title_text='время начала выхода, UTC', row=2, col=1)
+    fig.update_xaxes(dtick=_hour_tick_ms(x), tickformat='%H:%M')
     # Заголовка у рисунка нет намеренно: над ним стоит заголовок блока, а под ним подпись о том,
     # как читать. Третья строка о том же была бы вторым сообщением об одном и том же.
     fig.update_layout(template='plotly_white', height=int(height), separators=',' + NBSP_THIN,
-                      margin={'l': 70, 'r': 20, 't': 34, 'b': 40}, hovermode='x unified',
+                      margin={'l': 78, 'r': 20, 't': 40, 'b': 40}, hovermode='x unified',
                       legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'x': 0})
     return fig
 
@@ -3053,6 +3242,109 @@ def refusal_lift_ru(verdict: str, missing_ru=None, mode: str = 'live') -> str:
     return head_ru + ' ' + tail
 
 
+def _peak_label_ru(t_peak, t_first) -> str:
+    """Время пика так, как его называют и подпись на графике, и популярное объяснение.
+
+    Час без даты читается как «сегодня». Пока срок поиска не переходит через полночь, дата —
+    лишний шум; как только переходит, без неё «00:40» неоднозначно. Правило одно на оба места:
+    иначе экран называет один и тот же момент двумя разными способами.
+    """
+    if t_peak is None:
+        return '—'
+    if t_first is not None and t_peak.date() != t_first.date():
+        return t_peak.strftime('%d.%m %H:%M')
+    return t_peak.strftime('%H:%M')
+
+
+def plain_why_ru(scan: dict, cand: dict | None, duration_min: int | None = None) -> str:
+    """Ровно ДВА предложения обычными словами: почему выходить именно в этот промежуток.
+
+    Пункт 5 двенадцатого круга, дословно: «здесь надо пояснять популярным языком, почему надо
+    выходить именно в этот временной промежуток… также пиковое значение приводится на вот такое-то
+    время, но при этом перегружать текстом нельзя».
+
+    Правила, которым подчинён этот текст:
+      * два предложения, не больше. Третье — уже перегрузка;
+      * слов «флюенс», «частиц на квадратный сантиметр», «геомагнитный» в нём нет: это те самые
+        термины, из-за которых блок и читался как технический;
+      * каждое число берётся ИЗ РАСЧЁТА и ни одно не выдумывается. Нет числа — нет предложения,
+        и функция возвращает пустую строку: пустое место честнее правдоподобной фразы;
+      * сравнение идёт с ХУДШИМ началом на сроке, а не с «обычным»: «обычного» в расчёте нет.
+
+    Первое предложение — минуты в аномалии рекомендованного окна против худшего начала на сроке.
+    Второе — во сколько раз ниже набранный поток по сравнению с пиковым и на какое время приходится
+    сам пик. Пик по минутам и пик по потоку — разные моменты, поэтому время названо только у того,
+    о ком речь во втором предложении.
+    """
+    if not isinstance(cand, dict):
+        return ''
+    cands = [c for c in (scan.get('candidates') or []) if isinstance(c, dict)]
+    saa = cand.get('saa_min')
+    flu = cand.get('fluence')
+    saa_all = [c.get('saa_min') for c in cands if isinstance(c.get('saa_min'), (int, float))]
+    flu_all = [(c.get('fluence'), _iso_dt(c.get('start_utc'))) for c in cands
+               if isinstance(c.get('fluence'), (int, float)) and _iso_dt(c.get('start_utc')) is not None]
+    dur = int(duration_min or scan.get('requested_duration_min') or 0)
+    if not isinstance(saa, (int, float)) or not isinstance(flu, (int, float)) or not saa_all or not flu_all or not dur:
+        return ''
+    saa_worst = max(saa_all)
+    flu_peak, t_peak = max(flu_all, key=lambda p: p[0])
+    if flu <= 0 or flu_peak <= 0:
+        return ''                     # отношения нет — второго предложения не из чего собрать
+    # «7 минут из 360» — единица называется один раз, у первого числа: второе стоит в тех же
+    # минутах, и повторять её значило бы писать «7 минут из 360 минут».
+    # Падеж у двух чисел РАЗНЫЙ, и одной формой тут не обойтись: «проводит 4 минуты» —
+    # винительный, «против 74 минут» — родительный. Одна пара форм на оба места давала
+    # «против 74 минуты»; на экране, который читает жюри, это грубая ошибка согласования.
+    m_vin = lambda v: '%s %s' % (fmt(round(float(v))), plural_ru(int(round(float(v))), ('минуту', 'минуты', 'минут')))
+    m_rod = lambda v: '%s %s' % (fmt(round(float(v))), plural_ru(int(round(float(v))), ('минуты', 'минут', 'минут')))
+    # «Меньше всего» — сильное утверждение, и говорить его можно ТОЛЬКО когда оно верно. Правило
+    # выбора окна не минимизирует минуты в аномалии: оно отбирает начала, которых не превосходит
+    # ни одно другое СРАЗУ ПО ДВУМ величинам, и рекомендованное начало может проигрывать по
+    # минутам тому, кто сильно хуже по потоку. Когда минимум не у него, предложение просто
+    # называет оба числа без превосходной степени: это по-прежнему ответ на «почему тогда»,
+    # но не заявление, которое опровергается таблицей под ним.
+    saa_best = min(saa_all)
+    if saa_worst - saa < 1.0:
+        first = ('В этот промежуток станция проводит в радиационной аномалии %s из %s — столько же, '
+                 'сколько в любое другое время на сроке поиска.' % (m_vin(saa), fmt(round(float(dur)))))
+    elif saa - saa_best < 0.5:
+        first = ('В этот промежуток станция меньше всего времени проводит в радиационной аномалии — '
+                 '%s из %s против %s в худшее время на сроке.'
+                 % (m_vin(saa), fmt(round(float(dur))), m_rod(saa_worst)))
+    else:
+        first = ('В этот промежуток станция проводит в радиационной аномалии %s из %s — против %s '
+                 'в худшее время на сроке.'
+                 % (m_vin(saa), fmt(round(float(dur))), m_rod(saa_worst)))
+    ratio = float(flu_peak) / float(flu)
+    # Час без даты читается как «сегодня». Срок поиска доходит до суток, и пик легко попадает на
+    # следующие: «приходится на 00:40» рядом с окном «26.06 04:00 — 05:00» тогда неоднозначно.
+    # Дата печатается ровно тогда, когда пик не в тот же день, что начало срока, — и тем же
+    # правилом, что подпись пика на самом графике (`_peak_label_ru`), чтобы экран не называл
+    # одно и то же время двумя разными способами.
+    t_ru = _peak_label_ru(t_peak, _iso_dt((cands[0] if cands else {}).get('start_utc')))
+    if ratio >= 1.5:
+        # Отношение огрубляется до двух значащих цифр: «в 1 463 раза» обещает точность, которой
+        # у модели нет (у самого флюенса на экране печатаются три значащие цифры), и читается
+        # хуже, чем «в 1 500 раз». Округление только ВВЕРХ по значащим цифрам не делается —
+        # обычное, чтобы не преувеличивать выигрыш рекомендованного окна.
+        if ratio >= 100:
+            _p = 10.0 ** (len(str(int(ratio))) - 2)
+            n = int(round(ratio / _p) * _p)
+        else:
+            n = int(round(ratio)) if ratio >= 10 else round(ratio, 1)
+        second = ('Набранный поток частиц в нём в %s %s ниже пикового, который приходится на %s.'
+                  % (nbsp_thousands(n) if isinstance(n, int) else fmt(n),
+                     plural_ru(int(round(float(n))), ('раз', 'раза', 'раз')), t_ru))
+    elif ratio >= 1.02:
+        second = ('Набранный поток частиц в нём на %s %% ниже пикового, который приходится на %s.'
+                  % (fmt(round((ratio - 1.0) * 100)), t_ru))
+    else:
+        second = ('Набранный поток частиц в нём почти такой же, как в самое неудачное время суток, — '
+                  'оно приходится на %s.' % t_ru)
+    return first + ' ' + second
+
+
 def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'live',
                          missing_ru=None, duration_min: int | None = None) -> str:
     """Крупный блок ответа: когда выходить, почему, область вывода, условия.
@@ -3091,11 +3383,24 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
         lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get('all_need_check', 'Нужна проверка аналитиком')))
     else:
         lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Оснований для рекомендации недостаточно')))
+    # Пункт 5: популярное объяснение — сразу под крупным ответом, ДО любых служебных строк.
+    # Это первое, что человек читает после самого ответа, и единственное место экрана, где о
+    # воздействиях сказано без единого термина. Собирается из чисел расчёта; чисел нет — блока нет.
+    plain = plain_why_ru(scan, cand, dur) if kind in ('point', 'interval') else ''
+    if plain:
+        lines.append('<div class="plain">%s</div>' % esc(plain))
     if kind == 'interval':
         lines.append('<div class="why">Внутри промежутка начала неразличимы в пределах чувствительности '
                      'модели, поэтому сервис называет промежуток, а не минуту.</div>')
     why = scan.get('why')
-    if why:
+    if why and plain:
+        # Популярное объяснение уже сказало главное обычными словами. Техническая фраза движка
+        # говорит то же самое числами и жаргоном слоёв, и на поверхности рядом с популярной это
+        # два сообщения об одном и том же (бриф §9.7) — она целиком уезжает на клик глубже.
+        # Ничего не потеряно: перечень всех проверенных начал и их условий открывается щелчком.
+        lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
+                     % (esc(WHY_MORE_RU), esc(sentence_ru(screen_text(status_ru(why, pro))))))
+    elif why:
         # Числа «почему» пишет движок — и при промежутке, и при споре величин он уже говорит
         # словами промежутка. Свой текст поверх не сочиняем, но переводим слова слоёв так же,
         # как переводятся все готовые строки экрана: на оперативном уровне жаргона быть не должно.
@@ -3172,6 +3477,12 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
     _s = lambda x: sentence_ru(screen_text(status_ru(x, pro)))
     tail = ' '.join(_s(x)[0].upper() + _s(x)[1:] for x in (rule, tol) if x and str(x).strip())
     if tail:
-        lines.append('<div class="policy">%s</div>' % esc(tail))
+        # Двенадцатый круг. Текст правила перебора занимал на главном экране 1 500–1 900 знаков —
+        # больше, чем весь остальной ответ вместе взятый, и стоял ПОСЛЕ ответа, то есть читался
+        # первым при прокрутке вниз. Владелец: «перегружать текстом нельзя, всё должно быть
+        # интуитивно понятно». Правило целиком остаётся в этом же блоке на клик глубже и, кроме
+        # того, целиком лежит во вкладке «Методика», в отчёте и в выгрузке.
+        lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
+                     % (esc(RULE_MORE_RU), esc(tail)))
     lines.append('</div>')
     return ''.join(lines)
