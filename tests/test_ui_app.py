@@ -25,6 +25,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
+import plotly.graph_objects as go
 import pytest
 from streamlit.testing.v1 import AppTest
 
@@ -165,6 +166,31 @@ def test_plotly_panel_instrumentov_skryta():
     assert PLOTLY_CONFIG['displayModeBar'] is False
 
 
+def test_grafiki_pishut_drobi_s_zapyatoy_i_razryady_tysyach():
+    """Пятый круг, §9.8: своими подписями были закрыты только логарифмические оси. Деления
+    остальных осей и всплывающие подписи рисует Plotly, и по умолчанию это «7.67» и «24000»
+    рядом с «7,67» и «24 000» в тексте того же экрана. Разделители задаются один раз, в стиле."""
+    from app.obs import observations_figure
+    from app.viz import SEPARATORS, ground_track, style
+    assert SEPARATORS == ',\u202f', repr(SEPARATORS)          # запятая и узкий неразрывный пробел
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    obs = [(t0 - timedelta(hours=h), 10.0 ** (h % 3)) for h in range(6, 0, -1)]
+    fig = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', kp_obs=[], goes_obs=obs, search_min=360)
+    assert fig.layout.separators == SEPARATORS
+    assert style(go.Figure(), 200).layout.separators == SEPARATORS
+    of = observations_figure([t for t, _ in obs], [v for _, v in obs], [], [], t0, 'GOES', 'Kp')
+    assert of.layout.separators == SEPARATORS
+    # карта трассы стиль задаёт сама — у неё те же разделители и время без машинной «Z»
+    pt = SimpleNamespace(lon_deg=10.0, lat_deg=5.0, alt_km=420.0, in_saa=False, B_nT=30000.0, t_utc=t0)
+    win = SimpleNamespace(start_utc=t0, duration_min=360)
+    gt = ground_track([pt], [win], 24000.0, t0)
+    assert gt.layout.separators == SEPARATORS
+    names = [tr.name for tr in gt.data if tr.name]
+    assert any(n.startswith('окно 1: 19.09 12:00') for n in names), names
+    assert not any(re.search(r'\d\d:\d\dZ', n) for n in names), names
+    assert 'UTC' in gt.layout.title.text, gt.layout.title.text
+
+
 # ----------------------------------------------------------------- экран: три режима × два уровня
 @pytest.mark.parametrize('mode', MODES)
 @pytest.mark.parametrize('pro', [False, True])
@@ -252,6 +278,9 @@ def test_stress_scenariy():
     body = texts(at)
     assert 'Изменение плана' in body
     assert 'сценарий' in body.lower()
+    # плашка сценария стоит НА ВИДУ, а не в свёртке блока: она говорит, что числа блока получены
+    # на подставленных условиях, а не на данных источников (пятый круг, сокращение блока вердикта)
+    assert 'сценарий «что если»' in verdict_visible(at).lower(), verdict_visible(at)
 
 
 def test_tri_okna():
@@ -293,11 +322,14 @@ def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
 
 # ================================================================= S1: мелкие правки экрана
 def test_verification_ru_bez_usloviy_ne_vryot():
-    """S1: «условие поставлено в 12:00Z» печатается только там, где условия действительно были."""
+    """S1: «условие поставлено в 12:00» печатается только там, где условия действительно были.
+
+    Буква Z из голого времени снята пятым кругом (`dates_ru`): на оперативном уровне время
+    печатается одним видом «чч:мм», а UTC названо один раз в шапке экрана."""
     raw = 'условие поставлено в 12:00Z; факт: максимум Kp 2.67, бури Kp ≥ 7 не было'
     assert verification_ru(raw, False).startswith('условий проверки на отсечку не ставилось; факт:')
     assert 'условие поставлено' not in verification_ru(raw, False)
-    assert verification_ru(raw, True).startswith('условие поставлено в 12:00Z')
+    assert verification_ru(raw, True).startswith('условие поставлено в 12:00;'), verification_ru(raw, True)
     assert '2,67' in verification_ru(raw, True)          # дробь приводится к запятой в обоих случаях
     assert verification_ru('наблюдений Kp нет', False) == 'наблюдений Kp нет'      # чужую сводку не трогаем
 
@@ -420,6 +452,48 @@ def test_kartochki_ssylayutsya_na_formuly_po_nomeram():
     assert formula_ref('что-то постороннее') is None
     at = run_app(MODES[1])
     assert 'вкладка «Методика», формул' in texts(at)
+
+
+def test_kartochka_obrezaniya_ssylaetsya_na_svoyu_formulu():
+    """Пятый круг: карточки «минут доступности протонов ≥10 МэВ по обрезанию» и «≥100 МэВ»
+    отсылали к формуле (3) — «L-оболочка и B/B₀», — а на формулу (4) «жёсткость геомагнитного
+    обрезания» не ссылалась ни одна карточка. Имя фактора содержит слово «минут» (ключ формулы (3)),
+    и оно стояло в списке ключей раньше, чем «обрезание».
+
+    Тексты ниже — дословно с экрана (дамп AppTest режима «Сейчас»)."""
+    name10 = 'минут доступности протонов ≥10 МэВ по обрезанию'
+    rule10 = ('точки трассы с вертикальной жёсткостью обрезания (A3, центральный диполь) ниже 0,14 ГВ — '
+              'жёсткости протона 10 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра')
+    assert formula_ref(name10, rule10, '0 мин') == '(4)'
+    assert formula_ref('минут доступности протонов ≥100 МэВ по обрезанию', rule10) == '(4)'
+    assert formula_ref(rule10) == '(4)'                       # и по одному правилу — та же формула
+    # соседние карточки от перестановки ключей не пострадали
+    assert formula_ref('минут в аномалии', 'точки трассы с |B| ниже порога 24000 нТл') == '(3)'
+    assert formula_ref('флюенс захваченных протонов ≥30 МэВ',
+                       'ОСТ 134-1044-2007, прил. А, табл. А.2.1; интерполяция по L и B/B0') == '(1) и (2)'
+
+
+@pytest.mark.parametrize('preset', ['now', 'gannon', 'quiet'])
+def test_na_kazhduyu_formulu_metodiki_est_ssylka(preset):
+    """Пятый круг: обязательный шаг жюри «открыть Методику по номеру формулы» обязан работать
+    в обе стороны — карточка ведёт к своей формуле, и у каждой формулы вкладки есть место на
+    экране, которое на неё ссылается.
+
+    Ссылку даёт не только карточка «Объяснений»: на формулу (3) ссылается ещё подпись под
+    величинами карточки окна, на (9) — строка о допуске, на (10) — блок норм. Поэтому ищем по
+    всему профессиональному экрану: на нём видны все десять формул."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_' + preset).click().run()
+    at.sidebar.radio('level').set_value('Профессиональный').run()
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    refs = set()
+    for grp in re.findall(r'формул[аы]?\s+((?:\(\d+\)(?:\s*(?:и|–|,)\s*)?)+)', body):
+        refs.update(int(x) for x in re.findall(r'\((\d+)\)', grp))
+    refs.update(range(5, 8) if '(5)–(7)' in body else ())     # диапазон метеороидов — тремя формулами
+    missing = [b['no'] for b in METHOD_BLOCKS if b['no'] not in refs]
+    assert not missing, ('на эти формулы «Методики» на экране никто не ссылается', missing, sorted(refs))
 
 
 # ================================================================= S4: монотонный цвет, без эмодзи
@@ -1076,6 +1150,30 @@ def test_operativnyy_uroven_bez_mashinnyh_dat(mode):
 
 
 @pytest.mark.parametrize('mode', MODES)
+def test_operativnyy_uroven_bez_gologo_vremeni_s_Z(mode):
+    """Пятый круг: на одном оперативном экране стояли три вида одного времени — «наблюдение 06:15»
+    в приборной полосе, «наблюдение 06:15Z покрывает 13 % окна» в блоке вердикта и «наблюдение
+    19.09.2026 06:15» в карточке окна. Под прежние правила `dates_ru` голое «06:15Z» не подпадало:
+    им обеим нужна дата. Бриф §9.8 требует одного вида и называет UTC один раз, в шапке."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    assert not re.search(r'\d\d:\d\d\s*Z', body), re.findall(r'.{0,60}\d\d:\d\d\s*Z', body)[:5]
+
+
+def test_dates_ru_snimaet_Z_no_ne_trogaet_chisla():
+    """Та же правка прямым вызовом: снимается только признак зоны у времени."""
+    from app.ui import dates_ru
+    assert dates_ru('окно 1 (06:23Z), окно 2 (10:23Z)') == 'окно 1 (06:23), окно 2 (10:23)'
+    assert dates_ru('наблюдение 06:15Z покрывает 13 % окна') == 'наблюдение 06:15 покрывает 13 % окна'
+    assert dates_ru('2026-09-19 05:55Z') == '19.09.2026 05:55'       # дата с временем — как прежде
+    assert dates_ru('05-10 13:35Z') == '10.05 13:35'
+    assert dates_ru('206,919 pfu в 10.05 17:45Z') == '206,919 pfu в 10.05 17:45'
+    assert dates_ru('запись 1:23:45Z') == 'запись 1:23:45Z'          # внутри длинного времени не режем
+    assert dates_ru('высота 420 км') == 'высота 420 км'
+
+
+@pytest.mark.parametrize('mode', MODES)
 def test_odna_fraza_ob_ustoychivosti_vybora(mode):
     """R4-18: на одном экране стояли «Есть предпочтительное окно» и «выбор меняется на сетке порогов»,
     а подпись таблицы 1 добавляла «порядок окон при нулевом допуске». Формально верно всё, читается
@@ -1114,31 +1212,81 @@ def test_tolerance_origin_ru_schitaet_po_snimku():
     assert '×1,50' in tolerance_origin_ru(S, pro=True)
 
 
+def verdict_visible(at: AppTest) -> str:
+    """Текст блока вердикта, который виден БЕЗ клика: весь блок минус содержимое свёртки."""
+    return re.sub(r'\s+', ' ', _strip_tags(re.sub(r'<details class="vmore">.*?</details>', ' ',
+                                                  verdict_html(at), flags=re.S))).strip()
+
+
+def verdict_folded(at: AppTest) -> str:
+    """Текст, уехавший в свёртку блока вердикта («на один клик глубже», бриф §9.1)."""
+    return re.sub(r'\s+', ' ', _strip_tags(''.join(re.findall(r'<details class="vmore">(.*?)</details>',
+                                                              verdict_html(at), re.S)))).strip()
+
+
 @pytest.mark.parametrize('mode', MODES)
 def test_blok_verdikta_ne_splosnoy_abzac(mode):
-    """R4-7 и R4-23: блок «Почему?» был сплошным абзацем на 1266–1283 символа, и про непокрытие GOES
-    в нём говорилось трижды. Теперь это строки фиксированной формы: правило, сравнение окон, одна
-    строка о покрытии, одна об устойчивости, одна о происхождении допуска.
+    """R4-7, R4-23 и находка пятого круга: блок «Почему?» был сплошным абзацем — 934…1921 символа
+    на оперативном уровне. Внутри подряд стояли правило, сравнение по космопогоде, абзац про
+    метеороиды, строки о покрытии, плашка устойчивости и абзац «Откуда допуск». Всё верно, но
+    у члена жюри три минуты на весь экран.
 
-    Порог длины — измеренный бюджет, а не идеал: 400 символов из находки недостижимы, пока в блоке
-    обязаны стоять обе величины обоих окон с единицами, происхождение допуска, допуск рядом с «не
-    хуже» и причина неустойчивости (задание владельца пятого круга). Охват и «не учтено» уведены
-    во вкладку «Окна и факторы» и на профессиональный уровень.
+    Теперь без клика видно только то, что отвечает на два вопроса брифа §9.1: вердикт с окном,
+    величины сравнения (или названия условий) и чего не хватает. Правило целиком, роль линии
+    метеороидов, остальные строки о покрытии, происхождение допуска и результат сетки порогов
+    стоят в свёртке ВНУТРИ того же блока — ничего не выброшено (проверяется ниже).
 
-    Бюджет пересчитан на коммите слияния пятого круга (оперативный уровень): «Гэннон» 934,
-    «Сейчас» 1242, «Прогноз из прошлого» 1343, «Тихая дата» 1517, «Исторический разбор» 1921
-    символов. Самый длинный блок вырос не от лишних слов: после R4-12 карточка условия называет
-    каждое уведомление DONKI отдельной записью со своим временем публикации и своим Kp
-    (два окна × четыре записи), потому что число и ссылка обязаны приходить из одной записи.
-    Порог 2000 стоит как защита от нового разрастания, а не как достигнутая цель."""
+    Измерено на этой ветке (оперативный уровень, видимая часть): режимы «Текущая обстановка» 441,
+    «Исторический разбор» 326, «Прогноз из прошлого» 265; пресеты «Сейчас» 439…481 (живые данные
+    от прогона к прогону разные), «Гэннон» 481, «Тихая дата» 583 символа.
+    Было 1242/1921/1343/1242/934/1517.
+
+    400 символов из находки достигнуты не везде, и вот чем заняты остальные — это ограничение,
+    а не недосмотр: «Тихая дата» 583 — из них 295 занимает вычисленное правило шага 3–4, где
+    рядом с «не хуже по флюенсу» обязаны стоять обе величины, допуск и отношение (R4-17: без них
+    фраза опровергается числами той же строки), и 209 — строка о том, почему покрытие неполное;
+    «Гэннон» 481 — из них 415 занимает перечень записей единственного условия: два уведомления
+    DONKI, каждое со своим временем публикации и своим Kp, и сводить их в одну фразу нельзя
+    (закрытая критическая находка пятого круга). Порог 650 стоит как защита от нового разрастания."""
     at = run_app(mode)
     assert not at.exception, at.exception
     html_ = verdict_html(at)
-    body = re.sub(r'\s+', ' ', _strip_tags(html_)).strip()
-    assert len(body) <= 2000, (len(body), body)
-    assert html_.count('<li>') <= 4, html_
-    assert 'Охват:' not in body and 'Не учтено:' not in body, body     # они во вкладке «Окна и факторы»
-    assert len(re.findall(r'не покрывает окно', body)) <= 1, body
+    vis = verdict_visible(at)
+    assert len(vis) <= 650, (len(vis), vis)
+    assert html_.count('<li') <= 5, html_
+    assert 'Охват:' not in vis and 'Не учтено:' not in vis, vis      # они во вкладке «Окна и факторы»
+    assert len(re.findall(r'не покрывает окно', vis)) <= 1, vis
+    # на поверхности нет ни происхождения допуска, ни разбора сетки порогов — они на клик глубже
+    assert 'Откуда допуск' not in vis, vis
+    assert 'ячеек сетки' not in vis and 'ячейках сетки' not in vis, vis
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_iz_bloka_verdikta_nichego_ne_propalo(mode):
+    """Обратная сторона сокращения: всё, что ушло с поверхности, обязано стоять в свёртке того же
+    блока — иначе это не «на один клик глубже», а молчаливое выбрасывание пояснения."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    fold = verdict_folded(at)
+    assert fold, 'свёртки под вердиктом нет'
+    assert 'формулы (8) и (9)' in fold, fold                          # формальная запись правила
+    # результат сетки порогов — единственная фраза об устойчивости — теперь именно здесь (R4-18)
+    assert 'сетк' in fold, fold
+    # правило целиком уезжает в свёртку всюду, кроме шагов 3–4 и 4: там оно и есть ответ «почему»
+    # и остаётся на поверхности — тогда в свёртке стоит происхождение допуска
+    assert 'Правило целиком' in fold or 'Откуда допуск' in fold or 'условия' in fold, fold
+
+
+@pytest.mark.parametrize('preset', ['now', 'gannon', 'quiet'])
+def test_blok_verdikta_korotkiy_na_presetah(preset):
+    """Тот же бюджет на трёх пресетах защиты — их жюри увидит первыми (бриф §9.9)."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_' + preset).click().run()
+    assert not at.exception, at.exception
+    vis = verdict_visible(at)
+    assert len(vis) <= 650, (len(vis), vis)
+    assert verdict_folded(at), 'свёртки под вердиктом нет'
 
 
 def test_ohvat_ostalsya_na_ekrane_vo_vkladke():
@@ -1195,6 +1343,25 @@ def test_prichina_nepokrytiya_kanala_ne_vydumyvaetsya():
     assert _cov_reason(f2) == 'прогноз Kp: ячейки покрывают 40 % окна'
 
 
+def test_prichina_nepokrytiya_GOES_nazyvaet_dolyu_a_ne_uroven():
+    """Пятый круг: при частичном покрытии ветки не было, и карточка окна на вопрос «почему покрытие
+    неполное» отвечала уровнем по шкале S — «поток протонов GOES ≥10 МэВ: наблюдение 19.09.2026 06:15
+    (ниже S1 (фон))». Уровень к покрытию отношения не имеет, а блок вердикта на том же экране
+    называл настоящую причину — долю окна. Два места об одном говорили разное (бриф §9.7)."""
+    from app.ui import _cov_reason
+    f = SimpleNamespace(name='поток протонов GOES ≥10 МэВ',
+                        limits_note='покрытие частичное; горизонт данных до 2026-09-19 07:15Z; '
+                                    'наблюдение 2026-09-19 06:15Z (ниже S1 (фон)), давность 9 мин; '
+                                    'горизонт наблюдения до 07:15Z покрывает 12 % окна; '
+                                    'на остальные участки окна наблюдение не распространяется, '
+                                    'прогноза потока на окно нет; уровень ниже S1 (фон)')
+    out = _cov_reason(f)
+    assert out == ('GOES: наблюдение 19.09.2026 06:15 покрывает 12 % окна — '
+                   'на остальные участки прогноза потока нет'), out
+    assert 'S1' not in out, out                       # уровень по шкале S стоит в приборной полосе
+    assert out.count('(') == out.count(')') == 0, out  # и вложенных скобок в карточке больше нет
+
+
 def test_kesh_ne_menyaet_cvet_proishozhdeniya():
     """R4-28: янтарный означал разом внешний прогноз и наблюдение из кеша, и по цвету жюри не
     отличало наблюдение от прогноза — ровно то различие, ради которого система цветов заведена."""
@@ -1207,6 +1374,12 @@ def test_kesh_ne_menyaet_cvet_proishozhdeniya():
                    encoding='utf-8').read()
     assert "'fc' if (g.value >=" not in src, 'наблюдение GOES не должно краситься тоном прогноза'
     assert "'fc' if k_src.get('from_cache')" not in src, 'кеш Kp не должен краситься тоном прогноза'
+    # тема Streamlit описывает ту же систему цветов; её комментарий пережил R4-28 и говорил
+    # «янтарный — внешний прогноз ИЛИ кеш», то есть ровно то, что было исправлено в коде
+    cfg = _io.open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                '.streamlit', 'config.toml'), encoding='utf-8').read()
+    assert 'внешний прогноз или кеш' not in cfg, cfg[:400]
+    assert 'Кеш цвет НЕ меняет' in cfg, cfg[:400]
 
 
 def test_orbita_v_razbore_nazyvaet_datu_sozdaniya():

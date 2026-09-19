@@ -88,6 +88,18 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
                  background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
 .verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+/* «на один клик глубже» (бриф §9.1): как считался допуск, устойчив ли выбор и остальные пояснения.
+   Обычный <details>, а не свёртка Streamlit: блок вердикта — одна разметка, и свёртка обязана
+   стоять ВНУТРИ неё, иначе она уезжает под карточки окон. */
+.verdict details.vmore { margin:8px 0 0 0; }
+.verdict details.vmore > summary { cursor:pointer; color:var(--muted); font-size:0.84rem; list-style:none;
+                                   user-select:none; }
+.verdict details.vmore > summary::-webkit-details-marker { display:none; }
+.verdict details.vmore > summary::before { content:"\25B8\00A0"; }
+.verdict details.vmore[open] > summary::before { content:"\25BE\00A0"; }
+.verdict details.vmore .vm { margin:6px 0 0 0; font-size:0.86rem; color:var(--muted); }
+.verdict details.vmore ul { margin:6px 0 0 18px; }
+.verdict details.vmore li { font-size:0.86rem; color:var(--muted); }
 /* вердикт — наш расчёт (синий); условие у всех окон — красный; нет оснований — серый. Без заливок. */
 .v-preferred { border-left-color:var(--calc); }
 .v-equivalent { border-left-color:var(--calc); }
@@ -753,19 +765,20 @@ def _wins_ru(nums: list[int]) -> str:
     return 'окна ' + ' и '.join(str(n) for n in nums) if len(nums) == 2 else 'окна ' + ', '.join(str(n) for n in nums)
 
 
-def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: int = 6,
-                    max_other: int | None = None) -> tuple[list[str], int]:
-    """Список условий панели вердикта с указанием окна и без дубликатов (О3-3).
-    Возвращает (строки, сколько не показано).
+def verdict_items(rec, assessments, mech_ru: dict | None = None) -> list[dict]:
+    """Пункты блока «Почему?» с их родом (О3-3). Один пункт — словарь:
 
-    `max_other` — сколько строк НЕ о сравнении механизмов оставить (бриф §9.1 и §9.7). Сообщения о
-    неполном покрытии слой расчёта даёт и общей строкой, и отдельно по каждому окну; в блоке «Почему?»
-    это три формулировки об одном и том же, а полностью они стоят в карточках окон и в таблице 1.
-    Строки сравнения (обе величины обоих окон) не режутся никогда — ради них блок и существует.
+    `text` — строка как её печатает экран;
+    `kind` — `cond` (условие проверки окна), `cmp` (сравнение по механизму) или `other`
+             (покрытие, чего не хватает и прочие пояснения слоя сравнения);
+    `mech` — идентификатор механизма для `cmp`, иначе None.
+
+    Род нужен панели вердикта: условия и сравнение — это и есть ответ на «почему», а пояснения
+    о покрытии слой расчёта даёт и общей строкой, и отдельно по каждому окну, и в блоке они
+    читаются как три формулировки об одном и том же.
     """
     mech_ru = mech_ru or MECH_RU
-    out: list[str] = []
-    is_cmp: list[bool] = []
+    out: list[dict] = []
     if rec.verdict == 'all_need_check' and assessments:
         by: dict[str, list[int]] = {}
         for i, a in enumerate(assessments):
@@ -773,8 +786,13 @@ def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: in
                 for r in m.needs_check_reasons:
                     by.setdefault(_short_reason(r), []).append(i + 1)
         for text, nums in by.items():
-            out.append('%s: %s' % (_wins_ru(nums), text))
-            is_cmp.append(True)          # сами условия — это и есть ответ на «почему», их не режем
+            # `head` — условие без перечня записей: «окно 1: геомагнитная буря Kp ≥ 7 в окне
+            # (2 сигнала по 6 записям)». Перечень стоит после первого «: » и всегда доступен
+            # целиком: в карточке окна и в свёртке блока вердикта.
+            head_ = '%s: %s' % (_wins_ru(nums), text.partition(': ')[0])
+            if head_.count('(') != head_.count(')'):     # скобка попала бы под обрез — не режем
+                head_ = ''
+            out.append({'text': '%s: %s' % (_wins_ru(nums), text), 'kind': 'cond', 'mech': None, 'head': head_})
     else:
         seen = set()
         per = dict(getattr(rec, 'per_mechanism_comparison', None) or {})
@@ -792,8 +810,23 @@ def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: in
                     txt = '%s — %s: %s' % (mech_ru.get(mech, mech), ('окно %d (%s)' % (n, m.group(1))) if n else m.group(1), m.group(2))
                 else:
                     txt = '%s: %s' % (mech_ru.get(mech, mech), txt)
-            out.append(txt)
-            is_cmp.append(bool(mech))
+            out.append({'text': txt, 'kind': 'cmp' if mech else 'other', 'mech': mech, 'head': ''})
+    return out
+
+
+def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: int = 6,
+                    max_other: int | None = None) -> tuple[list[str], int]:
+    """Список условий панели вердикта с указанием окна и без дубликатов (О3-3).
+    Возвращает (строки, сколько не показано).
+
+    `max_other` — сколько строк НЕ о сравнении механизмов оставить (бриф §9.1 и §9.7). Сообщения о
+    неполном покрытии слой расчёта даёт и общей строкой, и отдельно по каждому окну; в блоке «Почему?»
+    это три формулировки об одном и том же, а полностью они стоят в карточках окон и в таблице 1.
+    Строки сравнения (обе величины обоих окон) не режутся никогда — ради них блок и существует.
+    """
+    items = verdict_items(rec, assessments, mech_ru)
+    out = [x['text'] for x in items]
+    is_cmp = [x['kind'] != 'other' for x in items]
     if max_other is not None:
         kept, others = [], 0
         for txt, cmp_ in zip(out, is_cmp):
@@ -957,6 +990,32 @@ def ratio_ru(v) -> str:
 # правило и не подставляет в него числа.
 
 
+def rule_operational_ru(rec, S: dict) -> tuple[str, str]:
+    """Строка правила для ОПЕРАТИВНОГО уровня: (что видно сразу, что уходит в свёртку).
+
+    На шагах 3–4 и 4 вычисленное правило — это и есть ответ «почему»: в нём стоят обе величины
+    обоих окон, допуск и отношение. Резать его нельзя: без допуска фраза «не хуже по флюенсу»
+    опровергается числами той же строки (R4-17), поэтому она остаётся на виду целиком.
+
+    На остальных шагах вычисленный хвост повторяет заголовок вердикта («Все окна требуют проверки
+    аналитиком» ↔ «у каждого окна есть условие проверки, автоматический выбор не делается») или
+    строки сравнения («окна 1 и 2 равнозначны» ↔ пункт с минутами и флюенсом обоих окон), а бриф
+    §9.7 запрещает два сообщения об одном и том же. Видно остаётся имя шага; на шаге 5 к нему
+    добавляются числа допуска — прямо из снимка, а не выкусыванием из готовой фразы.
+    """
+    full = frac_ru(rule_ru(rec.rule_applied, basis=False))
+    ra = str(rec.rule_applied or '')
+    if ra.startswith('п.3–4') or ra.startswith('п.4'):
+        return full, ''
+    step = full.partition(':')[0].strip()
+    if ra.startswith('п.5'):
+        rob = S.get('robustness') or {}
+        tol, ratio = rob.get('tol_min'), rob.get('tol_ratio')
+        if tol is not None and ratio is not None:
+            step += ': %s мин по минутам в аномалии и ×%s по флюенсу' % (fmt(round(float(tol))), ratio_ru(ratio))
+    return step, (full if full != step else '')
+
+
 def coverage_scope_ru(S: dict) -> str:
     """Охват расчёта одной строкой: что учтено и что нет (О1). Стоит во вкладке «Окна и факторы»
     на обоих уровнях и в панели вердикта — на профессиональном."""
@@ -964,48 +1023,119 @@ def coverage_scope_ru(S: dict) -> str:
                                           ', '.join(S.get('coverage_missing', []) or ['—']))
 
 
+_FORMAL_RU = 'формальная запись — вкладка «Методика», формулы (8) и (9)'
+_VMORE_SUMMARY = 'Как это посчитано: правило целиком, откуда допуск и что даёт сетка порогов'
+# Сколько знаков перечней записей блок вердикта держит на поверхности. Перечень — это «откуда
+# известно»: у каждого условия он называет каждое уведомление со своим временем публикации и своим
+# Kp, и резать его по одной записи нельзя (число и ссылка обязаны приходить из одной записи).
+# Пока все перечни вместе укладываются в бюджет, они стоят на виду целиком; как только не
+# укладываются — на виду остаются НАЗВАНИЯ всех условий, а перечни печатает карточка окна, которая
+# стоит прямо под блоком вердикта и показывает их целиком, со своим временем публикации у каждой
+# записи. В свёртку перечень не дублируется: он и так на экране. Правило одно на все условия сразу:
+# если часть условий показывать с записями, а часть без, жюри прочтёт в этом разницу, которой нет.
+_COND_BUDGET = 420
+_COND_POINTER = 'Записи, по которым поставлены условия, — в карточке каждого окна ниже.'
+
+
 def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = False,
                   plan_change: str | None = None, missing_ru=None, policy_short: str | None = None,
                   thr_nT=None, e_min_MeV=None) -> str:
+    """Блок «Когда выходить? / Почему?» — первое, что читает жюри (бриф §9.1).
+
+    На ОПЕРАТИВНОМ уровне сразу видно только то, что отвечает на два вопроса: вердикт с окном,
+    величины сравнения (или условия проверки) и чего не хватает. Всё остальное — правило целиком,
+    роль линии метеороидов, остальные пояснения о покрытии, происхождение допуска и устойчивость
+    выбора — стоит на один клик глубже, в свёртке внутри того же блока. Ничего не выброшено:
+    каждая строка либо видна, либо лежит в свёртке, и обе проверяются `tests/test_ui_app.py`.
+
+    На ПРОФЕССИОНАЛЬНОМ уровне блок остаётся сплошным: там читают целиком и свёртка мешает.
+    """
     v = rec.verdict
     title = VERDICT_TITLE.get(v, v)
-    # Основание допуска на оперативном уровне не повторяется в строке правила: под вердиктом стоит
-    # отдельная строка «Откуда допуск …» с числами сетки (бриф §9.7: нет двух сообщений об одном).
     rob = S.get('robustness') or {}
-    rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied, basis=pro))) + \
-           ' · формальная запись — вкладка «Методика», формулы (8) и (9)'
+    lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title)]
+    more: list[str] = []                   # то, что уезжает в свёртку (только оперативный уровень)
+
     if pro:
-        rule += ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
-    lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title), '<div class="rule">%s</div>' % rule]
+        rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied, basis=True))) + ' · ' + _FORMAL_RU \
+            + ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
+        lines.append('<div class="rule">%s</div>' % rule)
+    else:
+        shown_rule, hidden_rule = rule_operational_ru(rec, S)
+        lines.append('<div class="rule">Правило: %s</div>' % esc(screen_text(shown_rule)))
+        if hidden_rule:
+            more.append('Правило целиком: ' + screen_text(hidden_rule) + '.')
+        more.append(_FORMAL_RU[0].upper() + _FORMAL_RU[1:] + '.')
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
-    bullets, more = verdict_reasons(rec, assessments, max_other=None if pro else 1)
-    if not pro:
-        bullets = [bullet_short_ru(b) for b in bullets]
+
+    items = verdict_items(rec, assessments)
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
-    bullets += ['Чего не хватает: ' + x for x in missing]
-    if bullets:
-        lis = ''.join('<li>%s</li>' % esc(screen_text(b)) for b in bullets)
-        if more:
-            lis += '<li class="more">… ещё %d о покрытии, см. карточки окон и вкладку «Окна и факторы»</li>' % more
-        lines.append('<ul>' + lis + '</ul>')
+    items += [{'text': 'Чего не хватает: ' + x, 'kind': 'need', 'mech': None} for x in missing]
+    cut_cond = False
+    if pro:
+        shown, hidden = items, []          # профессиональный уровень читают целиком, ничего не режем
+    else:
+        # перечни записей остаются на поверхности, только если умещаются в бюджет — все сразу
+        conds = [it for it in items if it['kind'] == 'cond']
+        cut_cond = bool(conds) and all(it['head'] for it in conds) \
+            and sum(len(it['text']) for it in conds) > _COND_BUDGET
+        shown, hidden, others = [], [], 0
+        rule_txt = (rule_operational_ru(rec, S)[0] or '').lower()
+        for it in items:
+            it = dict(it, text=bullet_short_ru(it['text']))
+            # линия метеороидов по построению не выбирает окно — она об охвате и абсолютной оценке;
+            # механизм, уже названный в видимой строке правила, — второе сообщение об одном и том же
+            dup = it['kind'] == 'cmp' and (it['mech'] == 'mmod_stat'
+                                           or (MECH_RU.get(it['mech'], '???')[:-1].lower() in rule_txt))
+            if it['kind'] == 'other':
+                others += 1
+                keep = others <= 1         # одна строка о покрытии, остальные — в свёртку
+            else:
+                keep = not dup
+            if keep and len(shown) >= 4:   # больше четырёх строк за три минуты не читаются
+                keep = False
+            if keep and cut_cond and it['kind'] == 'cond':
+                shown.append(dict(it, text=it['head']))   # перечень записей — в карточке окна ниже
+                continue
+            (shown if keep else hidden).append(it)
+    if shown:
+        lines.append('<ul>' + ''.join('<li%s>%s</li>' % (' class="evid"' if it['kind'] == 'cond' else '',
+                                                         esc(screen_text(it['text']))) for it in shown) + '</ul>')
+    if cut_cond:
+        lines.append('<div class="policy">%s</div>' % esc(_COND_POINTER))
     if plan_change:
         lines.append('<div class="plan">%s</div>' % esc(plan_change))
-    if policy_short:
-        lines.append('<div class="policy">%s</div>' % esc(policy_short))
-    sim = pill('сценарий «что если»', 'warn') if S.get('is_simulated') else ''
+
+    # Плашка сценария «что если» остаётся НА ВИДУ на обоих уровнях: она говорит, что числа блока
+    # получены на подставленных условиях, а не на данных источников. В свёртку её прятать нельзя.
+    if S.get('is_simulated'):
+        lines.append('<div class="cov">%s</div>' % pill('сценарий «что если»', 'warn'))
     if thr_nT is not None and e_min_MeV is not None:
-        lines.append('<div class="cov">%s%s</div>'
-                     % (sim, esc(screen_text(robustness_line_ru(rec, S, thr_nT, e_min_MeV)))))
+        robust_html = '<div class="cov">%s</div>' % esc(screen_text(robustness_line_ru(rec, S, thr_nT, e_min_MeV)))
     else:                                  # порогов не передали — печатаем прежнюю плашку, не выдумывая
-        lines.append('<div class="cov">%s %s</div>' % (robustness_pill(rec, rob), sim))
+        robust_html = '<div class="cov">%s</div>' % robustness_pill(rec, rob)
     # Допуск равнозначности участвует только в сравнении окон. Там, где до сравнения не дошло
     # (у каждого окна условие; нет покрытия обязательной линии), строка о нём была бы лишней.
     tol = tolerance_origin_ru(S, pro) if v in ('preferred', 'equivalent', 'trade_off') else ''
-    if tol:
-        lines.append('<div class="policy">%s</div>' % esc(screen_text(tol)))
-    if pro:                                # охват на оперативном уровне — во вкладке «Окна и факторы»
-        lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))
+    if pro:
+        if policy_short:
+            lines.append('<div class="policy">%s</div>' % esc(policy_short))
+        lines.append(robust_html)
+        if tol:
+            lines.append('<div class="policy">%s</div>' % esc(screen_text(tol)))
+        lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))  # охват — только здесь
+    else:
+        body = ['<summary>%s</summary>' % esc(_VMORE_SUMMARY)]
+        if hidden:
+            body.append('<ul>' + ''.join('<li>%s</li>' % esc(screen_text(it['text'])) for it in hidden) + '</ul>')
+        body += ['<div class="vm">%s</div>' % esc(screen_text(x)) for x in more]
+        if policy_short:
+            body.append('<div class="vm">%s</div>' % esc(policy_short))
+        body.append(robust_html)
+        if tol:
+            body.append('<div class="vm">%s</div>' % esc(screen_text(tol)))
+        lines.append('<details class="vmore">' + ''.join(body) + '</details>')
     lines.append('</div>')
     return ''.join(lines)
 
@@ -1022,6 +1152,12 @@ _win_span = win_span     # прежнее имя
 
 _ISO_DT_RE = re.compile(r'(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?Z?')
 _MD_DT_RE = re.compile(r'(?<![\d.\-])(\d{2})-(\d{2}) (\d{2}):(\d{2})Z')
+# Голое время с признаком зоны: «окно 1 (06:23Z)», «наблюдение 06:15Z покрывает 14 % окна».
+# Под две регулярные выражения выше оно не попадает — там обязательна дата, — и на оперативном
+# уровне рядом с «19.09 06:23» оставался машинный вид «06:23Z» (пятый круг). Слово UTC стоит один
+# раз в шапке экрана, поэтому здесь остаётся только «чч:мм». Запускается ПОСЛЕ дат: к этому моменту
+# «2026-09-19 06:15Z» уже превращено в «19.09.2026 06:15» и под это правило не подпадает.
+_BARE_TIME_RE = re.compile(r'(?<![\d\-:.])(\d{2}):(\d{2})\s*Z')
 _AGE_CLAUSE_RE = re.compile(r'[,;]?\s*давность(?:\s+данных)?\s+\d+(?:[.,]\d+)?\s*(?:мин|ч|сут)\b'
                             r'(?:\s*\(предел[^)]*\))?')
 # разряды тысяч в готовых строках модулей: «24000 нТл» → «24 000 нТл» (единица обязательна, год не трогаем)
@@ -1033,10 +1169,12 @@ _THOUSANDS_RE = re.compile(r'(?<![\d,.])(\d{4,})(?=(?:\s*/\s*\d+)*\s*(?:нТл|�
 
 def dates_ru(text) -> str:
     """Дата источника в едином виде экрана (S7): «2026-09-19 01:35Z» → «19.09.2026 01:35»,
-    «05-09 14:00Z» → «09.05 14:00». Времена всюду UTC, слово UTC печатается один раз в шапке."""
+    «05-09 14:00Z» → «09.05 14:00», «06:23Z» → «06:23». Времена всюду UTC, слово UTC печатается
+    один раз в шапке; буква Z на оперативном уровне — машинная запись и на экране не остаётся."""
     s = _ISO_DT_RE.sub(lambda m: '%s.%s.%s %s:%s' % (m.group(3), m.group(2), m.group(1), m.group(4), m.group(5)),
                        str(text or ''))
-    return _MD_DT_RE.sub(lambda m: '%s.%s %s:%s' % (m.group(2), m.group(1), m.group(3), m.group(4)), s)
+    s = _MD_DT_RE.sub(lambda m: '%s.%s %s:%s' % (m.group(2), m.group(1), m.group(3), m.group(4)), s)
+    return _BARE_TIME_RE.sub(lambda m: '%s:%s' % (m.group(1), m.group(2)), s)
 
 
 def screen_text(text) -> str:
@@ -1098,6 +1236,14 @@ def _cov_reason(f) -> str | None:
             m0 = re.search(r'наблюдение\s+([\d.:\s]+)', note)
             return 'GOES: наблюдение%s не покрывает окно — значение окна не определено' \
                 % ((' ' + m0.group(1).strip()) if m0 else '')
+        if share is not None and share < 100:
+            # Пятый круг: этой ветки не было, и строка «почему неполное» уходила в общий хвост —
+            # печаталось «GOES: наблюдение 19.09.2026 06:15 (ниже S1 (фон))», то есть на вопрос
+            # «почему покрытие неполное» карточка отвечала уровнем по шкале S. Причина — доля окна,
+            # и блок вердикта на том же экране называл именно её. Теперь оба места говорят одно.
+            m0 = re.search(r'наблюдение\s+([\d.:\s]+)', note)
+            return 'GOES: наблюдение%s покрывает %d %% окна — на остальные участки прогноза потока нет' \
+                % ((' ' + m0.group(1).strip()) if m0 else '', share)
         if 'наблюдений GOES нет' in note and 'DONKI о протонных' in note:
             return 'GOES: наблюдений за 2024 нет, канал по датированным уведомлениям DONKI'
         if 'наблюдений GOES нет' in note and 'каталог' in note:
@@ -1373,8 +1519,17 @@ RULE_POLICY = ('Это правило команды, а не эксплуата
                'исключение помеченного окна из автоматического выбора — политика прототипа, её устойчивость '
                'проверена на сетке порогов.')
 # Ключевые слова карточки → номер формулы. Карточка ссылается на формальную запись по номеру (PROPOSAL_A п. 5).
-_FORMULA_KEYS = [(('флюенс', 'захвач', 'ост 134'), '(1) и (2)'), (('аномали', 'минут', '|b|', 'l-оболоч'), '(3)'),
-                 (('обрезан', 'жёсткост', 'жесткост'), '(4)'), (('метеороид', 'попадан', 'grün', 'grun'), '(5)–(7)'),
+#
+# Порядок строк — это порядок поиска, и он решает спор ключей. Карточки «минут доступности протонов
+# ≥10 МэВ по обрезанию» и «≥100 МэВ» содержат и слово «минут» (формула (3), L-оболочка и B/B₀), и
+# слово «обрезания» (формула (4), жёсткость обрезания). Пока строка с «минут» стояла первой, обе
+# карточки отсылали жюри к формуле (3) — к магнитным координатам вместо жёсткости, — а на формулу (4)
+# не ссылалась ни одна карточка (пятый круг). Более узкий ключ обязан стоять раньше более широкого,
+# поэтому «обрезание» и «жёсткость» — первой строкой.
+_FORMULA_KEYS = [(('обрезан', 'жёсткост', 'жесткост'), '(4)'),
+                 (('флюенс', 'захвач', 'ост 134'), '(1) и (2)'),
+                 (('аномали', 'минут', '|b|', 'l-оболоч'), '(3)'),
+                 (('метеороид', 'попадан', 'grün', 'grun'), '(5)–(7)'),
                  (('сравнен', 'предпочт', 'равнознач', 'правил', 'допуск'), '(8) и (9)')]
 
 
