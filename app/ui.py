@@ -2982,7 +2982,8 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 360, duration_min=N
         fig.add_trace(go.Scatter(x=[x[i_pk]], y=[flu[i_pk]], mode='markers', name='пик на сроке',
                                  marker={'size': 10, 'color': PEAK_RED},
                                  hovertemplate='пик %{x|%d.%m %H:%M}<extra></extra>'), row=1, col=1)
-        fig.add_annotation(x=x[i_pk], y=flu[i_pk], row=1, col=1, text='пик %s' % x[i_pk].strftime('%H:%M'),
+        fig.add_annotation(x=x[i_pk], y=flu[i_pk], row=1, col=1,
+                           text='пик %s' % _peak_label_ru(x[i_pk], x[0] if x else None),
                            showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=PEAK_RED,
                            ax=0, ay=-26, font={'size': 12, 'color': PEAK_RED})
     # --- полоса-подложка: минуты в аномалии под тем же временем, своей заливкой и своей шкалой.
@@ -3235,6 +3236,20 @@ def refusal_lift_ru(verdict: str, missing_ru=None, mode: str = 'live') -> str:
     return head_ru + ' ' + tail
 
 
+def _peak_label_ru(t_peak, t_first) -> str:
+    """Время пика так, как его называют и подпись на графике, и популярное объяснение.
+
+    Час без даты читается как «сегодня». Пока срок поиска не переходит через полночь, дата —
+    лишний шум; как только переходит, без неё «00:40» неоднозначно. Правило одно на оба места:
+    иначе экран называет один и тот же момент двумя разными способами.
+    """
+    if t_peak is None:
+        return '—'
+    if t_first is not None and t_peak.date() != t_first.date():
+        return t_peak.strftime('%d.%m %H:%M')
+    return t_peak.strftime('%H:%M')
+
+
 def plain_why_ru(scan: dict, cand: dict | None, duration_min: int | None = None) -> str:
     """Ровно ДВА предложения обычными словами: почему выходить именно в этот промежуток.
 
@@ -3296,7 +3311,12 @@ def plain_why_ru(scan: dict, cand: dict | None, duration_min: int | None = None)
                  'в худшее время на сроке.'
                  % (m_vin(saa), fmt(round(float(dur))), m_rod(saa_worst)))
     ratio = float(flu_peak) / float(flu)
-    t_ru = t_peak.strftime('%H:%M')
+    # Час без даты читается как «сегодня». Срок поиска доходит до суток, и пик легко попадает на
+    # следующие: «приходится на 00:40» рядом с окном «26.06 04:00 — 05:00» тогда неоднозначно.
+    # Дата печатается ровно тогда, когда пик не в тот же день, что начало срока, — и тем же
+    # правилом, что подпись пика на самом графике (`_peak_label_ru`), чтобы экран не называл
+    # одно и то же время двумя разными способами.
+    t_ru = _peak_label_ru(t_peak, _iso_dt((cands[0] if cands else {}).get('start_utc')))
     if ratio >= 1.5:
         # Отношение огрубляется до двух значащих цифр: «в 1 463 раза» обещает точность, которой
         # у модели нет (у самого флюенса на экране печатаются три значащие цифры), и читается

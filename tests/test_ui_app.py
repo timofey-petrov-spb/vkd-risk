@@ -2420,6 +2420,18 @@ def test_profil_odin_grafik_s_kruglymi_otmetkami_polosoy_i_pikom():
     # пик подписан ВРЕМЕНЕМ
     ann = [str(a.text) for a in (fig.layout.annotations or ())]
     assert any(re.fullmatch(r'пик \d\d:\d\d', a) for a in ann), ann
+    # пик на следующие сутки подписывается с датой — и на графике, и в популярном объяснении
+    # одним и тем же правилом: «00:40» рядом с окном «26.06 04:00» иначе читается как «сегодня»
+    from app.ui import plain_why_ru
+    # шаг 200 мин на семи началах разносит срок на 20 ч, и пик кладётся на начало, попавшее
+    # в следующие сутки (20.09 04:40), при рекомендованном начале 20.09 08:00
+    сутки = _scan_fixture(t0, n=7, step=200)
+    сутки['candidates'][5]['fluence'] = 1.0e7
+    fig2 = windows_ribbon(сутки, 30.0, duration_min=240)
+    ann2 = [str(a.text) for a in (fig2.layout.annotations or ())]
+    assert any(re.fullmatch(r'пик \d\d\.\d\d \d\d:\d\d', a) for a in ann2), ann2
+    txt = plain_why_ru(сутки, сутки['candidates'][-1], 240)
+    assert re.search(r'приходится на \d\d\.\d\d \d\d:\d\d', txt), txt
     body = ' '.join(names) + ' ' + ribbon_caption_ru(sc, duration_min=240)
     for bad in ('балл', 'нормиров', 'индекс риска'):
         assert bad not in body, bad
