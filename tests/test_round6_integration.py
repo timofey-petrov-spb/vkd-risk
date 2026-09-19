@@ -49,15 +49,20 @@ def app_strict() -> AppTest:
 
 
 def test_formula_reference_is_a_separate_sentence(app_now: AppTest) -> None:
-    """П. 4: перед «Формальная запись — вкладка «Методика»» всегда стоит конец предложения."""
-    # разметку убираем: в блоке вердикта дописка стоит отдельной ячейкой <div class="vm">,
-    # и её открывающий тег сам по себе не является знаком препинания
-    body = re.sub(r'<[^>]+>', ' ', _texts(app_now))
-    hits = list(re.finditer(r'(.{1,80}?)\s*Формальная запись — вкладка', body))
-    assert hits, 'карточек объяснения со ссылкой на формулу на экране нет — проверять нечего'
-    склеенные = [h.group(1) for h in hits
-                 if not h.group(1).rstrip().endswith(('.', '!', '?', ':', ';'))]
-    assert not склеенные, 'дописка приклеена к правилу без знака препинания: %r' % склеенные[:3]
+    """П. 4: в пункте 5 карточки объяснения перед «Формальная запись» стоит конец предложения.
+
+    Проверяется именно пункт 5 карточки: это одна строка одного абзаца, и склейка там
+    видна глазами. Блок вердикта сюда не входит намеренно — там ссылка на формулу стоит
+    ОТДЕЛЬНОЙ ячейкой разметки (`<div class="vm">`) после списка, то есть отдельным блоком
+    на экране, и знак препинания перед ней ничего не решает.
+    """
+    пункты = [str(e.value) for e in app_now.markdown
+              if str(e.value).startswith('**5. Применённое правило или модель.**')]
+    со_ссылкой = [p for p in пункты if 'Формальная запись — вкладка' in p]
+    assert со_ссылкой, 'карточек объяснения со ссылкой на формулу на экране нет — проверять нечего'
+    склеенные = [p for p in со_ссылкой
+                 if not p.split('Формальная запись — вкладка')[0].rstrip().endswith(('.', '!', '?', ':', ';'))]
+    assert not склеенные, 'дописка приклеена к правилу без знака препинания: %r' % [p[-90:] for p in склеенные[:3]]
 
 
 def test_verification_table_end_of_interval_is_not_earlier_than_start(app_strict: AppTest) -> None:
@@ -85,6 +90,28 @@ def не_тот_же_день(нач: str, кон: str, кон_с_датой: bo
     if not кон_с_датой:
         return False
     return str(кон).split()[0] != str(нач).split()[0]
+
+
+@pytest.mark.parametrize('уровень', [False, True], ids=['оперативный', 'профессиональный'])
+def test_no_nested_parentheses_on_screen(уровень: bool) -> None:
+    """Скобка в скобке на экране — признак склеенного шаблона, а не оформления.
+
+    Проверка поставлена после того, как пятый круг закрыл два последних таких места
+    (правило карточки флюенса и заметка GOES): область «экран» просила её поставить
+    именно после закрытия R5-8, иначе она была бы красной с рождения. Разметка и CSS
+    из проверки убраны: `grid-template-columns: repeat(auto-fit, minmax(190px, 1fr))` —
+    не текст экрана.
+    """
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button(key='preset_gannon').click().run()
+    if уровень:
+        at.sidebar.radio('level').set_value('Профессиональный').run()
+    assert not at.exception, at.exception
+    тело = re.sub(r'<style[^>]*>.*?</style>', ' ', _texts(at), flags=re.S)
+    тело = re.sub(r'<[^>]+>', ' ', тело)
+    вложенные = re.findall(r'\([^()]*\([^()]*\)[^()]*\)', тело)
+    assert not вложенные, 'вложенные скобки на экране: %r' % вложенные[:3]
 
 
 def test_events_on_horizon_cell_has_unit_and_origin(app_now: AppTest) -> None:
