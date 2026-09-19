@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Поставщик истории (experiments/stub_history): происхождение уведомлений по телу (О4/Т3),
+"""АРХИВ (experiments/legacy/stub_history, в конвейере не используется с 0.6.0): происхождение уведомлений по телу (О4/Т3),
 карточки событий — только разбор после факта (CONTRACT §10, Т4), публикация ENLIL по политике
 R10 (Т5-1), окончательный ряд Kp GFZ (Т1), происхождение архива в сырых записях (Т1)."""
 from datetime import datetime, timedelta, timezone
 
-import experiments.stub_history as SH
+import experiments.legacy.stub_history as SH
 from vkd.assess.cutoff import apply_cutoff
 
 UTC = timezone.utc

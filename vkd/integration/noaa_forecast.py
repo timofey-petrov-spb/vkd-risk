@@ -128,6 +128,44 @@ def noaa_forecasts(cutoff_utc: datetime, valid_from_utc: datetime, valid_to_utc:
     return lines, raw
 
 
+def live_forecast_lines(samples, raw: dict, fetch, valid_from_utc: datetime, valid_to_utc: datetime) -> tuple[list[ForecastLine], dict]:
+    """Те же линии по тем же каналам для ТЕКУЩЕГО режима — из живого бюллетеня NOAA (A4, noaa_latest).
+
+    Ячейки не пересчитываются: 3-часовой прогноз Kp остаётся 3-часовым, суточная
+    вероятность — суточной. Канал daypre (proton_prob_daily) у живого бюллетеня
+    отсутствует: это отдельный продукт NGDC, он объявляется как «нет выпуска»,
+    а не подменяется 3-суточным. Покрытие считается по фактическим ячейкам.
+    """
+    by_channel: dict[str, list] = {cid: [] for _, _, cid, _, _ in CHANNELS}
+    for s in samples or ():
+        if s.channel_id in by_channel:
+            by_channel[s.channel_id].append(s)
+    lines = []
+    for src, _ch, cid, _unit, label in CHANNELS:
+        ss = sorted(by_channel[cid], key=lambda s: s.valid_from_utc)
+        if not ss:
+            reason = ('живой бюллетень NOAA 3-day не содержит этого канала: суточная вероятность протонного события '
+                      'публикуется отдельным выпуском NGDC daypre, которого в текущем режиме нет'
+                      if cid == 'proton_prob_daily'
+                      else 'живой прогноз NOAA не получен: %s' % (getattr(fetch, 'status_ru', None) or 'нет данных'))
+            status = 'missing' if getattr(fetch, 'payload', None) is not None else 'unavailable'
+            lines.append(ForecastLine(cid, 'noaa_swpc_3day_forecast', label, status, 0.0, None, None, None, (),
+                                      ((valid_from_utc.isoformat(), valid_to_utc.isoformat()),), reason,
+                                      ('живой выпуск: историческая неизменность байтов не доказывается',)))
+            continue
+        total = (valid_to_utc - valid_from_utc).total_seconds()
+        covered = sum(max(0.0, (min(valid_to_utc, s.valid_to_utc) - max(valid_from_utc, s.valid_from_utc)).total_seconds())
+                      for s in ss)
+        frac = min(1.0, covered / total) if total > 0 else 0.0
+        rid = ss[0].raw_record_id
+        lines.append(ForecastLine(
+            cid, ss[0].source_id, label, 'full' if frac >= 0.999 else ('partial' if frac > 0 else 'missing'), frac,
+            (getattr(fetch, 'metadata', None) or {}).get('release_id') or rid, ss[0].published_utc, rid, tuple(ss), (),
+            None if frac > 0 else 'ячейки выпуска не пересекают горизонт запроса',
+            ('живой выпуск NOAA SWPC: доступность подтверждена самим запросом, историческая неизменность байтов не доказывается',)))
+    return lines, dict(raw or {})
+
+
 def in_window(samples, start_utc: datetime, duration_min: int):
     """Ячейки, пересекающие окно [start, start+duration)."""
     end = start_utc + timedelta(minutes=duration_min)

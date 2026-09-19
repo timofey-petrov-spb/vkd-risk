@@ -1,0 +1,710 @@
+{
+  "schema_version": 1,
+  "method_id": "a5-seasonal-arithmetic-controls-v1",
+  "status": "conditional_controls_not_station_prediction",
+  "source_c2_sha256": "3b0a7a7cbee0c704c083d71603059eff58c5569846d00446fa31bd54f1d8bc6b",
+  "mass_kg": 1e-06,
+  "mass_g": 0.001,
+  "geometry": "one-sided plate with uniformly random surface normal",
+  "catalogue_assumptions": {
+    "raw_flux_convention": "hypothetical perpendicular TOA flux; not independently established for C-2 k",
+    "profile_normalization": "(Zp*q_peak + Zb*q_base)/(Zp+Zb); proposed interpretation",
+    "annual_average": "uniform solar longitude; arithmetic cross-check only, not time-weighted 2024",
+    "source_policy": "all 49 literal C-2 rows, Bootids Zp=10 unchanged"
+  },
+  "geometric_projection_quadrature": [
+    {
+      "uniform_cos_theta_bins": 100,
+      "mean_projected_area_ratio": 0.25,
+      "absolute_error_from_one_quarter": 0.0
+    },
+    {
+      "uniform_cos_theta_bins": 1000,
+      "mean_projected_area_ratio": 0.25,
+      "absolute_error_from_one_quarter": 0.0
+    },
+    {
+      "uniform_cos_theta_bins": 10000,
+      "mean_projected_area_ratio": 0.25,
+      "absolute_error_from_one_quarter": 0.0
+    }
+  ],
+  "angular_wrap_controls": [
+    {
+      "longitude_deg": 1.0,
+      "peak_deg": 359.0,
+      "signed_delta_deg": 2.0
+    },
+    {
+      "longitude_deg": 359.0,
+      "peak_deg": 1.0,
+      "signed_delta_deg": -2.0
+    },
+    {
+      "longitude_deg": 721.0,
+      "peak_deg": 359.0,
+      "signed_delta_deg": 2.0
+    },
+    {
+      "longitude_deg": 46.5,
+      "peak_deg": 46.5,
+      "signed_delta_deg": 0.0
+    }
+  ],
+  "speed_controls": [
+    {
+      "entry_speed_km_s": 18.0,
+      "h_km": 400.0,
+      "satellite_speed_km_s": 7.67,
+      "local_speed_km_s": 17.8480570990284,
+      "average_focusing_toa_to_altitude": 0.9831887105252408,
+      "motion_factor_same_velocity_direction": 0.5702613479190666,
+      "motion_factor_perpendicular": 1.0884279071635097,
+      "motion_factor_opposite_velocity_direction": 1.4297386520809334
+    },
+    {
+      "entry_speed_km_s": 38.0,
+      "h_km": 400.0,
+      "satellite_speed_km_s": 7.67,
+      "local_speed_km_s": 37.92826310563375,
+      "average_focusing_toa_to_altitude": 0.9962279378186829,
+      "motion_factor_same_velocity_direction": 0.7977761338915432,
+      "motion_factor_perpendicular": 1.0202423692553897,
+      "motion_factor_opposite_velocity_direction": 1.2022238661084568
+    },
+    {
+      "entry_speed_km_s": 66.0,
+      "h_km": 400.0,
+      "satellite_speed_km_s": 7.67,
+      "local_speed_km_s": 65.95872301834063,
+      "average_focusing_toa_to_altitude": 0.998749573510142,
+      "motion_factor_same_velocity_direction": 0.8837151532198817,
+      "motion_factor_perpendicular": 1.006738379913409,
+      "motion_factor_opposite_velocity_direction": 1.1162848467801183
+    }
+  ],
+  "shielding_control": {
+    "h_km": 400.0,
+    "earth_radius_km": 6378.0,
+    "absorbing_atmosphere_km": 100.0,
+    "straight_line_earth_cone_half_angle_deg": 72.88950838326849,
+    "isotropic_geometrical_visible_fraction": 0.6471076693362517,
+    "radiant_angle_from_nadir_deg_and_visible": [
+      [
+        0.0,
+        false
+      ],
+      [
+        60.0,
+        false
+      ],
+      [
+        90.0,
+        true
+      ],
+      [
+        180.0,
+        true
+      ]
+    ],
+    "warning": "Straight-line geometric test only; not gravitationally bent stream shadow."
+  },
+  "stream_controls": [
+    {
+      "c2_row_1based": 1,
+      "name": "Bootids",
+      "raw_peak_per_m2_s": 2.781501420453767e-11,
+      "q_at_minus_1_deg": 0.2854404384211179,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.23759635204243976,
+      "mean_q_uniform_longitude_untruncated": 0.004282565761933301,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.004239740104313967,
+      "conditional_plate_mean_toa_per_m2_s": 2.977990687501036e-14,
+      "conditional_plate_mean_infty_per_m2_s": 2.7797865251686995e-14
+    },
+    {
+      "c2_row_1based": 2,
+      "name": "γVelids",
+      "raw_peak_per_m2_s": 2.3090215892102867e-12,
+      "q_at_minus_1_deg": 0.7585775750291838,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7585775750291838,
+      "mean_q_uniform_longitude_untruncated": 0.020106226014039438,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.01990516375389904,
+      "conditional_plate_mean_toa_per_m2_s": 1.1606427485989638e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.0440453609972104e-14
+    },
+    {
+      "c2_row_1based": 3,
+      "name": "αCrucids",
+      "raw_peak_per_m2_s": 4.3526485402587716e-13,
+      "q_at_minus_1_deg": 0.7762471166286917,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7762471166286917,
+      "mean_q_uniform_longitude_untruncated": 0.021934064742588476,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.02171472409516259,
+      "conditional_plate_mean_toa_per_m2_s": 2.386781872094228e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.2692923686404757e-15
+    },
+    {
+      "c2_row_1based": 4,
+      "name": "αHydrusids",
+      "raw_peak_per_m2_s": 5.14610824468311e-13,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339423,
+      "conditional_plate_mean_toa_per_m2_s": 1.5520322319046552e-15,
+      "conditional_plate_mean_infty_per_m2_s": 1.453376634760029e-15
+    },
+    {
+      "c2_row_1based": 5,
+      "name": "αCarinids",
+      "raw_peak_per_m2_s": 4.3047045792736874e-12,
+      "q_at_minus_1_deg": 0.6918309709189365,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6918309709189365,
+      "mean_q_uniform_longitude_untruncated": 0.015079669510529576,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.014928872815424281,
+      "conditional_plate_mean_toa_per_m2_s": 1.6228380598977616e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.3033007949763672e-14
+    },
+    {
+      "c2_row_1based": 6,
+      "name": "δVelids",
+      "raw_peak_per_m2_s": 1.234132228715843e-12,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339423,
+      "conditional_plate_mean_toa_per_m2_s": 3.722061228265641e-15,
+      "conditional_plate_mean_infty_per_m2_s": 3.3481454680255358e-15
+    },
+    {
+      "c2_row_1based": 7,
+      "name": "αCentaurids",
+      "raw_peak_per_m2_s": 3.5334725682793115e-13,
+      "q_at_minus_1_deg": 0.660693448007596,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.660693448007596,
+      "mean_q_uniform_longitude_untruncated": 0.013404150676026292,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.013270109169266029,
+      "conditional_plate_mean_toa_per_m2_s": 1.1840799678705373e-15,
+      "conditional_plate_mean_infty_per_m2_s": 1.1392304613519243e-15
+    },
+    {
+      "c2_row_1based": 8,
+      "name": "οcentaurids",
+      "raw_peak_per_m2_s": 2.875766372028797e-13,
+      "q_at_minus_1_deg": 0.7079457843841379,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7079457843841379,
+      "mean_q_uniform_longitude_untruncated": 0.01608498081123155,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.015924131003119235,
+      "conditional_plate_mean_toa_per_m2_s": 1.1564161727917043e-15,
+      "conditional_plate_mean_infty_per_m2_s": 1.1017019605299358e-15
+    },
+    {
+      "c2_row_1based": 9,
+      "name": "θCentaurids",
+      "raw_peak_per_m2_s": 2.2052238279599967e-13,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339423,
+      "conditional_plate_mean_toa_per_m2_s": 6.650809304476336e-16,
+      "conditional_plate_mean_infty_per_m2_s": 6.423457533631058e-16
+    },
+    {
+      "c2_row_1based": 10,
+      "name": "δLeonids",
+      "raw_peak_per_m2_s": 7.564036240516456e-12,
+      "q_at_minus_1_deg": 0.8933054837332952,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8933054837332952,
+      "mean_q_uniform_longitude_untruncated": 0.04923973710271207,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.048747339805467034,
+      "conditional_plate_mean_toa_per_m2_s": 9.311278897960421e-14,
+      "conditional_plate_mean_infty_per_m2_s": 7.145171381096874e-14
+    },
+    {
+      "c2_row_1based": 11,
+      "name": "Virginids",
+      "raw_peak_per_m2_s": 5.9716075583024656e-12,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339421,
+      "conditional_plate_mean_toa_per_m2_s": 1.8009973685156328e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.4731341267513678e-14
+    },
+    {
+      "c2_row_1based": 12,
+      "name": "γNormids",
+      "raw_peak_per_m2_s": 3.153215124131365e-13,
+      "q_at_minus_1_deg": 0.6456542290346555,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6456542290346555,
+      "mean_q_uniform_longitude_untruncated": 0.012698669061498587,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.012571682370883602,
+      "conditional_plate_mean_toa_per_m2_s": 1.0010408835264098e-15,
+      "conditional_plate_mean_infty_per_m2_s": 9.617581132539465e-16
+    },
+    {
+      "c2_row_1based": 13,
+      "name": "δPavonids",
+      "raw_peak_per_m2_s": 2.556054891499087e-13,
+      "q_at_minus_1_deg": 0.841395141645195,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.841395141645195,
+      "mean_q_uniform_longitude_untruncated": 0.03216996162246208,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.03184826200623847,
+      "conditional_plate_mean_toa_per_m2_s": 2.0557046941108025e-15,
+      "conditional_plate_mean_infty_per_m2_s": 1.98543232857681e-15
+    },
+    {
+      "c2_row_1based": 14,
+      "name": "Lyrids",
+      "raw_peak_per_m2_s": 1.7419271799121612e-12,
+      "q_at_minus_1_deg": 0.6025595860743578,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6025595860743578,
+      "mean_q_uniform_longitude_untruncated": 0.010967032371294235,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.010857362047581295,
+      "conditional_plate_mean_toa_per_m2_s": 4.775942942633487e-15,
+      "conditional_plate_mean_infty_per_m2_s": 4.5311531434703945e-15
+    },
+    {
+      "c2_row_1based": 15,
+      "name": "μVirginids",
+      "raw_peak_per_m2_s": 4.379178876088475e-12,
+      "q_at_minus_1_deg": 0.9015711376059569,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9015711376059569,
+      "mean_q_uniform_longitude_untruncated": 0.05361660227821335,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.053080436677064115,
+      "conditional_plate_mean_toa_per_m2_s": 5.869917302609727e-14,
+      "conditional_plate_mean_infty_per_m2_s": 5.0672865054431676e-14
+    },
+    {
+      "c2_row_1based": 16,
+      "name": "ηAquarids",
+      "raw_peak_per_m2_s": 1.3064453849341208e-12,
+      "q_at_minus_1_deg": 0.831763771102671,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.831763771102671,
+      "mean_q_uniform_longitude_untruncated": 0.030159339021059026,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.02985774563084856,
+      "conditional_plate_mean_toa_per_m2_s": 9.850382319181528e-15,
+      "conditional_plate_mean_infty_per_m2_s": 9.572096188598866e-15
+    },
+    {
+      "c2_row_1based": 17,
+      "name": "βCorona Aust.",
+      "raw_peak_per_m2_s": 9.038393791115353e-13,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339421,
+      "conditional_plate_mean_toa_per_m2_s": 2.72591982552084e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.5602610690150434e-15
+    },
+    {
+      "c2_row_1based": 18,
+      "name": "αScorpiids",
+      "raw_peak_per_m2_s": 1.5563162709681793e-11,
+      "q_at_minus_1_deg": 0.7413102413009174,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7413102413009174,
+      "mean_q_uniform_longitude_untruncated": 0.01855959324372871,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.018373997311291423,
+      "conditional_plate_mean_toa_per_m2_s": 7.22114923694152e-14,
+      "conditional_plate_mean_infty_per_m2_s": 5.206060955694551e-14
+    },
+    {
+      "c2_row_1based": 19,
+      "name": "Da.Arietids",
+      "raw_peak_per_m2_s": 2.2645053338858093e-11,
+      "q_at_minus_1_deg": 0.7943282347242815,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7943282347242815,
+      "mean_q_uniform_longitude_untruncated": 0.024127471216847315,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.023886196504678846,
+      "conditional_plate_mean_toa_per_m2_s": 1.3659196815931772e-13,
+      "conditional_plate_mean_infty_per_m2_s": 1.2495112826817453e-13
+    },
+    {
+      "c2_row_1based": 20,
+      "name": "γSagitarids",
+      "raw_peak_per_m2_s": 4.352648540258772e-12,
+      "q_at_minus_1_deg": 0.9183325964835809,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9183325964835809,
+      "mean_q_uniform_longitude_untruncated": 0.06520936740089665,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.06455728785048338,
+      "conditional_plate_mean_toa_per_m2_s": 7.095836445717769e-14,
+      "conditional_plate_mean_infty_per_m2_s": 6.057509923841988e-14
+    },
+    {
+      "c2_row_1based": 21,
+      "name": "τCetids",
+      "raw_peak_per_m2_s": 1.2251851494855878e-13,
+      "q_at_minus_1_deg": 0.660693448007596,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.660693448007596,
+      "mean_q_uniform_longitude_untruncated": 0.013404150676026292,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.013270109169266029,
+      "conditional_plate_mean_toa_per_m2_s": 4.1056415874336543e-16,
+      "conditional_plate_mean_infty_per_m2_s": 3.989651865014322e-16
+    },
+    {
+      "c2_row_1based": 22,
+      "name": "θOphiuchids",
+      "raw_peak_per_m2_s": 5.2974643695267305e-12,
+      "q_at_minus_1_deg": 0.9183325964835809,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9183325964835809,
+      "mean_q_uniform_longitude_untruncated": 0.06520936740089665,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.06455728785048338,
+      "conditional_plate_mean_toa_per_m2_s": 8.636107509140698e-14,
+      "conditional_plate_mean_infty_per_m2_s": 7.178244024736383e-14
+    },
+    {
+      "c2_row_1based": 23,
+      "name": "τAquarids",
+      "raw_peak_per_m2_s": 2.947066981195063e-13,
+      "q_at_minus_1_deg": 0.5754399373371569,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5754399373371569,
+      "mean_q_uniform_longitude_untruncated": 0.010053113007019719,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.00995258187694952,
+      "conditional_plate_mean_toa_per_m2_s": 7.406799350302606e-16,
+      "conditional_plate_mean_infty_per_m2_s": 7.177144391535589e-16
+    },
+    {
+      "c2_row_1based": 24,
+      "name": "νPhoenicids",
+      "raw_peak_per_m2_s": 1.035078643439094e-12,
+      "q_at_minus_1_deg": 0.5623413251903491,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5623413251903491,
+      "mean_q_uniform_longitude_untruncated": 0.009650988486738928,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.009554478601871539,
+      "conditional_plate_mean_toa_per_m2_s": 2.4973830176750114e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.3639912506090686e-15
+    },
+    {
+      "c2_row_1based": 25,
+      "name": "οCygnids",
+      "raw_peak_per_m2_s": 1.2193490259385128e-12,
+      "q_at_minus_1_deg": 0.7413102413009175,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7413102413009175,
+      "mean_q_uniform_longitude_untruncated": 0.01855959324372871,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.018373997311291423,
+      "conditional_plate_mean_toa_per_m2_s": 5.657655485888902e-15,
+      "conditional_plate_mean_infty_per_m2_s": 5.149075346540976e-15
+    },
+    {
+      "c2_row_1based": 26,
+      "name": "Capricornid",
+      "raw_peak_per_m2_s": 1.1457189396203938e-12,
+      "q_at_minus_1_deg": 0.9099132726322516,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9099132726322516,
+      "mean_q_uniform_longitude_untruncated": 0.05884748831962663,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.05825901586507035,
+      "conditional_plate_mean_toa_per_m2_s": 1.685567047922153e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.3536784278286573e-14
+    },
+    {
+      "c2_row_1based": 27,
+      "name": "τAquarids N",
+      "raw_peak_per_m2_s": 4.969383352570381e-13,
+      "q_at_minus_1_deg": 0.8649679187756932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8649679187756932,
+      "mean_q_uniform_longitude_untruncated": 0.03829757335990006,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.03791459762647437,
+      "conditional_plate_mean_toa_per_m2_s": 4.757883087463257e-15,
+      "conditional_plate_mean_infty_per_m2_s": 4.4259568892051276e-15
+    },
+    {
+      "c2_row_1based": 28,
+      "name": "Pisces Aust.",
+      "raw_peak_per_m2_s": 1.368016259033863e-12,
+      "q_at_minus_1_deg": 0.5641873144221677,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5210723283996027,
+      "mean_q_uniform_longitude_untruncated": 0.020383503586719465,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.02017971773671144,
+      "conditional_plate_mean_toa_per_m2_s": 6.971241080676823e-15,
+      "conditional_plate_mean_infty_per_m2_s": 6.484903458143171e-15
+    },
+    {
+      "c2_row_1based": 29,
+      "name": "δAquarids S.",
+      "raw_peak_per_m2_s": 4.9693833525703825e-12,
+      "q_at_minus_1_deg": 0.8109610578538407,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8109610578538407,
+      "mean_q_uniform_longitude_untruncated": 0.026513704633898162,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.026248567587559175,
+      "conditional_plate_mean_toa_per_m2_s": 3.293919060566543e-14,
+      "conditional_plate_mean_infty_per_m2_s": 3.0746878618491425e-14
+    },
+    {
+      "c2_row_1based": 30,
+      "name": "τAquarids S.",
+      "raw_peak_per_m2_s": 1.6564611175234608e-12,
+      "q_at_minus_1_deg": 0.8511380382023764,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8511380382023764,
+      "mean_q_uniform_longitude_untruncated": 0.03446781602405894,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.034123137863826924,
+      "conditional_plate_mean_toa_per_m2_s": 1.427364926245143e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.2918283952891547e-14
+    },
+    {
+      "c2_row_1based": 31,
+      "name": "Perseids",
+      "raw_peak_per_m2_s": 3.9735734577910954e-12,
+      "q_at_minus_1_deg": 0.5566303551359524,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5363124422760238,
+      "mean_q_uniform_longitude_untruncated": 0.014398652171828973,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.014254665656018023,
+      "conditional_plate_mean_toa_per_m2_s": 1.4303525524486428e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.383047255650074e-14
+    },
+    {
+      "c2_row_1based": 32,
+      "name": "κCygnids",
+      "raw_peak_per_m2_s": 1.6486226215728746e-12,
+      "q_at_minus_1_deg": 0.8531001140175895,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8531001140175895,
+      "mean_q_uniform_longitude_untruncated": 0.03496734958962051,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.03461767609373746,
+      "conditional_plate_mean_toa_per_m2_s": 1.4411990887473835e-14,
+      "conditional_plate_mean_infty_per_m2_s": 1.1979099074793469e-14
+    },
+    {
+      "c2_row_1based": 33,
+      "name": "πEridanids",
+      "raw_peak_per_m2_s": 2.573054122341555e-12,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339423,
+      "conditional_plate_mean_toa_per_m2_s": 7.760161159523276e-15,
+      "conditional_plate_mean_infty_per_m2_s": 7.485818677374474e-15
+    },
+    {
+      "c2_row_1based": 34,
+      "name": "γDoradids",
+      "raw_peak_per_m2_s": 1.6649173732798295e-12,
+      "q_at_minus_1_deg": 0.660693448007596,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.660693448007596,
+      "mean_q_uniform_longitude_untruncated": 0.013404150676026292,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.01327010916926603,
+      "conditional_plate_mean_toa_per_m2_s": 5.5792008336441866e-15,
+      "conditional_plate_mean_infty_per_m2_s": 5.170758613834168e-15
+    },
+    {
+      "c2_row_1based": 35,
+      "name": "Aurigids",
+      "raw_peak_per_m2_s": 2.5257944108726335e-13,
+      "q_at_minus_1_deg": 0.6456542290346555,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6456542290346555,
+      "mean_q_uniform_longitude_untruncated": 0.012698669061498588,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.012571682370883604,
+      "conditional_plate_mean_toa_per_m2_s": 8.018556835263591e-16,
+      "conditional_plate_mean_infty_per_m2_s": 7.811292596011338e-16
+    },
+    {
+      "c2_row_1based": 36,
+      "name": "κAquarids",
+      "raw_peak_per_m2_s": 2.875766372028797e-11,
+      "q_at_minus_1_deg": 0.7762471166286918,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7762471166286918,
+      "mean_q_uniform_longitude_untruncated": 0.021934064742588473,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.02171472409516259,
+      "conditional_plate_mean_toa_per_m2_s": 1.57693114471596e-13,
+      "conditional_plate_mean_infty_per_m2_s": 1.0393650426275949e-13
+    },
+    {
+      "c2_row_1based": 37,
+      "name": "εGeminids",
+      "raw_peak_per_m2_s": 8.360250581623452e-14,
+      "q_at_minus_1_deg": 0.8279421637123342,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.8279421637123342,
+      "mean_q_uniform_longitude_untruncated": 0.02942374538639912,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.029129507932535173,
+      "conditional_plate_mean_toa_per_m2_s": 6.14974711200459e-16,
+      "conditional_plate_mean_infty_per_m2_s": 5.999617311971835e-16
+    },
+    {
+      "c2_row_1based": 38,
+      "name": "Orionids",
+      "raw_peak_per_m2_s": 9.64095337718971e-13,
+      "q_at_minus_1_deg": 0.7585775750291838,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7585775750291838,
+      "mean_q_uniform_longitude_untruncated": 0.020106226014039438,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.01990516375389904,
+      "conditional_plate_mean_toa_per_m2_s": 4.8460796898148284e-15,
+      "conditional_plate_mean_infty_per_m2_s": 4.7132279358783476e-15
+    },
+    {
+      "c2_row_1based": 39,
+      "name": "Leo Minorids",
+      "raw_peak_per_m2_s": 9.580599489516885e-14,
+      "q_at_minus_1_deg": 0.72443596007499,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.72443596007499,
+      "mean_q_uniform_longitude_untruncated": 0.0172339080120338,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.017061568931913462,
+      "conditional_plate_mean_toa_per_m2_s": 4.1277792575617993e-16,
+      "conditional_plate_mean_infty_per_m2_s": 3.9912633877060367e-16
+    },
+    {
+      "c2_row_1based": 40,
+      "name": "Taurids",
+      "raw_peak_per_m2_s": 4.106468119892173e-12,
+      "q_at_minus_1_deg": 0.9418895965228413,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9418895965228413,
+      "mean_q_uniform_longitude_untruncated": 0.09279602739432581,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.0918699865564571,
+      "conditional_plate_mean_toa_per_m2_s": 9.526598203685992e-14,
+      "conditional_plate_mean_infty_per_m2_s": 8.223966374935954e-14
+    },
+    {
+      "c2_row_1based": 41,
+      "name": "δEridanids",
+      "raw_peak_per_m2_s": 1.1351709363271565e-12,
+      "q_at_minus_1_deg": 0.6309573444801932,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.6309573444801932,
+      "mean_q_uniform_longitude_untruncated": 0.01206373560842366,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.011943098252339423,
+      "conditional_plate_mean_toa_per_m2_s": 3.423600511554386e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.985184868982319e-15
+    },
+    {
+      "c2_row_1based": 42,
+      "name": "ζPuppids",
+      "raw_peak_per_m2_s": 1.984831324311337e-12,
+      "q_at_minus_1_deg": 0.7413102413009174,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7413102413009174,
+      "mean_q_uniform_longitude_untruncated": 0.01855959324372871,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.018373997311291423,
+      "conditional_plate_mean_toa_per_m2_s": 9.20941550915745e-15,
+      "conditional_plate_mean_infty_per_m2_s": 8.535212477958058e-15
+    },
+    {
+      "c2_row_1based": 43,
+      "name": "Leonids",
+      "raw_peak_per_m2_s": 7.103606844903731e-13,
+      "q_at_minus_1_deg": 0.39700743802374594,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.35594394377995714,
+      "mean_q_uniform_longitude_untruncated": 0.013414481459044341,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.013280599374142913,
+      "conditional_plate_mean_toa_per_m2_s": 2.3822800578325393e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.3241229950801102e-15
+    },
+    {
+      "c2_row_1based": 44,
+      "name": "Puppids/Vel",
+      "raw_peak_per_m2_s": 1.878511475269575e-12,
+      "q_at_minus_1_deg": 0.9246981739382226,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.9246981739382226,
+      "mean_q_uniform_longitude_untruncated": 0.0709630968067315,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.07025351913140836,
+      "conditional_plate_mean_toa_per_m2_s": 3.332624791802772e-14,
+      "conditional_plate_mean_infty_per_m2_s": 3.076298718552427e-14
+    },
+    {
+      "c2_row_1based": 45,
+      "name": "Phoenicids",
+      "raw_peak_per_m2_s": 3.783903121090522e-11,
+      "q_at_minus_1_deg": 0.5011872336272722,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5011872336272722,
+      "mean_q_uniform_longitude_untruncated": 0.008042490405615775,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.007962065501559618,
+      "conditional_plate_mean_toa_per_m2_s": 7.608001136787527e-14,
+      "conditional_plate_mean_infty_per_m2_s": 4.718306812289884e-14
+    },
+    {
+      "c2_row_1based": 46,
+      "name": "Monoceroti.",
+      "raw_peak_per_m2_s": 1.0435516278555653e-12,
+      "q_at_minus_1_deg": 0.5623413251903491,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.5623413251903491,
+      "mean_q_uniform_longitude_untruncated": 0.009650988486738928,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.009554478601871539,
+      "conditional_plate_mean_toa_per_m2_s": 2.5178261864379317e-15,
+      "conditional_plate_mean_infty_per_m2_s": 2.3502488893443265e-15
+    },
+    {
+      "c2_row_1based": 47,
+      "name": "Geminids",
+      "raw_peak_per_m2_s": 3.909260422292722e-11,
+      "q_at_minus_1_deg": 0.3657812835156889,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.2204050187889608,
+      "mean_q_uniform_longitude_untruncated": 0.006226543316858935,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.006164277883690348,
+      "conditional_plate_mean_toa_per_m2_s": 6.085294839071971e-14,
+      "conditional_plate_mean_infty_per_m2_s": 5.5074610019313337e-14
+    },
+    {
+      "c2_row_1based": 48,
+      "name": "σHydrusids",
+      "raw_peak_per_m2_s": 1.8711037016014393e-13,
+      "q_at_minus_1_deg": 0.7943282347242815,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.7943282347242815,
+      "mean_q_uniform_longitude_untruncated": 0.02412747121684732,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.023886196504678846,
+      "conditional_plate_mean_toa_per_m2_s": 1.12862501760313e-15,
+      "conditional_plate_mean_infty_per_m2_s": 1.0887251002715807e-15
+    },
+    {
+      "c2_row_1based": 49,
+      "name": "Ursids",
+      "raw_peak_per_m2_s": 1.6923298659917715e-11,
+      "q_at_minus_1_deg": 0.2435377461666258,
+      "q_at_peak": 1.0,
+      "q_at_plus_1_deg": 0.21007000839621282,
+      "mean_q_uniform_longitude_untruncated": 0.005752614665127939,
+      "mean_q_uniform_longitude_components_cut_at_1pct": 0.00569508851847667,
+      "conditional_plate_mean_toa_per_m2_s": 2.4338304013345664e-14,
+      "conditional_plate_mean_infty_per_m2_s": 2.1893294409797178e-14
+    }
+  ],
+  "conditional_reference_mean": {
+    "grun_infty_plate_per_m2_s": 1.8909978912674497e-11,
+    "stream_plate_toa_uniform_longitude_per_m2_s": 1.2246878328057517e-12,
+    "stream_plate_infty_uniform_longitude_per_m2_s": 1.007137087433889e-12,
+    "ecss_subtracted_sporadic_infty_per_m2_s": 1.790284182524061e-11,
+    "reference_stream_fraction": 0.053259556347725535,
+    "warning": "Not a runtime correction or validation of C-2 normalization; see assumptions."
+  }
+}

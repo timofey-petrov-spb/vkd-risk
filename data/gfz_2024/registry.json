@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "record_count": 1,
+  "sources": {
+    "gfz_kp_archive": {
+      "records_path": "data/gfz_2024/records.json",
+      "records_sha256": "cda56b1be978273d94b86b6a5ff33f9a3bf75e76aa6093c8e02ad4ddf1b1a136",
+      "record_count": 1,
+      "records": {
+        "gfz_kp_archive:2024-05_06:2cb26056e449": {
+          "record_index": 0,
+          "release_id": "2024-05_06_repository_extract",
+          "sha256": "2cb26056e449762ec828425f666bf1017a02ad47d747ffbe58ed4f21af771dd7"
+        }
+      }
+    }
+  }
+}

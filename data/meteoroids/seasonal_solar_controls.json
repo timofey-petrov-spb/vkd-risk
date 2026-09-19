@@ -1,0 +1,56 @@
+{
+  "ephemeris": "DE421",
+  "ephemeris_sha256": "a20a7139da04cbc462454634918e9a9ca69127044e2cc9d4f9c16e238d2deedc",
+  "skyfield": "1.55",
+  "frames": "Skyfield ecliptic_frame versus ecliptic_J2000_frame",
+  "controls": [
+    {
+      "time_utc": "2024-01-01T00:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 280.0389940889941,
+      "solar_apparent_ecliptic_J2000_deg": 279.70522919559835,
+      "usno_approx_apparent_of_date_deg": 280.0420877022898,
+      "usno_vs_de421_abs_arcmin": 0.1856167977405221
+    },
+    {
+      "time_utc": "2024-05-01T00:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 41.11334637653358,
+      "solar_apparent_ecliptic_J2000_deg": 40.774897530923795,
+      "usno_approx_apparent_of_date_deg": 41.11870023320989,
+      "usno_vs_de421_abs_arcmin": 0.32123140057933597
+    },
+    {
+      "time_utc": "2024-05-10T19:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 50.59912872249774,
+      "solar_apparent_ecliptic_J2000_deg": 50.26031094295906,
+      "usno_approx_apparent_of_date_deg": 50.60125294138925,
+      "usno_vs_de421_abs_arcmin": 0.12745313349057596
+    },
+    {
+      "time_utc": "2024-05-20T12:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 59.96024752198014,
+      "solar_apparent_ecliptic_J2000_deg": 59.62104579340595,
+      "usno_approx_apparent_of_date_deg": 59.96174409142259,
+      "usno_vs_de421_abs_arcmin": 0.08979416654710803
+    },
+    {
+      "time_utc": "2024-06-15T12:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 84.87591106625925,
+      "solar_apparent_ecliptic_J2000_deg": 84.5353375222186,
+      "usno_approx_apparent_of_date_deg": 84.87514152018593,
+      "usno_vs_de421_abs_arcmin": 0.04617276439887519
+    },
+    {
+      "time_utc": "2024-06-30T00:00:00Z",
+      "solar_apparent_ecliptic_of_date_deg": 98.70784021832529,
+      "solar_apparent_ecliptic_J2000_deg": 98.36651391222019,
+      "usno_approx_apparent_of_date_deg": 98.70995179801321,
+      "usno_vs_de421_abs_arcmin": 0.12669478127520506
+    }
+  ],
+  "status": "ephemeris_controls_not_confirmation_of_C2_equinox",
+  "source_url": "https://rhodesmill.org/skyfield/planets.html",
+  "calculation": "Earth observer; apparent Sun; Skyfield frame_latlon(ecliptic_frame) / frame_latlon(ecliptic_J2000_frame); timescale built-in",
+  "catalogue_epoch_policy": "Do not assign of-date or B1950 to C-2 silently. Comparison with DMS supports J2000 for lambda, pending authoritative metadata.",
+  "usno_source_url": "https://aa.usno.navy.mil/faq/sun_approx",
+  "usno_max_abs_error_arcmin": 0.32123140057933597
+}

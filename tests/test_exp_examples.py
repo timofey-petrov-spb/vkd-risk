@@ -57,14 +57,17 @@ def test_snapshot_and_zip_agree_and_manifest_is_versioned(path):
         man = json.loads(z.read('manifest.json').decode('utf-8'))
         rec = json.loads(z.read('recommendation.json').decode('utf-8'))
         names = z.namelist()
-        goes = (json.loads(z.read(next(n for n in names if n.startswith('raw/goes_p10_'))).decode('utf-8'))
-                if any(n.startswith('raw/goes_p10_') for n in names) else None)
+        # A4: имя записи — source_id:sha256, в архиве двоеточие заменено дефисом
+        goes = (json.loads(z.read(next(n for n in names if n.startswith('raw/noaa_swpc_goes-'))).decode('utf-8'))
+                if any(n.startswith('raw/noaa_swpc_goes-') for n in names) else None)
     assert man['algorithm_version'] == S['algorithm_version'] and man['git_commit']
     assert rec == S['recommendation']
     if S['mode_id'] == 'live':
-        # текущий режим воспроизводим только с сырыми записями источников
+        # текущий режим воспроизводим только с сырыми записями источников: точные байты ответа
         assert goes is not None and 'raw/iss.tle.json' in names
-        assert goes.get('url') and 'fetched_basis' in goes
+        assert goes['content_base64'] and goes['metadata'].get('url')
+        assert goes['metadata'].get('sha256') and goes['metadata'].get('fetched_utc')
+        assert any(n.startswith('raw/celestrak_gp-') for n in names)      # байты ответа TLE, не только текст
 
 
 def test_index_names_t5_pair_and_lists_every_example():

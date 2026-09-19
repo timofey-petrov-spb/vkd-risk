@@ -39,7 +39,9 @@ from typing import Optional
 from vkd.config import section as _cfg_section   # Т7: настройки вне кода
 from vkd.types import EnvironmentSample, EventInterval, Kind
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# модуль перенесён в experiments/legacy/ (архив, в конвейере не используется с 0.6.0):
+# корень репозитория теперь на уровень выше
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCH = os.path.join(_ROOT, 'data', 'archive_2024')
 GFZ_FILE = os.path.join(_ROOT, 'data', 'spaceweather', 'kp_ap_sn_f107.txt')
 ARCHIVE_PERIOD = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))

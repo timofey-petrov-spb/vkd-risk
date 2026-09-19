@@ -15,6 +15,32 @@ class OrbitDataError(ValueError):
     """Invalid orbital input, unavailable coverage, or unsupported semantics."""
 
 
+def validate_continuous_coverage(segments, start_utc, end_utc):
+    """Check every usable interpolation interval, including between output nodes.
+
+    A coarse requested grid must not hide missing OEM knots or segment gaps.
+    Overlapping segments can supply a valid alternative interval.
+    """
+    start, end = utc(start_utc).timestamp(), utc(end_utc).timestamp()
+    intervals = []
+    for segment in segments:
+        lo = utc(segment.metadata.get('USEABLE_START_TIME', segment.metadata['START_TIME'])).timestamp()
+        hi = utc(segment.metadata.get('USEABLE_STOP_TIME', segment.metadata['STOP_TIME'])).timestamp()
+        for a, b in zip(segment.times_s, segment.times_s[1:]):
+            if b-a > 300:
+                continue
+            a, b = max(a, lo, start), min(b, hi, end)
+            if b > a:
+                intervals.append((a, b))
+    cursor = start
+    for a, b in sorted(intervals):
+        if a > cursor:
+            raise OrbitDataError('Gap in continuous OEM coverage between output samples')
+        cursor = max(cursor, b)
+    if cursor < end:
+        raise OrbitDataError('Incomplete continuous OEM coverage')
+
+
 @dataclass(frozen=True)
 class OemSegment:
     metadata: dict

@@ -7,13 +7,41 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.compute import run
-from experiments.stub_sources import Fetch
 from vkd.orbit.trajectory import satellite_from_tle
+from vkd.sources import Fetch, noaa_latest
 from vkd.types import EnvironmentSample, Kind
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TLE = os.path.join(ROOT, 'data', 'orbit', 'iss.tle')
 UTC = timezone.utc
+
+
+def pinned_noaa(tmp_dir, now=None):
+    """Живой прогноз NOAA из ЗАКРЕПЛЁННОГО ответа: сети нет, байты — выпуск из реестра A1.
+
+    Возвращает то же, что noaa_latest(): (samples, raw, Fetch). Используется тестами
+    текущего режима — живой запрос в тестах недопустим (CONTRACT §8).
+    """
+    from unittest.mock import Mock
+    from vkd.sources.registry import SourceRegistry
+
+    class _Response:
+        def __init__(self, raw):
+            self.raw, self.status_code, self.headers = raw, 200, {}
+
+        def iter_content(self, size):
+            for i in range(0, len(self.raw), size):
+                yield self.raw[i:i + size]
+
+        def close(self):
+            pass
+
+    record = SourceRegistry(ROOT).records('noaa_ngdc_3day_forecast')[0]
+    raw = open(os.path.join(ROOT, record['raw_path']), 'rb').read()
+    # момент запроса — час после выпуска бюллетеня: иначе закреплённый ответ 2024 года
+    # честно объявляется устаревшим и значения не даёт
+    now = now or datetime.fromisoformat(record['published_utc'].replace('Z', '+00:00')) + timedelta(hours=1)
+    return noaa_latest(cache_dir=tmp_dir, now=now, transport=Mock(return_value=_Response(raw)))
 
 
 def _fetched(tle_text=None, goes_at=None):
@@ -25,7 +53,10 @@ def _fetched(tle_text=None, goes_at=None):
                                  goes_at - timedelta(minutes=5), None, None, goes_at, 'preliminary', 'goes_test')
         goes_raw = {'goes_test': {'flux': 0.4}}
         f_goes = Fetch('noaa_swpc_goes', True, False, goes_at, 5.0, 'тестовое наблюдение', None, None)
-    return (goes, goes_raw, f_goes), (None, {}, off('gfz_kp')), (tle_text, f_tle)
+    # живой прогноз NOAA в тестах исключён как источник: сети быть не должно ('off' не читает
+    # ни сеть, ни кеш). Отдельный тест C6 подаёт закреплённый ответ через pinned_noaa().
+    return ((goes, goes_raw, f_goes), (None, {}, off('gfz_kp')), (tle_text, f_tle),
+            noaa_latest(disabled='off'))
 
 
 def test_live_orbit_through_bridge_with_pinned_tle():

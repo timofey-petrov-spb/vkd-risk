@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import unittest
+import tempfile
 
 import numpy as np
 from skyfield.api import load, wgs84
@@ -116,6 +117,40 @@ class MagneticTests(unittest.TestCase):
 
 
 class TrajectoryTests(unittest.TestCase):
+    def test_pinned_oem_replay_and_changed_input_refusal(self):
+        t = utc('2024-05-03T12:00Z')
+        meta, points, proof = trajectory_with_provenance(t, 60, 24000)
+        oem_id = next(rid for rid, r in proof['records'].items() if r['source_id'] == 'nasa_jsc_oem')
+        hashes = {rid: r['sha256'] for rid, r in proof['records'].items()}
+        replay_meta, replay = trajectory(t, 60, 24000, oem_raw_record_id=oem_id,
+                                        expected_record_hashes=hashes)
+        self.assertEqual(meta, replay_meta)
+        self.assertEqual(points, replay)
+        with self.assertRaisesRegex(OrbitDataError, 'hashes differ'):
+            trajectory(t, 60, 24000, oem_raw_record_id=oem_id,
+                       expected_record_hashes={**hashes, oem_id: '0'*64})
+        with self.assertRaises(OrbitDataError):
+            trajectory(t, 60, 24000, oem_raw_record_id='missing release')
+
+    def test_colleague_tle_path_interface_and_validation(self):
+        path = ROOT / 'data/orbit/iss.tle'
+        epoch = satellite_from_tle(path.read_bytes()).epoch.utc_datetime()
+        meta, points, proof = trajectory_with_provenance(
+            epoch + timedelta(days=1), 60, 24000, tle_path=path)
+        self.assertEqual(meta.method, 'sgp4')
+        self.assertEqual(meta.frame, 'TEME')
+        self.assertEqual(len(points), 61)
+        self.assertTrue(any(r.get('raw_path') == str(path) for r in proof['records'].values()))
+        with tempfile.TemporaryDirectory() as directory:
+            bad = Path(directory) / 'invalid.tle'
+            bad.write_bytes(path.read_bytes().replace(b'25544', b'25545', 1))
+            with self.assertRaises(OrbitDataError):
+                trajectory(epoch, 60, 24000, tle_path=bad)
+        # A legacy B1 TLE override must never drag a 2024 orbit into today's epoch.
+        historical, _ = trajectory(utc('2024-05-03T12:00Z'), 60, 24000, tle_path=path)
+        self.assertEqual(historical.method, 'oem_interp')
+        self.assertEqual(historical.frame, 'EME2000')
+
     def test_six_dates_full_32h_horizon_and_provenance(self):
         for date in ['2024-05-01T00:00Z','2024-05-03T12:00Z','2024-05-20T12:00Z',
                      '2024-06-01T12:00Z','2024-06-25T12:00Z','2024-06-30T12:00Z']:

@@ -1,0 +1,100 @@
+{
+  "base": "73a2ec8",
+  "date_checks": [
+    {
+      "t0": "2024-05-03T12:00:00+00:00",
+      "audited_A2": {
+        "events": 5,
+        "kind_counts": {
+          "FLR": 2,
+          "IPS": 1,
+          "MPC": 2
+        },
+        "verdict": "equivalent",
+        "condition_counts": [
+          0,
+          0
+        ]
+      },
+      "legacy_B_stub": {
+        "events": 6,
+        "kind_counts": {
+          "CME_ARRIVAL": 1,
+          "FLR": 2,
+          "GST": 3
+        },
+        "verdict": "equivalent",
+        "condition_counts": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "t0": "2024-05-10T12:00:00+00:00",
+      "audited_A2": {
+        "events": 13,
+        "kind_counts": {
+          "CME_ARRIVAL": 7,
+          "FLR": 6
+        },
+        "verdict": "all_need_check",
+        "condition_counts": [
+          1,
+          1
+        ]
+      },
+      "legacy_B_stub": {
+        "events": 51,
+        "kind_counts": {
+          "CME": 9,
+          "CME_ARRIVAL": 32,
+          "FLR": 7,
+          "SEP": 3
+        },
+        "verdict": "all_need_check",
+        "condition_counts": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "t0": "2024-05-20T12:00:00+00:00",
+      "audited_A2": {
+        "events": 1,
+        "kind_counts": {
+          "CME_ARRIVAL": 1
+        },
+        "verdict": "equivalent",
+        "condition_counts": [
+          0,
+          0
+        ]
+      },
+      "legacy_B_stub": {
+        "events": 1,
+        "kind_counts": {
+          "CME_ARRIVAL": 1
+        },
+        "verdict": "equivalent",
+        "condition_counts": [
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "tests": {
+    "passed": 158,
+    "subtests_passed": 670,
+    "seconds": 10.24,
+    "mode": "Full suite, app.compute network entry points pinned; source tests cover injected transports independently.",
+    "command": "python tests/sources/run_pinned_suite.py"
+  },
+  "ui": {
+    "current": "no exceptions",
+    "historical_review": "no exceptions",
+    "historical_forecast": "no exceptions"
+  }
+}

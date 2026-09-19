@@ -209,7 +209,7 @@ def test_kp_age_in_sources_table_equals_age_in_factor():
     """M6: таблица источников считала давность от начала 3-часового интервала GFZ, а фактор —
     от его конца; расхождение ровно 3 ч на одном экране."""
     import os
-    from experiments.stub_sources import Fetch
+    from vkd.sources import Fetch
     from vkd.orbit.trajectory import satellite_from_tle
     ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     tle_path = os.path.join(ROOT, 'data', 'orbit', 'iss.tle')
@@ -220,9 +220,10 @@ def test_kp_age_in_sources_table_equals_age_in_factor():
     vf = t0 - timedelta(hours=4)
     kp = EnvironmentSample(vf, 'kp', 3.0, '', 'gfz_kp', Kind.OBSERVATION, None, vf, vf + timedelta(hours=3),
                            t0, 'final', 'gfz_kp#test')
-    (g, g_raw, f_goes), _, (txt, f_tle) = _fetched(tle_text, goes_at=t0)
+    (g, g_raw, f_goes), _, (txt, f_tle), noaa = _fetched(tle_text, goes_at=t0)
     f_kp = Fetch('gfz_kp', True, False, t0, 60.0, 'тестовое наблюдение', None, None)
-    r = run('live', t0, 360, 720, [0, 240], fetched=((g, g_raw, f_goes), (kp, {'gfz_kp#test': {}}, f_kp), (txt, f_tle)), now=t0)
+    r = run('live', t0, 360, 720, [0, 240],
+            fetched=((g, g_raw, f_goes), (kp, {'gfz_kp#test': {}}, f_kp), (txt, f_tle), noaa), now=t0)
     age_table = r.S['sources']['gfz_kp']['age_min']
     kpf = next(f for f in r.assessments[0].mechanisms[0].factors if f.name.startswith('Kp'))
     age_factor = float(kpf.limits_note.split('давность ')[1].split(' мин')[0])
@@ -281,12 +282,18 @@ def test_sep_condition_kind_follows_record_kind_not_event_type(belts):
 
 # ------------------------------------------------------- M9: год публикации, если он не совпадает с годом окна
 def test_publication_range_shows_year_when_it_differs_from_window_year():
-    """Переанализы ENLIL поданы в 2025: «05-07 14:21Z — 03-12 16:52Z» читалось как ход назад."""
+    """M9: год печатается, если он отличается от года окна («05-07 — 03-12» читалось как ход назад).
+
+    После стыка A2 все записи конвейера — уведомления 2024 года (переанализы поздних карточек
+    ENLIL сняты по R10), поэтому правило проверяется на самой функции формата и на том,
+    что реальные диапазоны публикации читаются вперёд."""
+    from vkd.windows.compare import _pub_time
+    assert _pub_time(datetime(2025, 3, 12, 16, 52, tzinfo=UTC), 2024) == '2025-03-12 16:52Z'
+    assert _pub_time(datetime(2024, 5, 7, 14, 21, tzinfo=UTC), 2024) == '05-07 14:21Z'
     r = run('history_review', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
     texts = [c.text for a in r.assessments for m in a.mechanisms for c in m.conditions if 'публикация' in c.text]
     assert texts
     ranges = [t.split('публикация ')[1].split(')')[0] for t in texts if 'публикация ' in t]
-    assert any('2025-' in x for x in ranges), ranges
     for x in ranges:                     # диапазон читается вперёд: конец не раньше начала
         lo, hi = [p.strip() for p in x.split(' — ')]
         norm = lambda s: s if s.startswith('20') else '2024-' + s
@@ -315,11 +322,15 @@ def test_condition_sources_have_no_chopped_notes_or_code_identifiers():
     conds = [c for c in r.cards if c.title.startswith(('Окно 1 · Условие', 'Окно 2 · Условие'))]
     assert conds
     joined = ' '.join(c.source_ru for c in conds)
-    for sid in ('nasa_donki_notification', 'nasa_donki_wsa_enlil', 'nasa_donki_sep_card'):
+    for sid in ('nasa_donki_notification', 'nasa_donki_wsa_enlil', 'nasa_donki_sep_card',
+                'nasa_iswa_goes_primary_p5m', 'gfz_kp_archive'):
         assert sid not in joined, sid                    # идентификаторов кода на экране нет
     assert 'уведомление NASA DONKI' in joined
+    # номер выпуска источника остаётся виден: запись должна оставаться находимой
+    from vkd.explain.cards import record_ru
+    assert 'уведомление NASA DONKI 20240510-AL-004, протонное событие' in joined
     # заметка записи не режется по символам: либо целиком, либо по границе слова с многоточием
-    shown = {e.event_id for c in conds for e in r.events if e.event_id in c.source_ru}
+    shown = {e.event_id for c in conds for e in r.events if record_ru(e.event_id) in c.source_ru}
     assert shown
     for e in r.events:
         if e.event_id in shown and e.note:

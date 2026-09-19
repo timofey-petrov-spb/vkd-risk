@@ -43,8 +43,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-import experiments.stub_history as SH                                    # noqa: E402
-from experiments.stub_history import ARCH, _load, _t, history_bundle   # noqa: E402
+import experiments.legacy.stub_history as SH                                    # noqa: E402
+from experiments.legacy.stub_history import ARCH, _load, _t, history_bundle   # noqa: E402
 from vkd.assess.cutoff import apply_cutoff                              # noqa: E402
 from vkd.config import settings_path                                     # noqa: E402
 from vkd.integration.noaa_forecast import noaa_forecasts                 # noqa: E402
@@ -313,7 +313,7 @@ def exp1_precursors(cards, storm_start):
     ref, ref_txt = (_t(ips['eventTime']), 'прихода ударной волны %s (`%s`)' % (fmt_s(_t(ips['eventTime'])), ips['activityID'])) if ips else (storm_start, 'начала бури')
     lines += ['', 'Оценки прихода из `cmeAnalyses.enlilList` карточек — внешний прогноз WSA-ENLIL. Времени размещения прогона на сайте '
               'в данных нет; `modelCompletionTime` — время завершения модели, а не доказанная публикация (R4). Политика прототипа R10 '
-              '(`experiments/stub_history.py`, `enlil_arrivals`): принятая публикация = завершение прогона + %d мин запаса '
+              '(`experiments/legacy/stub_history.py`, `enlil_arrivals`): принятая публикация = завершение прогона + %d мин запаса '
               '(`[history].enlil_publication_lag_min`), но не раньше подачи анализа `submissionTime` — анализ, переподанный позже прогона, '
               'не мог быть виден раньше подачи. Доступность к отсечке этим не доказана, и запись так и помечена. '
               'Ошибка = оценка − фактический момент %s; «+» — оценка позже факта.' % (SH.ENLIL_PUBLICATION_LAG_MIN, ref_txt), '']
@@ -341,7 +341,7 @@ def exp1_precursors(cards, storm_start):
 
 def exp1_cutoffs(bundle, cards, msgs, kp7_all, seps):
     lines = ['', '### 1.5. Отсечки 10 мая: что известно строго и что случилось потом', '',
-             'Отбор — `vkd.assess.cutoff.apply_cutoff` на выдаче `experiments.stub_history.history_bundle()` '
+             'Отбор — `vkd.assess.cutoff.apply_cutoff` на выдаче `experiments.legacy.stub_history.history_bundle()` '
              '(%d образцов Kp без публикации, %d событий, из них уникальных %d). '
              '«Известно» — уникальные записи с публикацией ≤ отсечки, не старше %d ч; '
              '«случилось потом» — по карточкам после факта, горизонт %d ч.' % (
@@ -688,7 +688,7 @@ def main():
               'WSA-ENLIL — условие по политике R10 (раздел 5);' % KP_CHECK,
               '* карточки событий DONKI (SEP, GST.allKpIndex) — только разбор после факта (CONTRACT §10): в строгий отбор входят '
               'датированные уведомления и прогнозы ENLIL по принятой публикации;',
-              '* строгий отбор — `vkd.assess.cutoff.apply_cutoff` на выдаче `experiments.stub_history.history_bundle()`.', '',
+              '* строгий отбор — `vkd.assess.cutoff.apply_cutoff` на выдаче `experiments.legacy.stub_history.history_bundle()`.', '',
               '## 1. Эксперимент 1 — внешние сообщения и последующие наблюдения', '']
     l1, storm_start, kp7, peak = exp1_storm(cards)
     lines += l1
@@ -739,7 +739,7 @@ def main():
               'слабой активности (DONKI заводит GST при заметной буре).',
               '* Окна — %d ч с шагом начала 1 ч, период поиска %d ч; сервис — сетка от 00:00Z. Другая сетка даст другие задержки применения, '
               'но не изменит заблаговременность поставщика.' % (DURATION_MIN // 60, SEARCH_H),
-              '* Поставщик истории — временная заглушка `experiments/stub_history.py`; после появления `vkd/history` (A2) эксперимент '
+              '* Поставщик истории — временная заглушка `experiments/legacy/stub_history.py`; после появления `vkd/history` (A2) эксперимент '
               'повторяется на реестре выпусков с доказанной доступностью.',
               '* Вариант «любое уведомление — проверка» (таблица 1.6) отвергнут: ветка условий `vkd/windows/compare.py` образует условия только '
               'из протонных событий, бурь с Kp ≥ порога и прогнозов прихода выброса (тест `test_storm_level_below_threshold_is_information_not_condition`).',
