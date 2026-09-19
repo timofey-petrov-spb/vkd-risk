@@ -2421,6 +2421,27 @@ def test_profil_odin_grafik_s_kruglymi_otmetkami_polosoy_i_pikom():
     assert rows[0]['начало выхода'] == '19.09 13:00', rows[0]
 
 
+def test_polosa_rekomendacii_tolko_tam_gde_okno_nazvano():
+    """Полоса с подписью «рекомендованный промежуток» — это рекомендация. Рисовать её там, где
+    сервис как раз отказался называть окно (спор величин; условие у каждого начала; нет
+    оснований), значило бы опровергать собственный заголовок рисунком под ним. Подпись под
+    графиком про полосу тоже молчит, когда полосы нет: обещать нарисованное нельзя."""
+    from app.ui import ribbon_caption_ru, windows_ribbon
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    есть = _scan_fixture(t0, answer_kind='point')
+    нет = [_scan_fixture(t0, answer_kind='tradeoff', best=[0, 6], recommended_index=None),
+           _scan_fixture(t0, verdict='all_need_check', answer_kind=None, recommended_index=None),
+           _scan_fixture(t0, verdict='insufficient', answer_kind=None, recommended_index=None)]
+    имена = lambda sc: [str(tr.name or '') for tr in windows_ribbon(sc, 30.0, duration_min=240).data]
+    assert 'рекомендованный промежуток' in имена(есть), имена(есть)
+    assert 'синяя полоса' in ribbon_caption_ru(есть, duration_min=240)
+    for sc in нет:
+        assert 'рекомендованный промежуток' not in имена(sc), (sc.get('verdict'), имена(sc))
+        assert 'полоса' not in ribbon_caption_ru(sc, duration_min=240), ribbon_caption_ru(sc, duration_min=240)
+        # пик при этом подписан всегда: худшее время на сроке сервис знает в любом исходе
+        assert 'пик на сроке' in имена(sc), имена(sc)
+
+
 def test_profil_ne_vybrasyvaet_tochki_pri_nulevom_flyuense():
     """Логарифмическая шкала не определена в нуле, а Plotly такую точку молча выбрасывает.
     Молчаливых выбрасываний в сервисе быть не может: при нуле шкала линейная и названа."""
