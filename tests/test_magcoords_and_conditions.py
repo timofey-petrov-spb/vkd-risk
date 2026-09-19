@@ -162,4 +162,5 @@ def test_storm_condition_uses_observed_kp_fact_and_window_overlap():
     assert len(r) == 1 and 'Kp до 7' in r[0] and 'наблюдённый Kp уведомления' in r[0]   # второе событие вне окна (через 20 ч)
     a = assess_window(Window(T0 + timedelta(hours=18), 360), pts, belts, None, None, [], th, T0,
                       events=strong, mmod_hits=1e-7, event_facts=facts)
-    assert any('уровень Kp не назван' in x for x in a.mechanisms[0].needs_check_reasons)
+    # уровень называется (или не называется) по КОНКРЕТНОЙ записи, а не по кластеру
+    assert any('уровень Kp в записи не назван' in x for x in a.mechanisms[0].needs_check_reasons)

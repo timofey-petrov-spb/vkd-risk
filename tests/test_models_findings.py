@@ -265,13 +265,15 @@ def test_sep_level_from_donki_body_and_storm_signals_grouped():
 def test_report_is_a_readable_document(gannon):
     md = report_md(gannon.S)
     for section in ('## Вывод', '## Окна и величины', '## Почему такой вывод', '## Источники и публикация',
-                    '## Условия по окнам', '## Проверка после отсечки', 'Окно 1 — 10.05 12:00–18:00 UTC (360 мин)'):
+                    '## Условия по окнам', '## Проверка после отсечки', 'Окно 1 — 10.05 12:00 — 18:00 UTC (360 мин)'):
         assert section in md, section
     assert 'own_calculation' not in md and 'external_forecast' not in md
     assert 'Kp 3,67' in md and '3.67 1' not in md and '1654378.43' not in md
     from app.export import _fold_records
     assert _fold_records(['a', 'b', 'c', 'd']).endswith('всего 4 (полный список — cards.json, raw/)')
-    assert _fold_records(['a', 'b']) == 'a, b'
+    # записи называются номером выпуска источника, как на экране, а не машинным ключом
+    assert _fold_records(['nasa_donki_notification:20240508-AL-012:00f5:CME_ARRIVAL']) == \
+        'уведомление NASA DONKI 20240508-AL-012, приход выброса'
     z = build_zip(gannon.S, gannon.raw_records)
     import io as _io
     import zipfile

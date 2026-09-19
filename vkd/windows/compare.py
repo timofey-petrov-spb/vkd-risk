@@ -190,13 +190,14 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
 
     # флюенс: вклад считается только там, где есть модель ОСТ; покрытие — по точкам АНОМАЛИИ
     # (вне аномалии сильное поле даёт L < 1,14 — граница сетки таблицы, не пропуск данных)
-    fl_vals, fl_status, n_saa_model, n_saa = [], {}, 0, 0
+    fl_vals, fl_status, n_saa_model, n_saa, n_saa_mirror = [], {}, 0, 0, 0
     for p in pts:
         r = belts.integral_flux(p.L, p.B_over_B0, th.e_min_MeV)
         fl_status[r.status] = fl_status.get(r.status, 0) + 1
         if p.in_saa:
             n_saa += 1
             n_saa_model += r.value_per_cm2_s is not None
+            n_saa_mirror += r.status == 'beyond_mirror'
         if r.value_per_cm2_s is not None:
             fl_vals.append(r.value_per_cm2_s)
     fluence = float(sum(fl_vals) * 60.0 * step_min) if fl_vals else None   # част./см² (всенаправленный, R3)
@@ -207,7 +208,15 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     cov_fl = _cov(len(pts) - (n_saa - n_saa_model), len(pts)) if pts else Coverage.NONE
     fl_note = []
     if n_saa:
-        fl_note.append('точки аномалии с моделью ОСТ: %d из %d (%.0f %%)' % (n_saa_model, n_saa, 100.0 * n_saa_model / n_saa))
+        # «69 из 72 (96 %)» читалось как неполнота данных, хотя причина у трёх точек названа
+        # тут же в статусах: L вне сетки таблицы. Причина печатается рядом с числом, а точки
+        # выше точки отражения называются отдельно — там поток известен и равен нулю, это не пропуск.
+        fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (%.0f %%)%s%s'
+                       % (n_saa_model, n_saa, 100.0 * n_saa_model / n_saa,
+                          '; у %d точек L вне сетки 1,14…9 — таблица значения не даёт' % (n_saa - n_saa_model)
+                          if n_saa_model < n_saa else '',
+                          '; из них %d выше точки отражения — поток физически нулевой, не пропуск данных' % n_saa_mirror
+                          if n_saa_mirror else ''))
     else:
         fl_note.append('окно не пересекает аномалию по порогу |B|')
     if n_nomodel:
@@ -539,30 +548,39 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                 kp_max, kp_basis_ru = _storm_kp(evs, facts_of, th)
                 if kp_max is not None and kp_max < th.kp_check:
                     continue          # информация в картине, не условие
-                kp_txt = ('Kp до %g (%s)' % (kp_max, kp_basis_ru)) if kp_max is not None else 'уровень Kp не назван'
                 storm_sim = storm_sim or sim
-                if kind_ev == 'GST':
-                    storm_signals.append('%s%s с %s, %s; действие %s — %s%s (%d %s, %s)'
-                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', STORM_SIGNAL_RU['donki_storm'],
-                                            a0.strftime('%m-%d %H:%MZ'), kp_txt,
-                                            a0.strftime('%m-%d %H:%MZ'), a1.strftime('%m-%d %H:%MZ'), assumed_txt, n,
-                                            _plural(n, 'запись', 'записи', 'записей'), pub_txt))
-                else:
-                    storm_signals.append('%s%s %s (уведомление NASA DONKI), ожидаемый %s; действие %s — %s%s (%d %s, %s)'
-                                         % ('МОДЕЛИРУЕМОЕ ' if sim else '', STORM_SIGNAL_RU['cme_arrival'],
-                                            a0.strftime('%m-%d %H:%MZ'), kp_txt,
-                                            a0.strftime('%m-%d %H:%MZ'), a1.strftime('%m-%d %H:%MZ'), assumed_txt, n,
-                                            _plural(n, 'запись', 'записи', 'записей'), pub_txt))
+                # ЛОЖНАЯ АТРИБУЦИЯ (находка четвёртого круга). Прежде связка «время прихода — граница Kp»
+                # печаталась одним предложением, где время бралось как минимум по кластеру (a0), а граница
+                # Kp — как максимум по кластеру (kp_max). На буре Гэннон это давало «приход 10.05 12:14Z …
+                # диапазон 8–9» со ссылкой на уведомление 20240508-AL-012, в теле которого объявлен
+                # диапазон 6–8: жюри открывало первоисточник и видело другое число.
+                # Теперь каждая пара «приход — Kp» печатается ТОЛЬКО внутри одной записи, рядом с её
+                # номером выпуска и временем публикации, а кластер называется кластером.
+                per_rec = [_storm_record_ru(a_i, e, facts_of, th, win.start_utc.year) for a_i, e in cluster]
+                span_txt = 'действие %s — %s%s' % (a0.strftime('%m-%d %H:%MZ'), a1.strftime('%m-%d %H:%MZ'), assumed_txt)
+                mark = STORM_SIGNAL_RU['donki_storm'] if kind_ev == 'GST' else STORM_SIGNAL_RU['cme_arrival']
+                head = '%s%s%s: ' % ('МОДЕЛИРУЕМОЕ ' if sim else '', mark,
+                                     ', %d %s одного события' % (n, _plural(n, 'запись', 'записи', 'записей')) if n > 1 else '')
+                # разделитель записей — « · », а не «;»: короткая форма причины (_short, bullet_short_ru)
+                # режет строку по первой «;», и кластер не должен обрываться на середине первой записи
+                chosen = ('; условие поставлено по наибольшей объявленной верхней границе — Kp до %s'
+                          % fmt_ru(kp_max)) if (n > 1 and kp_max is not None) else ''
+                storm_signals.append(head + ' · '.join(per_rec) + chosen + '; ' + span_txt)
                 storm_ids += ids
                 storm_span.append((a0, a1))
     if storm_signals:
         n_src = len(storm_signals)
         ids = tuple(dict.fromkeys(storm_ids))
         n_rec = len([i for i in ids if not i.startswith('sim_')])
+        # «(1 источник)» при двух уведомлениях создавало впечатление, что весь сигнал стоит в одной
+        # записи (находка четвёртого круга). Считаются и сигналы, и записи, из которых они собраны.
+        n_txt = '%d %s' % (n_src, _plural(n_src, 'сигнал', 'сигнала', 'сигналов'))
+        if n_rec and n_rec != n_src:
+            n_txt += ' по %d %s' % (n_rec, _plural(n_rec, 'записи', 'записям', 'записям'))
         conds.append(Condition(
             'GST', 'limiting',
-            '%sгеомагнитная буря Kp ≥ %.0f в окне (%d %s): %s — условие проверки по правилу команды (порог Kp ≥ %.0f, не норма)%s'
-            % ('МОДЕЛИРУЕМОЕ ' if storm_sim else '', th.kp_check, n_src, _plural(n_src, 'источник', 'источника', 'источников'),
+            '%sгеомагнитная буря Kp ≥ %.0f в окне (%s): %s — условие проверки по правилу команды (порог Kp ≥ %.0f, не норма)%s'
+            % ('МОДЕЛИРУЕМОЕ ' if storm_sim else '', th.kp_check, n_txt,
                ', '.join(storm_signals), th.kp_check,
                ('; %d %s DONKI/NOAA — %s' % (n_rec, _plural(n_rec, 'запись', 'записи', 'записей'),
                                              ', '.join(record_ru(i) for i in ids if not i.startswith('sim_'))) if n_rec else '')),
@@ -628,7 +646,7 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
     cond_reasons = tuple('%s %s: %s' % ('окно' if len(set(w)) == 1 else 'окна', ', '.join(map(str, sorted(set(w)))), t)
                          for t, w in cond_groups.items())
 
-    per, best, conflict, sw_conflict, equiv_set, d_saa, ratio = {}, None, False, None, [], 0.0, None
+    per, best, conflict, sw_conflict, equiv_set = {}, None, False, None, []
     if len(candidates) >= 2:
         # 3. сравнение по каждому механизму отдельно; космопогода — по двум величинам
         mins = {id(a): _sw_vals(a)[0] for a in candidates}
@@ -660,11 +678,6 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
             strict = [a for a in dominators if all(better(a, b) for b in candidates if b is not a)]
             if strict:
                 best = strict[0]
-                others = [b for b in candidates if b is not best]
-                dd = [mins[id(b)] - mins[id(best)] for b in others if mins[id(b)] is not None and mins[id(best)] is not None]
-                d_saa = min(dd) if dd else 0.0
-                rr = [fls[id(b)] / fls[id(best)] for b in others if fls[id(b)] is not None and fls[id(best)]]
-                ratio = min(rr) if rr else None
                 per['spaceweather'] = listing + ' — лучше %s' % lab(best)
             else:
                 a0 = dominators[0]
@@ -684,7 +697,7 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
             per['mmod_stat'] = ('%s: %s попаданий против %s' % (lab(best_mm), fmt_ru(min(vals)), fmt_ru(max(vals)))
                                 if 100 * rel > equal_pct else
                                 'окна не различаются: разница %s %% ниже порога различимости %s %% '
-                                '(%s; настройка config/settings.toml); %s'
+                                '(%s; порог задан в config/settings.toml); %s'
                                 % (('%.3f' % (100 * rel)).replace('.', ','), fmt_ru(equal_pct), TEAM_RULE_RU, MMOD_ROLE_RU))
             # 4. сведение: противоречие механизмов вне допуска → компромисс
             conflict = 100 * rel > equal_pct and best is not None and best_mm.window.start_utc != best.window.start_utc
@@ -717,14 +730,36 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
                               rule_applied='п.5: %s равнозначны — разница минут и флюенса внутри допуска (%.0f мин, ×%.2f)' % (
                                   ', '.join(lab(a) for a in equiv_set), th.equiv_tol_min, th.fluence_equiv_ratio),
                               per_mechanism_comparison=per, reasons=tuple(per.values()) + note_partial + cond_reasons, tolerance_basis=tol)
+    # Хвост «не хуже по флюенсу и минутам» печатался БЕЗУСЛОВНО и без допуска, тогда как у
+    # выбранного окна флюенс может быть ВЫШЕ (на тихой дате 1,74·10⁶ против 1,65·10⁶): экран
+    # утверждал то, что опровергалось числами двумя строками ниже (находка четвёртого круга).
+    # Теперь обе части собираются из вычисленного, с числами, единицами и допуском.
+    m_best, f_best = mins[id(best)], fls[id(best)]
+    others = [b for b in candidates if b is not best]
+    m_ref = min((mins[id(b)] for b in others if mins[id(b)] is not None), default=None)
+    f_ref = min((fls[id(b)] for b in others if fls[id(b)] is not None), default=None)
     why = []
-    if d_saa > th.equiv_tol_min:
-        why.append('на %.0f мин меньше в аномалии' % d_saa)
-    if ratio is not None and ratio > th.fluence_equiv_ratio:
-        why.append('флюенс ниже в %.2f раза' % ratio)
+    if m_best is None or m_ref is None:
+        why.append('минуты в аномалии не вычислены — по ним окна не сравнивались')
+    elif m_best < m_ref:
+        why.append('меньше по минутам в аномалии (%s против %s мин)' % (fmt_ru(m_best), fmt_ru(m_ref)))
+    elif m_best == m_ref:
+        why.append('по минутам в аномалии одинаково (%s мин у обоих)' % fmt_ru(m_best))
+    else:
+        why.append('не хуже по минутам в пределах допуска %s мин (%s против %s мин, разница %s мин)'
+                   % (fmt_ru(th.equiv_tol_min), fmt_ru(m_best), fmt_ru(m_ref), fmt_ru(m_best - m_ref)))
+    if f_best is None or f_ref is None or not f_ref:
+        why.append('флюенс не вычислен — по нему окна не сравнивались')
+    elif f_best <= f_ref:
+        why.append('флюенс ниже (%s против %s част./см², отношение ×%s)'
+                   % (fmt_ru(f_best), fmt_ru(f_ref), ('%.2f' % (f_best / f_ref)).replace('.', ',')))
+    else:
+        why.append('не хуже по флюенсу в пределах допуска ×%s (%s против %s част./см², отношение ×%s)'
+                   % (('%.2f' % max(1.0, th.fluence_equiv_ratio)).replace('.', ','), fmt_ru(f_best), fmt_ru(f_ref),
+                      ('%.2f' % (f_best / f_ref)).replace('.', ',')))
     return Recommendation(preferred=best.window, verdict='preferred',
-                          rule_applied='п.3–4: %s лучше по космопогоде (%s), не хуже по флюенсу и минутам, линия метеороидов не противоречит'
-                                       % (lab(best), ', '.join(why) or 'за пределами допуска') + ('; покрытие частичное — объявлено' if partial_l else ''),
+                          rule_applied='п.3–4: %s лучше по космопогоде — %s; линия метеороидов не противоречит'
+                                       % (lab(best), '; '.join(why)) + ('; покрытие частичное — объявлено' if partial_l else ''),
                           per_mechanism_comparison=per, reasons=tuple(per.values()) + cond_reasons + note_partial, tolerance_basis=tol)
 
 
@@ -808,38 +843,54 @@ def _sep_level(evs: Sequence[EventInterval], facts_of: dict):
     return (max(from_note) if from_note else None), False, True
 
 
-def _storm_kp(evs: Sequence[EventInterval], facts_of: dict, th: Thresholds):
-    """(Kp для сравнения с порогом, чем он обоснован) — по структурированным фактам.
+def _storm_kp_one(e: EventInterval, facts_of: dict, th: Thresholds):
+    """(Kp ОДНОЙ записи, чем он обоснован) — строго по структурированным фактам этой записи.
 
     Уведомление о буре: facts.kp — наблюдённый индекс за указанный 3-часовой интервал.
     Уведомление о приходе выброса: граница ОПУБЛИКОВАННОГО диапазона максимума Kp
     (facts.kp_range_min/max, kp_basis = published_notification_range); какая именно
     граница — настройка [history].cme_kp_range_bound, по умолчанию верхняя.
+
+    Величины разных записей здесь не смешиваются: это и есть место, где обеспечивается
+    правило «каждое число прослеживается до записи, из тела которой оно взято» (О4).
     """
-    vals, bases = [], []
-    for e in evs:
-        f = _facts(e, facts_of)
-        if e.kind_of_event == 'CME_ARRIVAL':
-            key = 'kp_range_max' if th.cme_kp_bound == 'max' else 'kp_range_min'
-            v = f.get(key)
-            if v is not None:
-                vals.append(float(v))
-                bases.append('%s граница опубликованного диапазона %g–%g'
-                             % ('верхняя' if th.cme_kp_bound == 'max' else 'нижняя',
-                                float(f.get('kp_range_min')), float(f.get('kp_range_max'))))
-                continue
-        elif f.get('kp') is not None:
-            vals.append(float(f['kp']))
-            bases.append('наблюдённый Kp уведомления')
-            continue
-        v = _kp_from_note(e.note)
+    f = _facts(e, facts_of)
+    if e.kind_of_event == 'CME_ARRIVAL':
+        key = 'kp_range_max' if th.cme_kp_bound == 'max' else 'kp_range_min'
+        v = f.get(key)
         if v is not None:
-            vals.append(v)
-            bases.append('по тексту записи (запасной разбор)')
-    if not vals:
+            return float(v), ('%s граница опубликованного диапазона %g–%g'
+                              % ('верхняя' if th.cme_kp_bound == 'max' else 'нижняя',
+                                 float(f.get('kp_range_min')), float(f.get('kp_range_max'))))
+    elif f.get('kp') is not None:
+        return float(f['kp']), 'наблюдённый Kp уведомления'
+    v = _kp_from_note(e.note)
+    if v is not None:
+        return v, 'по тексту записи (запасной разбор)'
+    return None, ''
+
+
+def _storm_kp(evs: Sequence[EventInterval], facts_of: dict, th: Thresholds):
+    """(Kp для сравнения с порогом, чем он обоснован) — наибольший по кластеру.
+
+    Для ПЕЧАТИ эта пара не годится: значение и обоснование берутся из одной записи, а время
+    прихода в кластере — из другой. Печать идёт через _storm_record_ru по каждой записи.
+    """
+    got = [(v, b) for v, b in (_storm_kp_one(e, facts_of, th) for e in evs) if v is not None]
+    if not got:
         return None, ''
-    best = max(range(len(vals)), key=lambda i: vals[i])
-    return vals[best], bases[best]
+    return max(got, key=lambda x: x[0])
+
+
+def _storm_record_ru(a_i: datetime, e: EventInterval, facts_of: dict, th: Thresholds, ref_year: int) -> str:
+    """Одна запись кластера бури: её собственное время, её собственный Kp, её номер выпуска
+    и её время публикации — в одной скобке, чтобы число и ссылка не расходились."""
+    v, basis = _storm_kp_one(e, facts_of, th)
+    kp_txt = ('Kp до %s' % fmt_ru(v)) if v is not None else 'уровень Kp в записи не назван'
+    pub = ('публикация %s' % _pub_time(e.published_utc, ref_year)) if e.published_utc else 'без времени публикации'
+    src = record_ru(e.event_id, with_kind=False)
+    when = 'приход %s' % a_i.strftime('%m-%d %H:%MZ') if e.kind_of_event == 'CME_ARRIVAL' else 'начало %s' % a_i.strftime('%m-%d %H:%MZ')
+    return '%s, %s (%s)' % (when, kp_txt, ', '.join(x for x in (basis, src, pub) if x))
 
 
 def _cov(n_ok: int, n_all: int) -> Coverage:

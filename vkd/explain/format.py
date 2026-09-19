@@ -70,17 +70,20 @@ def source_ru(source_id: str) -> str:
     return SOURCE_ID_RU.get(source_id, source_id)
 
 
-def record_ru(rid: str) -> str:
+def record_ru(rid: str, with_kind: bool = True) -> str:
     """Идентификатор записи по-русски: «уведомление NASA DONKI 20240510-AL-004, протонное событие».
 
     Формат записи A1/A2 — source_id:release_id:хеш[:тип события]. На экране идентификаторов
     кода быть не должно (О5), но запись обязана оставаться находимой: печатаются имя источника
     и НОМЕР ВЫПУСКА источника, а не внутренний ключ с хешем.
+
+    with_kind=False — без типа события: там, где тип уже назван самой фразой («приход выброса
+    10.05 12:14Z … уведомление NASA DONKI 20240508-AL-012»), повтор только удлиняет строку.
     """
     parts = (rid or '').split(':')
     if len(parts) < 2 or parts[0] not in SOURCE_ID_RU:
         return 'запись %s' % rid
     out = '%s %s' % (SOURCE_ID_RU[parts[0]], parts[1])
-    if len(parts) >= 4 and parts[3] in EVENT_KIND_RU:
+    if with_kind and len(parts) >= 4 and parts[3] in EVENT_KIND_RU:
         out += ', ' + EVENT_KIND_RU[parts[3]]
     return out

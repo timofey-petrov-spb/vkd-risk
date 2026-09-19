@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import zipfile
 from datetime import datetime, timedelta
 from typing import Any
 
-from app.ui import (EVENT_KIND_RU, STRICT_RU, fmt, frac_ru, phrase_ru, raw_record, record_url, rule_ru,
-                    source_name_ru, status_ru)
+from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, fmt, frac_ru, phrase_ru, raw_record, record_url,
+                    rule_ru, source_name_ru, status_ru, verification_ru)
+from vkd.explain.format import record_ru
 
 VERDICT_TITLE = {
     'preferred': 'Есть предпочтительное окно',
@@ -64,11 +66,25 @@ def _dt(s, fmt='%d.%m %H:%MZ'):
     return t.strftime(fmt) if t else '—'
 
 
+def _span_end(from_iso, to_iso) -> str:
+    """Конец интервала: «00:00Z» внутри суток и «11.05 00:00Z», когда сутки другие.
+    Без даты строка «21:00Z — 00:00Z» читается как интервал назад."""
+    a, b = _t(from_iso), _t(to_iso)
+    if b is None:
+        return '—'
+    return b.strftime('%H:%MZ') if (a and a.date() == b.date()) else b.strftime('%d.%m %H:%MZ')
+
+
 def _win_title(w: dict) -> str:
+    """Заголовок окна. Дата конца печатается всегда, когда она отличается от даты начала:
+    «25.06 20:00–02:00 UTC (360 мин)» читается как ошибка — из отчёта не видно, это 6 часов
+    вперёд или 18 назад (находка четвёртого круга на пресете «Тихая дата»)."""
     t0 = _t(w['start_utc'])
     t1 = t0 + timedelta(minutes=w['duration_min']) if t0 else None
-    return 'Окно %s — %s–%s UTC (%d мин)' % (w.get('index', '?'), t0.strftime('%d.%m %H:%M') if t0 else '?',
-                                            t1.strftime('%H:%M') if t1 else '?', w['duration_min'])
+    end = ('?' if t1 is None else
+           t1.strftime('%d.%m %H:%M') if t1.date() != t0.date() else t1.strftime('%H:%M'))
+    return 'Окно %s — %s — %s UTC (%d мин)' % (w.get('index', '?'), t0.strftime('%d.%m %H:%M') if t0 else '?',
+                                               end, w['duration_min'])
 
 
 def _value(f: dict) -> str:
@@ -76,7 +92,9 @@ def _value(f: dict) -> str:
     Прежний fmt_ru печатал «1,34·10^6», и одна и та же величина получала два вида в двух
     артефактах одного расчёта."""
     if f['value'] is None:
-        return '—'
+        # «поток протонов GOES ≥10 МэВ: — — наблюдение» читалось как сломанная строка:
+        # прочерк-значение и тире-разделитель шли подряд (находка четвёртого круга)
+        return 'значение не определено'
     if f['name'].startswith('Kp') or f['name'].startswith('прогноз Kp'):
         return 'Kp %s' % fmt(f['value'])
     return fmt(f['value'], f['unit'])
@@ -103,8 +121,22 @@ def _record_links(ids, raw_records: dict, n: int = 5) -> list[str]:
     return out
 
 
-def _source_link(sid: str, raw_records: dict) -> str | None:
-    """Адрес первоисточника источника: первая его запись, у которой адрес есть."""
+def _source_link(sid: str, raw_records: dict, src: dict | None = None) -> str | None:
+    """Адрес первоисточника источника: первая его запись, у которой адрес есть.
+
+    Ключ снимка («donki_archive», «noaa_forecast_kp_forecast») и идентификатор записи
+    («nasa_donki_notification:…», «noaa_ngdc_3day_forecast:…») — разные имена, и поиск по
+    ключу не находил НИ ОДНОГО адреса: колонка «первоисточник» была пустой во всех строках
+    отчёта, тогда как на экране адреса стояли (находка четвёртого круга). Поэтому адрес
+    ищется по перечню записей источника (S['sources'][k]['record_ids']), а поиск по имени
+    ключа остаётся только запасным — для снимков, собранных прежними версиями.
+    """
+    if (src or {}).get('url'):
+        return src['url']
+    for rid in ((src or {}).get('record_ids') or []):
+        u = record_url(raw_record(raw_records, str(rid)))
+        if u:
+            return u
     for rid, rec in (raw_records or {}).items():
         if str(rid) == sid or str(rid).startswith(sid + ':'):
             u = record_url(rec)
@@ -114,9 +146,12 @@ def _source_link(sid: str, raw_records: dict) -> str | None:
 
 
 def _fold_records(ids: list, n: int = 3) -> str:
+    """Записи по-русски — номером выпуска источника, как их называет экран.
+    Машинные ключи с хешами остаются в manifest.json и в именах файлов raw/."""
     if not ids:
         return ''
-    return ', '.join(ids[:n]) + (' … всего %d (полный список — cards.json, raw/)' % len(ids) if len(ids) > n else '')
+    return ', '.join(record_ru(i) for i in ids[:n]) + (
+        ' … всего %d (полный список — cards.json, raw/)' % len(ids) if len(ids) > n else '')
 
 
 def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
@@ -198,55 +233,96 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
     # источники и публикация (Т1/О4): имена и состояния — теми же словами, что на экране,
     # адрес записи — той же функцией record_url; хеши и идентификаторы версий — в manifest.json
     L += ['## Источники и публикация', '',
-          '| источник | роль | статус | происхождение | данные на | давность, мин | первоисточник |',
-          '|---|---|---|---|---|---|---|']
+          '| источник | роль | статус | происхождение | данные на | давность, мин |',
+          '|---|---|---|---|---|---|']
+    links = []
     for k, v in S['sources'].items():
         if k.startswith('_'):
             continue
         age = v.get('age_min')
-        L.append('| %s | %s | %s | %s | %s | %s | %s |' % (
+        L.append('| %s | %s | %s | %s | %s | %s |' % (
             source_name_ru(k, mode_id), v.get('role', ''),
             status_ru((v.get('status') or '').replace('|', '/')),
             phrase_ru(v.get('origin') or ''),
             _dt(v.get('data_utc'), '%Y-%m-%d %H:%MZ') if v.get('data_utc') else '—',
-            fmt(round(float(age))) if age is not None else '—',
-            _source_link(k, raw_records) or '—'))
+            fmt(round(float(age))) if age is not None else '—'))
+        u = _source_link(k, raw_records, v)
+        if u:
+            links.append('- %s: %s' % (source_name_ru(k, mode_id), u))
+    # Адреса первоисточников — отдельным списком, а не колонкой: адрес архивного запроса
+    # длиннее всей строки таблицы и в ячейке не читается. Раньше колонка была пустой во всех
+    # строках во всех режимах (искали по ключу снимка, а не по записям) — находка четвёртого круга.
+    L += ['', 'Первоисточники записей:', ''] + (links or ['- ни у одной записи снимка нет сетевого адреса'])
     L += ['', 'Идентификаторы записей, хеши и версии выпусков — в `manifest.json` и `sources.json`; '
               'сами записи — в `raw/`.']
     # прогнозы NOAA: «до отсечки» — только там, где отсечка есть
     if S.get('forecasts'):
         L += ['', '## Внешний прогноз NOAA (%s)' % ('выпуски до отсечки' if req.get('cutoff_utc') else 'выпуск с указанием времени публикации'), '']
         for line in S['forecasts']:
+            # идентификатор выпуска — 64-значный хеш; он остаётся в manifest.json и sources.json,
+            # а человек читает время выпуска (находка четвёртого круга)
             L.append('- %s: %s%s' % (line['label'], line['status_ru'],
-                                    ('; выпуск %s от %s' % (line['release_id'], _dt(line['published_utc'], '%Y-%m-%d %H:%MZ'))) if line.get('release_id')
+                                    ('; выпуск от %s' % _dt(line['published_utc'], '%Y-%m-%d %H:%MZ')) if line.get('release_id')
                                     else ('; ' + phrase_ru(line['reason']) if line.get('reason') else '')))
     # проверка после отсечки
     ver = S.get('verification')
     if ver:
-        L += ['', '## Проверка после отсечки: что наблюдалось потом (в расчёт не входило)', '', frac_ru(ver.get('summary', '')), '']
+        # «условие поставлено в 12:00Z» печаталось безусловно и на тихой дате противоречило
+        # обеим карточкам окон («условий проверки нет»). Признак берётся из снимка — того же,
+        # по которому экран рисует карточки, — а не пересчитывается (находка четвёртого круга).
+        had_conditions = any(m.get('needs_check') for w in S['windows'] for m in w['mechanisms'])
+        L += ['', '## Проверка после отсечки: что наблюдалось потом (в расчёт не входило)', '',
+              verification_ru(ver.get('summary', ''), had_conditions), '']
         if ver.get('kp_obs'):
-            L += ['| интервал | Kp наблюдение |', '|---|---|'] + ['| %s — %s | %s |' % (_dt(k['from_utc']), _dt(k['to_utc'], '%H:%MZ'), fmt(k['kp'])) for k in ver['kp_obs']]
+            L += ['| интервал | Kp наблюдение | происхождение |', '|---|---|---|'] + [
+                '| %s — %s | %s | %s |' % (_dt(k['from_utc']), _span_end(k['from_utc'], k['to_utc']), fmt(k['kp']),
+                                           (k.get('origin') or '—').replace('|', '/'))
+                for k in ver['kp_obs']]
         if ver.get('events'):
             L += ['', 'События, опубликованные после отсечки на горизонте:'] + [
-                '- %s %s, публикация %s%s' % (EVENT_KIND_RU.get((e['kind'] or '').upper(), e['kind']), e['id'],
-                                              _dt(e['published_utc']), (' — ' + phrase_ru(e['note'])) if e.get('note') else '')
+                '- %s (%s), публикация %s%s' % (EVENT_KIND_RU.get((e['kind'] or '').upper(), e['kind']),
+                                                record_ru(e['id'], with_kind=False),
+                                                _dt(e['published_utc']), (' — ' + phrase_ru(e['note'])) if e.get('note') else '')
                 for e in ver['events'][:20]]
     L += ['', '## Чего не заявляем', '',
           '- допустимость реального выхода — за уполномоченными специалистами;',
           '- вероятность разгерметизации и попадания в космонавта;',
           '- дозу человека; поток GOES как поток у станции без обрезания.', '']
-    return '\n'.join(L)
+    return _dates_outside_urls('\n'.join(L))
+
+
+_URL_RE = re.compile(r'https?://\S+')
+
+
+def _dates_outside_urls(md: str) -> str:
+    """Даты отчёта — тем же видом, что на экране («дд.мм чч:мм»). В отчёте их было два вида
+    сразу: 19 дат «05-10 12:14Z» приходили готовыми строками расчёта и 35 печатались через
+    _dt (находка четвёртого круга). Сетевые адреса не трогаются: в них есть цифровые группы."""
+    out, last = [], 0
+    for m in _URL_RE.finditer(md):
+        out.append(dates_ru(md[last:m.start()]))
+        out.append(m.group(0))
+        last = m.end()
+    out.append(dates_ru(md[last:]))
+    return ''.join(out)
 
 
 def _traj_line(tm: dict) -> str:
+    """Строка «Траектория». Службу называет ФАКТИЧЕСКИЙ адрес получения, а не имя парсера
+    записи: отчёт писал «SGP4 по TLE (celestrak_gp)», а строкой ниже — «SGP4 по TLE
+    (api.wheretheiss.at)», то есть называл источником службу, которая данных не отдала
+    (находка четвёртого круга). Кодовый идентификатор остаётся в manifest.json."""
     if not tm.get('source_id'):
         return 'орбита недоступна: %s' % tm.get('status')
     if tm.get('method') == 'oem_interp':
-        return 'OEM NASA/JSC (%s), создан %s, интерполяция; %s; поле %s' % (
-            tm['source_id'], _dt(tm.get('created_utc'), '%d.%m.%Y %H:%MZ'),
+        return 'эфемериды OEM NASA/JSC, создан %s, интерполяция; %s; поле %s' % (
+            _dt(tm.get('created_utc'), '%d.%m.%Y %H:%MZ'),
             'объявленная реконструкция' if tm.get('is_reconstruction') else 'доказанная публикация до отсечки', tm.get('field_model'))
-    return 'SGP4 по TLE (%s), эпоха %s, получен %s; %s; поле %s' % (
-        tm['source_id'], _dt(tm.get('epoch_utc'), '%d.%m.%Y %H:%MZ'), _dt(tm.get('fetched_utc'), '%d.%m.%Y %H:%MZ'),
+    url = tm.get('tle_url')
+    where = (', адрес получения %s%s' % (url, ' (резервный адрес, основной %s не ответил)' % tm['tle_url_primary_failed']
+                                         if tm.get('tle_url_primary_failed') else '')) if url else ''
+    return 'SGP4 по элементам орбиты%s, эпоха %s, получен %s; %s; поле %s' % (
+        where, _dt(tm.get('epoch_utc'), '%d.%m.%Y %H:%MZ'), _dt(tm.get('fetched_utc'), '%d.%m.%Y %H:%MZ'),
         'объявленная реконструкция' if tm.get('is_reconstruction') else 'без реконструкции', tm.get('field_model'))
 
 
