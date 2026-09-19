@@ -44,9 +44,15 @@ NOAA_S_PFU = ((1, 10.0), (2, 100.0), (3, 1000.0), (4, 1e4), (5, 1e5))   # NOAA S
 M_P_MEV = 938.272                                # масса протона, МэВ (CODATA 2018)
 MMOD_ROLE_RU = ('линия метеороидов различает окна только по высоте и длительности; при равной длительности '
                 'на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна')
-MAG_STATUS_RU = {'ok': 'в сетке таблицы', 'no_model_L': 'L вне сетки 1,14…9 (сильное поле вне аномалии)',
-                 'beyond_mirror': 'выше точки отражения — поток 0', 'inconsistent_BB0': 'B/B0 < 1, помечено',
-                 'approximation': 'эксцентричный диполь (объявленное приближение)', 'outside_model': 'вне модели координат'}
+MAG_STATUS_RU = {
+    'ok': 'в сетке таблицы', 'no_model_L': 'L вне сетки 1,14…9',
+    'no_model_BB0': 'B/B0 вне диапазона нужной строки таблицы — поток неизвестен',
+    'inconsistent_BB0': 'B/B0 < 1, помечено',
+    'invalid_coordinates': 'магнитные координаты нечисловые или бесконечные',
+    'no_model_energy': 'энергия вне рассчитанного диапазона 0,2…300 МэВ',
+    'approximation': 'эксцентричный диполь (объявленное приближение)',
+    'outside_model': 'вне модели координат',
+}
 TEAM_RULE_RU = 'правило команды, не норма'
 
 
@@ -224,15 +230,14 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         known = sum(r.value_per_cm2_s is not None for r in saa_flux)
         unknown_L = sum(r.status == 'no_model_L' for r in saa_flux)
         inconsistent = sum(r.status == 'inconsistent_BB0' for r in saa_flux)
-        mirror = sum(r.status == 'beyond_mirror' for r in saa_flux)
+        unknown_B = sum(r.status == 'no_model_BB0' for r in saa_flux)
         fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (диагностика узлов, не покрытие времени)' % (known, len(saa_flux)))
         if unknown_L:
             fl_note.append('у %d точек L вне сетки — вклад неизвестен' % unknown_L)
         if inconsistent:
             fl_note.append('у %d точек B/B0 < 1 — магнитные координаты несовместимы, вклад неизвестен' % inconsistent)
-        if mirror:
-            fl_note.append(('ещё у %d точек' if unknown_L or inconsistent else 'у %d точек') % mirror +
-                           ' значение известно и равно нулю — выше точки отражения')
+        if unknown_B:
+            fl_note.append('у %d точек B/B0 вне диапазона нужной строки таблицы — вклад неизвестен' % unknown_B)
     if cov_fl != Coverage.FULL:
         notes.append('флюенс: модель ОСТ покрывает %.1f %% времени окна; полный флюенс неизвестен, вне модели не ноль' % (100*fl_int.coverage_fraction))
         fl_note.append('полный флюенс окна неизвестен; показан только известный вклад')

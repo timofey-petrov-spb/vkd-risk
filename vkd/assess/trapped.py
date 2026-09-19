@@ -12,19 +12,19 @@ CONTRACT v3.1, R3 — без произвольного 4π), как функц�
 см⁻²·с⁻¹; флюенс за окно (в compare) — част./см². Никаких «на стерадиан».
 
 Метод:
-  * по L — интерполяция между соседними табличными оболочками В ЛОГАРИФМЕ
-    ПОТОКА: между узлами 1,20 и 1,30 интегральный поток ≥30 МэВ меняется
-    в ~445 раз, и линейная интерполяция завышала середину в ~24 раза
-    (найдено разбором 19.09); при нулевом узле — линейно;
-    вне диапазона таблицы — статус «нет модели», не ноль;
-  * по B/B0 — та же логарифмическая интерполяция внутри оболочки; выше
-    максимального табличного B/B0 — физический ноль (точка отражения выше),
-    статус «за зеркальной точкой»; B/B0 < 1 (несовместимость дипольной L
-    и поля IGRF) не заменяется экваториальным значением: поток отсутствует, статус inconsistent_BB0;
-  * по энергии — интегрирование ПО СТЕПЕННОМУ ЗАКОНУ между узлами (log-log),
-    точное для спектров вида a·E^b на логарифмической сетке; обычные трапеции
-    на сетке ОСТ завышают интеграл ∝E⁻² на ~30 %. Хвост выше последнего узла
-    ОТБРАСЫВАЕТСЯ, и это объявляется в результате.
+  * сначала интерполируется ДИФФЕРЕНЦИАЛЬНЫЙ спектр по B/B0 и L,
+    затем он интегрируется по энергии (порядок прил. Е, Е.2–Е.4);
+  * двухточечная интерполяция логарифма положительного потока; при
+    табличном нуле — линейная. Это объявленное приближение к рекомендованной
+    в прил. Е трёхточечной интерполяции, не её точная реализация;
+  * обе соседние оболочки должны иметь данные при заданном B/B0. Конец
+    строки таблицы не доказывает нулевой поток или зеркальную точку;
+    вне сетки L или B/B0 — None, а не ноль. На точной оболочке соседняя
+    оболочка с нулевым весом не требуется;
+  * B/B0 < 1 — inconsistent_BB0, без скрытого обрезания;
+  * по энергии — степенной закон между узлами (log-log). Хвост выше
+    последнего узла отброшен; запрос вне энергетической сетки не поддержан.
+
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ FLUX_UNIT_SHORT_RU = 'см⁻²·с⁻¹, всенаправленный (при
 @dataclass(frozen=True)
 class FluxResult:
     value_per_cm2_s: Optional[float]   # интегральный всенаправленный поток выше e_min, см⁻²·с⁻¹; None = нет модели
-    status: str                        # "ok" | "no_model_L" | "beyond_mirror" | "inconsistent_BB0"
+    status: str                        # ok | no_model_L | no_model_BB0 | inconsistent_BB0 | invalid_coordinates | no_model_energy
     e_min_MeV: float
     e_max_MeV: float                   # последний узел таблицы: хвост выше отброшен
 
@@ -66,6 +66,8 @@ def _log_mix(a: np.ndarray, b: np.ndarray, w: float) -> np.ndarray:
 
 class BeltTable:
     def __init__(self, solar_activity: str = 'min'):
+        if solar_activity not in ('min', 'max'):
+            raise ValueError('solar_activity must be min or max')
         fn = 'A_2_1.csv' if solar_activity == 'min' else 'A_2_2.csv'
         path = os.path.join(_DATA, fn)
         raw = open(path, 'rb').read()
@@ -86,50 +88,57 @@ class BeltTable:
         self.source = 'ОСТ 134-1044-2007, прил. А, табл. %s' % self.table_name
         self.flux_unit_ru = FLUX_UNIT_RU
         self.flux_unit_short_ru = FLUX_UNIT_SHORT_RU
-        self.interpolation_ru = ('по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); '
-                                 'по энергии — степенной закон между узлами, хвост выше %g МэВ отброшен' % self.energies_MeV[-1])
+        self.interpolation_ru = (
+            'сначала дифференциальный спектр по B/B0 и L, затем интеграл по энергии; '
+            'двухточечная интерполяция логарифма положительного потока '
+            '(линейно при табличном нуле), приближение к трёхточечной схеме прил. Е; '
+            'вне диапазона любой нужной строки B/B0 — нет модели, не ноль; '
+            'по энергии — степенной закон, хвост выше %g МэВ отброшен' % self.energies_MeV[-1])
 
     def _spectrum_at(self, L_row: float, B_over_B0: float) -> Optional[np.ndarray]:
-        """Спектр на табличной оболочке при данном B/B0; None — за зеркальной точкой."""
+        """Spectrum within one tabulated shell; no spatial extrapolation."""
         pts = self.table[L_row]
         bbs = np.array([p[0] for p in pts])
-        if B_over_B0 > bbs[-1]:
+        if not math.isfinite(B_over_B0) or not bbs[0] <= B_over_B0 <= bbs[-1]:
             return None
         j = int(np.searchsorted(bbs, B_over_B0))
-        if j == 0:
-            return pts[0][1]
+        if bbs[j] == B_over_B0:
+            return pts[j][1]
         b0, b1 = bbs[j - 1], bbs[j]
-        w = 0.0 if b1 == b0 else (B_over_B0 - b0) / (b1 - b0)
+        w = (B_over_B0 - b0) / (b1 - b0)
         return _log_mix(pts[j - 1][1], pts[j][1], w)
 
     def integral_flux(self, L: Optional[float], B_over_B0: Optional[float], e_min_MeV: float) -> FluxResult:
         e_max = float(self.energies_MeV[-1])
-        if L is None or B_over_B0 is None or L < self.Ls[0] or L > self.Ls[-1]:
-            return FluxResult(None, 'no_model_L', e_min_MeV, e_max)
-        status = 'ok'
+        def missing(status):
+            return FluxResult(None, status, e_min_MeV, e_max)
+
+        if not math.isfinite(e_min_MeV) or not self.energies_MeV[0] <= e_min_MeV < e_max:
+            return missing('no_model_energy')
+        if L is None or B_over_B0 is None:
+            return missing('no_model_L')
+        if not math.isfinite(L) or not math.isfinite(B_over_B0):
+            return missing('invalid_coordinates')
+        if L < self.Ls[0] or L > self.Ls[-1]:
+            return missing('no_model_L')
         if B_over_B0 < 1.0:
-            return FluxResult(None, 'inconsistent_BB0', e_min_MeV, e_max)
+            return missing('inconsistent_BB0')
+
         j = int(np.searchsorted(self.Ls, L))
-        if j == 0 or self.Ls[j - 1] == L:
-            rows = [(self.Ls[max(j - 1, 0)] if self.Ls[max(j - 1, 0)] == L else self.Ls[j], 1.0)]
+        if self.Ls[j] == L:
+            # An exact node must not depend on an unused neighbouring shell.
+            spectrum = self._spectrum_at(float(self.Ls[j]), B_over_B0)
         else:
             L0, L1 = self.Ls[j - 1], self.Ls[j]
-            w = (L - L0) / (L1 - L0)
-            rows = [(L0, 1 - w), (L1, w)]
-        # интеграл по энергии на каждой оболочке, затем смешивание в логарифме (степенной закон по L
-        # между узлами); если на одной из оболочек точка за зеркальной — вклад этой оболочки нулевой
-        vals = []
-        for L_row, wt in rows:
-            spec = self._spectrum_at(float(L_row), B_over_B0)
-            vals.append(None if spec is None else (integrate_power_law(self.energies_MeV, spec, e_min_MeV), wt))
-        if all(v is None for v in vals):
-            return FluxResult(0.0, 'beyond_mirror', e_min_MeV, e_max)
-        if len(vals) == 1 or any(v is None for v in vals):
-            total = sum(v[0] * v[1] for v in vals if v is not None)
-        else:
-            (f0, w0), (f1, w1) = vals
-            total = float(_log_mix(np.array([f0]), np.array([f1]), w1)[0])
-        return FluxResult(float(total), status, e_min_MeV, e_max)
+            lower = self._spectrum_at(float(L0), B_over_B0)
+            upper = self._spectrum_at(float(L1), B_over_B0)
+            if lower is None or upper is None:
+                return missing('no_model_BB0')
+            spectrum = _log_mix(lower, upper, (L - L0) / (L1 - L0))
+        if spectrum is None:
+            return missing('no_model_BB0')
+        total = integrate_power_law(self.energies_MeV, spectrum, e_min_MeV)
+        return FluxResult(total, 'ok', e_min_MeV, e_max)
 
 
 def integrate_power_law(E: np.ndarray, f: np.ndarray, e_min: float) -> float:

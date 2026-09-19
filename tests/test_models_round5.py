@@ -123,7 +123,7 @@ def test_goes_bez_pokrytiya_okna_ne_daet_chisla_v_otchyote(live):
 # ------------------------------------------- (2) карточка флюенса не складывает разные множества
 def _belt_traj(n_ok: int, n_nomodel: int, n_mirror: int):
     """Трасса, где у точек аномалии ровно три исхода таблицы ОСТ: значение есть (L = 2, B/B0 = 1,2),
-    L вне сетки (L = 1,05) и точка выше точки отражения (L = 2, B/B0 = 100 — за последним узлом)."""
+    L вне сетки (L = 1,05) и B/B0 вне таблицы (L = 2, B/B0 = 100 — за последним узлом)."""
     out = []
     spec = [(2.0, 1.2)] * n_ok + [(1.05, 1.2)] * n_nomodel + [(2.0, 100.0)] * n_mirror
     for i, (L, bb) in enumerate(spec):
@@ -135,9 +135,8 @@ def _belt_traj(n_ok: int, n_nomodel: int, n_mirror: int):
 def test_kartochka_flyuensa_ne_podayot_odno_mnozhestvo_chastyu_drugogo():
     """«у 3 точек L вне сетки; ИЗ НИХ 4 выше точки отражения» — из трёх четыре.
 
-    Точка без модели (`no_model_L`) значения не имеет, точка выше точки отражения имеет
-    значение 0,0 (`vkd/assess/trapped.py`) и в число «со значением» ВХОДИТ: множества
-    не пересекаются, и связывать их словом «из них» нельзя.
+    L вне таблицы и B/B0 вне нужной строки — разные причины неизвестного потока.
+    Ни одна не входит в число точек с известным значением; это не физические нули.
     """
     tr = _belt_traj(n_ok=50, n_nomodel=3, n_mirror=4)
     a = assess_window(Window(T_GANNON, len(tr)), tr, BeltTable('min'), None, None, [], Thresholds(), T_GANNON,
@@ -146,9 +145,10 @@ def test_kartochka_flyuensa_ne_podayot_odno_mnozhestvo_chastyu_drugogo():
     head = next(p for p in note.split('; ') if p.startswith('точки аномалии'))
     assert 'из них' not in note, note
     m = re.search(r'(\d+) из (\d+)', head)
-    assert m and (int(m.group(1)), int(m.group(2))) == (54, 57), head      # 50 со значением + 4 нулевых
+    assert m and (int(m.group(1)), int(m.group(2))) == (50, 57), head      # 50 со значением, 3 вне L и 4 вне B/B0
     assert 'у 3 точек L вне сетки' in note, note
-    assert 'ещё у 4 точек значение известно и равно нулю' in note, note
+    assert 'у 4 точек B/B0 вне диапазона' in note, note
+    assert 'равно нулю' not in note, note
 
 
 @pytest.mark.parametrize('label', ['Гэннон', 'Тихая дата', 'Сейчас'])
@@ -168,12 +168,14 @@ def test_chisla_kartochki_flyuensa_ne_prevyshayut_chisla_tochek(three, label):
                 m_ok = re.search(r'(\d+) из (\d+)', head)
                 n_model, n_saa = int(m_ok.group(1)), int(m_ok.group(2))
                 m_no = re.search(r'у (\d+) точек L вне сетки', note)
-                m_mir = re.search(r'у (\d+) точек значение известно', note)
+                m_mir = re.search(r'у (\d+) точек B/B0 вне диапазона', note)
+                m_inconsistent = re.search(r'у (\d+) точек B/B0 < 1', note)
                 n_no = int(m_no.group(1)) if m_no else 0
                 n_mir = int(m_mir.group(1)) if m_mir else 0
-                assert n_model + n_no == n_saa, (label, note)
+                n_inconsistent = int(m_inconsistent.group(1)) if m_inconsistent else 0
+                assert n_model + n_no + n_mir + n_inconsistent == n_saa, (label, note)
                 assert n_no + n_mir <= n_saa, (label, note)
-                assert n_mir <= n_model, (label, note)
+                assert n_mir <= n_saa - n_model, (label, note)
                 seen += 1
     assert seen >= 2, label
 
