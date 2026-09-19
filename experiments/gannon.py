@@ -626,7 +626,10 @@ def exp5_forecast_at_cutoff(bundle, cutoff=datetime(2024, 5, 10, 12, 0, tzinfo=U
         rows.append(('`%s`' % r.get('activityID', '?'), fmt(_t(r.get('modelCompletionTime'))), fmt(e.published_utc), fmt(e.start_utc),
                      num(float(r['estimatedDuration_h']), 1) if r.get('estimatedDuration_h') is not None else '—',
                      num(float(r['kp_90']), 0) if r.get('kp_90') is not None else '—', num(float(r['kp_180']), 0) if r.get('kp_180') is not None else '—'))
-    lines += table(['activityID (CME)', 'завершение прогона', 'принятая публикация', 'приход к Земле', 'длительность, ч', 'Kp типичный (kp_90)', 'Kp верхний (kp_180)'], rows or [('нет', '—', '—', '—', '—', '—', '—')])
+    # «типичный» из подписи снят: kp_90 — сценарий прогона при повороте межпланетного поля
+    # на 90°, а не медиана и не типичная оценка (возражение А по R10, CONTRACT §12)
+    lines += table(['activityID (CME)', 'завершение прогона', 'принятая публикация', 'приход к Земле', 'длительность, ч',
+                    'Kp при угле поля 90° (kp_90)', 'Kp при южном поле (kp_180)'], rows or [('нет', '—', '—', '—', '—', '—', '—')])
     n_cond = sum(1 for e in enl if any(k is not None and float(k) >= KP_CHECK for k in (raw.get(e.raw_record_id, {}).get(f) for f in SH.ENLIL_KP_FIELDS)))
     excl_2025 = [e for e in events if e.kind_of_event == 'CME_ARRIVAL' and e.published_utc and e.published_utc.year >= 2025
                  and e.start_utc and cutoff - timedelta(hours=6) <= e.start_utc <= end]
