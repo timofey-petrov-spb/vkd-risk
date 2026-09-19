@@ -31,7 +31,12 @@ import html
 import re
 from datetime import datetime, timedelta
 
-CSS = """
+# Строка стилей объявлена RAW (r"""…"""): внутри неё стоят экранированные последовательности CSS
+# вида \25B8 (треугольник свёртки). В обычной строке Python «\25» и «\00» читаются как ВОСЬМЕРИЧНЫЕ
+# escape и дают U+0015 и U+0000 — браузер по спецификации заменяет нуль на U+FFFD, и перед подписью
+# «Как это посчитано…» в блоке вердикта рисовался мусор «B8◆A0». Проверка — tests/test_ui_app.py:
+# в CSS нет знаков вне печатного диапазона.
+CSS = r"""
 <style>
 :root { --ink:#1a1f2b; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f7f9;
         --calc:#1f4e79; --calc-bg:#eaf2fb; --calc-line:#c4d8ee;
@@ -88,6 +93,10 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
                  background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
 .verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+/* «Что дальше» — последняя видимая строка блока: что проверить, до какого момента действует
+   условие, когда пересчитать. Наш расчёт по снимку, поэтому тон синий, как у всего расчётного. */
+.verdict .next { margin:10px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--calc);
+                 background:var(--calc-bg); color:var(--calc); font-size:0.9rem; }
 /* «на один клик глубже» (бриф §9.1): как считался допуск, устойчив ли выбор и остальные пояснения.
    Обычный <details>, а не свёртка Streamlit: блок вердикта — одна разметка, и свёртка обязана
    стоять ВНУТРИ неё, иначе она уезжает под карточки окон. */
@@ -154,8 +163,10 @@ COV_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'не
 COV_KIND = {'full': 'calc', 'partial': 'warn', 'none': 'none'}
 MECH_RU = {'spaceweather': 'космопогода', 'mmod_stat': 'метеороиды', 'conjunctions': 'сближения'}
 KIND_PILL = {'observation': ('наблюдение', 'obs'), 'external_forecast': ('внешний прогноз', 'fc'), 'own_calculation': ('наш расчёт', 'calc')}
-# уровень предупреждения — текстом, без эмодзи (одинаково в Windows, macOS и на телефоне)
-SEV_RU = {'critical': 'КРИТИЧНО', 'limiting': 'ВНИМАНИЕ', 'info': '—'}
+# уровень предупреждения — текстом, без эмодзи (одинаково в Windows, macOS и на телефоне).
+# У информационной карточки уровня нет, и пустая строка тут значит именно это: заголовок свёртки
+# собирается пропуском пустых частей (card_label_ru), а не печатает прочерк первым знаком строки.
+SEV_RU = {'critical': 'КРИТИЧНО', 'limiting': 'ВНИМАНИЕ', 'info': ''}
 # одна строка, объясняющая цвет: он означает происхождение величины, а не «безопасно/опасно».
 # Три происхождения названы без союза «или» (R4-28): кеш — это давность наблюдения, а не прогноз.
 COLOR_LEGEND = ('Цвет означает происхождение: синий — наш расчёт, зелёный — наблюдение источника (в том числе взятое '
@@ -184,7 +195,10 @@ SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA
              'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
              'noaa_forecast_kp_forecast': 'прогноз Kp NOAA',
              'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
-             'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки'}
+             'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки',
+             # живой слой источников кладёт элементы орбиты под своим ключом; на оперативном уровне
+             # английский идентификатор на экране недопустим (бриф §9.8)
+             'celestrak_gp': 'элементы орбиты МКС (двухстрочные, TLE)'}
 # Откуда взят выпуск внешнего прогноза — свойство режима, а не источника: в текущем режиме отсечки
 # нет вовсе, и подпись «выпуск до отсечки» у живого бюллетеня была неправдой (О2).
 RELEASE_BY_MODE_RU = {'live': 'живой выпуск', 'history_forecast': 'выпуск до отсечки',
@@ -242,6 +256,14 @@ def raw_record(raw_records: dict | None, rid: str):
     к идентификатору в карточке («…:CME_ARRIVAL»), а в раздел сырых записей та же запись попадает
     без него: поиск в лоб её не находил, и карточка условия печатала «записей без ссылки» там, где
     у записи есть и адрес, и тело. Ищем точное совпадение, затем отбрасываем последние поля.
+
+    Третья ступень — по ИМЕНИ ИСТОЧНИКА, и только когда запись этого источника ровно одна.
+    В текущем режиме карточки ссылаются на запись трассы «celestrak_gp:25544:aedc1743d259», а слой
+    источников кладёт её под ключом «celestrak_gp:<64 hex>»: совпадения нет ни на одном шаге, и
+    четыре главные карточки вкладки «Объяснения» печатали «адрес записи не сохранён слоем
+    источников», хотя адрес есть в metadata.url и выгрузка его печатает. Путь О4 «от предупреждения
+    к первоисточнику» был разорван. Если записей источника несколько, ступень молчит: подставить
+    чужую запись к числу хуже, чем честно сказать, что адреса нет.
     """
     if not raw_records or not rid:
         return None
@@ -254,7 +276,9 @@ def raw_record(raw_records: dict | None, rid: str):
         rec = raw_records.get(':'.join(parts))
         if rec is not None:
             return rec
-    return None
+    src = str(rid).split(':')[0]
+    hits = [v for k, v in raw_records.items() if str(k).split(':')[0] == src]
+    return hits[0] if len(hits) == 1 else None
 
 
 def record_url(rec) -> str | None:
@@ -287,18 +311,49 @@ def record_url(rec) -> str | None:
 BUILTIN_RECORD_PREFIXES = ('igrf', 'ost1044', 'ecss', 'imo_', 'nasa_jsc_oem', 'orbit_provenance')
 
 
-def record_no_url_ru(rids) -> str:
-    """Почему у записей нет ссылки — раздельно по причине, без общего «в составе сервиса»."""
+def record_label_ru(rid: str) -> str:
+    """Подпись ссылки на первоисточник для ОПЕРАТИВНОГО уровня (бриф §9.8).
+
+    Слой объяснений печатает «запись celestrak_gp:25544:aedc1743d259», когда имени источника он не
+    знает, — и на экран выходит английский идентификатор с хешем. Для источников, у которых имя есть
+    в SOURCE_RU, подписью служит это имя; для остальных остаётся прежняя подпись слоя объяснений:
+    у двух уведомлений DONKI с разными числами она называет каждое по номеру выпуска, и заменять её
+    именем источника нельзя — станет непонятно, какая ссылка к какому числу.
+    """
+    sid = str(rid or '').split(':')[0]
+    if sid in SOURCE_RU:
+        return SOURCE_RU[sid]
+    from vkd.explain.format import record_ru as _record_ru
+    return _record_ru(rid, with_kind=False)
+
+
+def record_no_url_ru(rids, raw_records: dict | None = None) -> str:
+    """Почему у записей нет ссылки — раздельно по причине, без общего «в составе сервиса».
+
+    Причин три, и называть их одной фразой нельзя (О4): (1) запись сервис везёт с собой — таблицы
+    стандартов, коэффициенты поля, эфемериды; (2) запись источника есть в выгрузке, но адреса
+    в ней не сохранено; (3) самой записи в выгрузке нет — сказать про «адрес» здесь было бы
+    неправдой, нет и тела. `raw_records` нужен, чтобы отличить (2) от (3); без него причина (3)
+    не называется, и текст остаётся прежним.
+    """
+    n_ru = lambda n: '%d %s' % (n, plural_ru(n, ('запись', 'записи', 'записей')))
     builtin = [r for r in rids if str(r).split(':')[0].startswith(BUILTIN_RECORD_PREFIXES)]
-    live = [r for r in rids if r not in builtin]
+    rest = [r for r in rids if r not in builtin]
+    if raw_records is None:
+        live, absent = rest, []
+    else:
+        live = [r for r in rest if raw_record(raw_records, r) is not None]
+        absent = [r for r in rest if raw_record(raw_records, r) is None]
     parts = []
     if builtin:
-        parts.append('%d %s из состава сервиса (таблицы стандартов, коэффициенты поля, эфемериды) — сами записи '
-                     'в выгрузке, папка raw/'
-                     % (len(builtin), plural_ru(len(builtin), ('запись', 'записи', 'записей'))))
+        parts.append('%s из состава сервиса (таблицы стандартов, коэффициенты поля, эфемериды) — сами записи '
+                     'в выгрузке, папка raw/' % n_ru(len(builtin)))
     if live:
-        parts.append('%d %s живого источника — адрес записи не сохранён слоем источников, адрес получения есть '
-                     'в манифесте выгрузки' % (len(live), plural_ru(len(live), ('запись', 'записи', 'записей'))))
+        parts.append('%s живого источника — тело записи в выгрузке есть, сетевого адреса в ней не сохранено, '
+                     'адрес получения есть в манифесте выгрузки' % n_ru(len(live)))
+    if absent:
+        parts.append('%s источника в сырые записи этого расчёта не попало — ни адреса, ни тела; '
+                     'происхождение величины смотрите в таблице источников вкладки «Данные»' % n_ru(len(absent)))
     return 'без сетевого адреса: ' + '; '.join(parts) if parts else ''
 
 
@@ -349,6 +404,40 @@ def fmt(v, unit='') -> str:
     else:
         s = str(v)
     return s + (' ' + unit if unit and unit not in ('1',) else '')
+
+
+# Флюенс на одном экране обязан печататься ОДНИМ видом. У fmt порог степенной записи 1e5, и
+# в одной строке правила стояло «флюенс ниже (61,59 против 57605 част./см², отношение ×0,00)»
+# рядом с «1,73·10⁵» в соседней карточке — сопоставлять такую пару нечем (проверено прогоном
+# history_forecast 20.05.2024 12:00, 60 мин, период 1440, сдвиги 0/480). Для величин флюенса
+# порог опущен до 1e4 и задан здесь константой, а не числом по месту.
+FLUENCE_POW_FROM = 1e4
+
+
+def fmt_fluence(v, unit: str = '') -> str:
+    """Флюенс единым видом: от 10⁴ — степенная запись («5,76·10⁴», «1,73·10⁵»)."""
+    if v is None:
+        return '—'
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return fmt(v, unit)
+    if x != 0 and abs(x) >= FLUENCE_POW_FROM:
+        m, e = ('%.2e' % x).split('e')
+        s = sup('%s·10^%d' % (m.replace('.', ','), int(e)))
+        return s + (' ' + unit if unit and unit not in ('1',) else '')
+    return fmt(x, unit)
+
+
+# То же для ГОТОВЫХ строк слоя сравнения, которые экран не собирает сам: голое целое ≥ 10⁴
+# прямо перед единицей «част./см²» — это флюенс, и он приводится к степенной записи до того,
+# как разряды тысяч успеют сделать из него «57 605» — третий вид записи одной величины.
+_FLUENCE_INT_RE = re.compile(r'(?<![\d,.·])(\d{5,})(?=\s*част\.)')
+
+
+def fluence_sci_ru(text) -> str:
+    """«57605 част./см²» → «5,76·10⁴ част./см²»; всё остальное не трогается."""
+    return _FLUENCE_INT_RE.sub(lambda m: fmt_fluence(float(m.group(1))), str(text or ''))
 
 
 NBSP_THIN = ' '          # узкий неразрывный пробел: «24 000 нТл» не рвётся по строкам
@@ -701,6 +790,17 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                 out.append('%s: исключён пользователем — %s' % (
                     name, 'обязательная линия без покрытия, рекомендации не будет' if sid == 'noaa_swpc_goes'
                     else 'условие по наблюдению Kp не проверяется, покрытие объявлено'))
+            elif disabled.get(DISABLED_KEY[sid]) == 'cache':
+                # Признак берётся ИЗ ЗАПРОСА, а не из состояния источника: слой источников ставит
+                # state='cache' и при настоящем отказе сети, и фраза «вы перевели источник в режим
+                # отказа» стала бы неправдой на обычном прогоне.
+                # Т6: смоделированный пользователем отказ и настоящий отказ сети — разные вещи.
+                # Раньше оба печатались одной фразой «живого ответа нет, взят кеш», и на показе
+                # ничто не подтверждало, что отказ вызван проверкой, а не сетью.
+                out.append('%s: вы перевели источник в режим отказа — живой запрос не выполнялся, взят кеш%s. '
+                           'Покрытие частичное и объявлено; значения относятся к моменту последнего успешного '
+                           'получения, а не к настоящему времени'
+                           % (name, (', %s' % age_ru(v.get('age_min'))) if v.get('age_min') is not None else ''))
             elif v.get('live_ok') is False and v.get('from_cache'):
                 age = v.get('age_min')
                 out.append('%s: живого ответа нет, взят кеш%s — покрытие частичное, объявлено'
@@ -712,16 +812,24 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                 out.append('GOES ≥10 МэВ: наблюдение устарело (%s) — для будущих участков окна покрытие частичное'
                            % age_ru(v['age_min'], th.goes_max_age_min))
         o = src.get('orbit') or {}
+        _orb: list[str] = []
         if o.get('live_ok') is False and o.get('from_cache'):
             # «по кешу (кеш, давность 31 ч)» дублировало слово и оставляло пустые скобки, когда
             # происхождение снимка неизвестно (R4-27): давность берётся из той же строки один раз
             _, _, _age = tle_origin(tle_fetch).partition(', ')
-            out.append('Элементы орбиты: живого ответа нет — орбита построена по проверенному %s%s'
-                       % ('снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу',
-                          (', ' + _age) if _age.startswith('давность') else ''))
+            _orb.append('живого ответа нет — орбита построена по проверенному %s%s'
+                        % ('снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу',
+                           (', ' + _age) if _age.startswith('давность') else ''))
         if o.get('age_h') is not None and o['age_h'] > 24:
-            out.append('Элементы орбиты: эпоха старше суток (%s) — точность положения снижается, предел %s сут задан порогом'
-                       % (age_ru(o['age_h'] * 60), fmt(th.tle_max_age_days) if th is not None else '—'))
+            # давность печатается ОДИН раз: если она уже названа строкой о кеше, здесь только факт
+            _age_txt = '' if any('давность' in x for x in _orb) else ' (%s)' % age_ru(o['age_h'] * 60)
+            _orb.append('эпоха старше суток%s — точность положения снижается, предел %s сут задан порогом'
+                        % (_age_txt, fmt(th.tle_max_age_days) if th is not None else '—'))
+        if _orb:
+            # Бриф §9.7: нет двух сообщений об одном и том же. Прежде об ОДНОМ источнике элементов
+            # орбиты печаталось две строки подряд, и жёлтая плашка над вердиктом разрасталась
+            # до четырёх пунктов, уводя ответ на вопрос «Когда выходить?» вниз экрана.
+            out.append('Элементы орбиты: ' + '; '.join(_orb))
     else:
         if kp_excluded_hist:
             out.append('Kp: исключён пользователем из архива (проверка отказа) — условие по наблюдению Kp не проверяется')
@@ -745,6 +853,41 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
                 out.append('Орбита: эфемерида OEM NASA/JSC%s; её публичная доступность в тот момент документально '
                            'не доказана — объявленная реконструкция' % ((' создана ' + _c) if _c else ''))
     return out
+
+
+_AGE_IN_LINE_RE = re.compile(r'давность\s+[^,;.—]+')
+
+
+def source_issues_short_ru(issues: list[str]) -> str:
+    """Свести блок состояния источников к ОДНОЙ строке над вердиктом (бриф §9.1 и §9.7).
+
+    Ответ на вопрос «Когда выходить?» обязан стоять первым и без прокрутки, а над ним стояла
+    жёлтая плашка на четыре пункта. Здесь остаётся одна строка с именами источников и давностями;
+    полный перечень никуда не девается — он в свёртке рядом и в таблице реестра.
+    """
+    if len(issues) < 2:
+        return ''
+    parts = []
+    for x in issues:
+        name = str(x).partition(':')[0].strip()
+        m = _AGE_IN_LINE_RE.search(str(x))
+        age = m.group(0).replace('давность ', '').strip() if m else ''
+        parts.append(('%s %s' % (name, age)) if age else name)
+    return ('Источники: %s — покрытие частичное и объявлено. Подробности — ниже и во вкладке «Данные».'
+            % ', '.join(parts))
+
+
+def coverage_consequence_ru(missing: list[str] | tuple) -> str:
+    """Следствие из строки нехватки: что из этого следует для вердикта (О1, О2).
+
+    На экране стояло «GOES: наблюдение 08:20 покрывает 0 % окна, прогноза потока протонов на окно
+    нет» — сказано, чего нет, но не сказано, что из этого следует. Аналитик спрашивает: «и что?».
+    """
+    if not missing:
+        return ''
+    return ('Следствие: по протонному потоку окно не оценивается — обязательная линия без покрытия, '
+            'поэтому рекомендации не будет; числа сравнения ниже посчитаны по минутам в аномалии '
+            'и флюенсу захваченных протонов, которые от этой линии не зависят.')
 
 
 def _win_num(windows_ru: dict, t) -> str:
@@ -924,7 +1067,12 @@ def robustness_line_ru(rec, S: dict, thr_nT, e_min_MeV) -> str:
         if none_cells:
             parts.append('в %d из %d %s сетки правило лучшее окно не называет — разница внутри допуска'
                          % (none_cells, n, _cells_ru(n)))
-        return head_ + '; ' + ', '.join(parts) + ', поэтому выбор считается неустойчивым.'
+        # Насколько слабо держится предпочтение — числом, из того же снимка: разность минут на
+        # РАБОЧЕМ пороге против итогового допуска. Без неё фраза «неустойчив» не говорит, что
+        # рекомендация стоит на одной-двух минутах сверх собственного допуска.
+        margin = _preference_margin_ru(rob, thr_nT)
+        return head_ + '; ' + ', '.join(parts) + ', поэтому выбор считается неустойчивым.' \
+            + ((' ' + margin) if margin else '')
     if not n:
         return 'Предпочтительного окна нет; сетка порогов не считалась, устойчивость ответа не проверена.'
     named = [v for v in grid.values() if v]
@@ -937,7 +1085,20 @@ def robustness_line_ru(rec, S: dict, thr_nT, e_min_MeV) -> str:
             'ответ неустойчив к настройке порога.' % (where, reason, len(named), n, _cells_ru(n), wins))
 
 
-def tolerance_origin_ru(S: dict, pro: bool = False) -> str:
+def _preference_margin_ru(rob: dict, thr_nT) -> str:
+    """«Предпочтение держится на 21 мин против допуска 20 мин» — числа из снимка устойчивости."""
+    diff = rob.get('diff_by_thr') or {}
+    tol = rob.get('tol_min')
+    if not diff or tol is None or thr_nT is None:
+        return ''
+    cur = next((float(v) for k, v in diff.items() if abs(float(k) - float(thr_nT)) < 0.5), None)
+    if cur is None:
+        return ''
+    return ('Предпочтение держится на %s мин при допуске %s мин — слабое предпочтение, не преимущество.'
+            % (fmt(round(abs(cur))), fmt(round(float(tol)))))
+
+
+def tolerance_origin_ru(S: dict, pro: bool = False, e_min_MeV=None) -> str:
     """Откуда взялся допуск равнозначности — одной строкой под вердиктом (R4-19).
 
     Допуск по минутам не задан числом: это размах РАЗНОСТИ минут между двумя лучшими окнами по оси
@@ -960,14 +1121,26 @@ def tolerance_origin_ru(S: dict, pro: bool = False) -> str:
     s += (' Настолько разность двигает одна настройка порога, поэтому меньшую разницу мы не считаем '
           'преимуществом окна.') if round(tol) <= round(span) else \
          (' Допуск не опускается ниже %s мин — это нижняя граница настройки.' % fmt(round(tol)))
-    if pro:
-        ratio = rob.get('ratio_by_e') or {}
-        if ratio:
-            ek = sorted(ratio, key=lambda k: float(k))
-            rs = max(float(v) for v in ratio.values()) / min(float(v) for v in ratio.values())
-            s += (' Допуск по флюенсу ×%s: разброс отношения флюенсов по каналам %s МэВ — ×%s%s.'
-                  % (ratio_ru(rob.get('tol_ratio')), ' / '.join(fmt(float(k)) for k in ek), ratio_ru(rs),
-                     '' if float(rob.get('tol_ratio') or 0) <= rs else ', ниже границы настройки'))
+    # Допуск по флюенсу решает вердикт («Окна равнозначны») ровно так же, как допуск по минутам,
+    # и на оперативном уровне он печатался числом без происхождения. Это одно предложение, оно
+    # лежит в свёрнутом блоке и главный экран не удлиняет, поэтому стоит на обоих уровнях (О3).
+    ratio = rob.get('ratio_by_e') or {}
+    if ratio:
+        ek = sorted(ratio, key=lambda k: float(k))
+        rs = max(float(v) for v in ratio.values()) / min(float(v) for v in ratio.values())
+        s += (' Допуск по флюенсу ×%s: разброс отношения флюенсов по каналам %s МэВ — ×%s%s.'
+              % (ratio_ru(rob.get('tol_ratio')), ' / '.join(fmt(float(k)) for k in ek), ratio_ru(rs),
+                 '' if float(rob.get('tol_ratio') or 0) <= rs else ', ниже границы настройки'))
+        # Фактическое отношение флюенсов сравниваемой пары на РАБОЧЕМ канале — это та же ячейка
+        # ratio_by_e, а не отдельная величина: без неё на экране стояли два разных числа, слово
+        # «равнозначны» и ни одного обоснования.
+        cur = next((float(v) for k, v in ratio.items() if e_min_MeV is not None and float(k) == float(e_min_MeV)), None)
+        if cur is not None:
+            inside = cur <= float(rob.get('tol_ratio') or 0)
+            s += (' Отношение флюенсов сравниваемых окон на рабочем канале от %s МэВ — ×%s: %s допуска, '
+                  'поэтому %s.'
+                  % (fmt(float(e_min_MeV)), ratio_ru(cur), 'внутри' if inside else 'за пределами',
+                     'преимуществом окна мы его не считаем' if inside else 'различие по флюенсу засчитывается'))
     return s
 
 
@@ -1016,11 +1189,147 @@ def rule_operational_ru(rec, S: dict) -> tuple[str, str]:
     return step, (full if full != step else '')
 
 
-def coverage_scope_ru(S: dict) -> str:
+# В текущем режиме источник уведомлений о событиях (NASA DONKI) не опрашивается вовсе: живого
+# загрузчика нет. Пропуск данных не равен нулевому риску, и это ограничение охвата обязано стоять
+# на экране, а не выводиться зрителем из того, что счётчик событий показывает ноль.
+LIVE_NO_EVENTS_RU = ('уведомления NASA DONKI (протонное событие, буря, приход выброса) — в текущем режиме '
+                     'не запрашиваются, доступны в исторических режимах')
+LIVE_DONKI_REGISTRY_ROW = {
+    'источник': 'NASA DONKI: уведомления о событиях',
+    'величина': 'уведомления и карточки событий (протонные события, бури, выбросы)',
+    'единица': 'текст уведомления, Kp — безразмерный, энергии — МэВ',
+    'частота': 'по мере событий',
+    'публикация': 'время выпуска уведомления, объявленное в самом сообщении',
+    'лицензия': 'в ответе службы не указана; условия — на сайте NASA DONKI',
+    'ограничение': 'в текущем режиме не запрашивается: живого загрузчика нет. Условия ставятся по наблюдению '
+                   'GOES и прогнозу Kp NOAA; в исторических режимах канал работает из архива',
+}
+
+
+# Два канала NOAA с почти одинаковыми подписями читались как один показатель, выданный дважды:
+# «вероятность S1 и выше за сутки, прогноз NOAA» и «вероятность протонного события за сутки,
+# прогноз NOAA». Это один и тот же показатель из РАЗНЫХ выпусков одной службы, и подпись обязана
+# называть выпуск (Т1: перепечатка не является независимым подтверждением).
+_FORECAST_LABEL_BY_CHANNEL_RU = {
+    's1_prob_daily': 'вероятность S1 и выше за сутки (трёхсуточный бюллетень NOAA)',
+    'proton_prob_daily': 'вероятность протонного события за сутки (суточный выпуск NOAA)',
+}
+
+
+def forecast_label_ru(line: dict) -> str:
+    """Подпись строки внешнего прогноза с указанием выпуска, а не только величины."""
+    return _FORECAST_LABEL_BY_CHANNEL_RU.get(line.get('channel'), line.get('label') or '—')
+
+
+def coverage_scope_ru(S: dict, mode: str | None = None) -> str:
     """Охват расчёта одной строкой: что учтено и что нет (О1). Стоит во вкладке «Окна и факторы»
-    на обоих уровнях и в панели вердикта — на профессиональном."""
+    на обоих уровнях и в панели вердикта — на профессиональном.
+
+    В текущем режиме к «не учтено» первым пунктом добавляется канал уведомлений: слой расчёта
+    его не опрашивает и потому в список не кладёт, а строка охвата в live побуквенно совпадала
+    со строкой исторического режима и про DONKI не говорила ничего.
+    """
+    missing = list(S.get('coverage_missing', []) or [])
+    if mode == 'live' and not any('DONKI' in x for x in missing):
+        missing.insert(0, LIVE_NO_EVENTS_RU)
     return 'Охват: %s. Не учтено: %s.' % (', '.join(S.get('coverage_declared', []) or ['—']),
-                                          ', '.join(S.get('coverage_missing', []) or ['—']))
+                                          ', '.join(missing or ['—']))
+
+
+def preset_matches(preset: dict, mode_ru: str, hist_date, hist_hour, duration_min: int,
+                   search_min: int, offsets_min) -> bool:
+    """Совпадает ли текущий запрос с пресетом по КАЖДОМУ полю (О5, О4, Т8).
+
+    Подпись под кнопками пресетов утверждала параметры пресета до конца сессии, даже когда
+    пользователь всё перекрутил руками: на одной панели стояли «Буря Гэннон, 10.05.2024 12:00»
+    и строкой ниже «Отсечка публикации: 25.06.2024 12:00», а вердикт был третий. Здесь запрос
+    сверяется с пресетом целиком; расходится хоть одно поле — подпись говорит об этом.
+    """
+    if preset.get('mode') != mode_ru:
+        return False
+    if int(preset.get('duration_min', -1)) != int(duration_min):
+        return False
+    if int(preset.get('search_min', -1)) != int(search_min):
+        return False
+    if [int(x) for x in (preset.get('offsets_min') or [])] != [int(x) for x in (offsets_min or [])]:
+        return False
+    d = preset.get('date')
+    if d is not None:
+        if hist_date is None or (hist_date.year, hist_date.month, hist_date.day) != tuple(d):
+            return False
+        if hist_hour is None or int(hist_hour) != int(preset.get('hour')):
+            return False
+    return True
+
+
+PRESET_CHANGED_RU = ('Параметры изменены вручную: расчёт идёт по текущим настройкам ниже. '
+                     'Нажмите пресет ещё раз, чтобы вернуть его значения.')
+
+
+def plan_state(rec, assessments, S: dict, duration_min: int, offsets, mode: str = '', t0=None) -> dict:
+    """Снимок плана и ИСХОДА для плашки пересчёта (О3: «Система пересчитывает последствия»).
+
+    Постановка требует не только пересчитать, но и показать, ЧТО изменилось. Здесь собирается
+    ровно то, что стоит на экране: длительность, сдвиги, вердикт, предпочтительное окно, минуты
+    и флюенс первого окна, допуск равнозначности. Ничего не досчитывается."""
+    first = (assessments or [None])[0]
+    f = {x.name: x.value for m in (first.mechanisms if first else ()) for x in m.factors}
+    rob = S.get('robustness') or {}
+    return {'duration_min': int(duration_min),
+            'offsets': [int(x) for x in (offsets or [])],
+            # Момент и режим запроса: плашка пересчёта имеет смысл ТОЛЬКО когда изменён план при
+            # том же запросе. Смена режима или даты (в том числе нажатием пресета) — это другой
+            # запрос, и сравнивать его исход с прежним нельзя: получилось бы «было окно 19.09 15:20,
+            # стало окно 25.06 20:00», то есть сопоставление двух разных суток как пересчёт плана.
+            'mode': str(mode or ''),
+            't0': t0.isoformat() if t0 is not None else None,
+            'verdict': rec.verdict,
+            'pref': rec.preferred.start_utc.isoformat() if rec.preferred is not None else None,
+            'pref_ru': (dt_ru(rec.preferred.start_utc) if rec.preferred is not None else None),
+            'saa_min': f.get('минут в аномалии'),
+            'fluence': next((v for n, v in f.items() if n.startswith('флюенс')), None),
+            'tol_min': rob.get('tol_min')}
+
+
+def plan_change_ru(prev: dict, cur: dict) -> str:
+    """Одна плашка: что изменено в плане и что из этого вышло в пересчёте (О3, О5).
+
+    Плашка печаталась только при изменении длительности и говорила лишь о плане, ни слова об
+    исходе; при сдвиге окна её не было вовсе. Между тем на тихой дате 25.06.2024 сокращение
+    длительности 360 → 120 мин переворачивает рекомендацию с окна 2 на окно 1 — и молчать об
+    этом нельзя, иначе сокращение выхода читается как улучшение обстановки.
+    """
+    if not prev or not cur:
+        return ''
+    plan = []
+    if prev.get('duration_min') != cur.get('duration_min'):
+        plan.append('длительность ВКД %d → %d мин' % (prev['duration_min'], cur['duration_min']))
+    if prev.get('offsets') != cur.get('offsets'):
+        plan.append('сдвиги окон %s → %s мин'
+                    % (', '.join(str(x) for x in prev.get('offsets') or []),
+                       ', '.join(str(x) for x in cur.get('offsets') or [])))
+    if not plan:
+        return ''
+    out = []
+    n = lambda a, b, unit='': '%s → %s%s' % (fmt(a), fmt(b), (' ' + unit) if unit else '')
+    if prev.get('saa_min') is not None and cur.get('saa_min') is not None and prev['saa_min'] != cur['saa_min']:
+        out.append('минуты в аномалии окна 1 — ' + n(prev['saa_min'], cur['saa_min'], 'мин'))
+    if prev.get('fluence') is not None and cur.get('fluence') is not None and prev['fluence'] != cur['fluence']:
+        out.append('флюенс окна 1 — %s → %s част./см²'
+                   % (fmt_fluence(prev['fluence']), fmt_fluence(cur['fluence'])))
+    if prev.get('tol_min') is not None and cur.get('tol_min') is not None \
+            and round(float(prev['tol_min'])) != round(float(cur['tol_min'])):
+        out.append('допуск равнозначности — %s → %s мин'
+                   % (fmt(round(float(prev['tol_min']))), fmt(round(float(cur['tol_min'])))))
+    if prev.get('pref') != cur.get('pref') or prev.get('verdict') != cur.get('verdict'):
+        was = ('окно %s' % prev['pref_ru']) if prev.get('pref_ru') else \
+            '«%s»' % VERDICT_TITLE.get(prev.get('verdict'), prev.get('verdict') or '—').lower()
+        now = ('окно %s' % cur['pref_ru']) if cur.get('pref_ru') else \
+            '«%s»' % VERDICT_TITLE.get(cur.get('verdict'), cur.get('verdict') or '—').lower()
+        out.append('ответ изменился: было %s, стало %s' % (was, now))
+    tail = ('Пересчёт: ' + '; '.join(out) + '.') if out else 'Пересчёт: ни одна из показанных величин не изменилась.'
+    return ('Изменение плана: %s. Условия обстановки те же — это изменение плана, а не улучшение обстановки. %s'
+            % ('; '.join(plan), tail))
 
 
 def sentence_ru(text: str) -> str:
@@ -1044,10 +1353,82 @@ _VMORE_SUMMARY = 'Как это посчитано: правило целико�
 _COND_BUDGET = 420
 _COND_POINTER = 'Записи, по которым поставлены условия, — в карточке каждого окна ниже.'
 
+# Хвост строки сравнения, в котором слой сравнения НАЗЫВАЕТ лучшее окно. При вердиктах
+# «оснований недостаточно» и «все окна требуют проверки» сервис отказывается рекомендовать —
+# и печатать под таким заголовком «— лучше окно 2» значит опровергать собственный заголовок
+# первой же видимой строкой. Числа остаются: они и есть расчёт факторов.
+_CMP_PICK_TAIL_RE = re.compile(r'\s+—\s+(?:лучше\s|равнозначны в допуске|по минутам лучше).*$', re.S)
+_CMP_NO_PICK_RU = {
+    'insufficient': 'числа приведены как расчёт факторов, а не как рекомендация: у обязательной линии '
+                    'нет данных, поэтому окно сравнением не выбирается',
+    'all_need_check': 'числа приведены как расчёт факторов, а не как рекомендация: условие проверки '
+                      'стоит у каждого окна, и правило команды окно с условием не выбирает',
+}
+
+
+def comparison_without_pick_ru(text: str, verdict: str) -> str:
+    """Строка сравнения без вывода о лучшем окне — для вердиктов отказа (О3)."""
+    s = str(text or '')
+    note = _CMP_NO_PICK_RU.get(verdict)
+    if not note:
+        return s
+    cut = _CMP_PICK_TAIL_RE.sub('', s).rstrip(' ;,')
+    return cut + ' — ' + note + '.'
+
+
+def next_step_ru(rec, S: dict, assessments=None, mode: str = 'live') -> str:
+    """Одна строка «что делать дальше» под вердиктом — сквозное замечание аналитика.
+
+    Сервис заканчивался вердиктом и объяснением и нигде не говорил, ЧТО ДЕЛАТЬ: что проверить,
+    до какого момента действует условие, когда пересчитать. Всё это в снимке есть — срок действия
+    условия в `Condition.interval_utc`, время выпуска прогноза в `S['forecasts']`. Формулировки —
+    без командного наклонения: строка говорит о сроках и о том, что сервис сделает при пересчёте.
+    """
+    v = rec.verdict
+    # до какого момента действует самое позднее условие любого окна
+    ends = [c.interval_utc[1] for a in (assessments or []) for m in a.mechanisms
+            for c in (getattr(m, 'conditions', None) or ())
+            if len(tuple(c.interval_utc or ())) == 2 and c.interval_utc[1] is not None]
+    span = ('условие действует до %s UTC — начало позже этого момента из-под него выходит, '
+            'это проверяется сдвигом окна; ' % dt_ru(max(ends))) if ends else ''
+    # когда ждать следующий выпуск внешнего прогноза
+    pubs = [x.get('published_utc') for x in (S.get('forecasts') or []) if x.get('published_utc')]
+    when = ''
+    if pubs:
+        try:
+            last = max(datetime.fromisoformat(p) for p in pubs)
+            when = 'пересчитать после следующего выпуска NOAA (последний — %s UTC, выпуск раз в сутки)' % dt_ru(last)
+        except (TypeError, ValueError):
+            when = ''
+    if not when:
+        when = 'пересчитать после следующего выпуска источников' if mode == 'live' \
+            else 'пересчёт на другой отсечке покажет, что знал прогноз раньше'
+    if v == 'insufficient':
+        return ('Что дальше: %sбез обязательной линии рекомендации не будет, сравнение окон её не заменяет; '
+                'пробел закрывает возврат источника в работу (боковая панель, «Источники») или новый выпуск — %s.'
+                % (span, when))
+    if v == 'all_need_check':
+        return ('Что дальше: %sрешение за аналитиком — правило команды окно с условием не выбирает; '
+                'до решения нужен фактический Kp у смены, %s.' % (span, when))
+    if v == 'preferred':
+        n = _win_num(_win_no_by_iso(S), rec.preferred.start_utc.isoformat()) if rec.preferred is not None else ''
+        rob = S.get('robustness') or {}
+        # О неустойчивости выбора сказано строкой устойчивости выше — второго сообщения об одном
+        # и том же здесь быть не должно (бриф §9.7); меняется только оговорка к действию.
+        act = 'можно выносить на согласование' if rob.get('stable') \
+            else 'выносится на согласование только с оговоркой о неустойчивости выбора'
+        return ('Что дальше: %sокно %s %s; отчёт — кнопкой «Скачать отчёт»; %s.'
+                % (span, n or '—', act, when))
+    if v in ('equivalent', 'trade_off'):
+        return ('Что дальше: %sвыбор между окнами сервис не делает — различие внутри допуска либо механизмы '
+                'указывают на разные окна; решение принимается по причинам вне охвата (план, смена, ресурс), %s.'
+                % (span, when))
+    return ''
+
 
 def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = False,
                   plan_change: str | None = None, missing_ru=None, policy_short: str | None = None,
-                  thr_nT=None, e_min_MeV=None) -> str:
+                  thr_nT=None, e_min_MeV=None, mode: str = 'live') -> str:
     """Блок «Когда выходить? / Почему?» — первое, что читает жюри (бриф §9.1).
 
     На ОПЕРАТИВНОМ уровне сразу видно только то, что отвечает на два вопроса: вердикт с окном,
@@ -1059,8 +1440,13 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     На ПРОФЕССИОНАЛЬНОМ уровне блок остаётся сплошным: там читают целиком и свёртка мешает.
     """
     v = rec.verdict
-    title = VERDICT_TITLE.get(v, v)
     rob = S.get('robustness') or {}
+    # О3: заголовок не должен быть увереннее расчёта. Когда предпочтительное окно есть, но на сетке
+    # порогов правило его не подтверждает, «Есть предпочтительное окно» опровергается строкой
+    # устойчивости, которая до шестого круга лежала под свёрткой. Заголовок смягчается, а сама
+    # фраза о неустойчивости выносится на поверхность на ОБОИХ уровнях (ниже).
+    unstable = v == 'preferred' and rob.get('stable') is False
+    title = 'Предпочтительное окно есть, но выбор неустойчив' if unstable else VERDICT_TITLE.get(v, v)
     lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title)]
     more: list[str] = []                   # то, что уезжает в свёртку (только оперативный уровень)
 
@@ -1078,8 +1464,16 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
 
     items = verdict_items(rec, assessments)
+    # О3: при отказе рекомендовать строка сравнения не имеет права называть лучшее окно, а причина
+    # отказа обязана стоять ПЕРВОЙ. Раньше под заголовком «Оснований для рекомендации недостаточно»
+    # первой видимой строкой шло «космопогода: … — лучше окно 2», то есть ровно та рекомендация,
+    # в которой заголовок только что отказал (проверено прогоном live с GOES «исключён»).
+    if v in _CMP_NO_PICK_RU:
+        items = [dict(it, text=comparison_without_pick_ru(it['text'], v)) if it['kind'] == 'cmp' else it
+                 for it in items]
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
-    items += [{'text': 'Чего не хватает: ' + x, 'kind': 'need', 'mech': None} for x in missing]
+    need_items = [{'text': 'Чего не хватает: ' + x, 'kind': 'need', 'mech': None, 'head': ''} for x in missing]
+    items = (need_items + items) if v == 'insufficient' else (items + need_items)
     cut_cond = False
     if pro:
         shown, hidden = items, []          # профессиональный уровень читают целиком, ничего не режем
@@ -1125,11 +1519,15 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         robust_html = '<div class="cov">%s</div>' % robustness_pill(rec, rob)
     # Допуск равнозначности участвует только в сравнении окон. Там, где до сравнения не дошло
     # (у каждого окна условие; нет покрытия обязательной линии), строка о нём была бы лишней.
-    tol = tolerance_origin_ru(S, pro) if v in ('preferred', 'equivalent', 'trade_off') else ''
+    tol = tolerance_origin_ru(S, pro, e_min_MeV) if v in ('preferred', 'equivalent', 'trade_off') else ''
+    # Устойчивость выбора — НА ПОВЕРХНОСТИ на обоих уровнях. Рекомендация, которая держится
+    # на одной минуте сверх собственного допуска, и фраза об этом, спрятанная под свёртку, —
+    # это заголовок, увереннее расчёта (проверено на пресете «Тихая дата»: 21 мин при допуске 20).
+    lines.append(robust_html)
+    step = next_step_ru(rec, S, assessments, mode)
     if pro:
         if policy_short:
             lines.append('<div class="policy">%s</div>' % esc(policy_short))
-        lines.append(robust_html)
         if tol:
             lines.append('<div class="policy">%s</div>' % esc(screen_text(tol)))
         lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))  # охват — только здесь
@@ -1141,10 +1539,13 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(x))) for x in more]
         if policy_short:
             body.append('<div class="vm">%s</div>' % esc(policy_short))
-        body.append(robust_html)
         if tol:
             body.append('<div class="vm">%s</div>' % esc(screen_text(tol)))
         lines.append('<details class="vmore">' + ''.join(body) + '</details>')
+    # Последняя видимая строка блока — что делать дальше (сквозное замечание аналитика):
+    # что проверить, до какого момента действует условие, когда пересчитать.
+    if step:
+        lines.append('<div class="next">%s</div>' % esc(screen_text(step)))
     lines.append('</div>')
     return ''.join(lines)
 
@@ -1189,7 +1590,7 @@ def dates_ru(text) -> str:
 def screen_text(text) -> str:
     """Готовая строка модуля в виде экрана: дробь с запятой, степени надстрочно, даты «дд.мм чч:мм»,
     разряды тысяч узким неразрывным пробелом."""
-    s = dates_ru(frac_ru(text))
+    s = fluence_sci_ru(dates_ru(frac_ru(text)))
     return _THOUSANDS_RE.sub(lambda m: NBSP_THIN.join(_groups3(m.group(1))), s)
 
 
@@ -1228,6 +1629,8 @@ def factor_value_ru(f, unit: str = '') -> str:
         return '—'
     if obs_share_pct(f) == 0:
         return '—'
+    if str(getattr(f, 'name', '') or '').startswith('флюенс'):
+        return fmt_fluence(getattr(f, 'value', None), unit)     # один вид записи на весь столбец флюенса
     return fmt(getattr(f, 'value', None), unit)
 
 
@@ -1308,38 +1711,177 @@ def window_card(i: int, a, best: bool, mode: str, saa_thr_nT: float | None = Non
     f = {x.name: x for m in a.mechanisms for x in m.factors}
     reasons = [r for m in a.mechanisms for r in m.needs_check_reasons]
     crit = any('приоритетное' in r for r in reasons)
-    state = ('приоритетная проверка', 'crit') if crit else (('условие проверки', 'warn') if reasons else ('без условий', 'ok'))
+    # Т6 и постановка: «Сервис различает отсутствие выявленного воздействия и недостаток данных
+    # для оценки». Состояние карточки считается по ПОКРЫТИЮ обязательных механизмов раньше, чем
+    # по условиям: при исключённом GOES условий взяться неоткуда, и зелёная плашка «без условий»
+    # выдавала отсутствие данных за отсутствие воздействия (проверено прогоном live с GOES
+    # «исключён»: pill-ok «без условий» рядом с «покрытие: космопогода: нет»).
+    no_cov = any(m.mandatory and m.coverage.value == 'none' for m in a.mechanisms)
+    if crit:
+        state = ('приоритетная проверка', 'crit')
+    elif reasons:
+        state = ('условие проверки', 'warn')
+    elif no_cov:
+        state = ('условия не проверены: нет данных', 'none')
+    else:
+        state = ('без условий', 'ok')
     cls = 'wcard' + (' best' if best else '') + (' crit' if crit else (' flag' if reasons else ''))
     saa = f.get('минут в аномалии')
     flu = next((x for n, x in f.items() if n.startswith('флюенс')), None)
     mm = f.get('ожидаемое число попаданий, пластина 1 м²')
     goes = f.get('поток протонов GOES ≥10 МэВ')
     kpf = f.get('прогноз Kp NOAA, максимум в окне')
-    # единица — в подписи строки, в ячейке только число (PROPOSAL_A п. 2.2, правило 4)
+    # Единица — в подписи строки, в ячейке только число (PROPOSAL_A п. 2.2, правило 4).
+    # Метки разведены по смыслу: в карточке стоит величина ОКНА, в приборной полосе — величина
+    # «сейчас». Под одной меткой «GOES ≥10 МэВ, pfu» на одном экране стояли три разных ответа
+    # (окно 1, окно 2, полоса), а причина расхождения была спрятана мелким «почему неполное».
+    goes_v = factor_value_ru(goes)
     rows = [('минут в аномалии, мин', factor_value_ru(saa), True),
-            (fluence_label(flu), factor_value_ru(flu), False),
-            ('метеороиды, попаданий на 1 м²', factor_value_ru(mm), False)]
+            (fluence_label(flu), factor_value_ru(flu), False)]
     if mode == 'live':
-        rows.append(('GOES ≥10 МэВ, pfu', factor_value_ru(goes), False))
-    else:
-        rows.append(('прогноз Kp NOAA, макс. в окне', factor_value_ru(kpf), False))
+        rows.append(('GOES ≥10 МэВ на окно, pfu', goes_v if goes_v != '—' else 'нет данных на окно', False))
+    # Прогноз Kp по окну печатается во ВСЕХ режимах: в оперативном режиме карточка окна не должна
+    # показывать меньше, чем в разборе, — сравнивать окна там нечем.
+    rows.append(('прогноз Kp NOAA, макс. в окне', factor_value_ru(kpf), False))
+    # Линия метеороидов по построению одинакова у окон (различие 0,003 %) и окно не выбирает.
+    # Она стоит последней и с человеческим масштабом, чтобы не читаться как равноправная
+    # величина выбора рядом с флюенсом.
+    rows.append(('метеороиды, попаданий в пластину 1 м² за окно', mmod_scale_ru(mm, a.window.duration_min), False))
     kv = ''.join('<div class="k">%s</div><div class="v%s">%s</div>' % (esc(k), ' big' if big else '', esc(v)) for k, v, big in rows)
-    conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(screen_text(_short_reason(r))))
-                    for r in reasons[:4])
+    conds = ''.join(condition_html(r, c) for r, c in _reasons_with_conditions(a)[:4])
     if len(reasons) > 4:
         conds += '<div class="small">… ещё %d</div>' % (len(reasons) - 4)
     if not reasons:
-        conds = '<div class="cond none">Условий проверки нет по данным до отсечки</div>' if mode == 'history_forecast' \
-            else '<div class="cond none">Условий проверки нет</div>'
+        # Т6: «условий нет» и «условия не проверены» — разные утверждения. Без покрытия
+        # обязательной линии условию взяться неоткуда, и молчание условий ничего не значит.
+        if no_cov:
+            conds = ('<div class="cond none">Условия по обязательной линии не проверялись: данных нет. '
+                     'Отсутствие условия здесь не означает отсутствия воздействия.</div>')
+        else:
+            conds = '<div class="cond none">Условий проверки нет по данным до отсечки</div>' if mode == 'history_forecast' \
+                else '<div class="cond none">Условий проверки нет</div>'
+    reconcile = kp_reconcile_ru(a, kpf)
+    if reconcile:
+        conds += '<div class="covwhy">%s</div>' % esc(screen_text(reconcile))
     cov = ' '.join(pill('%s: %s' % (MECH_RU.get(m.mechanism_id, m.mechanism_id), COV_RU[m.coverage.value]), COV_KIND[m.coverage.value])
                    for m in a.mechanisms if m.mandatory or m.coverage.value != 'none')
     why = coverage_reasons(a)
     why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(screen_text('; '.join(why)))) if why else ''
-    note = ('<div class="wnote">минуты в аномалии: |B| &lt; %s нТл, шаг трассы 1 мин — формула (3)</div>' % esc(nbsp_thousands(saa_thr_nT))) \
-        if saa_thr_nT is not None else ''
+    # Служебная подпись о том, КАК считаны минуты в аномалии, одинакова у всех окон и печатается
+    # один раз под парой карточек (saa_note_ru), а не в каждой карточке: место под карточкой нужно
+    # ответу, а не двум одинаковым техническим строкам.
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
-            '<div class="kv">%s</div>%s%s<div class="cov">покрытие: %s</div>%s</div>'
-            % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv, note, conds, cov, why_html))
+            '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div>%s</div>'
+            % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv,
+               conds, cov, why_html))
+
+
+def saa_note_ru(saa_thr_nT) -> str:
+    """Одна строка под парой карточек: как считаны минуты в аномалии у ОБОИХ окон (О4)."""
+    if saa_thr_nT is None:
+        return ''
+    return ('Минуты в аномалии у всех окон считаны одинаково: точки трассы с |B| < %s нТл, шаг 1 мин — '
+            'формула (3), вкладка «Методика».' % nbsp_thousands(saa_thr_nT))
+
+
+def mmod_scale_ru(mm, duration_min: int | None) -> str:
+    """Число попаданий за окно в человеческом масштабе: «5,64·10⁻⁷ — раз в ~1 200 лет».
+
+    Число «5,64·10⁻⁷» не с чем сопоставить, и на карточке оно занимает место сразу под флюенсом,
+    как равноправная величина выбора. Обратная величина в годах непрерывной работы даёт масштаб;
+    она считается из длительности окна, а не зашивается."""
+    v = getattr(mm, 'value', None)
+    if mm is None or v is None:
+        return '—'
+    s = fmt(v)
+    try:
+        years = float(duration_min) / float(v) / (60.0 * 24.0 * 365.0)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return s
+    if years <= 0 or years != years or years == float('inf'):
+        return s
+    if years >= 1:
+        scale = 'раз в ~%s лет непрерывной работы' % nbsp_thousands(float(round(years, -2) if years >= 100 else round(years)))
+    else:
+        scale = 'раз в ~%s сут непрерывной работы' % fmt(round(years * 365.0))
+    return '%s (%s)' % (s, scale)
+
+
+def _reasons_with_conditions(a) -> list[tuple]:
+    """Пары (текст условия, структурное условие или None) по всем механизмам окна, в порядке показа."""
+    out = []
+    for m in a.mechanisms:
+        by_text = {c.text: c for c in (getattr(m, 'conditions', None) or ())}
+        for r in m.needs_check_reasons:
+            out.append((r, by_text.get(r)))
+    return out
+
+
+def condition_html(r: str, cond=None) -> str:
+    """Короткая форма условия для карточки: заголовок, сигналы источников и СРОК ДЕЙСТВИЯ.
+
+    Прежде строка резалась по первой точке с запятой, и вместе с хвостом (до 371 знака) с экрана
+    уходил срок действия условия — ровно то, что аналитику нужно, чтобы понять, выводит ли сдвиг
+    окно из-под условия. Здесь короткая форма собирается из готовых полей `Condition`, а не
+    выкусыванием из строки; когда структурного условия нет, остаётся прежнее поведение.
+    """
+    cls = ' crit' if 'приоритетное' in r else ''
+    if cond is None:
+        return '<div class="cond%s">%s</div>' % (cls, esc(screen_text(_short_reason(r))))
+    title = str(r).partition(': ')[0]
+    out = ['<div class="cond%s">%s</div>' % (cls, esc(screen_text(title)))]
+    for s in (cond.sources_ru or ()):
+        body = _DROP_SPAN_RE.sub('', str(s or '')).strip().rstrip(' ;,')
+        for part in [p.strip() for p in body.split(' · ') if p.strip()]:
+            out.append('<div class="cond%s">%s</div>' % (cls, esc(screen_text(part))))
+    span = action_span_ru(cond)
+    if span:
+        out.append('<div class="cond%s">%s</div>' % (cls, esc(span)))
+    return ''.join(out)
+
+
+# Срок действия печатается отдельной строкой из Condition.interval_utc — в перечне сигналов
+# он был бы вторым сообщением об одном и том же.
+_DROP_SPAN_RE = re.compile(r'[;,]?\s*действие [^;]*', re.S)
+
+
+def action_span_ru(cond) -> str:
+    """«действует до 11.05 13:03 UTC (конец не объявлен — принято 24 ч)» из Condition.interval_utc."""
+    iv = tuple(getattr(cond, 'interval_utc', ()) or ())
+    if len(iv) != 2 or iv[1] is None:
+        return ''
+    assumed = 'конец не объявлен' in str(getattr(cond, 'text', '') or '')
+    return 'действует до %s UTC%s' % (dt_ru(iv[1]), ' (конец не объявлен — принят срок по умолчанию)' if assumed else '')
+
+
+_KP_UP_RE = re.compile(r'Kp до (\d+(?:[.,]\d+)?)')
+_ISSUED_RE = re.compile(r'публикация (\d{2}-\d{2} \d{2}:\d{2}Z|\d{2}\.\d{2} \d{2}:\d{2})')
+
+
+def kp_reconcile_ru(a, kpf) -> str:
+    """Одна примиряющая фраза, когда на карточке два разных Kp (О2).
+
+    На карточке стоят «прогноз Kp NOAA, макс. в окне 3,67» (спокойно) и тут же условие
+    «геомагнитная буря Kp ≥ 7 … Kp до 9» по адресному уведомлению. Почему условие поставлено
+    не по свежему официальному бюллетеню, не сказано нигде, и два числа никто не мирит.
+    Числа и времена берутся из тех же записей, ничего не досчитывается."""
+    fc = getattr(kpf, 'value', None)
+    if fc is None:
+        return ''
+    cond = next((c for _r, c in _reasons_with_conditions(a) if c is not None and c.kind in ('GST', 'KP')), None)
+    if cond is None:
+        return ''
+    src = ' '.join(cond.sources_ru) if cond.sources_ru else str(cond.text or '')
+    ups = [float(x.replace(',', '.')) for x in _KP_UP_RE.findall(src)]
+    if not ups or max(ups) <= float(fc):
+        return ''
+    pub = _ISSUED_RE.findall(src)
+    pub_ru = (', последнее — публикация %s' % pub[-1]) if pub else ''
+    return ('Два Kp на карточке — разные величины, а не расхождение расчёта: %s — максимум по 3-часовым ячейкам '
+            'регулярного бюллетеня NOAA на это окно; %s — верхняя граница, объявленная адресным уведомлением '
+            'о конкретном событии%s. Условие ставится по уведомлению, а не по регулярному бюллетеню; '
+            'само расхождение и есть повод для проверки.'
+            % (fmt(float(fc)), 'Kp до %s' % fmt(max(ups)), pub_ru))
 
 
 def _short_reason(r: str) -> str:
@@ -1400,7 +1942,15 @@ def tle_origin(tle_fetch_status: str | None) -> str:
         return 'кеш' + age
     if 'воспроизведение' in s:
         return 'из сохранённого расчёта'
-    return s or '—'
+    # Незнакомая формулировка слоя источников не уходит на экран как есть: в ней стоят перебор
+    # адресов с параметрами запроса, английские имена отказов и вторая давность в минутах с точкой
+    # вместо запятой («получено по сети, давность данных 2117.4 мин; проверка адресов:
+    # https://…?CATNR=25544&FORMAT=TLE: timeout» — находка владельца прямо с экрана).
+    # Остаётся начало фразы без хвоста; полный текст виден на профессиональном уровне и в выгрузке.
+    head_ = drop_age(_PROBE_TAIL_RE.sub('', s)).rstrip(' ;,')
+    if _PROBE_FAIL_RE.search(s):
+        head_ = (head_ + '; ' if head_ else '') + 'основной адрес не ответил, взят резервный'
+    return head_ or '—'
 
 
 def verification_ru(summary: str, had_conditions: bool) -> str:
@@ -1514,16 +2064,27 @@ METHOD_BLOCKS = [
                'для дозы нужны модели защиты станции, скафандра и ткани, которых в обязательной части нет.'},
 ]
 # Пороги условий: на каждый — источник. Печатаются таблицей под формулами (8) и (9).
+# Колонка «состояние» обязательна (О1): строка о сближениях SOCRATES описывает запланированный,
+# но НЕ подключённый механизм — данных SOCRATES нет ни в одном режиме, покрытие conjunctions
+# во всех прогонах 'none', и строка охвата двумя блоками ниже честно пишет «Не учтено: сближения
+# SOCRATES — нет данных». Без колонки таблица и строка охвата на одном экране утверждали
+# противоположное, и несделанное было подано как сделанное.
 RULE_THRESHOLDS = [
     {'условие': 'протонное событие, наблюдение или уведомление', 'порог': '≥ 1000 pfu (S3)',
-     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'приоритетная проверка'},
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'приоритетная проверка',
+     'состояние': 'применяется'},
     {'условие': 'протонное событие', 'порог': '≥ 10 pfu (S1)',
-     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки'},
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки',
+     'состояние': 'применяется'},
     {'условие': 'геомагнитная буря', 'порог': 'Kp ≥ 7 (G3)',
-     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки'},
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки',
+     'состояние': 'применяется'},
     {'условие': 'сближение с расчётным моментом внутри окна', 'порог': 'качественно, без порога',
-     'источник': 'CelesTrak SOCRATES', 'класс': 'ручная оценка'},
+     'источник': 'CelesTrak SOCRATES', 'класс': 'ручная оценка',
+     'состояние': 'не применяется: источник не подключён'},
 ]
+RULE_THRESHOLDS_NOTE = ('Строки со состоянием «не применяется» описывают запланированный, но не подключённый '
+                        'механизм: на вердикт они не влияют и в охвате расчёта объявлены как не учтённые.')
 RULE_POLICY = ('Это правило команды, а не эксплуатационная норма. Шкалы NOAA сами по себе не запрещают ВКД; '
                'исключение помеченного окна из автоматического выбора — политика прототипа, её устойчивость '
                'проверена на сетке порогов.')
@@ -1540,6 +2101,24 @@ _FORMULA_KEYS = [(('обрезан', 'жёсткост', 'жесткост'), '(
                  (('аномали', 'минут', '|b|', 'l-оболоч'), '(3)'),
                  (('метеороид', 'попадан', 'grün', 'grun'), '(5)–(7)'),
                  (('сравнен', 'предпочт', 'равнознач', 'правил', 'допуск'), '(8) и (9)')]
+
+
+# Вкладка «Устойчивость и нормы» существует ТОЛЬКО на профессиональном уровне, а «Методика» видна
+# на обоих. Формула (9) на оперативном уровне отсылала пользователя к вкладке, которой у него на
+# экране нет, — ссылка в никуда в академическом слое (потеря по О4). Источник формулы (9) зависит
+# от уровня; остальные блоки не трогаются.
+_METHOD_SOURCE_BY_LEVEL = {
+    9: ('договор команды, раздел 4; сетка порогов и разбросы печатаются под вердиктом, в строке '
+        '«Как это посчитано»; полная сетка из девяти ячеек — на профессиональном уровне, вкладка '
+        '«Устойчивость и нормы»'),
+}
+
+
+def method_source_ru(block: dict, pro: bool = False) -> str:
+    """Источник формулы для вкладки «Методика» с поправкой на уровень интерфейса."""
+    if pro:
+        return block['source']
+    return _METHOD_SOURCE_BY_LEVEL.get(block.get('no'), block['source'])
 
 
 def formula_ref(*texts) -> str | None:

@@ -39,6 +39,17 @@ from app.viz import GOES_TICKVALS, PLOTLY_CONFIG, timeline
 APP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app', 'main.py')
 TIMEOUT = 300
 MODES = ['Текущая обстановка', 'Исторический разбор', 'Прогноз из прошлого']
+# Бюджет видимой (без клика) части блока вердикта. Был 650. Девятый круг добавил на поверхность
+# две строки, каждая из которых обязательна и ни одна не повторяет другую:
+#   1) строку устойчивости выбора (находка «экран» №7) — иначе заголовок «Есть предпочтительное
+#      окно» стоит увереннее расчёта, а фраза о неустойчивости лежит под свёрткой;
+#   2) строку «Что дальше» (сквозное замечание аналитика) — что проверить, до какого момента
+#      действует условие, когда пересчитать; без неё сервис заканчивается вердиктом и молчит.
+# Измерено на этой ветке: пресеты «Сейчас» 748, «Гэннон» 1013, «Тихая дата» 1086; режимы без
+# пресета 700…900. Из 1013 у «Гэннона» 415 занимает перечень записей единственного условия
+# (два уведомления DONKI, каждое со своим временем публикации и своим Kp — сводить нельзя).
+# Порог стоит как защита от нового разрастания, а не как достигнутая цель.
+VERDICT_BUDGET = 1150
 
 
 def run_app(mode: str | None = None, pro: bool = False) -> AppTest:
@@ -565,7 +576,10 @@ def test_vkladka_metodika_tretya_i_s_formulami():
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     labels = [t.label for t in at.tabs]
-    assert labels[:3] == ['Объяснения', 'Окна и факторы', 'Методика'], labels
+    # Девятый круг, находка «экран» №29: порядок вкладок — рабочий путь аналитика, а не порядок
+    # разработчика. «Методика» (формулы) ушла с третьего места за «Наблюдения и прогнозы» и «Карту»:
+    # пользователь дважды проходил мимо формул, прежде чем добирался до данных.
+    assert labels[:5] == ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Карта', 'Методика'], labels
     lat = [x.value for x in at.latex]
     assert len(lat) >= 9, lat
     for f in lat:
@@ -967,8 +981,11 @@ def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
     at.sidebar.slider('hist_hour').set_value(19).run()
     assert not at.exception, at.exception
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
-    assert 'Kp, наблюдение' in bar and 'Kp (архив GFZ)' not in bar, bar
+    # Девятый круг, находка «экран» №14: момент стоит в самой МЕТКЕ ячейки, а не только в мелкой
+    # подписи — крупное число забивало подпись, и полоса читалась как «обстановка спокойная».
+    assert 'Kp на начало периода, наблюдение' in bar and 'архив GFZ' not in bar, bar
     assert 'уведомление NASA DONKI' in bar, bar
+    assert 'начало периода поиска' in bar, bar
     warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
     assert warns.count('GOES ≥10 МэВ: численного наблюдения') == 1, warns
 
@@ -978,7 +995,9 @@ def test_pribornaya_polosa_razbora_pokazyvaet_nablyudenie_goes():
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
-    assert 'GOES ≥10 МэВ, pfu' in bar and 'Kp (архив GFZ)' in bar, bar
+    assert 'GOES ≥10 МэВ на начало периода, pfu' in bar and 'Kp на начало периода (архив GFZ)' in bar, bar
+    # в архивных режимах тон ячеек нейтральный: зелёный здесь читался бы как «благоприятно» (Т6)
+    assert 'k-obs"><div class="cl">GOES' not in bar, bar
 
 
 # ================================================================= О4: путь к первоисточнику
@@ -1002,8 +1021,15 @@ def test_raw_record_nahodit_zapis_s_tipom_sobytiya():
     store = {'nasa_donki_notification:20240508-AL-012:00f5': {'metadata': {'url': 'https://kauai/1'}}}
     assert raw_record(store, 'nasa_donki_notification:20240508-AL-012:00f5:CME_ARRIVAL') is not None
     assert raw_record(store, 'nasa_donki_notification:20240508-AL-012:00f5')['metadata']['url'] == 'https://kauai/1'
-    assert raw_record(store, 'nasa_donki_notification:20240509-AL-001:beef') is None
     assert raw_record({}, 'x') is None and raw_record(None, 'x') is None
+    # Девятый круг, находка «экран» №2 (К5): третья ступень — по ИМЕНИ ИСТОЧНИКА, и только когда
+    # запись этого источника ровно одна. В текущем режиме карточка ссылается на
+    # «celestrak_gp:25544:<хеш>», а слой источников кладёт ту же запись под «celestrak_gp:<64 hex>»,
+    # и путь «от предупреждения к первоисточнику» был разорван.
+    assert raw_record(store, 'nasa_donki_notification:20240509-AL-001:beef')['metadata']['url'] == 'https://kauai/1'
+    two = dict(store, **{'nasa_donki_notification:20240509-AL-001:dead': {'metadata': {'url': 'https://kauai/2'}}})
+    assert raw_record(two, 'nasa_donki_notification:20240510-AL-009:beef') is None   # неоднозначно — молчим
+    assert raw_record(store, 'gfz_kp:что-нибудь') is None                            # другой источник
 
 
 def test_gannon_kartochka_usloviya_vedyot_na_pervoistochnik():
@@ -1393,13 +1419,16 @@ def test_blok_verdikta_ne_splosnoy_abzac(mode):
     assert not at.exception, at.exception
     html_ = verdict_html(at)
     vis = verdict_visible(at)
-    assert len(vis) <= 650, (len(vis), vis)
+    assert len(vis) <= VERDICT_BUDGET, (len(vis), vis)
     assert html_.count('<li') <= 5, html_
     assert 'Охват:' not in vis and 'Не учтено:' not in vis, vis      # они во вкладке «Окна и факторы»
     assert len(re.findall(r'не покрывает окно', vis)) <= 1, vis
     # на поверхности нет ни происхождения допуска, ни разбора сетки порогов — они на клик глубже
     assert 'Откуда допуск' not in vis, vis
-    assert 'ячеек сетки' not in vis and 'ячейках сетки' not in vis, vis
+    # Строка устойчивости с девятого круга стоит НА ПОВЕРХНОСТИ (находка «экран» №7): заголовок
+    # «Есть предпочтительное окно» при фразе о неустойчивости, спрятанной под свёртку, — это
+    # заголовок увереннее расчёта. Разбор самой сетки по ячейкам остаётся во вкладке.
+    assert 'сетк' in vis, vis
 
 
 @pytest.mark.parametrize('mode', MODES)
@@ -1411,8 +1440,9 @@ def test_iz_bloka_verdikta_nichego_ne_propalo(mode):
     fold = verdict_folded(at)
     assert fold, 'свёртки под вердиктом нет'
     assert 'формулы (8) и (9)' in fold, fold                          # формальная запись правила
-    # результат сетки порогов — единственная фраза об устойчивости — теперь именно здесь (R4-18)
-    assert 'сетк' in fold, fold
+    # результат сетки порогов ушёл на поверхность (девятый круг, находка «экран» №7), и проверяется
+    # он теперь в test_blok_verdikta_ne_splosnoy_abzac; здесь — что свёртка не опустела
+    assert 'сетк' in verdict_visible(at), verdict_visible(at)
     # правило целиком уезжает в свёртку всюду, кроме шагов 3–4 и 4: там оно и есть ответ «почему»
     # и остаётся на поверхности — тогда в свёртке стоит происхождение допуска
     assert 'Правило целиком' in fold or 'Откуда допуск' in fold or 'условия' in fold, fold
@@ -1426,7 +1456,7 @@ def test_blok_verdikta_korotkiy_na_presetah(preset):
     at.sidebar.button('preset_' + preset).click().run()
     assert not at.exception, at.exception
     vis = verdict_visible(at)
-    assert len(vis) <= 650, (len(vis), vis)
+    assert len(vis) <= VERDICT_BUDGET, (len(vis), vis)
     assert verdict_folded(at), 'свёртки под вердиктом нет'
 
 
@@ -1584,3 +1614,456 @@ def test_tablica_posle_otsechki_nazyvaet_proishozhdenie_stroki():
     caps = ' '.join(str(c.value) for c in at.caption)
     assert 'с самым поздним известным временем публикации' in caps, caps
     assert 'Наблюдения Kp — окончательный ряд GFZ' not in caps, caps
+
+
+# ================================================================= девятый круг, область «экран»
+# Каждая проверка ниже закрывает одну находку глубокого разбора пятью взглядами (19.09) или одну
+# находку владельца прямо с развёрнутого экрана. Номера — по списку находок области «экран».
+
+
+def test_css_bez_znakov_vne_pechatnogo_diapazona():
+    """К6 (критическая, находка владельца №1): строка стилей была объявлена обычной, и escape
+    вида «\\25B8» читался Python как ВОСЬМЕРИЧНЫЙ — в CSS уходили U+0015 и U+0000. Браузер по
+    спецификации заменяет нуль на U+FFFD, и перед подписью «Как это посчитано…» в блоке вердикта
+    рисовался мусор «B8◆A0» — в первом же элементе экрана."""
+    from app.ui import CSS
+    bad = sorted({hex(ord(c)) for c in CSS if ord(c) < 32 and c not in '\n\r\t'})
+    assert not bad, bad
+    assert '\x00' not in CSS and '\x15' not in CSS
+    assert 'summary::before' in CSS
+
+
+def test_raw_record_nahodit_zapis_po_imeni_istochnika():
+    """К5 (критическая, находка №2): в текущем режиме карточки ссылаются на запись трассы
+    «celestrak_gp:25544:<хеш>», а слой источников кладёт ту же запись под «celestrak_gp:<64 hex>».
+    Совпадения не было ни на одном шаге, и карточка печатала «адрес записи не сохранён слоем
+    источников», хотя адрес есть в metadata.url и выгрузка его печатает."""
+    from app.ui import raw_record, record_url
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    links = [m.value for m in at.markdown if str(m.value).startswith('**Первоисточник:**')]
+    assert links, 'карточки объяснений должны называть первоисточник'
+    assert any('https://' in x for x in links), links
+    assert not any('адрес записи не сохранён' in x for x in links), links
+    # и подпись ссылки — по-русски, без английского идентификатора слоя источников (бриф §9.8)
+    assert not any('celestrak_gp' in x for x in links), links
+    store = {'celestrak_gp:0011223344556677': {'metadata': {'url': 'https://wheretheiss/1'}}}
+    assert record_url(raw_record(store, 'celestrak_gp:25544:aedc1743d259')) == 'https://wheretheiss/1'
+
+
+def test_record_no_url_razlichaet_tri_prichiny():
+    """К5, вторая половина: при неудаче поиска экран обязан писать правду о том, чего именно нет.
+    Причин три — запись из состава сервиса, запись без адреса и запись, которой в выгрузке нет."""
+    from app.ui import record_no_url_ru
+    store = {'gfz_kp:abcd': {'value': 1}}
+    out = record_no_url_ru(['ost1044_A:1', 'gfz_kp:abcd', 'noaa_swpc_goes:zzz'], store)
+    assert 'из состава сервиса' in out, out
+    assert 'сетевого адреса в ней не сохранено' in out, out
+    assert 'в сырые записи этого расчёта не попало' in out, out
+
+
+def test_kartochka_bez_pokrytiya_ne_zelenaya():
+    """К2 (критическая, находка №4): при исключённом GOES карточка окна показывала ЗЕЛЁНУЮ плашку
+    «без условий» рядом с «покрытие: космопогода: нет» — отсутствие данных выдавалось за отсутствие
+    воздействия. Постановка и Т6 требуют различать эти два случая."""
+    at = run_app(MODES[0])
+    at.sidebar.selectbox('dis_goes').set_value('исключён: нет данных').run()
+    assert not at.exception, at.exception
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards, 'карточек окон на экране нет'
+    for c in cards:
+        assert 'pill-ok">без условий' not in c, c
+        assert 'условия не проверены: нет данных' in c, c
+        assert 'Отсутствие условия здесь не означает отсутствия воздействия' in c, c
+
+
+def test_otkaz_ot_rekomendacii_ne_nazyvaet_luchshee_okno():
+    """К1 (критическая, находка №6): под заголовком «Оснований для рекомендации недостаточно»
+    ПЕРВОЙ видимой строкой стоял утвердительный вывод сравнения — «— лучше окно 2», то есть
+    ровно та рекомендация, в которой заголовок только что отказал. Числа остаются, вывод снят,
+    причина отказа стоит первой."""
+    from app.ui import comparison_without_pick_ru
+    at = run_app(MODES[0])
+    at.sidebar.selectbox('dis_goes').set_value('исключён: нет данных').run()
+    assert not at.exception, at.exception
+    html_ = verdict_html(at)
+    assert 'Оснований для рекомендации недостаточно' in html_, html_
+    items = re.findall(r'<li[^>]*>(.*?)</li>', html_, re.S)
+    assert items, html_
+    assert items[0].startswith('Чего не хватает'), items
+    body = _strip_tags(html_)
+    assert '— лучше окно' not in body, body
+    assert 'как расчёт факторов, а не как рекомендация' in body, body
+    # числа сравнения при этом никуда не делись
+    assert 'мин в аномалии' in body and 'флюенс' in body, body
+    txt = comparison_without_pick_ru('окно 1: 5 мин, флюенс 1 — лучше окно 2 (20:00Z)', 'insufficient')
+    assert 'лучше окно' not in txt and '5 мин' in txt, txt
+    assert comparison_without_pick_ru('окно 1 — лучше окно 2', 'preferred') == 'окно 1 — лучше окно 2'
+
+
+def test_neustoychivyy_vybor_viden_bez_klika_i_v_zagolovke():
+    """К3 (критическая, находка №7): заголовок говорил «Есть предпочтительное окно», а фраза
+    о неустойчивости выбора лежала под свёрткой. На пресете «Тихая дата» рекомендация держится
+    на 21 мин при собственном допуске 20 мин, и на поверхности об этом не было ни слова."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    vis = verdict_visible(at)
+    assert 'выбор неустойчив' in vis, vis
+    assert 'Предпочтение держится на' in vis and 'при допуске' in vis, vis
+    assert 'сетк' in vis, vis
+
+
+def test_podpis_preseta_ne_vryot_posle_ruchnyh_izmeneniy():
+    """К4 (критическая, находка №5): подпись под кнопками пресетов утверждала параметры пресета
+    до конца сессии, даже когда пользователь всё перекрутил руками, — три утверждения на одной
+    панели, два ложные."""
+    from app.ui import PRESET_CHANGED_RU, PRESETS, preset_matches
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    caps = ' '.join(str(c.value) for c in at.sidebar.caption)
+    assert 'Буря Гэннон' in caps, caps
+    at.sidebar.slider('duration').set_value(120).run()
+    assert not at.exception, at.exception
+    caps = ' '.join(str(c.value) for c in at.sidebar.caption)
+    assert PRESET_CHANGED_RU in caps, caps
+    assert 'Буря Гэннон, 10.05.2024 12:00 UTC —' not in caps, caps
+    g = next(p for p in PRESETS if p['key'] == 'gannon')
+    d = datetime(2024, 5, 10).date()
+    assert preset_matches(g, 'Прогноз из прошлого', d, 12, 360, 720, [0, 240])
+    assert not preset_matches(g, 'Прогноз из прошлого', d, 12, 120, 720, [0, 240])
+    assert not preset_matches(g, 'Прогноз из прошлого', d, 12, 360, 720, [0, 480])
+    assert not preset_matches(g, 'Текущая обстановка', d, 12, 360, 720, [0, 240])
+
+
+def test_prichina_nehvatki_privyazana_k_kanalu():
+    """Находка №3 (критическая): суффикс « — GOES исключён пользователем» приклеивался к КАЖДОЙ
+    строке нехватки со словом «космопогода». Строка про отсутствие Kp получала объяснение про
+    GOES — ложная атрибуция причины в блоке вердикта."""
+    at = run_app(MODES[0])
+    at.sidebar.selectbox('dis_kp').set_value('исключён: нет данных').run()
+    assert not at.exception, at.exception
+    for line in re.findall(r'Чего не хватает: ([^<]*)', verdict_html(at)):
+        head_, sep, _ = line.partition(' — GOES исключён')
+        if sep:
+            assert 'GOES' in head_, line
+
+
+def test_uvedomleniya_o_sobytiyah_v_zhivom_rezhime_obyavleny():
+    """Находка №9 (критическая): в текущем режиме не опрашивается ни один источник событий, и это
+    нигде не объявлялось — полоса печатала «События на горизонте — 0 записей», что читается как
+    «опросили, событий нет». Постановка: «Пропуск данных не равен нулевому риску»."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'События на горизонте' in bar, bar
+    # Метка и счётчик оставлены прежними — их проверяет tests/test_round6_integration.py, файл вне
+    # правки этой области. Ложное чтение снято подписью: ноль означает «источников событий не
+    # опрашивали», а не «событий нет».
+    assert 'не опрашивается' in bar, bar
+    assert 'не отсутствие событий' in bar, bar
+    assert 'NASA DONKI' in bar, bar
+    tab = next(t for t in at.tabs if t.label == 'Окна и факторы')
+    body = '\n'.join(str(m.value) for m in tab.get('markdown'))
+    assert 'DONKI' in body and 'не запрашиваются' in body, body[:600]
+
+
+def test_chto_delat_dalshe_est_pri_lyubom_verdikte():
+    """Сквозное замечание аналитика (находка №10): сервис заканчивался вердиктом и объяснением
+    и нигде не говорил, ЧТО ДЕЛАТЬ — что проверить, до какого момента действует условие, когда
+    пересчитать. Строка печатается по исходу и берёт сроки из снимка, а не из головы."""
+    for mode in MODES:
+        at = run_app(mode)
+        assert not at.exception, at.exception
+        vis = verdict_visible(at)
+        assert 'Что дальше:' in vis, (mode, vis)
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    vis = verdict_visible(at)
+    assert 'условие действует до' in vis, vis
+    assert 'пересчитать после следующего выпуска' in vis, vis
+
+
+def test_dva_kp_na_kartochke_primireny():
+    """Находка №11: на карточке стояли «прогноз Kp NOAA, макс. в окне 3,67» и тут же условие
+    «Kp до 9» по адресному уведомлению — два числа из разных выпусков, и никто их не мирил."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert not at.exception, at.exception
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards, 'карточек окон нет'
+    assert any('разные величины, а не расхождение расчёта' in c for c in cards), cards[0]
+    assert any('по уведомлению, а не по регулярному бюллетеню' in c for c in cards), cards[0]
+
+
+def test_izmenenie_plana_pokazyvaet_ishod_pereschyota():
+    """Находка №12: постановка требует «Система пересчитывает последствия». Пересчёт шёл, а что
+    изменилось — не говорилось, и при сдвиге окна плашки не было вовсе."""
+    from app.ui import plan_change_ru
+    prev = {'duration_min': 360, 'offsets': [0, 480], 'mode': 'history_forecast', 't0': 'x',
+            'verdict': 'preferred', 'pref': 'a', 'pref_ru': '25.06 20:00',
+            'saa_min': 72, 'fluence': 1.65e6, 'tol_min': 20.0}
+    cur = {'duration_min': 120, 'offsets': [0, 480], 'mode': 'history_forecast', 't0': 'x',
+           'verdict': 'preferred', 'pref': 'b', 'pref_ru': '25.06 12:00',
+           'saa_min': 17, 'fluence': 1.73e5, 'tol_min': 15.0}
+    out = plan_change_ru(prev, cur)
+    assert 'длительность ВКД 360 → 120 мин' in out, out
+    assert '72 → 17 мин' in out, out
+    assert '1,65·10⁶ → 1,73·10⁵' in out, out
+    assert 'допуск равнозначности — 20 → 15 мин' in out, out
+    assert 'было окно 25.06 20:00, стало окно 25.06 12:00' in out, out
+    assert 'изменение плана, а не улучшение обстановки' in out, out
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert 'Изменение плана' not in verdict_visible(at), verdict_visible(at)
+    at.sidebar.slider('duration').set_value(120).run()
+    assert not at.exception, at.exception
+    assert 'Изменение плана' in verdict_visible(at), verdict_visible(at)
+    assert 'Пересчёт:' in verdict_visible(at), verdict_visible(at)
+
+
+def test_otkaz_zadannyy_polzovatelem_otlichim_ot_setevogo():
+    """Находка №13: смоделированный отказ источника и настоящий отказ сети печатались одной
+    фразой, и на показе ничто не подтверждало, что отказ вызван проверкой, а не сетью (Т6)."""
+    at = run_app(MODES[0])
+    assert 'вы перевели источник в режим отказа' not in texts(at)
+    at.sidebar.selectbox('dis_goes').set_value('отказ: только кеш').run()
+    assert not at.exception, at.exception
+    body = texts(at)
+    assert 'вы перевели источник в режим отказа' in body, body[:600]
+    assert 'живой запрос не выполнялся' in body, body[:600]
+
+
+def test_pribornaya_polosa_arhiva_neytralna_i_nazyvaet_moment():
+    """Находка №14: верхняя полоса в «Историческом разборе» показывала Kp 2 и GOES 4,01 ЗЕЛЁНЫМ,
+    то есть «спокойно», тогда как весь остальной экран про бурю. Значения относятся к началу
+    периода, а окна живут до 22:00; момент стоял в мелкой подписи, крупное число её забивало."""
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'на начало периода' in bar, bar
+    for kind, label in re.findall(r'<div class="cell k-(\w+)"><div class="cl">([^<]*)</div>', bar):
+        if 'начало периода' in label:
+            assert kind != 'obs', (kind, label)     # нейтральный тон, не «наблюдение зелёным»
+
+
+def test_blok_istochnikov_svyornut_v_odnu_stroku():
+    """Находка №15: над ответом стояла жёлтая плашка на четыре пункта, две из которых об ОДНОМ
+    источнике элементов орбиты. Бриф §9.7: нет двух сообщений об одном и том же."""
+    from app.ui import source_issues_short_ru
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    for w in at.warning:
+        if 'Состояние источников' in str(w.value):
+            assert '\n- ' not in str(w.value), w.value
+            assert 'Источники:' in str(w.value), w.value
+    out = source_issues_short_ru(['GOES ≥10 МэВ: живого ответа нет, взят кеш, давность 14 мин — объявлено',
+                                  'Kp (GFZ): живого ответа нет, взят кеш, давность 154 мин — объявлено'])
+    assert 'GOES ≥10 МэВ 14 мин' in out and 'Kp (GFZ) 154 мин' in out, out
+    assert ' ,' not in out, out
+
+
+def test_metki_goes_razvedeny_i_kp_est_v_zhivom_rezhime():
+    """Находка №17: под одной меткой «GOES ≥10 МэВ, pfu» на экране стояли три разных ответа
+    (полоса и две карточки), а строки «прогноз Kp NOAA, макс. в окне» в живом режиме не было
+    вовсе — в оперативном режиме по окну было видно МЕНЬШЕ, чем в разборе."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert 'GOES ≥10 МэВ сейчас, pfu' in bar, bar
+    assert cards, 'карточек окон нет'
+    for c in cards:
+        assert 'GOES ≥10 МэВ на окно, pfu' in c, c
+        assert 'прогноз Kp NOAA, макс. в окне' in c, c
+
+
+def test_usloviye_na_kartochke_nazyvaet_srok_deystviya():
+    """Находка №19: короткая форма условия резалась по первой точке с запятой, и с экрана уходил
+    срок действия — ровно то, что нужно аналитику, чтобы понять, выводит ли сдвиг окно из-под
+    условия. Теперь она собирается из полей Condition, а не выкусыванием из строки."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert not at.exception, at.exception
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards, 'карточек окон нет'
+    assert any('действует до 11.05 13:03 UTC' in c for c in cards), cards[0]
+
+
+def test_dopusk_po_flyuensu_obyasnyon_na_operativnom_urovne():
+    """Находка №20: допуск равнозначности по флюенсу ×1,50 решает вердикт, а на оперативном
+    уровне печатался числом без происхождения; фактическое отношение пары не называлось вовсе."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    fold = verdict_folded(at)
+    assert 'Допуск по флюенсу ×1,50' in fold, fold
+    assert 'Отношение флюенсов сравниваемых окон на рабочем канале' in fold, fold
+
+
+def test_pereklyuchatel_okon_otkryvaetsya_na_predpochtitelnom():
+    """Находка №22: вкладка «Объяснения» всегда открывалась на окне 1, даже когда вердикт
+    рекомендует окно 2. Именно этот шаг проверяет О4."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    r = at.radio('cards_win')
+    pref = [i for i, o in enumerate(r.options) if 'предпочтительное' in o]
+    assert pref, r.options
+    assert r.options.index(r.value) == pref[0], (r.value, r.options)
+
+
+def test_tablica_porogov_nazyvaet_nepodklyuchyonnyy_mehanizm():
+    """Находка №23: в таблице действующих порогов стояла строка о сближениях со ссылкой на
+    CelesTrak SOCRATES, хотя данных SOCRATES нет ни в одном режиме, а строка охвата двумя блоками
+    ниже честно писала «Не учтено: сближения SOCRATES — нет данных»."""
+    from app.ui import RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE
+    assert all('состояние' in r for r in RULE_THRESHOLDS), RULE_THRESHOLDS
+    soc = next(r for r in RULE_THRESHOLDS if 'SOCRATES' in r['источник'])
+    assert soc['состояние'].startswith('не применяется'), soc
+    assert all(r['состояние'] == 'применяется' for r in RULE_THRESHOLDS if 'SOCRATES' not in r['источник'])
+    at = run_app(MODES[1])
+    assert RULE_THRESHOLDS_NOTE in texts(at), 'подписи о непринятых строках нет'
+
+
+def test_stress_scenariy_obyasnyon_potrebnostyu_i_primerom():
+    """Находка №24: главная дополнительная функция не была объяснена ничем — ни потребности,
+    ни связи с основным сценарием, ни примера. О7 оценивает ровно это."""
+    at = run_app(MODES[0])
+    caps = ' '.join(str(c.value) for c in at.sidebar.caption)
+    assert 'Зачем: проверить, устоит ли выбор окна' in caps, caps
+    assert '25.06.2024 при Kp 7' in caps, caps
+
+
+def test_istochnik_formuly_9_zavisit_ot_urovnya():
+    """Находка №25: вкладка «Методика» видна на оперативном уровне, а «Устойчивость и нормы» —
+    только на профессиональном. Формула (9) отсылала пользователя к вкладке, которой у него нет."""
+    from app.ui import method_source_ru
+    b9 = next(b for b in METHOD_BLOCKS if b['no'] == 9)
+    assert method_source_ru(b9, pro=True) == b9['source']
+    op = method_source_ru(b9, pro=False)
+    assert 'строке «Как это посчитано»' in op, op
+    assert 'на профессиональном уровне' in op, op
+    at = run_app(MODES[1])
+    assert op in texts(at), 'источник формулы (9) на оперативном уровне не переписан'
+
+
+def test_zagolovok_kartochki_bez_pustogo_procherka():
+    """Находка №27: заголовок свёртки собирался как «уровень · окно · название», и у информационных
+    карточек уровень равен «—». Вкладка начиналась четырьмя строками «— · …»."""
+    from app.ui import SEV_RU
+    assert SEV_RU['info'] == ''
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    labels = [str(e.label) for e in at.expander]
+    assert labels, 'свёрток на экране нет'
+    assert not any(x.startswith('— ·') for x in labels), labels
+
+
+def test_flyuens_pechataetsya_odnim_vidom():
+    """Находка №28: fmt(88701)='88701', а fmt(173159.77)='1,73·10⁵' — одна и та же величина
+    на одном экране двумя видами: «флюенс ниже (88701 против 2,22·10⁶ част./см²)»."""
+    from app.ui import fluence_sci_ru, fmt_fluence, screen_text
+    assert fmt_fluence(88701.0) == '8,87·10⁴'
+    assert fmt_fluence(42936.0) == '4,29·10⁴'
+    assert fmt_fluence(173159.77) == '1,73·10⁵'
+    assert fmt_fluence(61.59) == '61,59'
+    assert fmt_fluence(None) == '—'
+    assert fluence_sci_ru('флюенс 57605 част./см²') == 'флюенс 5,76·10⁴ част./см²'
+    out = screen_text('флюенс ниже (61,59 против 57605 част./см²)')
+    assert '5,76·10⁴' in out and '57 605' not in out, out
+    assert '24' in screen_text('порог 24000 нТл') and '2,40·10⁴' not in screen_text('порог 24000 нТл')
+
+
+def test_lenta_vremeni_vidna_na_operativnom_urovne():
+    """Находка №33: постановка перечисляет, что должно быть ВИДНО, и «временная картина выбранных
+    воздействий» стоит в этом перечне; на оперативном уровне она была свёрнута."""
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    tl = [e for e in at.expander if 'Картина по времени' in str(e.label)]
+    assert tl, [str(e.label) for e in at.expander]
+    assert tl[0].proto.expanded, 'лента времени свёрнута на оперативном уровне'
+
+
+def test_sluzhebnaya_podpis_o_minutah_odna_na_pare_kartochek():
+    """Находка №34: «минуты в аномалии: |B| < 24 000 нТл…» печаталось под КАЖДЫМ окном, а сразу
+    под карточками шла 330-значная легенда о цветах, которую читают один раз за сессию."""
+    from app.ui import saa_note_ru
+    assert 'всех окон' in saa_note_ru(24000.0)
+    assert saa_note_ru(None) == ''
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards and all('формула (3)' not in c for c in cards), cards[0]
+    assert sum(1 for m in at.markdown if 'Минуты в аномалии у всех окон' in str(m.value)) == 1
+
+
+def test_meteoroidy_v_chelovecheskom_masshtabe_i_posledney_strokoy():
+    """Находка №31: «метеороиды, попаданий на 1 м² 5,64·10⁻⁷» — число, которое не с чем
+    сопоставить и которое по построению одинаково у обоих окон, стояло сразу под флюенсом,
+    как равноправная величина выбора."""
+    from app.ui import mmod_scale_ru
+    out = mmod_scale_ru(SimpleNamespace(name='ожидаемое число попаданий, пластина 1 м²', value=5.64e-7), 360)
+    assert '5,64·10⁻⁷' in out and 'раз в ~' in out and 'лет' in out, out
+    assert mmod_scale_ru(None, 360) == '—'
+    at = run_app(MODES[1])
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards, 'карточек окон нет'
+    c = _strip_tags(cards[0])
+    assert 'метеороиды, попаданий в пластину 1 м² за окно' in c, c
+    assert c.index('флюенс') < c.index('метеороиды'), c
+
+
+def test_tle_origin_ne_vypuskaet_adres_i_angliyskoe_slovo():
+    """Находка владельца №2: в ячейке «Элементы орбиты» стояли две давности в разных единицах,
+    десятичная точка вместо запятой и английское `timeout` с голым адресом и параметрами."""
+    from app.ui import tle_origin
+    s = ('получено по сети, давность данных 2117.4 мин; проверка адресов: '
+         'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout')
+    out = tle_origin(s)
+    assert 'http' not in out and 'timeout' not in out and 'CATNR' not in out, out
+    assert '2117' not in out and '.' not in out, out
+    assert 'резервный' in out, out
+    at = run_app(MODES[0])
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    cell = re.search(r'<div class="cl">Элементы орбиты</div>.*?<div class="cs">([^<]*)</div>', bar, re.S)
+    if cell:
+        assert 'http' not in cell.group(1) and 'timeout' not in cell.group(1), cell.group(1)
+        assert cell.group(1).count('давность') == 1, cell.group(1)
+
+
+def test_nehvatka_pokrytiya_nazyvaet_sledstvie():
+    """Находка владельца №3: «GOES: наблюдение 08:20 покрывает 0 % окна, прогноза потока протонов
+    на окно нет» — сказано, чего нет, но не сказано, что из этого следует."""
+    from app.ui import coverage_consequence_ru
+    assert coverage_consequence_ru([]) == ''
+    assert 'по протонному потоку окно не оценивается' in coverage_consequence_ru(['что-то'])
+    at = run_app(MODES[0])
+    at.sidebar.selectbox('dis_goes').set_value('исключён: нет данных').run()
+    assert not at.exception, at.exception
+    body = _strip_tags(verdict_html(at))
+    assert 'Следствие:' in body, body
+    assert 'рекомендации не будет' in body, body
+
+
+def test_dve_veroyatnosti_noaa_nazvany_odnim_pokazatelem():
+    """Находка №32: две строки таблицы 1 показывают одну и ту же величину NOAA из двух выпусков.
+    Постановка предупреждает: «Два сайта, перепечатывающих одно измерение, не считаются
+    независимым подтверждением»."""
+    from app.ui import forecast_label_ru
+    assert 'трёхсуточный бюллетень' in forecast_label_ru({'channel': 's1_prob_daily'})
+    assert 'суточный выпуск' in forecast_label_ru({'channel': 'proton_prob_daily'})
+    assert forecast_label_ru({'channel': 'kp_forecast', 'label': 'прогноз Kp'}) == 'прогноз Kp'
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert not at.exception, at.exception
+    assert 'один показатель NOAA' in texts(at), texts(at)[:800]
