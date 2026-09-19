@@ -42,14 +42,47 @@ NOTE_LIMIT = 160          # заметку источника не режем п
 HOURS_PER_YEAR = 8766.0
 
 
+def _clause_cut(head: str) -> Optional[int]:
+    """Последняя граница пункта («;», «.», «!», «?») ВНЕ скобок, или None, если её нет."""
+    depth = last = 0
+    for i, ch in enumerate(head):
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth = max(0, depth - 1)
+        elif ch in ';.!?' and depth == 0 and (i + 1 == len(head) or head[i + 1] == ' '):
+            last = i
+    return last or None
+
+
+def _word_cut(head: str) -> int:
+    """Граница слова, но не внутри незакрытой скобки: обрывок «(диапазон 6–8, верхняя граница, не»
+    читается как отрицание того, что стоит перед скобкой."""
+    opened = [i for i, ch in enumerate(head) if ch == '(']
+    closed = head.count(')')
+    if len(opened) > closed:
+        return opened[closed]                       # до первой скобки, которая в head не закрылась
+    return len(head.rsplit(' ', 1)[0]) if ' ' in head else len(head)
+
+
 def short_note(note: str, limit: int = NOTE_LIMIT) -> str:
-    """Заметка записи целиком, а при длине больше limit — до границы слова с многоточием.
-    Обрезка по символам давала на экране обрывки «тип сообщения: Space Wea» и «(по»."""
+    """Заметка записи целиком, а при длине больше limit — до ближайшей границы пункта, и только
+    если её нет — до границы слова, с многоточием.
+
+    Обрезка по символам давала на экране обрывки «тип сообщения: Space Wea» и «(по». Обрезка по
+    границе слова оставляла оборванную фразу внутри скобки: у уведомления DONKI о приходе выброса
+    заметка длиной 161 символ печаталась как «…опубликованный прогноз: Kp до 8 (диапазон 6–8,
+    верхняя граница, не…» — открытая скобка и отрицание без продолжения. Диапазон Kp при этом
+    не теряется: он стоит в той же карточке рядом с номером уведомления, откуда он взят.
+    """
     n = ' '.join((note or '').split())
     if len(n) <= limit:
         return n
-    cut = n[:limit].rsplit(' ', 1)[0] if ' ' in n[:limit] else n[:limit]
-    return cut.rstrip(' ,;.:—-') + '…'
+    head = n[:limit]
+    cut = _clause_cut(head)
+    if cut is None or cut < limit // 2:            # слишком ранняя граница — заметка стала бы бессодержательной
+        cut = _word_cut(head)
+    return n[:cut].rstrip(' ,;.:—-') + '…'
 
 
 @dataclass(frozen=True)

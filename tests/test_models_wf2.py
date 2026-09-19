@@ -363,6 +363,24 @@ def test_short_note_cuts_on_word_boundary_and_keeps_short_notes_whole():
     assert short_note('a' * 300).endswith('…')
 
 
+def test_short_note_ne_rezhet_frazu_vnutri_skobki():
+    """Заметка уведомления DONKI о приходе выброса длиннее предела на один символ, и обрез по
+    границе слова приходился внутрь скобки: «…(диапазон 6–8, верхняя граница, не…» — открытая
+    скобка и отрицание без продолжения в самой читаемой карточке «Гэннон». Режем по границе
+    пункта: остаётся целая фраза. Сам диапазон Kp не теряется — он стоит в той же карточке
+    рядом с номером уведомления, из которого взят."""
+    note = ('Модельный приход CME к Земле; неопределённость времени не является длительностью бури; '
+            'опубликованный прогноз: Kp до 8 (диапазон 6–8, верхняя граница, не kp_90) ')
+    out = short_note(note.strip() + ' хвост')
+    assert out == 'Модельный приход CME к Земле; неопределённость времени не является длительностью бури…', out
+    assert out.count('(') == out.count(')')
+    # границы пункта нет вовсе — режем по слову, но не внутрь незакрытой скобки
+    no_clause = 'приход выброса (модель WSA-ENLIL, ' + 'очень длинное слово ' * 12
+    out2 = short_note(no_clause)
+    assert out2.count('(') == out2.count(')'), out2
+    assert out2.endswith('…') and 'приход выброса' in out2, out2
+
+
 def test_source_id_translation_covers_used_sources():
     for sid in ('nasa_donki_notification', 'nasa_donki_wsa_enlil', 'gfz_kp', 'gfz_kp_archive',
                 'noaa_swpc_goes', 'scenario'):
