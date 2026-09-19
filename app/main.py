@@ -1057,11 +1057,14 @@ with tabs[TAB_METHOD]:
         for _line in _not_acc:
             st.markdown('- ' + _line)
     if _globe_limits or _globe_tech:
+        # Приглушённой подписью, а не пунктом списка: это служебное пояснение к рисунку, и
+        # набрано оно тем же кеглем, каким подписаны все рисунки сервиса. Заодно строка
+        # остаётся там, где её ищут проверки глобуса, — среди подписей экрана (tests/test_globe.py).
         st.markdown('**Чем посчитан глобус и чего он не даёт.**')
         if _globe_limits:
-            st.markdown('- ' + _globe_limits)
+            st.caption(_globe_limits)
         if _globe_tech:
-            st.markdown('- ' + _globe_tech)
+            st.caption(_globe_tech)
     if mode == 'history_forecast' and R.verification:
         # «Обыграть нормально» из замечания владельца — это назвать своими словами, что это такое
         # и почему оно не часть расчёта, а не убрать плашку и промолчать.
