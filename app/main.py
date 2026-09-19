@@ -23,6 +23,7 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 
+from app import globe
 from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, run, validate_request
 from app.export import _git_sha, build_zip
 from app.fetch_guard import LIMIT_MARK, fetch_live_sources, total_deadline_s
@@ -668,9 +669,28 @@ with tabs[2]:
 
 with tabs[3]:
     if traj:
-        with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
-            st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
-        st.caption(map_caption(pro))
+        # Основной вид — глобус: на сфере трасса не рвётся на долготе 180°, и видно, как окно
+        # ложится на геометрию пролётов аномалии. Плоская карта остаётся запасным видом и нужна
+        # там, где трёхмерная сцена не строится (нет WebGL, нет сети за three.js или текстурой).
+        view = st.radio('Вид', [globe.VIEW_GLOBE, globe.VIEW_FLAT], index=0, horizontal=True, key='map_view',
+                        help='Глобус показывает ту же трассу и ту же область аномалии на сфере, без разрыва '
+                             'по долготе. Плоская карта — запасной вид: она работает без WebGL и без сети.')
+        if view == globe.VIEW_GLOBE:
+            try:
+                with st.spinner('Область аномалии по IGRF на сетке 4°…'):
+                    _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0)
+                globe.render_globe(_gp)
+                st.caption(globe.caption(_gp))
+                if pro:
+                    st.caption(globe.tech_line(_gp))
+            except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
+                LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
+                st.warning('Глобус не построен (%s). Переключите вид на «Плоская карта» — данные те же.'
+                           % type(e).__name__)
+        else:
+            with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
+                st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
+            st.caption(map_caption(pro))
     else:
         st.write('Трассы нет: орбита недоступна.')
 
