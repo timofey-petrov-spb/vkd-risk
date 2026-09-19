@@ -32,10 +32,10 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, MECH_RU, M
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, SEV_RU, STRICT_RU, VERDICT_TITLE,
                     age_ru, close_cut_parens, coverage_reasons, coverage_rows_ru, coverage_scope_ru, dedup_clauses,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
-                    grid_cell_ru, head, kind_pill, limit_ru, nbsp_thousands, panel, pill, plural_ru, ratio_ru,
-                    raw_record, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
+                    grid_cell_ru, head, kind_pill, limit_ru, map_caption, nbsp_thousands, panel, pill, plural_ru,
+                    ratio_ru, raw_record, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
                     screen_text, short_reason, source_issues, source_name_ru, source_short, spread_offsets,
-                    status_ru, tle_origin, verdict_panel, verification_ru, window_card)
+                    status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card)
 from app.viz import PLOTLY_CONFIG, ground_track, timeline
 from vkd.config import section as _settings_section
 from vkd.explain.cards import KIND_RU
@@ -468,13 +468,9 @@ for _row in (S.get('observations') or []):
     if _row.get('channel') in ('goes_p_ge10MeV', 'goes') and not goes_obs:
         goes_obs = [(datetime.fromisoformat(c['t']), float(c['value'])) for c in (_row.get('points') or [])
                     if c.get('t') and c.get('value') is not None]
-_mid_ru = ('прогноз Kp NOAA по 3-часовым интервалам из выпуска до отсечки' if mode == 'history_forecast' else
-           'наблюдения Kp (GFZ) и GOES ≥10 МэВ за последние 12 ч' if mode == 'live' else
-           'наблюдения Kp из архива (разбор после факта)')
-_tl_caption = ('Ряд 1 — |B| на трассе, наш расчёт по IGRF: красные полосы — пролёты аномалии, синие — окна-кандидаты. '
-               'Ряд 2 — %s. Ряд 3 — события и прогнозы по типам: положение по вертикали означает тип, не значение.' % _mid_ru) if pro else \
-              ('Ряд 1 — |B| на трассе, наш расчёт. Ряд 2 — %s. Ряд 3 — события по типам.'
-               % _mid_ru.split(' из выпуска')[0].split(' за последние')[0].split(' (разбор')[0])
+# подпись описывает ряды ленты и живёт рядом с самим рисунком (app/ui.py): ряды менялись,
+# и подпись, написанная здесь, каждый раз оставалась описывать прежний вид
+_tl_caption = timeline_caption(mode, pro)
 
 
 def _timeline_chart():
@@ -672,13 +668,9 @@ with tabs[2]:
 
 with tabs[3]:
     if traj:
-        with st.spinner('Область аномалии по IGRF на сетке 4°…'):
+        with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
             st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
-        if pro:
-            st.caption('Область аномалии — наш расчёт |B| по IGRF на средней высоте трассы; трасса за весь горизонт серым, '
-                       'окна-кандидаты цветом, точки трассы в аномалии красным. Карта показывает, откуда берутся минуты в аномалии.')
-        else:
-            st.caption('Красным — область аномалии и точки трассы в ней, цветом — окна: откуда берутся минуты в аномалии.')
+        st.caption(map_caption(pro))
     else:
         st.write('Трассы нет: орбита недоступна.')
 
