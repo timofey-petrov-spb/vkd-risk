@@ -103,6 +103,17 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 
+# Что модуль отдаёт наружу. Объявлено списком, чтобы `dataclass` и `lru_cache`, ввезённые для
+# внутренних нужд, не выглядели частью его общедоступного набора.
+__all__ = [
+    'apply', 'css', 'weight_bytes',                                   # подключение
+    'mark_changed_cells', 'changed_labels', 'cells',                  # изменившиеся ячейки
+    'stars', 'starfield_svg', 'magnitude_counts', 'Star',             # поле звёзд
+    'contrast_table', 'contrast_ratio', 'relative_luminance', 'blend',  # контраст
+    'brightest_star_background', 'highlight_background',
+    'LENTA_KEY', 'MIN_CONTRAST', 'WEIGHT_LIMIT_BYTES', 'STAR_SEED', 'STAR_COUNT',
+]
+
 # --- палитра: те же значения, что в :root файла app/ui.py -------------------------------------
 # Дублируются, а не импортируются: app/ui.py переписывается параллельно, и импорт из него завязал
 # бы фон на порядок сборки. Совпадение сторожит tests/test_backdrop.py — при расхождении тест

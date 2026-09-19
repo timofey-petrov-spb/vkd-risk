@@ -529,3 +529,13 @@ def test_pravilo_podsvetki_est_v_razmetke():
     assert 'background-color:%s' % b.LINE in css
     for tone in (b.CALC, b.OBS, b.FC, b.COND):
         assert tone not in css, tone
+
+
+def test_obshchedostupnyy_nabor_obyavlen():
+    """Всё из __all__ существует, и служебные имена из ввоза туда не попали."""
+    assert not [n for n in b.__all__ if not hasattr(b, n)]
+    for internal in ('dataclass', 'lru_cache', 'math', 'random', 're'):
+        assert internal not in b.__all__, internal
+    # Одна строка подключения и способ проверить её стоимость — снаружи доступны.
+    for needed in ('apply', 'css', 'weight_bytes', 'contrast_table', 'mark_changed_cells'):
+        assert needed in b.__all__, needed
