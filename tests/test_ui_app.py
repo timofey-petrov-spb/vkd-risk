@@ -2866,7 +2866,7 @@ def test_temnaya_tema_i_grafiki_v_ney():
     cfg = tomllib.loads(open(os.path.join(os.path.dirname(APP), '..', '.streamlit', 'config.toml'),
                              encoding='utf-8').read())
     assert cfg['theme']['base'] == 'dark', cfg['theme']
-    assert cfg['theme']['backgroundColor'] == '#0e1117', cfg['theme']
+    assert cfg['theme']['backgroundColor'] == '#08090b', cfg['theme']
 
     def contrast(a, b):
         def lum(h):
