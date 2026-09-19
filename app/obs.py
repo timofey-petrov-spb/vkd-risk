@@ -21,6 +21,8 @@ from app.viz import style
 GREEN, GREY, RED = '#1e8449', '#7f8c8d', '#c0392b'
 S_LEVELS = [(10.0, 'S1'), (100.0, 'S2'), (1000.0, 'S3')]
 G_LEVELS = [(5, 'G1'), (7, 'G3'), (9, 'G5')]
+PFU_TICKVALS = [0.01, 0.1, 1, 10, 100, 1000, 10000]
+PFU_TICKTEXT = ['0,01', '0,1', '1', '10', '100', '1000', '10 000']
 
 
 def _load(path: Optional[str]):
@@ -69,7 +71,9 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
     fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='запрос', showarrow=False, xanchor='left', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
     lo = min([v for v in vg if v > 0] or [0.1])
-    fig.update_yaxes(type='log', title_text='поток, pfu', range=[math.log10(lo) - 0.5, 4.2], row=1, col=1)
+    # метки логарифмической оси задаём сами: иначе печатаются числа вида 192,3432 (U4)
+    fig.update_yaxes(type='log', title_text='поток, pfu', range=[math.log10(lo) - 0.5, 4.2], row=1, col=1,
+                     tickmode='array', tickvals=PFU_TICKVALS, ticktext=PFU_TICKTEXT)
     fig.update_yaxes(range=[0, 9], title_text='Kp', row=2, col=1)
     fig.update_xaxes(title_text='время, UTC', row=2, col=1)
     fig = style(fig, 440)
@@ -86,7 +90,8 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.F
     if not kp and not any(p[0].get('cells') for p in probs):
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                        subplot_titles=('Прогноз Kp NOAA (3-day forecast), 3-часовые интервалы', 'Суточные вероятности NOAA, %'))
+                        subplot_titles=('Прогноз Kp NOAA по 3-часовым интервалам (выпуск до отсечки)',
+                                        'Суточные вероятности NOAA, %'))
     if kp:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
         w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]

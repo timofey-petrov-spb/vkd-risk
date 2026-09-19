@@ -37,7 +37,36 @@ SOURCE_RU = {
                                    'спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md)',
     'imo_calendar': 'календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR',
 }
+# Имена источников по-русски: на оперативном уровне не должно быть идентификаторов кода
+# (О5). Дублируется в app/ui.py — vkd из app не импортируется и наоборот.
+SOURCE_ID_RU = {
+    'nasa_donki_notification': 'уведомление NASA DONKI',
+    'nasa_donki_sep_card': 'карточка протонного события NASA DONKI',
+    'nasa_donki_wsa_enlil': 'прогон модели WSA-ENLIL (NASA DONKI)',
+    'nasa_donki_gst': 'карточка геомагнитной бури NASA DONKI',
+    'noaa_swpc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)',
+    'noaa_ngdc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC',
+    'noaa_ngdc_daypre': 'суточный прогноз протонного события NOAA SWPC',
+    'gfz_kp': 'Kp (GFZ)',
+    'gfz_kp_archive': 'Kp, окончательный ряд GFZ',
+    'scenario': 'сценарий «что если»',
+}
+NOTE_LIMIT = 160          # заметку источника не режем по символам: либо целиком, либо по границе слова
 HOURS_PER_YEAR = 8766.0
+
+
+def source_ru(source_id: str) -> str:
+    return SOURCE_ID_RU.get(source_id, source_id)
+
+
+def short_note(note: str, limit: int = NOTE_LIMIT) -> str:
+    """Заметка записи целиком, а при длине больше limit — до границы слова с многоточием.
+    Обрезка по символам давала на экране обрывки «тип сообщения: Space Wea» и «(по»."""
+    n = ' '.join((note or '').split())
+    if len(n) <= limit:
+        return n
+    cut = n[:limit].rsplit(' ', 1)[0] if ' ' in n[:limit] else n[:limit]
+    return cut.rstrip(' ,;.:—-') + '…'
 
 
 @dataclass(frozen=True)
@@ -96,10 +125,10 @@ _COND_IMPACT = {
                  'Это правило команды, не эксплуатационная норма; шкалы NOAA сами по себе не запрещают и не разрешают ВКД.'),
 }
 _COND_LIMITS = {
-    'SEP': ('Уверенность: событие наблюдено (уведомление DONKI или карточка по прибору); конец события не объявляется — '
-            'действие принято по настройке sep_valid_hours, поэтому пересечение с окном условно. Уровень S — из текста '
-            'записи, если он там есть.'),
-    'GST': ('Уверенность: Kp измеряется по 3-часовым интервалам; уровень уведомления — из тела сообщения; прогноз '
+    'SEP': ('Уверенность: конец события не объявляется — принятая длительность действия задана настройкой '
+            'sep_valid_hours, поэтому пересечение с окном условно. Уровень S — из текста записи, если он там есть.'),
+    'GST': ('Уверенность: конец действия записи без объявленного конца — принятая длительность, настройка '
+            'event_valid_hours. Kp измеряется по 3-часовым интервалам; уровень уведомления — из тела сообщения; прогноз '
             'WSA-ENLIL имеет типичный разброс времени прихода порядка ±6–12 ч (оценка CCMC, не наша), «Kp до N» — '
             'диапазон из датированного уведомления (его верхняя граница не kp_90); прогноз NOAA — по 3-часовым ячейкам выпуска. Наблюдение '
             'сейчас распространено на окно как условие проверки объявленно, не молча.'),
@@ -133,10 +162,12 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
     parts = []
     for rid in f.record_ids:
         s = samples.get(rid)
-        if s is not None:
+        if s is not None and s.source_id == 'scenario':
+            parts.append('значение задано пользователем в сценарии «что если», не наблюдение (запись %s)' % s.raw_record_id)
+        elif s is not None:
             pub = s.published_utc.strftime('%Y-%m-%d %H:%MZ') if s.published_utc else 'время публикации неизвестно'
             parts.append('%s, запись %s, момент %s, публикация %s, получено %s, %s' % (
-                s.source_id, s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
+                source_ru(s.source_id), s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
                 s.fetched_utc.strftime('%Y-%m-%d %H:%MZ'), QUALITY_RU.get(s.quality, s.quality)))
         elif rid in traj_ids or rid == 'trajectory':
             parts.append('%s (запись %s)' % (_traj_line(meta), rid))
@@ -220,6 +251,11 @@ def _condition_from_text(reason: str) -> Condition:
                      tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ())
 
 
+def event_label(e: EventInterval) -> str:
+    parts = e.event_id.split(':')
+    return parts[1] if len(parts) > 2 and parts[0] == e.source_id else e.event_id
+
+
 def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str, ev_by_id: dict,
                     samples: dict, window_index: Optional[int], cutoff_utc: Optional[datetime]) -> Card:
     end = a.window.start_utc + timedelta(minutes=a.window.duration_min)
@@ -238,10 +274,15 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
     for rid in c.event_ids:
         e = ev_by_id.get(rid)
         s = samples.get(rid)
-        if e is not None:
+        if e is not None and (e.is_simulated or e.source_id == 'scenario'):
+            pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение%s'
+                        % (event_label(e), ('; ' + short_note(e.note)) if e.note else ''))
+        elif e is not None:
             pubs.append('%s %s (%s%s)' % (
-                e.event_id, 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
-                e.source_id, (', ' + e.note[:80]) if e.note else ''))
+                event_label(e), 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
+                source_ru(e.source_id), ('; ' + short_note(e.note)) if e.note else ''))
+        elif s is not None and s.source_id == 'scenario':
+            pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение' % s.raw_record_id)
         elif s is not None:
             pubs.append('%s, момент %s, публикация %s, получено %s' % (
                 s.raw_record_id, s.t_utc.strftime('%d.%m %H:%MZ'),
@@ -250,22 +291,44 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
     if pubs:
         shown = pubs[:6]
         src.append('записи: ' + '; '.join(shown) + ('; … всего %d (полный список — cards.json, raw/)' % len(pubs) if len(pubs) > 6 else ''))
-    if cutoff_utc is not None:
+    if c.is_simulated:
+        # сценарий: «опубликовано до отсечки» писать нельзя — значение не публиковал никто
+        src.append('значение задано пользователем в сценарии «что если», не наблюдение и не публикация источника')
+    elif cutoff_utc is not None:
         src.append('все записи опубликованы до отсечки %s' % cutoff_utc.strftime('%Y-%m-%d %H:%MZ'))
-    source_ru = '; '.join(src) if src else 'источник указан в тексте условия'
+    source_line = '; '.join(src) if src else 'источник указан в тексте условия'
+    # происхождение условия — по записям, а не по типу события: уведомления REleASE/«SEP Prediction»
+    # в DONKI имеют kind external_forecast и наблюдением не являются
+    ev_kinds = [ev_by_id[rid].kind for rid in c.event_ids if rid in ev_by_id]
     kind = (Kind.OWN_CALCULATION if c.is_simulated else
             (Kind.OBSERVATION if c.kind in ('GOES', 'SEP') else Kind.EXTERNAL_FORECAST))
+    origin_note = ''
+    if not c.is_simulated and c.kind in ('GOES', 'SEP') and ev_kinds:
+        if all(k == Kind.EXTERNAL_FORECAST for k in ev_kinds):
+            kind = Kind.EXTERNAL_FORECAST
+            origin_note = ' Происхождение: прогноз модели, не наблюдение (все записи условия — внешний прогноз).'
+        elif any(k == Kind.EXTERNAL_FORECAST for k in ev_kinds):
+            kind = Kind.OBSERVATION
+            origin_note = ' Происхождение: часть записей — прогноз модели, не наблюдение.'
+        else:
+            origin_note = ' Происхождение: событие наблюдено (уведомление DONKI или карточка по прибору).'
     if c.kind == 'GST' and not c.is_simulated and any('наблюдение Kp' in s for s in c.sources_ru) and len(c.sources_ru) == 1:
         kind = Kind.OBSERVATION
+    limits = _COND_LIMITS.get(c.kind, '') + origin_note
+    if c.is_simulated:
+        limits = ((_COND_LIMITS.get(c.kind, '') if c.kind != 'SEP' else
+                   'Уверенность: конец действия не объявлен — принятая длительность действия задана настройкой sep_valid_hours.')
+                  + ' Сценарий «что если»: значение задано пользователем в сценарии, не наблюдение; '
+                    'в живой кеш не попадают; в выгрузке и повторе сохраняются как синтетические входы.')
     return Card(
         title=prefix + ('Сценарий: ' if c.is_simulated else 'Условие: ') + c.text.split(': ')[0],
         kind=kind,
         impact_ru=_COND_IMPACT[c.severity],
         period_ru=period_ru,
         data_ru=c.text.split(';')[0] + ('; уровень: %s' % c.level_note if c.level_note else ''),
-        source_ru=source_ru,
+        source_ru=source_line,
         rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки; %s' % _COND_TAIL,
-        limits_ru=_COND_LIMITS.get(c.kind, '') + (' Сценарий «что если»: значения моделируемые, в live-кеш и replay не попадают.' if c.is_simulated else ''),
-        record_ids=c.event_ids,
+        limits_ru=limits,
+        record_ids=tuple(dict.fromkeys(ev_by_id[eid].raw_record_id if eid in ev_by_id else eid for eid in c.event_ids)),
         severity=c.severity, window_index=window_index, window_ru=period,
     )

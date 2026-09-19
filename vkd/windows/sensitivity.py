@@ -11,8 +11,10 @@
 
 Две проверки на сетке:
   * ranking_stable — при нулевом допуске лучшее окно одно на всей сетке;
-  * stable — с итоговым допуском предпочтительное окно (или одинаковый отказ)
-    одно на всей сетке; это и печатается как «выбор устойчив».
+  * stable — с итоговым допуском на всей сетке одинакова ПАРА (вердикт, предпочтительное
+    окно); это и печатается как «выбор устойчив». Одного предпочтительного окна мало:
+    без вердикта смена «компромисс» ↔ «равнозначны» (оба дают preferred = None) печаталась
+    как «выбор устойчив», хотя ответ пользователю менялся.
 
 Разбор Codex п. 10: смена канала GOES меняет показатель, а не его погрешность;
 поэтому канал варьируется как отдельная ось, а допуск по минутам берётся по оси порога.
@@ -34,13 +36,14 @@ class Robustness:
     tol_min: float                  # итоговый допуск по минутам
     tol_ratio: float                # итоговый допуск по флюенсу (отношение)
     ranking_stable: bool            # лучшее окно при нулевом допуске одно на всей сетке
-    stable: bool                    # предпочтительное окно с итоговым допуском одно на всей сетке (или везде отказ)
+    stable: bool                    # пара (вердикт, предпочтительное окно) с итоговым допуском одна на всей сетке
     grid: tuple
     diff_by_thr: dict               # thr -> разность минут (второе − лучшее)
     ratio_by_e: dict                # e_min -> отношение флюенсов (второе / лучшее)
     pair: tuple                     # (ISO лучшего по минутам, ISO второго) по базовой точке или ()
     pair_fluence: tuple             # (ISO лучшего по флюенсу, ISO второго) или ()
     saa_spread_min: float           # прежний показатель: разброс абсолютных минут лучшего окна (только для сведения)
+    verdict_by_grid: dict = None    # (thr, e_min) -> вердикт при итоговом допуске
 
 
 def resaa(traj: Sequence[TrajectoryPoint], thr_nT: float) -> list[TrajectoryPoint]:
@@ -112,11 +115,16 @@ def robustness(traj: Sequence[TrajectoryPoint], windows: Sequence[Window],
     ratio_spread = (max(ratio_by_e.values()) / min(ratio_by_e.values())) if ratio_by_e else 1.0
     tol_min = max(min_tol_min, diff_spread)
     tol_ratio = max(min_tol_ratio, ratio_spread)
-    prefs = {}
+    prefs, verdicts = {}, {}
     for k, A_k in A.items():
         r = decide(A_k, {'saa_B_threshold_nT': k[0], 'e_min_MeV': k[1], 'equiv_tol_min': tol_min, 'fluence_equiv_ratio': tol_ratio})
         prefs[k] = r.preferred.start_utc.isoformat() if r.preferred else None
+        verdicts[k] = r.verdict
+    # устойчивость — по ПАРЕ (вердикт, предпочтительное окно): смена «компромисс» ↔ «равнозначны»
+    # на сетке меняет ответ пользователю, хотя предпочтительного окна нет ни там, ни там
+    answers = {(verdicts[k], prefs[k]) for k in prefs}
     return Robustness(prefs, ranking, diff_spread, ratio_spread, tol_min, tol_ratio,
-                      ranking_stable=len(set(ranking.values())) <= 1, stable=len(set(prefs.values())) <= 1,
+                      ranking_stable=len(set(ranking.values())) <= 1, stable=len(answers) <= 1,
                       grid=(tuple(thr_grid), tuple(e_grid)), diff_by_thr=diff_by_thr, ratio_by_e=ratio_by_e, pair=pair, pair_fluence=pair_fl,
-                      saa_spread_min=(max(saa_best) - min(saa_best)) if saa_best else 0.0)
+                      saa_spread_min=(max(saa_best) - min(saa_best)) if saa_best else 0.0,
+                      verdict_by_grid=verdicts)

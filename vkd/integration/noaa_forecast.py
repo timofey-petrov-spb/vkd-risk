@@ -141,3 +141,21 @@ def covered_fraction(samples, start_utc: datetime, duration_min: int) -> float:
     for s in in_window(samples, start_utc, duration_min):
         cov += (min(end, s.valid_to_utc) - max(start_utc, s.valid_from_utc)).total_seconds()
     return min(1.0, cov / total) if total > 0 else 0.0
+
+
+def live_forecasts(bundle, start_utc: datetime, end_utc: datetime):
+    """A4 bulletin -> same forecast lines as history, without a second download."""
+    samples, raw, fetch = bundle
+    lines = []
+    for channel, label in [('kp_forecast', 'прогноз Kp NOAA, 3-часовые интервалы'),
+                           ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA')]:
+        cells = tuple(s for s in samples if s.channel_id == channel and
+                      s.valid_from_utc < end_utc and s.valid_to_utc > start_utc)
+        fraction = covered_fraction(cells, start_utc, (end_utc-start_utc).total_seconds()/60)
+        meta = getattr(fetch, 'metadata', {}) or {}
+        lines.append(ForecastLine(channel, 'noaa_swpc_3day_forecast', label,
+            'full' if fraction == 1 else ('partial' if fraction else 'missing'), fraction,
+            (meta.get('release_id') or cells[0].published_utc.isoformat()) if cells else None, cells[0].published_utc if cells else None,
+            cells[0].raw_record_id if cells else None, cells, (),
+            None if cells else fetch.status_ru, ('исходные интервалы; суточная вероятность не пересчитывается на окно',)))
+    return lines, raw

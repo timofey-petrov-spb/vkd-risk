@@ -74,7 +74,7 @@ def saved_sources(S: dict, now: datetime) -> tuple | None:
     """Кортеж источников текущего режима из сырых записей архива; None, если записей нет."""
     raw = S.get('raw') or {}
     if raw and 'источники: vkd.sources' in (S.get('sources', {}).get('_layers', {}).get('status', '')):
-        from vkd.sources.replay import observation
+        from vkd.sources.replay import observation, forecast
         from vkd.sources import Fetch
         from vkd.sources.registry import utc
         goes = observation(raw, 'noaa_swpc_goes', now)
@@ -92,7 +92,7 @@ def saved_sources(S: dict, now: datetime) -> tuple | None:
         fetch = Fetch('celestrak_gp', False, bool(text), utc(meta['fetched_utc']) if meta.get('fetched_utc') else None, None,
                       tle.get('fetch') or 'повтор TLE', text, None,
                       metadata={'url': tle.get('url')})
-        return goes, kp, (text, fetch)
+        return goes, kp, (text, fetch), forecast(raw, now)
     goes = next((v for k, v in raw.items() if k.startswith('goes_p10_')), None)
     kp = next((v for k, v in raw.items() if k.startswith('gfz_kp_')), None)
     tle = raw.get('iss.tle') or {}

@@ -34,28 +34,20 @@ from vkd.assess.trapped import BeltTable
 from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
 from vkd.integration.manifest import collect_records
-from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts
+from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts, live_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
 from vkd.types import SCHEMA_VERSION, Request, Window
-from vkd.windows.compare import Thresholds, assess_window, recommend
+from vkd.windows.compare import Thresholds, action_span, assess_window, overlaps, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
-try:
-    from vkd.sources import Fetch, goes_latest, kp_latest, tle_latest   # type: ignore  # A4 — когда появится
-    SRC_LAYER = 'vkd.sources'
-except ImportError:
-    from experiments.stub_sources import Fetch, goes_latest, kp_latest, tle_latest
-    SRC_LAYER = 'experiments.stub_sources — временно до A4: живой запрос, кеш, снимок'
-try:
-    from vkd.history import history_bundle    # type: ignore  # A2 — разбор содержания DONKI
-    HIST_SRC = 'vkd.history'
-except ImportError:
-    from experiments.stub_history import history_bundle
-    HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
+from vkd.sources import Fetch, goes_latest, kp_latest, tle_latest, noaa_latest
+from vkd.history import history_bundle
+SRC_LAYER = 'vkd.sources'
+HIST_SRC = 'vkd.history'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.6.0'      # 19.09: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ, строгая отсечка карточек SEP
+ALGO_VERSION = '0.6.1'      # объединённый потребитель A2/A3/A4 и правила действия событий Б
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -197,8 +189,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     # ------------------------------------------------------------ источники
     if mode == 'live':
         if fetched is None:
-            fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
-        (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched
+            fetched = (goes_latest(disabled=disabled['goes'], now=now), kp_latest(disabled=disabled['kp'], now=now),
+                       tle_latest(disabled=False, now=now), noaa_latest(disabled=disabled.get('noaa', False), now=now))
+        (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched[:3]
     else:
         # история: живые запросы не делаются и не учитываются, даже если экран их передал
         why = 'в историческом режиме живой источник не запрашивается'
@@ -216,6 +209,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp, kp_raw = None, {}
         f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs, verification = [], {}, [], [], {}, [], [], None
+    f_noaa = _empty_fetch('noaa_swpc_3day_forecast', 'прогноз NOAA не получен')
+    if mode == 'live':
+        bundle = fetched[3] if len(fetched) > 3 else ((), {}, f_noaa)
+        if disabled.get('noaa') == 'off':
+            bundle = ((), {}, _empty_fetch('noaa_swpc_3day_forecast', 'источник исключён пользователем'))
+        f_noaa = bundle[2]
+        fc_lines, fc_raw = live_forecasts(bundle, orbit_start, orbit_start + timedelta(minutes=horizon_min))
+        forecasts = [sample for line in fc_lines for sample in line.samples]
     catalog = None
     history_proof = {}
     goes_observations = None
@@ -257,11 +258,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
         # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
         def _touches(e):
-            a0 = e.valid_from_utc or e.start_utc
+            # то же правило пересечения, что при отборе условий в compare.action_span/overlaps:
+            # конец действия по настройке своего типа события, пересечение не меньше минуты
+            a0, a1 = action_span(e, th)
             if a0 is None:
                 return True
-            a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=th.sep_valid_hours))
-            return a0 <= orbit_start + timedelta(minutes=horizon_min) and a1 >= t0 - timedelta(hours=6)
+            return overlaps(a0, a1, t0 - timedelta(hours=6), orbit_start + timedelta(minutes=horizon_min))
         events = [e for e in cut.events if _touches(e)]
         # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
         fc_lines, fc_raw = noaa_forecasts(t0, orbit_start, orbit_start + timedelta(minutes=horizon_min))
@@ -398,7 +400,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                       max(1.0, (thresholds or Thresholds.from_settings()).fluence_equiv_ratio),
                                       '/'.join('%g' % x for x in rob.grid[1]), r_txt,
                                       'сохраняется' if rob.ranking_stable else 'МЕНЯЕТСЯ',
-                                      'выбор устойчив' if rob.stable else 'ВЫБОР МЕНЯЕТСЯ на сетке'))
+                                      'выбор устойчив: на всей сетке одинаковы и вердикт, и предпочтительное окно'
+                                      if rob.stable else
+                                      'ВЫБОР МЕНЯЕТСЯ на сетке: вердикт или предпочтительное окно на ней не одни и те же'))
     samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
                **{s.raw_record_id: s for s in forecasts}}
     def window_samples(a):
@@ -450,11 +454,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     source_versions = collect_records(raw_records, history_proof.get('source_versions', {}), orb.provenance, belts, ROOT)
 
     def _src(f, role, sample=None):
+        # давность — от КОНЦА интервала измерения (valid_to_utc), как в compare.py: у Kp GFZ
+        # t_utc — начало трёхчасового интервала, и таблица источников расходилась с фактором на 3 ч
+        ref_t = (sample.valid_to_utc or sample.t_utc) if sample else None
         return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
                 'origin': ('живой запрос' if f.ok else ('кеш или снимок репозитория' if f.from_cache else 'данных нет')),
                 'fetched_utc': iso(f.fetched_utc) if f.fetched_utc else None,
                 'data_utc': iso(sample.t_utc) if sample else None,
-                'age_min': round((ref_now - sample.t_utc).total_seconds() / 60) if sample else f.age_min}
+                'age_min': round((ref_now - ref_t).total_seconds() / 60) if sample else f.age_min}
 
     orbit_src = {'role': 'орбита', 'status': orb.status_ru, 'strictness': orb.strictness,
                  'origin': ('живой запрос TLE' if mode == 'live' and getattr(f_tle, 'ok', None) else
@@ -489,7 +496,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                              'origin': kp_origin if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
                              'fetched_utc': None,
                              'data_utc': iso(kp.t_utc) if kp and kp.source_id != 'scenario' else None,
-                             'age_min': round((t0 - kp.t_utc).total_seconds() / 60) if kp and kp.source_id != 'scenario' else None}
+                             'age_min': round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60)
+                             if kp and kp.source_id != 'scenario' else None}
         sources['donki_archive'] = {'role': 'события и уведомления (SEP, GST, прогнозы ENLIL)',
                                     'status': 'архив DONKI %s — %s%s; отбор по времени публикации (%s)' % (
                                         c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'),
@@ -507,14 +515,16 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                       'live_ok': None, 'from_cache': None, 'origin': 'модель стандарта в репозитории'},
         '_layers': {'role': 'слои', 'status': 'орбита: %s; источники: %s; история: %s' % (ORBIT_SRC, SRC_LAYER, HIST_SRC)},
     })
-    if mode != 'live':
+    if mode == 'live':
+        sources['noaa_swpc_3day_forecast'] = _src(f_noaa, 'внешний прогноз NOAA')
+    if fc_lines:
         for line in fc_lines:
             lr = line.last_release_before_cutoff
             sources['noaa_forecast_' + line.channel_id] = {
                 'role': line.label_ru, 'status': FC_STATUS_RU.get(line.status, line.status) + (
                     '; выпуск %s от %s' % (line.release_id, line.published_utc.strftime('%Y-%m-%d %H:%MZ')) if line.record_id_ok() else
                     ('; ' + line.reason if line.reason else '')),
-                'live_ok': None, 'from_cache': None, 'origin': 'архив A1 (data/source_registry_2024/noaa)' + (
+                'live_ok': None, 'from_cache': None, 'origin': ('текущий бюллетень NOAA' if mode == 'live' else 'архив A1 (data/source_registry_2024/noaa)') + (
                     ', sha256 %s…' % (fc_raw.get(line.raw_record_id, {}).get('sha256') or '')[:12] if line.raw_record_id else ''),
                 'coverage_fraction': line.coverage_fraction,
                 'last_release_before_cutoff': lr}
@@ -583,6 +593,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'diff_by_thr': {'%.0f' % k: v for k, v in rob.diff_by_thr.items()},
                        'ratio_by_e': {'%g' % k: v for k, v in rob.ratio_by_e.items()},
                        'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()},
+                       'verdict_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in (rob.verdict_by_grid or {}).items()},
                        'ranking_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.ranking_by_grid.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,

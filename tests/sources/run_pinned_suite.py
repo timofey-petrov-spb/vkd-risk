@@ -25,6 +25,7 @@ def main():
             raise RuntimeError('Pinned TLE fixture has changed or failed validation')
         with patch('app.compute.goes_latest', return_value=(None, {}, off)), \
              patch('app.compute.kp_latest', return_value=(None, {}, off)), \
+             patch('app.compute.noaa_latest', return_value=((), {}, off)), \
              patch('app.compute.tle_latest', return_value=(tle, fetch)):
             return pytest.main(['-q', *sys.argv[1:]])
 
