@@ -1,83 +1,164 @@
 # -*- coding: utf-8 -*-
-"""Воспроизведение сохранённого расчёта (Т8): из request.json архива или JSON-снимка
-повторно запускается конвейер и сравнивается вердикт.
+"""Воспроизведение сохранённого расчёта (Т8): из архива ZIP или JSON-снимка повторно
+запускается конвейер и сравниваются вердикт, предпочтительное окно, сравнение по
+механизмам, причины и условия по окнам.
 
-    python scripts/replay_example.py examples/gannon_2024-05-10_cutoff19Z.json
     python scripts/replay_example.py examples/gannon_2024-05-10_cutoff19Z.zip
+    python scripts/replay_example.py examples/live_now.zip
 
-Для исторических режимов результат обязан совпасть: входы — архив в репозитории
-и отсечка. Для текущего режима совпадение не гарантируется — живые данные
-изменились; скрипт печатает обе версии и разницу.
+Исторические режимы: входы — архив в репозитории и отсечка, живые источники не
+запрашиваются (fetch_none), результат обязан совпасть. Текущий режим: сохранённые
+сырые записи GOES, Kp и TLE (raw/*.json архива) подставляются вместо живых запросов,
+момент расчёта берётся из манифеста — повтор детерминирован и тоже обязан совпасть;
+JSON-снимок текущего режима без сырых записей не воспроизводим (код возврата 2).
+
+Версия: сравниваются версия алгоритма и коммит манифеста с текущими; если код расчёта
+(app, vkd, experiments, config, data) менялся после коммита манифеста или есть
+незакоммиченные изменения, совпадение объявляется «ВОСПРОИЗВЕДЕНО ДРУГОЙ ВЕРСИЕЙ»
+(код возврата 3). Коды: 0 — воспроизведено, 1 — расхождение, 2 — повтор невозможен,
+3 — воспроизведено другой версией.
 """
 from __future__ import annotations
 
 import io
 import json
 import os
+import subprocess
 import sys
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
 
-from app.compute import run                      # noqa: E402
-from vkd.windows.compare import Thresholds       # noqa: E402
-from vkd.windows.scenario import Scenario        # noqa: E402
+from app.compute import ALGO_VERSION, run                        # noqa: E402
+from experiments.stub_sources import fetch_none, from_records    # noqa: E402
+from vkd.windows.compare import Thresholds                       # noqa: E402
+from vkd.windows.scenario import Scenario                        # noqa: E402
+
+CODE_PATHS = ('app', 'vkd', 'experiments', 'config', 'data')
+MODE_IDS = {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}
 
 
 def load_snapshot(path: str) -> dict:
+    """Единая форма для ZIP и JSON: request, recommendation, windows, manifest-поля, сырые записи (только ZIP)."""
     if path.endswith('.zip'):
         with zipfile.ZipFile(path) as z:
-            req = json.loads(z.read('request.json').decode('utf-8'))
-            rec = json.loads(z.read('recommendation.json').decode('utf-8'))
-            man = json.loads(z.read('manifest.json').decode('utf-8'))
-            meta = json.loads(z.read('trajectory_meta.json').decode('utf-8'))
-            tle = None
-            if 'raw/iss.tle.json' in z.namelist():
-                tle = json.loads(z.read('raw/iss.tle.json').decode('utf-8')).get('text')
-        return {'request': req, 'recommendation': rec, 'mode_id': man.get('mode'), 'algorithm_version': man.get('algorithm_version'),
-                'trajectory_meta': {**meta, 'tle_text': meta.get('tle_text') or tle}}
-    return json.load(io.open(path, encoding='utf-8'))
+            j = lambda name: json.loads(z.read(name).decode('utf-8'))   # noqa: E731
+            man, meta = j('manifest.json'), j('trajectory_meta.json')
+            raw = {}
+            for n in z.namelist():
+                if n.startswith('raw/') and n.endswith('.json'):
+                    raw[n[4:-5]] = j(n)
+            return {'request': j('request.json'), 'recommendation': j('recommendation.json'), 'windows': j('factors.json'),
+                    'mode_id': man.get('mode'), 'algorithm_version': man.get('algorithm_version'), 'git_commit': man.get('git_commit'),
+                    'computed_utc': man.get('computed_utc'), 'trajectory_meta': meta, 'raw': raw, 'sources': j('sources.json')}
+    S = json.load(io.open(path, encoding='utf-8'))
+    return {'request': S['request'], 'recommendation': S['recommendation'], 'windows': S['windows'],
+            'mode_id': S.get('mode_id') or MODE_IDS[S['mode']], 'algorithm_version': S.get('algorithm_version'), 'git_commit': None,
+            'computed_utc': S.get('computed_utc'), 'trajectory_meta': S.get('trajectory_meta') or {}, 'raw': {}, 'sources': S.get('sources') or {}}
 
 
-def pin_tle(S: dict) -> str | None:
-    """Сохранённый TLE → временный файл; без него исторический повтор зависит от текущего TLE."""
-    txt = (S.get('trajectory_meta') or {}).get('tle_text')
-    if not txt:
+def saved_sources(S: dict, now: datetime) -> tuple | None:
+    """Кортеж источников текущего режима из сырых записей архива; None, если записей нет."""
+    raw = S.get('raw') or {}
+    goes = next((v for k, v in raw.items() if k.startswith('goes_p10_')), None)
+    kp = next((v for k, v in raw.items() if k.startswith('gfz_kp_')), None)
+    tle = raw.get('iss.tle') or {}
+    tle_text = tle.get('text') or (S.get('trajectory_meta') or {}).get('tle_text')
+    if not tle_text or goes is None:
         return None
-    p = os.path.join(_ROOT, 'data', 'cache', 'replay_iss.tle')
-    os.makedirs(os.path.dirname(p), exist_ok=True)
-    io.open(p, 'w', encoding='utf-8').write(txt)
-    return p
+    meta = S.get('trajectory_meta') or {}
+    prov = (raw.get('orbit_provenance') or {}).get('records') or {}
+    tle_url = next((r.get('url') for r in prov.values() if isinstance(r, dict) and r.get('source_id') == 'celestrak_gp'), None)
+    tle_rec = {'fetched_utc': meta.get('fetched_utc'), 'fetch': tle.get('fetch'), 'url': tle_url}
+    return from_records(goes, kp, tle_text, now, tle_rec)
 
 
-def main(path: str):
+def code_state(commit: str | None) -> tuple[str, bool]:
+    """(описание, изменился ли код расчёта относительно коммита манифеста)."""
+    try:
+        head = subprocess.check_output(['git', '-C', _ROOT, 'rev-parse', 'HEAD'], stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+    except Exception:            # noqa: BLE001 — вне репозитория версия кода не проверяема
+        return 'git недоступен — версия кода не проверена', False
+    dirty = ''
+    try:
+        st = subprocess.check_output(['git', '-C', _ROOT, 'status', '--porcelain', '--'] + list(CODE_PATHS), stderr=subprocess.DEVNULL, timeout=10).decode()
+        dirty = st.strip()
+    except Exception:            # noqa: BLE001
+        pass
+    if not commit:
+        return 'в манифесте нет коммита; HEAD %s%s' % (head[:12], '; есть незакоммиченные изменения кода' if dirty else ''), True
+    if commit == head and not dirty:
+        return 'коммит манифеста %s = HEAD, рабочая копия чистая' % head[:12], False
+    changed = True
+    if commit != head:
+        try:
+            rc = subprocess.call(['git', '-C', _ROOT, 'diff', '--quiet', commit, head, '--'] + list(CODE_PATHS),
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
+            changed = rc != 0
+        except Exception:        # noqa: BLE001
+            changed = True
+    else:
+        changed = False
+    if dirty:
+        changed = True
+    return ('коммит манифеста %s, HEAD %s: код расчёта (%s) %s%s' % (
+        commit[:12], head[:12], ', '.join(CODE_PATHS), 'изменён' if changed else 'не менялся',
+        '; есть незакоммиченные изменения кода' if dirty else ''), changed)
+
+
+def _conditions(windows: list) -> list:
+    return [[r for m in w['mechanisms'] for r in m['needs_check']] for w in windows]
+
+
+def main(path: str) -> int:
     sys.stdout.reconfigure(encoding='utf-8')
     S = load_snapshot(path)
     req = S['request']
-    mode = S.get('mode_id') or {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}[S['mode']]
+    mode = S['mode_id']
     t0 = datetime.fromisoformat(req['t0_utc'])
-    th_d = dict(req['thresholds'])
-    th = Thresholds(**{k: v for k, v in th_d.items() if k in Thresholds.__dataclass_fields__})
+    now = datetime.fromisoformat(S['computed_utc']) if S.get('computed_utc') else datetime.now(timezone.utc)
+    th = Thresholds(**{k: v for k, v in dict(req['thresholds']).items() if k in Thresholds.__dataclass_fields__})
     sc = Scenario(**req['scenario']) if req.get('scenario') else None
-    tle_path = pin_tle(S)
-    r = run(mode, t0, req['duration_min'], req['search_min'], req['window_offsets_min'], disabled=req['disabled'],
-            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), tle_override_path=tle_path)
-    old, new = S['recommendation'], r.S['recommendation']
     print('файл           :', path)
-    print('TLE            :', 'из сохранённого расчёта' if tle_path else (
-        'не нужен — орбита из архива OEM 2024 (A1/A3), повтор детерминирован' if mode != 'live'
-        else 'НЕ СОХРАНЁН — орбита по текущему TLE, совпадение не гарантируется'))
-    print('режим          :', mode, '| t0', t0.isoformat(), '| версия алгоритма сохранённая/текущая:', S.get('algorithm_version'), '/', r.S['algorithm_version'])
-    print('вердикт был    :', old['verdict'], '|', old['rule'])
-    print('вердикт теперь :', new['verdict'], '|', new['rule'])
-    same = old['verdict'] == new['verdict'] and old.get('preferred') == new.get('preferred')
+    print('режим          :', mode, '| t0', t0.isoformat(), '| момент расчёта', now.isoformat())
     if mode == 'live':
-        print('РЕЗУЛЬТАТ      : текущий режим — совпадение не гарантируется (живые данные); совпало: %s' % same)
+        fetched = saved_sources(S, now)
+        if fetched is None:
+            print('РЕЗУЛЬТАТ      : повтор невозможен — в снимке нет сырых записей GOES/Kp/TLE (нужен ZIP с raw/, а не JSON)')
+            return 2
+        print('источники      : GOES, Kp, TLE — из сырых записей архива (живых запросов нет)')
     else:
-        print('РЕЗУЛЬТАТ      : %s' % ('ВОСПРОИЗВЕДЕНО' if same else 'РАСХОЖДЕНИЕ — проверить версии архива и алгоритма'))
-    return 0 if (same or mode == 'live') else 1
+        fetched = fetch_none()
+        print('источники      : не запрашивались — орбита из архива OEM 2024 (A1/A3), события из архива DONKI/NOAA, повтор детерминирован')
+    r = run(mode, t0, req['duration_min'], req['search_min'], req['window_offsets_min'], disabled=req['disabled'],
+            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), fetched=fetched, now=now)
+    old, new = S['recommendation'], r.S['recommendation']
+    checks = [('вердикт', old['verdict'], new['verdict']), ('предпочтительное окно', old.get('preferred'), new.get('preferred')),
+              ('сравнение по механизмам', old.get('per_mechanism'), new.get('per_mechanism')),
+              ('причины', list(old.get('reasons') or []), list(new.get('reasons'))),
+              ('условия по окнам', _conditions(S['windows']), _conditions(r.S['windows']))]
+    same = True
+    for name, a, b in checks:
+        ok = a == b
+        same &= ok
+        print('%-22s: %s' % (name, 'совпало' if ok else 'РАСХОЖДЕНИЕ'))
+        if not ok:
+            print('   было  :', json.dumps(a, ensure_ascii=False)[:400])
+            print('   стало :', json.dumps(b, ensure_ascii=False)[:400])
+    algo_same = S.get('algorithm_version') == ALGO_VERSION
+    code_txt, code_changed = code_state(S.get('git_commit'))
+    print('версия алгоритма: сохранённая %s / текущая %s — %s' % (S.get('algorithm_version'), ALGO_VERSION, 'совпадает' if algo_same else 'ОТЛИЧАЕТСЯ'))
+    print('версия кода    :', code_txt)
+    if not same:
+        print('РЕЗУЛЬТАТ      : РАСХОЖДЕНИЕ — проверить версии архива, настроек и алгоритма')
+        return 1
+    if not algo_same or code_changed:
+        print('РЕЗУЛЬТАТ      : ВОСПРОИЗВЕДЕНО ДРУГОЙ ВЕРСИЕЙ (результат совпал, но версия алгоритма или код расчёта изменились)')
+        return 3
+    print('РЕЗУЛЬТАТ      : ВОСПРОИЗВЕДЕНО')
+    return 0
 
 
 if __name__ == '__main__':
