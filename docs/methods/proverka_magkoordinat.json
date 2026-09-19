@@ -1,0 +1,383 @@
+{
+ "generated_utc": "2026-09-19T13:58:44+00:00",
+ "method": "ОСТ 134-1044-2007, приложение Д, п. Д.2: Д.26–Д.28 (трассировка), Д.29 (L по B0 на экваторе)",
+ "field": "полное IGRF-13 степени 13, data/orbit/IGRF13.shc, через ppigrf (те же коэффициенты, что в расчёте)",
+ "belt_table": {
+  "source": "ОСТ 134-1044-2007, прил. А, табл. А.2.1",
+  "file": "data/ost1044_belts/A_2_1.csv",
+  "sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1"
+ },
+ "e_min_MeV": 30.0,
+ "ds_km": 20.0,
+ "dipole_selftest": {
+  "latitudes_deg": [
+   0.0,
+   5.0,
+   15.0,
+   30.0,
+   45.0,
+   51.6,
+   -40.0
+  ],
+  "altitude_km": 400.0,
+  "L_exact": [
+   1.0627825213460573,
+   1.0709173417255595,
+   1.139086873298354,
+   1.4170433617947429,
+   2.125565042692114,
+   2.754574534409084,
+   1.8110751442714965
+  ],
+  "B_over_B0_exact": [
+   1.0,
+   1.0347311763481932,
+   1.3492795721340978,
+   3.1357052575580315,
+   12.649110640673513,
+   29.35503623237201,
+   7.4055006289279754
+  ],
+  "equator_point": {
+   "lat_deg": 0.0,
+   "L_exact": 1.0627825213460573,
+   "r_over_RE": 1.0627825213460573,
+   "B_over_B0_exact": 1.0
+  },
+  "steps": [
+   {
+    "ds_km": 80.0,
+    "max_dL_pct": 1.5443673451187578e-06,
+    "max_dBB0_pct": 4.633102190787497e-06,
+    "max_dL_invariant_pct": 0.007427244375379782
+   },
+   {
+    "ds_km": 40.0,
+    "max_dL_pct": 8.114540150927496e-08,
+    "max_dBB0_pct": 2.434362045278249e-07,
+    "max_dL_invariant_pct": 0.0021481663738276424
+   },
+   {
+    "ds_km": 20.0,
+    "max_dL_pct": 1.4146905868983595e-09,
+    "max_dBB0_pct": 4.244093965155571e-09,
+    "max_dL_invariant_pct": 0.0007456476087464026
+   },
+   {
+    "ds_km": 10.0,
+    "max_dL_pct": 1.9333423750822476e-10,
+    "max_dBB0_pct": 5.799583036036893e-10,
+    "max_dL_invariant_pct": 0.0002558950848774444
+   },
+   {
+    "ds_km": 5.0,
+    "max_dL_pct": 1.7608137170554983e-11,
+    "max_dBB0_pct": 5.2802207051172445e-11,
+    "max_dL_invariant_pct": 0.00020544044856407595
+   }
+  ]
+ },
+ "convergence_igrf": {
+  "case": "quiet_2024-05-03_12Z",
+  "n_points": 106,
+  "steps": [
+   {
+    "ds_km": 80.0,
+    "seconds": 22.2,
+    "n_ok": 106,
+    "L_median": 1.5032784745126828,
+    "BB0_median": 3.7929907132525553
+   },
+   {
+    "ds_km": 40.0,
+    "seconds": 44.7,
+    "n_ok": 106,
+    "L_median": 1.5032784465744704,
+    "BB0_median": 3.7929906274741074,
+    "max_dL_vs_prev_pct": 0.0019378639981804113,
+    "max_dBB0_vs_prev_pct": 0.005813704654800134,
+    "max_dI_vs_prev_pct": Infinity
+   },
+   {
+    "ds_km": 20.0,
+    "seconds": 90.2,
+    "n_ok": 106,
+    "L_median": 1.5032784467638027,
+    "BB0_median": 3.792990630633795,
+    "max_dL_vs_prev_pct": 3.814058557871647e-06,
+    "max_dBB0_vs_prev_pct": 1.1442175251730191e-05,
+    "max_dI_vs_prev_pct": 2795.164305039968
+   },
+   {
+    "ds_km": 10.0,
+    "seconds": 180.9,
+    "n_ok": 106,
+    "L_median": 1.5032784467903884,
+    "BB0_median": 3.792990631422595,
+    "max_dL_vs_prev_pct": 4.748700987988741e-07,
+    "max_dBB0_vs_prev_pct": 1.4246102519877013e-06,
+    "max_dI_vs_prev_pct": 10.00020278684195
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "quiet_2024-05-03_12Z",
+   "start_utc": "2024-05-03T12:00:00+00:00",
+   "span_min": 840,
+   "step_seconds": 60,
+   "ds_km": 20.0,
+   "seconds_spent": 123.1,
+   "n_points": 841,
+   "n_in_saa": 188,
+   "trace_status": {
+    "mirror_in_atmosphere": 111,
+    "ok": 730
+   },
+   "B_start_vs_orbit_module_max_pct": 0.00019518353049363668,
+   "L_dipole_range": [
+    0.97416542860368,
+    3.331724894113076
+   ],
+   "L_traced_range": [
+    0.9751594827982013,
+    3.5035996600302854
+   ],
+   "delta_L_pct": {
+    "n": 841,
+    "median": 4.308887768707925,
+    "p95": 16.527518554023445,
+    "max": 21.383804478005363,
+    "mean": 6.064542489928355
+   },
+   "delta_L_pct_saa": {
+    "n": 188,
+    "median": 5.176921289437253,
+    "p95": 19.97482606732201,
+    "max": 21.383804478005363,
+    "mean": 8.131093839667349
+   },
+   "delta_BB0_pct": {
+    "n": 841,
+    "median": 13.628998765403955,
+    "p95": 45.3546519776913,
+    "max": 82.83794059051002,
+    "mean": 17.55874282090228
+   },
+   "delta_BB0_pct_saa": {
+    "n": 188,
+    "median": 17.315329763704604,
+    "p95": 46.3361973095739,
+    "max": 49.121167681081445,
+    "mean": 21.057547843396176
+   },
+   "delta_L_invariant_vs_D29_pct": {
+    "n": 730,
+    "median": 0.26472097092440916,
+    "p95": 1.369235223113299,
+    "max": 1.7341446861385945,
+    "mean": 0.463502841795833
+   },
+   "flux_status_dipole": {
+    "beyond_mirror": 496,
+    "ok": 201,
+    "no_model_L": 144
+   },
+   "flux_status_traced": {
+    "beyond_mirror": 462,
+    "ok": 219,
+    "no_model_L": 160
+   },
+   "n_points_flux_dipole_positive": 183,
+   "n_points_flux_traced_positive": 185,
+   "windows": [
+    {
+     "start_utc": "2024-05-03T12:00:00+00:00",
+     "duration_min": 360,
+     "fluence_dipole": {
+      "value_per_cm2": 2681847.075969865,
+      "coverage_fraction": 0.8111111111111111,
+      "covered_seconds": 17520.0
+     },
+     "fluence_traced": {
+      "value_per_cm2": 4130037.31128698,
+      "coverage_fraction": 0.8,
+      "covered_seconds": 17280.0
+     },
+     "ratio_as_is": 1.539997320612843,
+     "fluence_dipole_common": {
+      "value_per_cm2": 2679510.822558049,
+      "coverage_fraction": 0.7888888888888889,
+      "covered_seconds": 17040.0
+     },
+     "fluence_traced_common": {
+      "value_per_cm2": 4130037.31128698,
+      "coverage_fraction": 0.7888888888888889,
+      "covered_seconds": 17040.0
+     },
+     "ratio_common_support": 1.541340037337172
+    },
+    {
+     "start_utc": "2024-05-03T20:00:00+00:00",
+     "duration_min": 360,
+     "fluence_dipole": {
+      "value_per_cm2": 2452358.138889261,
+      "coverage_fraction": 0.8361111111111111,
+      "covered_seconds": 18060.0
+     },
+     "fluence_traced": {
+      "value_per_cm2": 4048827.831777054,
+      "coverage_fraction": 0.7861111111111111,
+      "covered_seconds": 16980.0
+     },
+     "ratio_as_is": 1.6509936976867812,
+     "fluence_dipole_common": {
+      "value_per_cm2": 2442591.9425142836,
+      "coverage_fraction": 0.7694444444444445,
+      "covered_seconds": 16620.0
+     },
+     "fluence_traced_common": {
+      "value_per_cm2": 4040259.6207382614,
+      "coverage_fraction": 0.7694444444444445,
+      "covered_seconds": 16620.0
+     },
+     "ratio_common_support": 1.6540870173261186
+    }
+   ],
+   "eccentric_dipole_offset_km": [
+    -396.7069313825396,
+    389.8394293106521,
+    232.76844197045347
+   ]
+  },
+  {
+   "name": "gannon_2024-05-10_cutoff12Z",
+   "start_utc": "2024-05-10T12:00:00+00:00",
+   "span_min": 600,
+   "step_seconds": 60,
+   "ds_km": 20.0,
+   "seconds_spent": 75.4,
+   "n_points": 601,
+   "n_in_saa": 120,
+   "trace_status": {
+    "mirror_in_atmosphere": 58,
+    "ok": 543
+   },
+   "B_start_vs_orbit_module_max_pct": 0.00011301518572093272,
+   "L_dipole_range": [
+    0.973594759673216,
+    2.476762749829368
+   ],
+   "L_traced_range": [
+    0.9747243539924086,
+    2.732623814941692
+   ],
+   "delta_L_pct": {
+    "n": 601,
+    "median": 4.311859934770168,
+    "p95": 16.81731730647371,
+    "max": 21.14793073895782,
+    "mean": 6.068349772221791
+   },
+   "delta_L_pct_saa": {
+    "n": 120,
+    "median": 5.879097937772942,
+    "p95": 20.225731300900883,
+    "max": 21.14793073895782,
+    "mean": 8.372628215442429
+   },
+   "delta_BB0_pct": {
+    "n": 601,
+    "median": 13.922377972421273,
+    "p95": 46.39766161217237,
+    "max": 81.66944074988595,
+    "mean": 17.71703061673687
+   },
+   "delta_BB0_pct_saa": {
+    "n": 120,
+    "median": 17.545468496929296,
+    "p95": 46.8390523773029,
+    "max": 48.66150225625773,
+    "mean": 21.843107001563542
+   },
+   "delta_L_invariant_vs_D29_pct": {
+    "n": 543,
+    "median": 0.25886165947741624,
+    "p95": 1.3467937027248609,
+    "max": 1.586260406833151,
+    "mean": 0.44771874936075284
+   },
+   "flux_status_dipole": {
+    "beyond_mirror": 348,
+    "no_model_L": 124,
+    "ok": 129
+   },
+   "flux_status_traced": {
+    "beyond_mirror": 332,
+    "no_model_L": 131,
+    "ok": 138
+   },
+   "n_points_flux_dipole_positive": 129,
+   "n_points_flux_traced_positive": 131,
+   "windows": [
+    {
+     "start_utc": "2024-05-10T12:00:00+00:00",
+     "duration_min": 360,
+     "fluence_dipole": {
+      "value_per_cm2": 1359197.6917103892,
+      "coverage_fraction": 0.7361111111111112,
+      "covered_seconds": 15900.0
+     },
+     "fluence_traced": {
+      "value_per_cm2": 1498710.0580688538,
+      "coverage_fraction": 0.75,
+      "covered_seconds": 16200.0
+     },
+     "ratio_as_is": 1.102643174873925,
+     "fluence_dipole_common": {
+      "value_per_cm2": 1358691.5708536494,
+      "coverage_fraction": 0.7194444444444444,
+      "covered_seconds": 15540.0
+     },
+     "fluence_traced_common": {
+      "value_per_cm2": 1498710.0580688538,
+      "coverage_fraction": 0.7194444444444444,
+      "covered_seconds": 15540.0
+     },
+     "ratio_common_support": 1.103053916149073
+    },
+    {
+     "start_utc": "2024-05-10T16:00:00+00:00",
+     "duration_min": 360,
+     "fluence_dipole": {
+      "value_per_cm2": 2891975.8469021013,
+      "coverage_fraction": 0.8111111111111111,
+      "covered_seconds": 17520.0
+     },
+     "fluence_traced": {
+      "value_per_cm2": 4081405.135881919,
+      "coverage_fraction": 0.7777777777777778,
+      "covered_seconds": 16800.0
+     },
+     "ratio_as_is": 1.4112860383166548,
+     "fluence_dipole_common": {
+      "value_per_cm2": 2877109.7227780223,
+      "coverage_fraction": 0.7444444444444445,
+      "covered_seconds": 16080.0
+     },
+     "fluence_traced_common": {
+      "value_per_cm2": 4072806.555475395,
+      "coverage_fraction": 0.7444444444444445,
+      "covered_seconds": 16080.0
+     },
+     "ratio_common_support": 1.4155895839602723
+    }
+   ],
+   "eccentric_dipole_offset_km": [
+    -396.69954416320235,
+    389.9182169521164,
+    232.791510050235
+   ]
+  }
+ ]
+}
