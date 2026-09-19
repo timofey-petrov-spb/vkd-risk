@@ -150,7 +150,10 @@ def test_missing_kp_is_declared_in_coverage_and_never_improves_verdict(belts):
     # до начала окна), а отсутствие Kp остаётся ОБЪЯВЛЕННЫМ частичным покрытием: оно стоит в
     # причинах (проверено выше) и в заметках механизма, но отказ не из-за него.
     assert r_off.verdict == 'insufficient'
-    assert 'не покрыта совсем' in r_off.rule_applied, r_off.rule_applied
+    # Десятый круг: правило называет отсутствие покрытия своими словами («отсутствует
+    # покрытие обязательной линии»), потому что прежняя фраза «не покрыта совсем» стояла
+    # в одной строке с долей покрытия другого окна и ею опровергалась.
+    assert 'отсутствует покрытие обязательной линии' in r_off.rule_applied, r_off.rule_applied
     assert 'GOES' in r_off.rule_applied, r_off.rule_applied
     # и ни одна строка отказа не утверждает отсутствия там, где рядом стоит доля покрытия
     assert not any('покрывает 8' in m or 'покрывает 7' in m for m in r_off.missing), r_off.missing
