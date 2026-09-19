@@ -1,30 +1,13 @@
-[project]
-name = "vkd-risk"
-version = "0.1.0"
-description = "Прогнозирование внешних рисков и планирование ВКД на МКС — исследовательский прототип поддержки решений"
-requires-python = ">=3.11"
-dependencies = [
-    "numpy>=2.0",
-    "pandas>=2.2",
-    "scipy>=1.13",
-    "sgp4>=2.23",
-    "skyfield>=1.49",
-    "ppigrf>=2.0",
-    "requests>=2.32",
-    "plotly>=5.24",
-    "streamlit>=1.38",
-]
-
-[project.optional-dependencies]
-dev = ["pytest>=8.0"]
-ml = ["scikit-learn>=1.5"]
+# Настройки инструментов разработки. Зависимости объявлены ТОЛЬКО в requirements.txt.
+#
+# Почему здесь нет [project] и [build-system]. Streamlit Community Cloud при наличии обоих файлов
+# пишет в журнал сборки «WARN: More than one requirement» и ставит окружение по pyproject.toml как
+# по устанавливаемому проекту: в журнале 19.09.2026 это дало «Audited 1 package in 1ms» вместо
+# установки девяти библиотек, после чего приложение не доходило до первого экрана. Один источник
+# зависимостей — requirements.txt с закреплёнными версиями; он же используется локально.
+#
+# Если понадобится устанавливаемый пакет (сборка колеса, публикация), разделы [project] и
+# [build-system] возвращают вместе с решением, чем ставит окружение площадка.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-include = ["vkd*", "app*"]
