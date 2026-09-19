@@ -175,10 +175,17 @@ def test_live_without_tle_url_does_not_invent_address():
     rec = next(v for k, v in r.S['trajectory_meta']['provenance']['records'].items() if k.startswith('celestrak_gp'))
     assert 'celestrak.org' not in (rec.get('url') or '') and 'неизвестен' in rec['url']
     assert r.S['trajectory_meta']['provenance']['requested_mode'] == 'live'
-    # в текущем режиме окно через 4 ч не покрыто наблюдением GOES: покрытие отсутствует
+    # в текущем режиме окно через 4 ч не покрыто наблюдением GOES: покрытие ВЕЛИЧИНЫ отсутствует
     g2 = next(f for f in r.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
     assert g2.coverage.value == 'none' and g2.horizon_utc is not None
-    assert r.rec.verdict == 'insufficient' and any('GOES' in x for x in r.rec.missing)
+    # ИЗМЕНЕНО в круге 11 (R14): раньше из-за этого вердикт был отказом ВСЕГДА и при любых данных —
+    # именно этот отказ владелец увидел 19.09 на развёрнутом сервисе первым экраном. Теперь канал
+    # протонных событий объявлен общим (наблюдение свежее и фоновое), линия не обнуляется, и вывод
+    # делается по тем факторам, которые окна действительно различают. Что проверяется взамен:
+    # отказа нет, а фраза об общем канале стоит В САМОМ вердикте, а не потерялась.
+    assert r.rec.verdict != 'insufficient', r.rec.rule_applied
+    assert 'прогноза потока с разрешением по окну не существует' in r.rec.scope_ru
+    assert 'наличие события внутри окна неизвестно' in r.rec.scope_ru
     assert r.S['effective_config']['sources']['cache_ttl_s'] == 300 and r.S['effective_config']['thresholds']['sep_valid_hours'] == 24.0
 
 

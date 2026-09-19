@@ -132,24 +132,53 @@ def test_rang_i_gruppa_tolko_u_poschitannyh(belts, track):
     assert ranks == list(range(1, len(ranks) + 1))
 
 
-def test_rangi_po_flyuensu_i_gruppy_ravnoznachnosti(belts, track):
-    """Порядок — по флюенсу; внутри группы равнозначности — по минутам в аномалии."""
-    sc = _scan(track, belts=belts)
+def test_pravilo_to_zhe_chto_u_sravneniya_okon(belts, track):
+    """Перебор применяет правило (8) методики — то же самое, которым сравниваются два-три окна.
+
+    Проверяется не словами, а применением: лучшая группа — ровно недоминируемое множество,
+    посчитанное теми же `pair_not_worse`/`pair_better`, которые зовёт `recommend`.
+    """
+    from vkd.windows.compare import pair_better
+    th = Thresholds()
+    sc = _scan(track, belts=belts, th=th)
+    free = [c for c in sc.candidates if c.rank is not None and not c.conditions]
+    tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
+    nd = [c for c in free
+          if not any(pair_better(b.saa_min, b.fluence, c.saa_min, c.fluence, tol_m, tol_r)
+                     for b in free if b is not c)]
+    assert {c.start_utc for c in nd} == {sc.candidates[i].start_utc for i in sc.best}
+    # и наоборот: никого из лучшей группы никто не превосходит
+    for i in sc.best:
+        a = sc.candidates[i]
+        assert not any(pair_better(b.saa_min, b.fluence, a.saa_min, a.fluence, tol_m, tol_r) for b in free)
+
+
+def test_gruppy_eto_sloi_nedominiruemosti(belts, track):
+    """Номер группы — номер слоя: каждого из второго слоя превосходит кто-то из первого."""
+    from vkd.windows.compare import pair_better
+    th = Thresholds()
+    sc = _scan(track, belts=belts, th=th)
+    tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
+    by_group = {}
+    for c in sc.candidates:
+        if c.rank is not None and not c.conditions:
+            by_group.setdefault(c.group, []).append(c)
+    if len(by_group) >= 2:
+        first, second = by_group[min(by_group)], by_group[min(by_group) + 1]
+        for a in second:
+            assert any(pair_better(b.saa_min, b.fluence, a.saa_min, a.fluence, tol_m, tol_r) for b in first), \
+                'кандидат второго слоя не превзойдён ни одним кандидатом первого'
+    # ранги идут по группам: сначала вся первая, потом вся вторая
     ranked = sorted((c for c in sc.candidates if c.rank), key=lambda c: c.rank)
-    assert [c.fluence for c in ranked] == sorted(c.fluence for c in ranked)
-    for a, b in zip(ranked, ranked[1:]):
-        if a.group == b.group:
-            assert a.saa_min <= b.saa_min, (a.start_utc, b.start_utc)
-            assert b.fluence <= a.fluence * max(1.0, sc_tol(sc)), 'группа шире объявленного допуска'
-        else:
-            assert b.group == a.group + 1
+    assert [c.group for c in ranked] == sorted(c.group for c in ranked)
 
 
-def sc_tol(sc: ScanResult) -> float:
-    """Допуск, объявленный в самой выдаче: правило и число на экране должны быть одним числом."""
-    import re
-    m = re.search(r'×(\d+),(\d+)', sc.tolerance_note)
-    return float('%s.%s' % m.groups())
+def test_dopuski_te_zhe_chto_u_sravneniya_okon(belts, track):
+    """Допуск в тексте выдачи — те же δ и ρ, что применены. Два числа для одного слова
+    «равнозначно» на одном экране недопустимы."""
+    th = Thresholds(equiv_tol_min=7.0, fluence_equiv_ratio=1.5)
+    sc = _scan(track, belts=belts, th=th)
+    assert '7 мин' in sc.tolerance_note and '×1,50' in sc.tolerance_note, sc.tolerance_note
 
 
 def test_kandidat_s_usloviem_ne_stoit_vyshe_kandidata_bez_usloviy(belts, track):
@@ -157,9 +186,9 @@ def test_kandidat_s_usloviem_ne_stoit_vyshe_kandidata_bez_usloviy(belts, track):
     хорошим ни был его флюенс."""
     from vkd.types import EventInterval
     # Протонное событие на первой половине горизонта: условие у ранних начал, у поздних нет.
-    ev = EventInterval('sep#1', 'SEP', T0 - timedelta(hours=1), T0 + timedelta(hours=5),
-                       T0 - timedelta(hours=2), 'rec#sep', valid_from_utc=T0 - timedelta(hours=1),
-                       valid_to_utc=T0 + timedelta(hours=5), note='poток > 10 pfu')
+    a0, a1 = T0 - timedelta(hours=1), T0 + timedelta(hours=5)
+    ev = EventInterval('sep#1', 'SEP', Kind.OBSERVATION, a0, a1, True, True, a0, a1,
+                       'test', a0, 'rec#sep', note='поток > 10 pfu')
     sc = _scan(track, belts=belts, events=(ev,))
     flagged = [c for c in sc.candidates if c.conditions and c.rank]
     free = [c for c in sc.candidates if not c.conditions and c.rank]
@@ -167,34 +196,58 @@ def test_kandidat_s_usloviem_ne_stoit_vyshe_kandidata_bez_usloviy(belts, track):
     assert max(c.rank for c in free) < min(c.rank for c in flagged)
     assert max(c.group for c in free) < min(c.group for c in flagged)
     # и правило названо словами, а не только применено
-    assert 'не может стоять выше кандидата без условий' in sc.rule
+    assert 'выше кандидата без условий не ставится' in sc.rule
 
 
 def test_ni_odnogo_summarnogo_balla(belts, track):
-    """Складывать флюенс с минутами в аномалии нельзя. Проверяется тем, что ранг определяется
-    флюенсом, и никакой третьей величины в выдаче нет."""
+    """Складывать флюенс с минутами в аномалии нельзя: третьей величины в выдаче нет, и правило
+    прямо это отрицает."""
     sc = _scan(track, belts=belts)
     d = sc.to_snapshot()
     assert not any(k for k in CANDIDATE_KEYS if 'score' in k or 'балл' in k)
-    assert 'балл' in sc.rule and 'нет' in sc.rule            # правило прямо это отрицает
+    assert 'суммарного балла воздействия у сервиса нет' in sc.rule
     assert all(set(c) == CANDIDATE_KEYS for c in d['candidates'])
 
 
 def test_verdikt_perebora_nazyvaet_svoy_ishod(belts, track):
-    """Четыре исхода перебора, и каждый означает своё."""
+    """Исходы перебора: рекомендация — только когда в лучшей группе ОДИН кандидат."""
     sc = _scan(track, belts=belts)
     assert sc.verdict in ('recommended', 'equivalent')
-    assert sc.recommended_index is not None and sc.candidates[sc.recommended_index].rank == 1
     assert sc.best and sc.candidates[sc.best[0]].rank == 1
+    if sc.verdict == 'recommended':
+        assert len(sc.best) == 1 and sc.recommended_index == sc.best[0]
+    else:
+        # несколько в лучшей группе — рекомендации одного нет, как и при сравнении окон
+        assert len(sc.best) > 1 and sc.recommended_index is None
     # все окна под условием: рекомендации нет, но перечень есть
     sc2 = _scan(track, belts=belts, goes=goes(20.0))
     assert sc2.verdict == 'all_need_check' and sc2.recommended_index is None and sc2.best
 
 
+def test_kompromiss_bez_pobeditelya_nazyvaetsya_chislami(belts, track):
+    """Правило (8): минуты и флюенс указывают на разные начала — компромисс без победителя.
+
+    Собирается искусственно из двух кандидатов, которые СПОРЯТ: у одного заметно меньше минут,
+    у другого заметно ниже флюенс. Подгонки данных здесь нет — проверяется сам текст правила,
+    а не то, что такой случай бывает на архиве (на архиве он измерен отдельно и в отчёте назван).
+    """
+    from vkd.windows.scan import Candidate, conflict_ru, why_ru
+    a = Candidate(T0, T0 + timedelta(minutes=DUR), 10.0, 9.0e5, 1e-6, 'full', ())
+    b = Candidate(T0 + timedelta(minutes=60), T0 + timedelta(minutes=60 + DUR), 90.0, 1.0e5, 1e-6, 'full', ())
+    txt = conflict_ru([a, b], tol_m=5.0, tol_r=1.5)
+    assert 'компромисс без победителя' in txt
+    assert 'по флюенсу лучше начало' in txt and 'по времени в аномалии — начало' in txt
+    assert 'выбор за аналитиком' in txt
+    why = why_ru([a, b], (0, 1), None, 'equivalent', STEP, 5.0, 1.5)
+    assert 'спорят между собой' in why and 'компромисс без победителя' in why
+    # а равнозначные (различие внутри допуска) компромиссом не называются
+    c = Candidate(T0 + timedelta(minutes=60), T0 + timedelta(minutes=60 + DUR), 12.0, 1.1e6, 1e-6, 'full', ())
+    assert conflict_ru([a, c], tol_m=5.0, tol_r=1.5) == ''
+
+
 def test_bez_trassy_perebor_nichego_ne_ranzhiruet(belts):
     """Пустая трасса — это не «нулевое воздействие»: ранга нет ни у кого, исход insufficient."""
-    empty = traj(24 * 60, lambda i: False)[:5]          # пять точек в самом начале горизонта
-    sc = _scan(empty, belts=belts)
+    sc = _scan([], belts=belts)                         # трассы нет вовсе
     assert sc.verdict == 'insufficient' and sc.recommended_index is None and sc.best == ()
     assert all(c.rank is None and c.fluence is None for c in sc.candidates)
     assert 'не по чему' in sc.why
@@ -206,6 +259,13 @@ def test_pochemu_soderzhit_chisla_i_chislo_perebrannyh_nachal(belts, track):
     assert 'перебрано %d' % sc.n_candidates in sc.why
     assert 'шагом %d мин' % STEP in sc.why
     assert 'мин в аномалии' in sc.why and 'флюенс' in sc.why
+
+
+def test_slishkom_melkiy_shag_otkaz_s_nazvannoy_prichinoy(belts, track):
+    """Никаких молчаливых огрублений: слишком мелкий шаг даёт отказ с числом, а не тихую замену
+    шага на удобный сервису."""
+    with pytest.raises(ValueError, match='при пределе'):
+        _scan(track, belts=belts, step_min=1)
 
 
 def test_polnaya_ocenka_tolko_dlya_pokazyvaemyh(belts, track):
@@ -222,13 +282,120 @@ def test_polnaya_ocenka_tolko_dlya_pokazyvaemyh(belts, track):
                       search_to_utc=T0 + timedelta(minutes=SEARCH + DUR), duration_min=DUR,
                       step_min=STEP, now_utc=T0, full_assess=full, goes=g, kp=k)
     assert 1 <= len(calls) <= 5 < sc.n_candidates
-    assert sc.candidates[sc.recommended_index].start_utc in calls
+    assert sc.candidates[sc.best[0]].start_utc in calls
 
 
 def test_oblast_vyvoda_perebora_ne_obeshchaet_bezopasnosti(belts, track):
     sc = _scan(track, belts=belts)
     assert 'безопас' not in sc.scope.lower()
     assert 'не заключение о полном риске ВКД' in sc.scope
+
+
+# --------------------------------------------------------------------- на настоящем конвейере
+@pytest.fixture(scope='module')
+def real():
+    """Один настоящий расчёт: те же входы, что у сохранённого примера разбора 03.05.2024."""
+    from datetime import datetime, timezone
+    from app.compute import run
+    from tests.test_integration import _fetched
+    t0 = datetime(2024, 5, 3, 12, 0, tzinfo=timezone.utc)
+    return run('history_review', t0, DUR, SEARCH, [0, 240], fetched=_fetched(), now=t0)
+
+
+def test_chisla_perebora_sovpadayut_s_pooknovym_raschetom_v_snimke(real):
+    """Тождественность НА НАСТОЯЩИХ ДАННЫХ и в том самом снимке, который уходит на экран:
+    окна сравнения стоят на сетке перебора, и их числа обязаны совпасть с числами кандидатов."""
+    S = real.S
+    by_start = {c['start_utc']: c for c in S['scan']['candidates']}
+    checked = 0
+    for w in S['windows']:
+        c = by_start.get(w['start_utc'])
+        if c is None or w['duration_min'] != S['scan']['requested_duration_min']:
+            continue
+        f = {x['name']: x['value'] for m in w['mechanisms'] for x in m['factors']}
+        assert c['saa_min'] == f['минут в аномалии'], w['start_utc']
+        assert c['fluence'] == next(v for n, v in f.items() if n.startswith('флюенс')), w['start_utc']
+        assert c['mmod_hits'] == next(v for n, v in f.items() if n.startswith('ожидаемое число')), w['start_utc']
+        checked += 1
+    assert checked >= 1, 'ни одно сравниваемое окно не попало на сетку перебора — проверять нечего'
+
+
+def test_klyuch_scan_v_snimke_i_v_vygruzke(real):
+    """Ключ `scan` попадает и в снимок, и в выгрузку — наравне с остальным снимком."""
+    import zipfile
+    from io import BytesIO
+    from app.export import build_zip, report_md
+    S = real.S
+    assert set(S['scan']) == SCAN_KEYS
+    z = zipfile.ZipFile(BytesIO(build_zip(S, real.raw_records)))
+    assert 'scan.json' in z.namelist()
+    import json
+    assert json.loads(z.read('scan.json').decode('utf-8'))['n_candidates'] == S['scan']['n_candidates']
+    md = report_md(S, real.raw_records)
+    assert '## Перебор начал выхода' in md
+    assert 'Перебрано начал: %d' % S['scan']['n_candidates'] in md
+
+
+def test_perebor_ne_rekomenduet_tam_gde_vydikt_otkazyvaet():
+    """На одном экране не может стоять отказ сверху и рекомендация перебора под ним.
+
+    Источник исключён пользователем — обязательная линия не покрыта совсем. Правило вердикта
+    отказывает; перебор обязан сказать то же самое, оставив числа кандидатов на месте и прямо
+    пометив, что это сравнение факторов, а не рекомендация.
+    """
+    from datetime import datetime, timedelta, timezone
+    from app.compute import run
+    from tests.test_integration import _fetched
+    from vkd.orbit.trajectory import satellite_from_tle
+    tle = open('data/orbit/iss.tle', encoding='utf-8').read()
+    t0 = (satellite_from_tle(tle.encode()).epoch.utc_datetime() + timedelta(hours=6)).replace(second=0, microsecond=0)
+    R = run('live', t0, DUR, SEARCH, [0, 240], disabled={'goes': 'off'},
+            fetched=_fetched(tle, goes_at=t0), now=t0)
+    assert R.S['recommendation']['verdict'] == 'insufficient'
+    sc = R.S['scan']
+    assert sc['verdict'] == 'insufficient' and sc['recommended_index'] is None
+    assert 'не покрыта совсем' in sc['why'] and 'а не рекомендация' in sc['why']
+    assert 'отказ от вывода, а не оценка риска' in sc['scope']
+    # числа при этом посчитаны и не спрятаны
+    assert any(c['fluence'] is not None for c in sc['candidates'])
+
+
+def test_bez_perebora_klyucha_net_vovse():
+    """Пустой перебор и НЕСДЕЛАННЫЙ перебор — разные вещи: во втором случае ключа нет вовсе,
+    и экран честно говорит, что перебор не выполнялся."""
+    from datetime import datetime, timezone
+    from app.compute import run
+    from tests.test_integration import _fetched
+    t0 = datetime(2024, 5, 3, 12, 0, tzinfo=timezone.utc)
+    S = run('history_review', t0, DUR, SEARCH, [0, 240], fetched=_fetched(), now=t0, scan=False).S
+    assert 'scan' not in S
+    from app.export import report_md
+    assert 'Перебор начал выхода' not in report_md(S, {})
+
+
+def test_shag_perebora_beryotsya_iz_nastroek():
+    """Шаг — настройка вне кода (Т7), и мёртвым ключом она не является."""
+    from vkd.config import section
+    from vkd.windows.scan import STEP_MIN_DEFAULT
+    assert int(section('ui')['scan_step_min']) == STEP_MIN_DEFAULT == 10
+
+
+def test_vse_sohranyonnye_primery_nesut_perebor():
+    """ТЗ раздела 1a: ключ попадает в сохранённые примеры наравне с остальным снимком."""
+    import glob
+    import io as _io
+    import json
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    files = sorted(glob.glob(os.path.join(root, 'examples', '*.json')))
+    assert files, 'примеров нет — сначала python scripts/make_examples.py'
+    for f in files:
+        d = json.load(_io.open(f, encoding='utf-8'))
+        sc = d.get('scan')
+        assert sc, os.path.basename(f)
+        assert set(sc) == SCAN_KEYS, (os.path.basename(f), set(sc) ^ SCAN_KEYS)
+        assert sc['n_candidates'] == len(sc['candidates']) > 1, os.path.basename(f)
+        assert sc['verdict'] in ('recommended', 'equivalent', 'all_need_check', 'insufficient')
 
 
 pytest_plugins = ('tests.test_compare',)

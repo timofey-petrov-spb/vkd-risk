@@ -255,9 +255,12 @@ def _scan_md(S: dict) -> list:
          '(последнее начало — конец срока минус длительность).'
          % (fmt(sc['n_candidates']), fmt(sc['step_min']), _dt(sc['search_from_utc']),
             _dt(sc['search_to_utc']), fmt(sc['requested_duration_min'])),
-         '', 'Почему: %s.' % phrase_ru(sc['why']),
+         # точка не удваивается: текст «почему» — законченные предложения и свою уже несёт
+         '', 'Почему: %s' % phrase_ru(sc['why']).rstrip('.') + '.',
          '', 'Правило ранжирования: %s' % phrase_ru(sc['rule']),
-         '', 'Допуск равнозначности: %s.' % phrase_ru(sc['tolerance_note']),
+         # Заголовок строки отличается от строки допуска у сравнения окон намеренно: величины в
+         # них одни и те же, но относятся к разным перечням, и путать их в отчёте нельзя.
+         '', 'Допуск при переборе: %s.' % phrase_ru(sc['tolerance_note']),
          '', 'Область вывода перебора: %s.' % phrase_ru(sc['scope']), '']
     rows = [sc['candidates'][i] for i in sc['best'][:SCAN_TABLE_ROWS]]
     if rows:

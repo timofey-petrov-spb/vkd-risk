@@ -38,6 +38,11 @@
 ПОЛНАЯ оценка окна (заметки, покрытие всех каналов, карточки факторов, объявленная область)
 считается только для тех кандидатов, которые действительно показываются: рекомендованного и
 строк таблицы лучших. Это единицы вызовов по 0,067 с, а не семьдесят три.
+
+ПРАВИЛО ВЫБОРА ЗДЕСЬ НЕ ИЗОБРЕТАЕТСЯ. Применяется правило (8) методики — то же, по которому
+сравниваются два-три окна: сравнение по доминированию двух величин с их допусками
+(`vkd.windows.compare.pair_not_worse` / `pair_better`). Второго правила выбора окна в проекте
+нет; если бы оно появилось, на одном экране стояли бы два разных ответа на один вопрос.
 """
 from __future__ import annotations
 
@@ -51,8 +56,8 @@ from vkd.assess.trapped import BeltTable
 from vkd.explain.format import fmt_ru
 from vkd.orbit.integration import integrate_time
 from vkd.types import TrajectoryPoint, Window, WindowAssessment
-from vkd.windows.compare import (Thresholds, _cov, _min_cov, _short, _sw_vals, declared_scope,
-                                 window_conditions)
+from vkd.windows.compare import (Thresholds, _cov, _min_cov, _short, declared_scope,
+                                 pair_better, pair_not_worse, window_conditions)
 
 # Разрыв трассы, больше которого интеграл не заполняется. Та же величина, что в оценке окна
 # (`assess_window`): при шаге трассы 60 с это ровно один пропущенный шаг. Держать её в двух
@@ -64,12 +69,25 @@ MAX_GAP_SECONDS = 60.0
 STEP_MIN_DEFAULT = 10
 
 RANK_RULE_RU = (
-    'Ранжирование по флюенсу захваченных протонов за окно — целевой величине обязательного '
-    'механизма. Кандидаты, у которых флюенс различается не больше допуска равнозначности, '
-    'считаются неразличимыми и попадают в одну группу; внутри группы порядок — по минутам в '
-    'аномалии. Кандидат, у которого стоит условие проверки, не может стоять выше кандидата без '
-    'условий. Складывать флюенс с минутами в аномалии нельзя: это разные величины, и никакого '
-    'суммарного балла воздействия у сервиса нет.')
+    'Применяется правило (8) методики — то же, которым сравниваются окна: m — минуты в аномалии, Φ — флюенс '
+    'за окно; «не хуже» требует обеих величин, «лучше» — строгого выигрыша хотя бы по одной сверх '
+    'допуска. Начало попадает в лучшую группу, если ни одно другое его не превосходит по этому '
+    'правилу. Кандидат, у которого стоит условие проверки, из автоматического выбора исключается и '
+    'выше кандидата без условий не ставится. Если в лучшей группе одно начало — оно и есть '
+    'рекомендация; если несколько и они равнозначны в допуске — перечисляются все; если несколько и '
+    'они спорят (одно лучше по минутам, другое по флюенсу сверх допуска) — это компромисс без '
+    'победителя, и обе стороны названы числами. Внутри группы порядок — по времени начала: выбирать '
+    'внутри неё правило не имеет права. Складывать флюенс с минутами в аномалии нельзя: это разные '
+    'величины, и никакого суммарного балла воздействия у сервиса нет.')
+
+# Предел числа перебранных начал. Сравнение по доминированию — попарное, и при мелком шаге оно
+# начинает стоить дороже самого перебора. Предел объявляется отказом с названной причиной, а не
+# молчаливым огрублением шага: подменять запрос человека сервис не имеет права.
+# 300 начал — это шаг 5 мин на сутки поиска. Замер разбиения на слои (та же машина, что и
+# остальные замеры круга; худшая расстановка — цепочка, где каждый слой из одного кандидата):
+# 73 начала — 0,004 с, 145 — 0,029 с, 300 — 0,237 с; дальше рост квадратичный, и при 1441 начале
+# (шаг 1 мин на сутки) перебор перестал бы укладываться в отрисовку экрана.
+MAX_CANDIDATES = 300
 
 # Чего НЕ означает покрытие кандидата. Каналы, одинаковые для всех окон по построению
 # (протонные события, Kp, уведомления), в него не входят: они окна не различают и попадают в
@@ -165,37 +183,52 @@ def starts(search_from_utc: datetime, search_to_utc: datetime, duration_min: int
     return [search_from_utc + timedelta(minutes=step_min * i) for i in range(n + 1)]
 
 
-def _rank_candidates(cands: list, tol_ratio: float) -> tuple[list, tuple, Optional[int], str]:
-    """Расставляет ранги и группы равнозначности. Возвращает (кандидаты, best, рекомендованный, исход).
+def _layers(pool: list, tol_m: float, tol_r: float) -> list:
+    """Разбиение на слои недоминируемости правилом (8) методики.
+
+    Слой 1 — кандидаты, которых не превосходит ни один другой из набора: `pair_better` ни от кого
+    к ним не применяется. Затем слой 1 убирается, и то же повторяется с остатком. Никакой третьей
+    величины и никакой свёртки двух величин в одно число здесь нет: сравниваются только пары
+    «не хуже» / «лучше» теми же функциями, которыми сравниваются окна.
+
+    Внутри слоя порядок не назначается: правило выбирать внутри него не имеет права. Слой
+    отдаётся в порядке времени начала — так его и печатают.
+    """
+    rest, out = list(pool), []
+    while rest:
+        front = [a for a in rest
+                 if not any(pair_better(b.saa_min, b.fluence, a.saa_min, a.fluence, tol_m, tol_r)
+                            for b in rest if b is not a)]
+        if not front:
+            # Отношение «лучше» с допусками не транзитивно, поэтому теоретически возможен цикл,
+            # в котором недоминируемых нет вовсе. Молча выбрасывать такой остаток нельзя: он
+            # объявляется одним слоем целиком, и это честнее выдуманного порядка.
+            front = list(rest)
+        out.append(sorted(front, key=lambda c: c.start_utc))
+        rest = [a for a in rest if a not in front]
+    return out
+
+
+def _rank_candidates(cands: list, tol_m: float, tol_r: float) -> tuple[list, tuple, Optional[int], str]:
+    """Расставляет ранги и группы. Возвращает (кандидаты, best, рекомендованный, исход).
 
     Порядок правил ровно тот, что напечатан пользователю (RANK_RULE_RU):
-      1. кандидаты без условий идут впереди кандидатов с условиями — правило команды, не норма;
-      2. внутри класса порядок по флюенсу, по возрастанию;
-      3. соседние по флюенсу кандидаты объединяются в группу равнозначности, пока флюенс не
-         превысил флюенс ведущего группы больше чем в `tol_ratio` раза;
-      4. внутри группы порядок по минутам в аномалии.
+      1. кандидаты с условием проверки из автоматического выбора исключаются — действующая
+         политика прототипа; их слои идут после всех слоёв кандидатов без условий;
+      2. внутри каждого класса кандидаты разбиваются на слои недоминируемости правилом (8);
+      3. номер слоя и есть номер группы, ранг — сквозной порядковый номер;
+      4. внутри слоя порядок по времени начала, потому что выбирать внутри него нечем.
     Кандидат, у которого флюенс не посчитан, НЕ ранжируется: ранга и группы у него нет.
     Подставлять вместо непосчитанного нуль или бесконечность нельзя — это превратило бы
     отсутствие данных в лучший или худший исход.
     """
     ranked = [c for c in cands if c.fluence is not None]
-    free = sorted([c for c in ranked if not c.conditions], key=lambda c: c.fluence)
-    flagged = sorted([c for c in ranked if c.conditions], key=lambda c: c.fluence)
-    order, group_no = [], 0
-    for klass in (free, flagged):
-        leader = None
-        for c in klass:
-            if leader is None or c.fluence > leader * max(1.0, tol_ratio):
-                group_no += 1
-                leader = c.fluence
-                order.append([group_no, []])
-            order[-1][1].append(c)
-    # внутри группы — по минутам в аномалии; непосчитанные минуты идут последними и своим
-    # отсутствием никого не обгоняют
+    free = [c for c in ranked if not c.conditions]
+    flagged = [c for c in ranked if c.conditions]
+    order = _layers(free, tol_m, tol_r) + _layers(flagged, tol_m, tol_r)
     ranked_out, rank_no, groups = [], 0, {}
-    for gno, members in order:
-        # непосчитанные минуты не обгоняют посчитанные и между собой сохраняют порядок по времени
-        for c in sorted(members, key=lambda c: (c.saa_min is None, c.saa_min or 0.0, c.start_utc)):
+    for gno, members in enumerate(order, 1):
+        for c in members:
             rank_no += 1
             groups[c.start_utc] = (rank_no, gno)
             ranked_out.append(c)
@@ -206,18 +239,19 @@ def _rank_candidates(cands: list, tol_ratio: float) -> tuple[list, tuple, Option
     by_start = {c.start_utc: i for i, c in enumerate(out)}
     if not ranked_out:
         return out, (), None, 'insufficient'
-    first_no = groups[ranked_out[0].start_utc][1]
-    best = tuple(by_start[c.start_utc] for c in ranked_out if groups[c.start_utc][1] == first_no)
+    best = tuple(by_start[c.start_utc] for c in order[0])
     if not free:
         # Все ранжированные кандидаты под условием: выбирать правило не имеет права, но числа
         # у них разные и перечислить их обязано — решение за аналитиком.
         return out, best, None, 'all_need_check'
-    # Первая группа состоит больше чем из одного начала — значит по целевой величине они
-    # неразличимы: исход «равнозначны». Рекомендованным при этом остаётся первый по рангу —
-    # порядок внутри группы задан ОБЪЯВЛЕННЫМ правилом (минуты в аномалии), а не выбран молча.
-    top = ranked_out[0]
-    verdict = 'equivalent' if len(best) > 1 else 'recommended'
-    return out, best, by_start[top.start_utc], verdict
+    # Один в лучшей группе — он и есть рекомендация. Несколько — рекомендации нет: они либо
+    # равнозначны в допуске, либо спорят, и в обоих случаях правило не выбирает за аналитика.
+    # Разницу между этими двумя случаями называет `why_ru` числами обеих сторон.
+    # Пятого исхода в договоре с экраном нет (ТЗ, раздел 1a), поэтому компромисс без победителя
+    # приходит под тем же `equivalent` — с рекомендацией None и названными сторонами в тексте.
+    if len(best) == 1:
+        return out, best, best[0], 'recommended'
+    return out, best, None, 'equivalent'
 
 
 def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Thresholds, *,
@@ -244,8 +278,14 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
     ones = [1.0] * len(traj)
     flux = [belts.integral_flux(p.L, p.B_over_B0, th.e_min_MeV).value_per_cm2_s for p in traj]
 
+    grid = starts(search_from_utc, search_to_utc, duration_min, step_min)
+    if len(grid) > MAX_CANDIDATES:
+        raise ValueError('шаг перебора %d мин даёт %d начал при пределе %d: сравнение по доминированию '
+                         'попарное и при таком шаге стоит дороже самого перебора; увеличьте шаг '
+                         '(config/settings.toml, [ui].scan_step_min) или сократите срок поиска'
+                         % (step_min, len(grid), MAX_CANDIDATES))
     cands: list[Candidate] = []
-    for start in starts(search_from_utc, search_to_utc, duration_min, step_min):
+    for start in grid:
         end = start + timedelta(minutes=duration_min)
         # Нарезка — теми же выражениями, что в assess_window: берутся и обрамляющие точки,
         # чтобы границы окна интерполировались, а не отбрасывались.
@@ -276,7 +316,11 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
         cands.append(Candidate(start, end, saa_min, fl_int.known_integral, mmod, cov.value,
                                tuple(_short(c.text) for c in conds)))
 
-    cands, best, rec_i, verdict = _rank_candidates(cands, th.fluence_equiv_ratio)
+    # Допуски — ТЕ ЖЕ, что у сравнения окон: δ по минутам и ρ по флюенсу после анализа
+    # чувствительности. Другие числа здесь означали бы, что «равнозначно» на одном экране
+    # значит две разные вещи.
+    tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
+    cands, best, rec_i, verdict = _rank_candidates(cands, tol_m, tol_r)
 
     # Полная оценка — только для показываемых: рекомендованного и строк таблицы лучших.
     shown = [i for i in sorted({*best, *( (rec_i,) if rec_i is not None else () )},
@@ -290,85 +334,124 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
     blocking = [n for a in shown_A for m in a.mechanisms if m.mandatory for n in m.blocking_notes]
     common_ru = tuple(dict.fromkeys(n for a in shown_A for m in a.mechanisms
                                     if m.mandatory for n in m.declared_common_ru))
+    # У показанных начал обязательная линия может быть НЕ ПОКРЫТА СОВСЕМ — например, источник
+    # исключён пользователем. Правило вердикта в этом случае отказывает, и перебор обязан сказать
+    # ТО ЖЕ САМОЕ: иначе на одном экране окажутся отказ сверху и рекомендация перебора под ним.
+    # Кандидаты при этом остаются в выдаче со своими числами: они посчитаны, и прятать их незачем,
+    # но рекомендацией они не становятся.
+    refusal_ru = ''
+    if blocking and verdict != 'insufficient':
+        verdict, rec_i, refusal_ru = 'insufficient', None, '; '.join(dict.fromkeys(blocking))
     scope, _detail, _facts = declared_scope(shown_A, 'insufficient' if verdict == 'insufficient' else 'preferred',
                                             [a for a in shown_A], blocking, common_ru)
-    tol_note = ('равнозначными считаются кандидаты, у которых флюенс различается не больше чем в ×%s раза; %s'
-                % (('%.2f' % max(1.0, th.fluence_equiv_ratio)).replace('.', ','),
-                   tolerance_basis_ru or ('допуск взят из настройки config/settings.toml '
-                                          '[thresholds].fluence_equiv_ratio — нижней границы, которую анализ '
-                                          'чувствительности в этом расчёте не уточнял')))
+    tol_note = ('различием не считается разница до %s мин по минутам в аномалии и до ×%s по флюенсу — '
+                'те же допуски, по которым сравниваются окна; %s'
+                % (fmt_ru(tol_m), ('%.2f' % tol_r).replace('.', ','),
+                   # Имён ключей настроек здесь быть не должно: строка уходит на оперативный
+                   # уровень экрана и в отчёт, где идентификаторов кода не бывает (О5).
+                   tolerance_basis_ru or ('оба взяты из настроек сервиса как нижние границы — '
+                                          'анализ чувствительности в этом расчёте их не уточнял')))
     return ScanResult(requested_duration_min=int(duration_min), search_from_utc=search_from_utc,
                       search_to_utc=search_to_utc, step_min=int(step_min), rule=RANK_RULE_RU,
                       tolerance_note=tol_note, candidates=tuple(cands), best=tuple(best),
-                      recommended_index=rec_i, verdict=verdict,
-                      scope=scope, why=why_ru(cands, best, rec_i, verdict, step_min), assessments=A)
+                      recommended_index=rec_i, verdict=verdict, scope=scope,
+                      why=why_ru(cands, best, rec_i, verdict, step_min, tol_m, tol_r, refusal_ru),
+                      assessments=A)
 
 
 def _t_ru(t: datetime) -> str:
     return t.strftime('%d.%m %H:%MZ')
 
 
-def conflict_ru(cands: Sequence[Candidate]) -> str:
-    """Спор двух величин: лучший по флюенсу и лучший по минутам в аномалии — разные начала.
+def conflict_ru(group: Sequence[Candidate], tol_m: float, tol_r: float) -> str:
+    """Спор внутри лучшей группы: одно начало лучше по минутам, другое по флюенсу сверх допуска.
 
     Обычно величины согласованы: время в аномалии и есть то, что набирает флюенс. Но когда они
-    расходятся, это надо не замолчать, а назвать: складывать их в один балл нельзя, и выбор
-    остаётся за аналитиком. Считается только по кандидатам БЕЗ условий — тем, между которыми
-    правило вообще имеет право выбирать.
+    расходятся, это надо не замолчать, а назвать числами обеих сторон: складывать их в один балл
+    нельзя, и выбор остаётся за аналитиком (правило (8) методики — компромисс без победителя).
+    Пустая строка означает, что члены группы попарно неразличимы в допуске, то есть равнозначны.
     """
-    pool = [c for c in cands if c.fluence is not None and c.saa_min is not None and not c.conditions]
+    pool = [c for c in group if c.fluence is not None and c.saa_min is not None]
     if len(pool) < 2:
+        return ''
+    disagree = any(not pair_not_worse(a.saa_min, a.fluence, b.saa_min, b.fluence, tol_m, tol_r)
+                   for a in pool for b in pool if a is not b)
+    if not disagree:
         return ''
     by_fl = min(pool, key=lambda c: (c.fluence, c.saa_min))
     by_saa = min(pool, key=lambda c: (c.saa_min, c.fluence))
     if by_fl.start_utc == by_saa.start_utc:
         return ''
-    return ('по флюенсу лучше начало %s (%s част./см² против %s), по времени в аномалии — начало %s '
-            '(%s мин против %s); величины указывают на разные начала, складывать их в один балл нельзя — '
-            'выбор за аналитиком'
+    return ('компромисс без победителя: по флюенсу лучше начало %s (%s против %s част./см²), '
+            'по времени в аномалии — начало %s (%s против %s мин); величины указывают на разные '
+            'начала, складывать их в один балл нельзя — выбор за аналитиком'
             % (_t_ru(by_fl.start_utc), fmt_ru(by_fl.fluence), fmt_ru(by_saa.fluence),
                _t_ru(by_saa.start_utc), fmt_ru(by_saa.saa_min), fmt_ru(by_fl.saa_min)))
 
 
 def why_ru(cands: Sequence[Candidate], best: Sequence[int], rec_i: Optional[int],
-           verdict: str, step_min: int) -> str:
+           verdict: str, step_min: int, tol_m: float, tol_r: float, refusal_ru: str = '') -> str:
     """«Почему именно это окно» — числами перебранных кандидатов, а не словами о них."""
     n = len(cands)
     head = 'перебрано %d %s с шагом %d мин' % (n, _plural_ru(n, 'начало', 'начала', 'начал'), step_min)
     ranked = [c for c in cands if c.rank is not None]
     if verdict == 'insufficient':
+        if refusal_ru:
+            # Числа у кандидатов есть, но рекомендацией они не становятся: обязательная линия
+            # не покрыта совсем. Пометка обязана стоять здесь же, а не подразумеваться.
+            return ('%s; рекомендации нет: у показанных начал обязательная линия не покрыта совсем — %s. '
+                    'Величины начал посчитаны и показаны, но это сравнение факторов, а не рекомендация.'
+                    % (head, refusal_ru))
         why_not = ('трассы окна нет' if all(c.coverage == 'none' for c in cands) or not cands
                    else 'флюенс не посчитан ни на одном из них')
         return ('%s; ранжировать не по чему: %s. Отсутствие величины не заменяется нулём, '
                 'поэтому ранга нет ни у одного кандидата.' % (head, why_not))
-    conflict = conflict_ru(cands)
+    group = [cands[i] for i in best]
+    conflict = conflict_ru(group, tol_m, tol_r)
+    worst_f = max((c.fluence for c in ranked if c.fluence is not None), default=None)
+    worst_m = max((c.saa_min for c in ranked if c.saa_min is not None), default=None)
+
+    def against_worst(c: Candidate) -> str:
+        bits = []
+        if c.saa_min is not None and worst_m is not None:
+            bits.append('%s мин в аномалии против %s у худшего из перебранных' % (fmt_ru(c.saa_min), fmt_ru(worst_m)))
+        if c.fluence is not None and worst_f is not None:
+            bits.append('флюенс %s против %s част./см²' % (fmt_ru(c.fluence), fmt_ru(worst_f)))
+        return ', '.join(bits)
+
     if verdict == 'all_need_check':
-        names = sorted({c for x in ranked for c in x.conditions})
+        names = sorted({x for c in ranked for x in c.conditions})
         return ('%s; все ранжированные начала стоят под условием проверки, поэтому сервис не выбирает '
                 'из них сам: %s. Числа начал при этом посчитаны и показаны — решение за аналитиком.%s'
                 % (head, '; '.join(names) or 'условие названо в карточке окна',
-                   (' Кроме того, ' + conflict) if conflict else ''))
-    top = cands[rec_i]
-    worst_f = max((c.fluence for c in ranked if c.fluence is not None), default=None)
-    worst_m = max((c.saa_min for c in ranked if c.saa_min is not None), default=None)
-    parts = ['%s; наименьшее воздействие среди них — начало %s' % (head, _t_ru(top.start_utc))]
-    if top.saa_min is not None and worst_m is not None:
-        parts.append('%s мин в аномалии против %s у худшего из перебранных'
-                     % (fmt_ru(top.saa_min), fmt_ru(worst_m)))
-    if top.fluence is not None and worst_f is not None:
-        parts.append('флюенс %s против %s част./см²' % (fmt_ru(top.fluence), fmt_ru(worst_f)))
-    txt = ': '.join((parts[0], ', '.join(parts[1:]))) if len(parts) > 1 else parts[0]
-    if verdict == 'equivalent':
-        others = [cands[i] for i in best if i != rec_i]
-        txt += ('. В той же группе равнозначности ещё %d %s — по флюенсу они от него в пределах '
-                'допуска не отличаются (%s); порядок внутри группы задан минутами в аномалии, и '
-                'выбрать любое из них правило не мешает'
-                % (len(others), _plural_ru(len(others), 'начало', 'начала', 'начал'),
-                   ', '.join(_t_ru(c.start_utc) for c in others[:4])
-                   + (' и другие' if len(others) > 4 else '')))
+                   (' Кроме того, ' + conflict + '.') if conflict else ''))
+    if verdict == 'recommended':
+        top = cands[rec_i]
+        tail = against_worst(top)
+        return ('%s; ни одно другое начало не превосходит по правилу начало %s%s. Это единственное '
+                'начало в лучшей группе, поэтому оно и рекомендовано.'
+                % (head, _t_ru(top.start_utc), (': ' + tail) if tail else ''))
+    # несколько в лучшей группе: либо спор, либо равнозначность — и то и другое называется прямо.
+    # Единицы названы один раз в заголовке перечня: у каждого начала они те же самые.
+    listed = ('начала (минут в аномалии; флюенс, част./см²): '
+              + ', '.join('%s (%s; %s)' % (_t_ru(c.start_utc), fmt_ru(c.saa_min), fmt_ru(c.fluence))
+                          for c in group[:4]) + (' и другие' if len(group) > 4 else ''))
     if conflict:
-        txt += '. Внимание: ' + conflict
-    return txt
+        return ('%s; в лучшей группе %d %s, и они спорят между собой — %s. Рекомендации одного начала '
+                'нет: %s.' % (head, len(group), _plural_ru(len(group), 'начало', 'начала', 'начал'),
+                              conflict, listed))
+    # Равнозначная группа из соседних начал — это не «сервис не смог выбрать», а ответ на вопрос
+    # человека: выходить можно в любой момент этого промежутка, внутри него разницы нет.
+    times = [c.start_utc for c in group]
+    contiguous = all((b - a) == timedelta(minutes=step_min) for a, b in zip(times, times[1:]))
+    where = ('любое начало с %s до %s' % (_t_ru(times[0]), _t_ru(times[-1])) if contiguous
+             else 'начала ' + ', '.join(_t_ru(t) for t in times[:6]) + (' и другие' if len(times) > 6 else ''))
+    best_one = min(group, key=lambda c: (c.fluence if c.fluence is not None else float('inf'),
+                                         c.saa_min if c.saa_min is not None else float('inf')))
+    return ('%s; лучших начал %d, и они равнозначны — различий сверх допуска между ними нет: %s. '
+            'Сервис не выбирает одно за аналитика, потому что выбирать не по чему: %s. Для сравнения, '
+            'наименьшие величины в группе — %s.'
+            % (head, len(group), where, listed, against_worst(best_one)))
 
 
 def _plural_ru(n: int, one: str, few: str, many: str) -> str:

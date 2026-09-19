@@ -642,6 +642,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         note('DONKI: окно за границей архива уведомлений; полнота событий на непокрытом участке неизвестна', True)
 
     goes_note, goes_val, goes_cov, goes_hz, goes_frac = 'нет данных GOES', None, Coverage.NONE, None, None
+    # Покрытие канала в ЛИНИИ отличается от покрытия величины только у объявленного общего
+    # канала (R14); во всех остальных ветках это одно и то же число.
+    goes_line_cov = None
     goes_records = (goes.raw_record_id,) if goes else ()
     goes_rule = 'NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)'
     if goes_observations is not None:
@@ -680,9 +683,13 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         # по-прежнему неизвестно, и это написано в объявленной области вывода.
         # Устаревшее наблюдение — по-прежнему полный отказ: текущее состояние среды неизвестно.
         common_channel = proton_state in ('background', 'above_background')
+        # Покрытие САМОЙ ВЕЛИЧИНЫ остаётся честным: наблюдение, горизонт которого кончился до
+        # начала окна, не покрывает его ни на минуту, и в карточке фактора стоит именно это.
         goes_cov = (Coverage.NONE if proton_state in ('stale', 'ahead') else
-                    (Coverage.FULL if frac == 1 else
-                     (Coverage.PARTIAL if (frac > 0 or common_channel) else Coverage.NONE)))
+                    (Coverage.FULL if frac == 1 else (Coverage.PARTIAL if frac > 0 else Coverage.NONE)))
+        # А вот покрытие ЛИНИИ (то, что берётся минимумом по каналам и решает, есть ли вывод)
+        # объявленным общим каналом не обнуляется: см. R14 выше.
+        goes_line_cov = Coverage.PARTIAL if (common_channel and goes_cov == Coverage.NONE) else goes_cov
         # ЯВНАЯ ЦЕПОЧКА (разбор Codex п. 7): срок действия данных → покрываемая часть окна →
         # допустимый вывод. Наблюдение сейчас и прогноз на всё окно — разные сущности, и решает
         # это не читатель: три звена печатаются подряд, каждое со своим числом, и последнее
@@ -942,7 +949,8 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     conds.sort(key=lambda c: order[c.severity])
     m1 = MechanismAssessment(
         mechanism_id='spaceweather', mandatory=True, factors=factors_m1,
-        coverage=_min_cov(cov_traj, cov_saa, cov_fl, goes_cov, kp_cov, event_cov),
+        coverage=_min_cov(cov_traj, cov_saa, cov_fl,
+                          goes_cov if goes_line_cov is None else goes_line_cov, kp_cov, event_cov),
         needs_check=bool(conds), needs_check_reasons=tuple(c.text for c in conds),
         priority=any(c.severity == 'critical' for c in conds), conditions=tuple(conds),
         coverage_notes=tuple(notes), blocking_notes=tuple(blocking),
@@ -960,6 +968,30 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                          + ('вклад метеорных потоков даты в число попаданий — не рассчитан (календарь даёт только признак активности)',
                             'техногенный мусор статистически — не включён'),
     )
+
+
+def pair_not_worse(m_a: Optional[float], f_a: Optional[float], m_b: Optional[float], f_b: Optional[float],
+                   tol_m: float, tol_r: float) -> bool:
+    """«A не хуже B» правила (8) методики: по ОБЕИМ величинам космопогоды, каждая со своим допуском.
+
+    m — минуты в аномалии, Φ — флюенс за окно. Невычисленная величина не делает окно ни хуже,
+    ни лучше: сравнение идёт по тем величинам, которые есть, а отсутствие не заменяется нулём.
+
+    Функция вынесена в модуль, чтобы её применяли ОБА места, где выбирается окно: сравнение
+    двух-трёх окон (`recommend`) и перебор начал (`vkd/windows/scan.py`). Два правила выбора
+    на одном экране — первое, что заметит читатель.
+    """
+    m_ok = m_a is None or m_b is None or m_a <= m_b + tol_m
+    f_ok = f_a is None or f_b is None or f_a <= f_b * tol_r
+    return m_ok and f_ok
+
+
+def pair_better(m_a: Optional[float], f_a: Optional[float], m_b: Optional[float], f_b: Optional[float],
+                tol_m: float, tol_r: float) -> bool:
+    """«A лучше B» правила (8): не хуже по обеим и строго лучше хотя бы по одной, сверх допуска."""
+    m_win = m_a is not None and m_b is not None and m_a < m_b - tol_m
+    f_win = f_a is not None and f_b is not None and f_a * tol_r < f_b
+    return pair_not_worse(m_a, f_a, m_b, f_b, tol_m, tol_r) and (m_win or f_win)
 
 
 def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recommendation:
@@ -1075,15 +1107,13 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
     if len(candidates) >= 2:
         # 3. сравнение по каждому механизму отдельно; космопогода — по двум величинам
 
+        # Правило (8) методики целиком живёт в pair_not_worse/pair_better — там же, откуда его
+        # берёт перебор начал. Здесь остаётся только подстановка величин окон.
         def not_worse(a, b):
-            m_ok = mins[id(a)] is None or mins[id(b)] is None or mins[id(a)] <= mins[id(b)] + tol_m
-            f_ok = fls[id(a)] is None or fls[id(b)] is None or fls[id(a)] <= fls[id(b)] * tol_r
-            return m_ok and f_ok
+            return pair_not_worse(mins[id(a)], fls[id(a)], mins[id(b)], fls[id(b)], tol_m, tol_r)
 
         def better(a, b):
-            m_b = mins[id(a)] is not None and mins[id(b)] is not None and mins[id(a)] < mins[id(b)] - tol_m
-            f_b = fls[id(a)] is not None and fls[id(b)] is not None and fls[id(a)] * tol_r < fls[id(b)]
-            return not_worse(a, b) and (m_b or f_b)
+            return pair_better(mins[id(a)], fls[id(a)], mins[id(b)], fls[id(b)], tol_m, tol_r)
 
         def vtxt(a):
             return '%s: %s мин в аномалии, флюенс %s' % (lab(a), fmt_ru(mins[id(a)]), fmt_ru(fls[id(a)], 'част./см²'))
