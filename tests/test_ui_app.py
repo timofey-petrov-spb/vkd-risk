@@ -2548,3 +2548,118 @@ def test_dogovor_answer_kind_chetyre_znacheniya():
                        answer_kind='point')
     assert scan_answer(pt)['kind'] == 'point'
     assert 'Выходить 04.05 в 01:50 UTC' in _strip_tags(recommendation_panel(pt, {}, duration_min=240))
+
+
+def test_drob_pered_pfu_tozhe_s_zapyatoy():
+    """Найдено дампом чисел экрана: единица «pfu» пишется латиницей, и по прежнему правилу дробь
+    перед ней запятой не получала — на экране стояло «GOES ≥10 МэВ = 77.5 pfu» рядом с «207 pfu»
+    и «2,43·10⁶ част./см²» того же блока. Прежняя проверка дробей смотрела только на кириллицу
+    и знаки после числа, поэтому латинская единица сквозь неё проходила."""
+    from app.ui import frac_ru, screen_text
+    assert screen_text('окно 2: GOES ≥10 МэВ = 77.5 pfu') == 'окно 2: GOES ≥10 МэВ = 77,5 pfu'
+    assert frac_ru('поток 0.19 pfu') == 'поток 0,19 pfu'
+    assert screen_text('версия v3.1') == 'версия v3.1'            # номер версии не трогаем
+    assert screen_text('дата 01.05.2024') == 'дата 01.05.2024'    # и дату тоже
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_na_glavnom_ekrane_net_desyatichnoy_tochki_pered_edinicey(mode):
+    """Та же находка на живом экране: перед любой единицей, латинской или кириллической,
+    десятичный разделитель — запятая (техзадание, раздел 4)."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    bad = re.findall(r'\d+\.\d+\s*(?:pfu|мин|нТл|МэВ|%|част|км|ч\b|сут)', body)
+    assert not bad, bad
+
+
+def test_velichiny_nazyvayut_edinicu_ili_bezrazmernost():
+    """Замечание владельца: «добавь размерности, где они нужны». У величины либо стоит единица,
+    либо прямо сказано, что она безразмерная. Kp — худший случай: голое «1,33» не говорит, в чём
+    оно измерено, и рядом в той же полосе стоят «pfu» и «нТл»."""
+    from app.ui import DIMENSIONLESS_RU, value_with_unit_ru
+    kp = SimpleNamespace(name='Kp, последнее наблюдение', unit='', value=1.33, limits_note='')
+    assert value_with_unit_ru(kp) == '1,33, ' + DIMENSIONLESS_RU, value_with_unit_ru(kp)
+    saa = SimpleNamespace(name='минут в аномалии', unit='мин', value=48.55, limits_note='')
+    assert value_with_unit_ru(saa) == '48,55 мин', value_with_unit_ru(saa)
+    empty = SimpleNamespace(name='поток протонов GOES ≥10 МэВ', unit='pfu', value=0.2,
+                            limits_note='горизонт наблюдения до 04:15Z покрывает 0 % окна')
+    assert value_with_unit_ru(empty) == 'значения на окно нет', value_with_unit_ru(empty)
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
+    assert 'безразмерный' in bar, bar          # метка Kp в приборной полосе называет безразмерность
+    cards = [m.value for m in at.markdown if 'class="wcard' in str(m.value)]
+    assert cards and all('макс. в окне, безразмерный' in c for c in cards), cards[0]
+
+
+def test_glavnyy_ekran_razgruzhen_i_nichego_ne_poteryano():
+    """Замечание владельца: «сделай главную страницу менее загруженной… адекватно с ходу
+    воспринимать информацию просто невозможно». Подробности уехали под раскрытия, но остались
+    достижимыми: источник каждой величины, перечень неучтённого и полные подписи полосы."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    labels = [str(e.label) for e in at.expander]
+    for need in ('Откуда взята каждая величина', 'Чего сервис не учёл', 'Подробнее о каждой величине полосы'):
+        assert any(need in x for x in labels), (need, labels)
+    body = texts(at)
+    # прослеживаемость не потеряна: первоисточники и пропуски охвата на экране есть
+    assert 'прогноза потока с разрешением по окну не существует' in body, body[:300]
+    assert 'Цвет = происхождение' in body or 'Происхождение величин' in body, body[:300]
+    # приглушённая подпись ленты окон — одна строка
+    from app.ui import ribbon_caption_ru
+    cap = ribbon_caption_ru({'candidates': []}, 30.0)
+    assert cap.count('.') <= 1 and len(cap) < 160, cap
+
+
+def test_temnaya_tema_i_grafiki_v_ney():
+    """Тёмная тема: палитра одна и означает происхождение величины, контраст проверен расчётом,
+    графики Plotly приводятся к тёмной подложке — светлый рисунок на тёмной странице читается
+    как поломка."""
+    import tomllib
+    from app.ui import CSS, DARK_PAPER, dark_figure
+    cfg = tomllib.loads(open(os.path.join(os.path.dirname(APP), '..', '.streamlit', 'config.toml'),
+                             encoding='utf-8').read())
+    assert cfg['theme']['base'] == 'dark', cfg['theme']
+    assert cfg['theme']['backgroundColor'] == '#0e1117', cfg['theme']
+
+    def contrast(a, b):
+        def lum(h):
+            h = h.lstrip('#')
+            ch = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+            f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+            return 0.2126 * f(ch[0]) + 0.7152 * f(ch[1]) + 0.0722 * f(ch[2])
+        la, lb = lum(a), lum(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+    root = re.search(r':root \{(.*?)\}', CSS, re.S).group(1)
+    var = lambda name: re.search(r'--%s:(#[0-9a-f]{6})' % name, root).group(1)
+    bg = var('bg')
+    for name in ('ink', 'muted', 'calc', 'obs', 'fc', 'cond', 'none'):
+        assert contrast(var(name), bg) >= 4.5, (name, contrast(var(name), bg))
+        # текст плашки на её собственной заливке — тоже не ниже 4,5:1
+        if name in ('calc', 'obs', 'fc', 'cond', 'none'):
+            assert contrast(var(name), var(name + '-bg')) >= 4.5, (name, contrast(var(name), var(name + '-bg')))
+    fig = dark_figure(go.Figure(go.Scatter(x=[1, 2], y=[1, 2], line={'color': '#1f4e79'})))
+    assert fig.layout.paper_bgcolor == DARK_PAPER, fig.layout.paper_bgcolor
+    assert fig.data[0].line.color != '#1f4e79', 'тёмный синий светлой темы не читается на тёмном фоне'
+
+
+def test_vvod_razlozhen_po_klassam_s_ikonkami():
+    """Замечание владельца: ввод «не выглядеть как однородная каша слева, распределённая по
+    логическим иконкам». Боковая панель разложена на смысловые разделы с материальными иконками;
+    эмодзи не используются — нужен вид рабочего решателя, а не детского приложения."""
+    src = open(APP, encoding='utf-8').read()
+    sections = re.findall(r"st\.expander\('([^']+)', expanded=\w+, icon=':material/([a-z_]+):'\)", src)
+    names = [n for n, _ in sections]
+    for need in ('Когда считаем', 'Источники данных', 'Проверки и сценарии', 'Пороги и правила', 'Вид'):
+        assert need in names, (need, names)
+    assert all(icon and '_' not in icon or icon for _, icon in sections), sections
+    assert not EMOJI.findall(' '.join(names)), names
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    # элементы управления остались на месте и доступны
+    assert at.sidebar.radio('mode') is not None and at.sidebar.radio('level') is not None
+    assert at.sidebar.checkbox('sc_sep_on') is not None
+    assert any('Длительность выхода и срок задаются строкой задачи' in str(c.value) for c in at.sidebar.caption), \
+        [str(c.value) for c in at.sidebar.caption]
