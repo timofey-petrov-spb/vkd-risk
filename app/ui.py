@@ -149,6 +149,7 @@ EVENT_KIND_RU = {'SEP': 'протонное событие', 'GST': 'геома�
 SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
              'ost1044_belts': 'таблицы ОСТ 134-1044-2007 (захваченные протоны)',
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
+             'noaa_swpc_3day_forecast': 'трёхсуточный бюллетень NOAA SWPC (живой выпуск)',
              'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
              'noaa_forecast_kp_forecast': 'прогноз Kp NOAA (выпуск до отсечки)',
              'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
@@ -969,14 +970,120 @@ _REGISTRY_FORECAST = {'величина': 'внешний прогноз NOAA', 
                       'публикация': 'время выпуска бюллетеня (заголовок :Issued:)',
                       'лицензия': 'в ответе службы не указана; условия — на сайте NOAA SWPC',
                       'ограничение': 'суточные вероятности относятся к суткам, а не к окну ВКД, и не пересчитываются'}
+SOURCE_REGISTRY['noaa_swpc_3day_forecast'] = dict(_REGISTRY_FORECAST)
+# В исторических режимах поток GOES берётся не с живой ленты NOAA, а из численного архива
+# NASA iSWA за 2024 (5-минутные средние). Частота, что считается публикацией и ограничение
+# у него свои, поэтому реестр печатает их отдельной записью, а не подписью живой ленты.
+_REGISTRY_GOES_ARCHIVE = {'величина': 'интегральный поток протонов ≥10 МэВ',
+                          'единица': 'pfu = част./(см²·с·ср)',
+                          'частота': '5-минутные средние за 2024 год',
+                          'публикация': 'время измерения из записи архива; историческое время публикации именно '
+                                        'этой версии не доказано — в строгий режим архив не идёт',
+                          'лицензия': 'в ответе службы не указана; условия — на сайтах NASA iSWA и NOAA SWPC',
+                          'ограничение': 'измерение на геостационарной орбите; на станцию не переносится '
+                                         'без геомагнитного обрезания'}
 
 
-def registry_row(sid: str) -> dict:
-    """Строка реестра источников по идентификатору; для выпусков NOAA — общая запись прогноза."""
+def registry_row(sid: str, origin: str | None = None) -> dict:
+    """Строка реестра источников по идентификатору; для выпусков NOAA — общая запись прогноза.
+    origin — строка происхождения из снимка: по ней различаются живая лента GOES и архив iSWA."""
     if sid.startswith('noaa_forecast_'):
         return dict(_REGISTRY_FORECAST)
+    if sid == 'noaa_swpc_goes' and 'iSWA' in (origin or ''):
+        return dict(_REGISTRY_GOES_ARCHIVE)
     return dict(SOURCE_REGISTRY.get(sid, {'величина': '—', 'единица': '—', 'частота': '—', 'публикация': '—',
                                           'лицензия': '—', 'ограничение': '—'}))
+
+
+# Причины исключения записи: группируемая формулировка (конкретные даты и номера убраны)
+# и отнесение к отсечке или к содержанию записи. Русский текст причины приходит из app.compute
+# (EXCLUDED_RU), здесь он только приводится к виду строки таблицы.
+def excl_reason_ru(reason: str) -> str:
+    """Причина исключения в виде, пригодном для группировки: без конкретных дат, смысл сохранён."""
+    r = (reason or '').strip()
+    low = r.lower()
+    if 'момент наблюдения' in low:
+        return 'момент наблюдения позже отсечки, хотя запись опубликована раньше'
+    if 'неизвестно' in low:
+        return 'времени публикации нет'
+    if 'после отсечки' in low or 'позже отсечки' in low:
+        return 'опубликовано после отсечки'
+    if low.startswith('запись не разобрана'):
+        return 'запись не разобрана'
+    return r or '—'
+
+
+def excl_group_ru(reason: str) -> str:
+    """Отношение причины к отсечке: экран не должен называть отсечкой то, что ею не является."""
+    low = (reason or '').lower()
+    if low.startswith('запись не разобрана') or 'не разобран' in low:
+        return 'запись не разобрана'
+    if 'отсечк' in low or 'время публикации' in low or 'времени публикации' in low or 'доступност' in low:
+        return 'время публикации или доступность'
+    return 'содержание записи'
+
+
+# Карта покрытия каналов адаптера истории (A2). Ключ — «источник:канал»; обе половины
+# переводятся по точному совпадению, непереведённая печатается как есть — придумывать
+# перевод причине, которой мы не знаем, нельзя.
+_COV_SOURCE_RU = {'goes_p_ge10MeV': 'GOES ≥10 МэВ (архив NASA iSWA)', 'gfz_kp_archive': 'Kp, окончательный ряд GFZ',
+                  'kp': 'Kp (сводный канал)', 'donki': 'уведомления NASA DONKI',
+                  'noaa_ngdc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC',
+                  'noaa_ngdc_daypre': 'суточный прогноз NOAA SWPC'}
+_COV_CHANNEL_RU = {'observations': 'наблюдения', 'notifications': 'уведомления', 'noaa_kp': 'прогноз Kp',
+                   'r1_r2_probability': 'вероятность R1–R2 за сутки', 'r3_or_greater_probability': 'вероятность R3+ за сутки',
+                   's1_or_greater_probability': 'вероятность S1+ за сутки', 'f107': 'поток F10.7',
+                   'high_latitude_k': 'K в высоких широтах', 'mid_latitude_k': 'K в средних широтах',
+                   'high_active_probability': 'вероятность активности, высокие широты',
+                   'mid_active_probability': 'вероятность активности, средние широты',
+                   'high_minor_storm_probability': 'вероятность слабой бури, высокие широты',
+                   'mid_minor_storm_probability': 'вероятность слабой бури, средние широты',
+                   'high_major_severe_storm_probability': 'вероятность сильной бури, высокие широты',
+                   'mid_major_severe_storm_probability': 'вероятность сильной бури, средние широты',
+                   'whole_disk_m_flare_probability': 'вероятность вспышки класса M по диску',
+                   'whole_disk_x_flare_probability': 'вероятность вспышки класса X по диску',
+                   'whole_disk_proton_probability': 'вероятность протонного события по диску'}
+COV_STATUS_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'нет', 'missing': 'записи нет',
+                 'invalid': 'запись непригодна', 'inventory_only': 'только перечень записей'}
+COV_REASON_RU = {
+    'union_of_GFZ_three_hour_cells; final_data_for_review_only':
+        'объединение 3-часовых интервалов GFZ; окончательные данные — только для разбора после факта',
+    'verified GFZ cells and explicitly reported notification intervals':
+        'проверенные интервалы GFZ и интервалы, прямо названные в уведомлениях',
+    'no notification is not a declaration of no SEP/GST; ends and monitoring gaps may be unknown':
+        'отсутствие уведомления не означает отсутствия события; концы событий и пропуски наблюдения могут быть неизвестны',
+    'historic_publication_and_version_availability_not_proven':
+        'историческая публикация и доступность именно этой версии не доказаны',
+    'historical_publication_not_proven': 'историческая публикация не доказана',
+    'only synoptic intervals explicitly reported in admitted notifications':
+        'только интервалы, прямо названные в допущенных уведомлениях',
+    'numerical historical GOES observations not present; threshold notifications do not replace them':
+        'численных исторических наблюдений GOES нет; пороговые уведомления их не заменяют',
+    'source_absent': 'источника нет', 'GFZ archive absent': 'архива GFZ нет',
+}
+
+
+def coverage_rows_ru(coverage_map: dict) -> list[dict]:
+    """Карта покрытия A2 строками таблицы: источник, канал, состояние, доля горизонта, причина."""
+    rows = []
+    for key, cell in (coverage_map or {}).items():
+        cell = cell or {}
+        sid = cell.get('source_id') or str(key).split(':')[0]
+        ch = cell.get('channel_id') or str(key).split(':')[-1]
+        reason = cell.get('reason')
+        rows.append({'источник': _COV_SOURCE_RU.get(sid, SOURCE_RU.get(sid, sid)),
+                     'канал': _COV_CHANNEL_RU.get(ch, ch),
+                     'покрытие': COV_STATUS_RU.get(cell.get('status'), cell.get('status') or '—'),
+                     'доля горизонта': fmt(cell.get('coverage_fraction')),
+                     'причина': COV_REASON_RU.get(reason, reason) if reason else '—'})
+    return sorted(rows, key=lambda r: (r['покрытие'] == 'полное', r['источник'], r['канал']))
+
+
+def record_release_ru(rid: str) -> str:
+    """Номер выпуска источника из идентификатора записи «source_id:release_id:хеш[:тип]».
+    На экране печатается он, а не внутренний ключ с хешем (О5)."""
+    parts = (rid or '').split(':')
+    return parts[1] if len(parts) > 1 and parts[1] else (rid or '—')
 
 
 def grid_cell_ru(v, windows_ru_iso: dict) -> str:

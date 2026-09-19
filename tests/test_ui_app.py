@@ -189,11 +189,16 @@ def test_operativnyy_uroven_bez_obryvkov_koda():
 
 
 def test_professionalnyy_uroven_pokazyvaet_proishozhdenie():
+    """Происхождение на профессиональном уровне: хеш таблицы стандарта — в статусе источника,
+    имена программных слоёв — отдельной строкой «Слои: …», а не внутри текста статуса
+    (в тексте, который читает аналитик, идентификаторов кода быть не должно, О5)."""
     at = run_app(MODES[1], pro=True)
     assert not at.exception, at.exception
     rows = '\n'.join(str(r.get('статус', '')) for r in source_rows(at))
-    assert 'experiments.stub_history' in rows or 'vkd.history' in rows
     assert 'sha256' in rows
+    assert 'vkd.history' not in rows and 'vkd.sources' not in rows, rows
+    caps = '\n'.join(c.value for c in at.caption)
+    assert 'Слои:' in caps and 'vkd.history' in caps and 'vkd.sources' in caps, caps
 
 
 def test_syraya_zapis_podpisana_yazykom_istochnika():
@@ -582,3 +587,130 @@ def test_punkt_4_kartochki_bez_povtora_istochnika(mode):
         body = txt.partition('**4. Источник и время публикации.** ')[2]
         parts = [p.strip().rstrip('.').lower() for p in body.split('; ') if p.strip()]
         assert len(parts) == len(set(parts)), txt
+
+
+# ================================================================= C: стык с адаптером истории A2 и живыми источниками A4
+def test_excl_reason_i_gruppa_po_russki():
+    """Причина исключения группируется без конкретных дат, а отсечка не называется там, где её нет."""
+    from app.ui import excl_group_ru, excl_reason_ru, record_release_ru
+    assert excl_reason_ru('опубликовано 2024-05-10 13:04Z, после отсечки') == 'опубликовано после отсечки'
+    assert excl_reason_ru('время публикации неизвестно — непригодно для строгого воспроизведения') == 'времени публикации нет'
+    assert excl_reason_ru('вне области: запись не является наблюдением GOES у Земли') \
+        == 'вне области: запись не является наблюдением GOES у Земли'
+    assert excl_group_ru('опубликовано после отсечки') == 'время публикации или доступность'
+    assert excl_group_ru('вне области: запись не является наблюдением GOES у Земли') == 'содержание записи'
+    assert excl_group_ru('окончательный индекс GFZ без собственного времени публикации — только для разбора после факта') \
+        == 'время публикации или доступность'
+    assert record_release_ru('nasa_donki_notification:20240510-AL-004:c3955880cb5f:SEP') == '20240510-AL-004'
+    assert record_release_ru('iss.tle') == 'iss.tle'
+
+
+def test_prichiny_isklyucheniya_perevedeny_polnostyu():
+    """Ни одна причина исключения адаптера A2 не должна остаться по-английски."""
+    from app.compute import excluded_ru
+    for reason in ('out_of_scope: no explicit Earth arrival in primary summary',
+                   'out_of_scope: not a GOES observation at Earth',
+                   'context_only: weekly retrospective report is not a current event',
+                   'publication_conflict: API/body issue times differ by at least one minute',
+                   'final_GFZ_index_without_historic_publication_review_only'):
+        assert not re.search(r'[A-Za-z]{4,}', excluded_ru(reason).replace('GOES', '').replace('GFZ', '')), reason
+    assert excluded_ru('invalid: bad body').startswith('запись не разобрана')
+    assert excluded_ru('нечто своё') == 'нечто своё'          # неизвестную причину не подменяем обобщением
+
+
+def test_karta_pokrytiya_chitaetsya_iz_coverage_map():
+    """Карта покрытия A2 лежит в ключе coverage_map; её строки печатаются по-русски."""
+    from app.ui import coverage_rows_ru
+    rows = coverage_rows_ru({'goes_p_ge10MeV:observations': {'status': 'missing', 'coverage_fraction': 0.0,
+                                                             'reason': 'historic_publication_and_version_availability_not_proven'},
+                             'noaa_ngdc_3day_forecast:noaa_kp': {'source_id': 'noaa_ngdc_3day_forecast',
+                                                                 'channel_id': 'noaa_kp', 'status': 'full',
+                                                                 'coverage_fraction': 1.0, 'reason': None}})
+    assert rows[0]['покрытие'] == 'записи нет'
+    assert rows[0]['причина'] == 'историческая публикация и доступность именно этой версии не доказаны'
+    assert rows[0]['источник'] == 'GOES ≥10 МэВ (архив NASA iSWA)'
+    assert rows[-1]['канал'] == 'прогноз Kp'
+
+
+def test_reestr_razlichaet_zhivuyu_lentu_goes_i_arhiv_iswa():
+    """Частота и правило публикации у архива iSWA свои — реестр не выдаёт их за живую ленту."""
+    from app.ui import registry_row
+    live = registry_row('noaa_swpc_goes')
+    arch = registry_row('noaa_swpc_goes', origin='архив наблюдений NASA iSWA (data/goes_2024), 5-минутные средние')
+    assert live['частота'] != arch['частота']
+    assert '5-минутные' in arch['частота'] and 'не доказано' in arch['публикация']
+
+
+def test_razbor_ne_nazyvaet_arhiv_goes_otsutstvuyushchim():
+    """C3: в «Историческом разборе» архив наблюдений GOES 2024 подключён — состояние из снимка."""
+    at = run_app(MODES[1], pro=True)
+    assert not at.exception, at.exception
+    goes = [r for r in source_rows(at) if 'GOES' in str(r['источник'])]
+    assert goes, source_rows(at)
+    assert goes[0]['состояние'] == 'архив наблюдений', goes[0]
+    assert goes[0]['данные на'] != '—', 'момент данных архива есть в снимке — его надо показать'
+
+
+def test_strogiy_rezhim_obyavlyaet_isklyuchenie_arhiva_goes():
+    """C3: в строгом режиме тот же архив исключён по недоказанной публикации — так и написано."""
+    at = run_app(MODES[2], pro=True)
+    assert not at.exception, at.exception
+    goes = [r for r in source_rows(at) if 'GOES' in str(r['источник'])]
+    assert goes and goes[0]['состояние'] == 'исключён строгим режимом', goes
+
+
+def test_snimok_nesyot_ryad_nablyudeniy_goes_v_razbore():
+    """C3: ряд наблюдений GOES ≥10 МэВ есть в снимке разбора и отсутствует в строгом режиме."""
+    from datetime import datetime as _dt
+    from app.compute import GOES_CHANNEL, run
+    t0 = _dt(2024, 5, 10, 12, 0, tzinfo=timezone.utc)
+    rev = run('history_review', t0, 240, 360, [0, 120]).S['observations']
+    line = [o for o in rev if o['channel'] == GOES_CHANNEL]
+    assert line and len(line[0]['points']) > 10, rev
+    assert line[0]['unit'] and line[0]['record'], line[0]
+    assert all(p['value'] is not None for p in line[0]['points'])
+    strict = run('history_forecast', t0, 240, 360, [0, 120]).S['observations']
+    assert not [o for o in strict if o['channel'] == GOES_CHANNEL], \
+        'в строгом режиме архив GOES исключён — ряда наблюдений быть не должно'
+
+
+def test_panel_isklyuchennogo_bez_syryh_identifikatorov():
+    """Панель «Не вошло в расчёт» переводит причины и не группирует по устаревшему «#»."""
+    at = run_app(MODES[2], pro=True)
+    assert not at.exception, at.exception
+    labels = [str(e.label) for e in at.expander]
+    panel_ = [l for l in labels if l.startswith('Не вошло в расчёт')]
+    assert panel_, labels
+    rows = []
+    for d in at.dataframe:
+        vals = d.value
+        vals = vals.to_dict('records') if hasattr(vals, 'to_dict') else list(vals)
+        if vals and 'почему не в расчёте' in vals[0]:
+            rows = vals
+            break
+    assert rows, 'таблица исключённого должна быть на экране'
+    for r in rows:
+        assert not re.search(r'\b(?:out_of_scope|context_only|publication_conflict|invalid)\b', str(r)), r
+        assert '#' not in str(r['первый выпуск']), r
+
+
+def test_istochnik_zhivogo_prognoza_pereklyuchaetsya():
+    """C6: у живого бюллетеня NOAA есть те же три состояния, что у GOES и Kp."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    labels = [str(s.label) for s in at.sidebar.selectbox]
+    assert any('NOAA' in l for l in labels), labels
+
+
+def test_lenta_nablyudeniy_v_razbore_i_chestnoe_otsutstvie_v_strogom():
+    """C3: в разборе вкладка наблюдений показывает ряд архива, в строгом — объявляет его отсутствие."""
+    rev = run_app(MODES[1])
+    assert not rev.exception, rev.exception
+    obs_tab = [t for t in rev.tabs if t.label == 'Наблюдения и прогнозы'][0]
+    assert len(obs_tab.get('plotly_chart')) >= 2, 'ряд наблюдений и прогноз — два рисунка'
+    strict = run_app(MODES[2])
+    assert not strict.exception, strict.exception
+    s_tab = [t for t in strict.tabs if t.label == 'Наблюдения и прогнозы'][0]
+    s_body = '\n'.join(str(m.value) for m in s_tab.get('markdown'))
+    assert 'Численных наблюдений на этом горизонте нет' in s_body, s_body
+    assert 'не доказан' in s_body, 'причина отсутствия берётся из снимка, а не придумывается'

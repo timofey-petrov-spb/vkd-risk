@@ -213,3 +213,17 @@ def test_screen_has_no_stub_layer_string_in_any_mode():
         body = texts(at) + ' '.join(str(r) for r in source_rows(at))
         assert 'stub' not in body.lower(), mode
         assert 'vkd.history' in body and 'vkd.sources' in body, mode
+
+
+def test_observations_series_reaches_snapshot_and_export():
+    """C3: ряд наблюдений GOES попадает в снимок с единицей, источником и записью,
+    в выгрузку — отдельным файлом, а в строгом режиме его нет по той же отсечке."""
+    review = run('history_review', T_CUT, 360, 720, [0, 240], fetched=_fetched(), now=T_CUT)
+    line = next(o for o in review.S['observations'] if o['channel'] == GOES_CHANNEL)
+    assert line['unit'] == 'pfu' and line['source_id'] == 'nasa_iswa_goes_primary_p5m'
+    assert line['record'] and line['n_points'] == len(line['points']) > 10
+    assert all(p['value'] is not None and p['t'] for p in line['points'])
+    names = json.loads(_zip_read(build_zip(review.S, review.raw_records), 'observations.json'))
+    assert names == review.S['observations']
+    strict = run('history_forecast', T_CUT, 360, 720, [0, 240], fetched=_fetched(), now=T_CUT)
+    assert not [o for o in strict.S['observations'] if o['channel'] == GOES_CHANNEL]

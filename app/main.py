@@ -23,18 +23,21 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 
-from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_latest, kp_latest, run, tle_latest, validate_request
+from app.compute import (ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_latest, kp_latest, noaa_latest, run,
+                         tle_latest, validate_request)
 from app.export import _git_sha, build_zip
 from app.norms import norms_rows, s_level
-from app.obs import forecast_panel, observations_panel
+from app.obs import forecast_panel, observations_figure, observations_panel
 from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESETS, RULE_POLICY, VERDICT_TITLE, plural_ru,
                     RULE_THRESHOLDS, SEV_RU, STRICT_RU, age_ru, coverage_reasons, dedup_clauses, dt_ru, event_kind_ru,
-                    fmt, formula_ref, frac_ru, grid_cell_ru, head, kind_pill, limit_ru, nbsp_thousands, panel, pill,
+                    coverage_rows_ru, excl_group_ru, excl_reason_ru, fmt, formula_ref, frac_ru, grid_cell_ru, head, kind_pill, limit_ru,
+                    nbsp_thousands, panel, pill, record_release_ru,
                     registry_row, short_reason, source_issues, source_name_ru, source_short, spread_offsets, status_ru,
                     tle_origin, verdict_panel, verification_ru, window_card)
 from app.viz import PLOTLY_CONFIG, ground_track, timeline
 from vkd.config import section as _settings_section
 from vkd.explain.cards import KIND_RU
+from vkd.explain.format import record_ru, source_ru
 from vkd.windows.compare import Thresholds
 from vkd.windows.scenario import Scenario
 
@@ -148,10 +151,12 @@ with st.sidebar:
     if mode == 'live':
         with st.expander('Источники и обновление', expanded=False):
             _SRC_STATE = {'включён': False, 'отказ: только кеш': 'cache', 'исключён: нет данных': 'off'}
-            disabled = {s: _SRC_STATE[st.selectbox({'goes': 'GOES, протоны ≥10 МэВ', 'kp': 'Kp (GFZ)'}[s], list(_SRC_STATE), key='dis_' + s,
+            _SRC_LABEL = {'goes': 'GOES, протоны ≥10 МэВ', 'kp': 'Kp (GFZ)',
+                          'noaa': 'Прогноз NOAA на трое суток'}     # живой бюллетень: те же три состояния (C6)
+            disabled = {s: _SRC_STATE[st.selectbox(_SRC_LABEL[s], list(_SRC_STATE), key='dis_' + s,
                                                    help='«отказ» — живого запроса нет, берётся кеш с давностью (покрытие частичное); '
                                                         '«исключён» — данных нет, обязательная линия без покрытия → рекомендации нет')]
-                        for s in ('goes', 'kp')}
+                        for s in ('goes', 'kp', 'noaa')}
             if st.button('Обновить данные сейчас', key='refresh', help='Повторный живой запрос GOES, Kp и TLE для этой сессии.'):
                 st.session_state['fetch_nonce'] += 1
             _auto_def = int(UI.get('auto_refresh_min', 5))
@@ -216,9 +221,11 @@ if mode == 'live' and auto_min:
 
 # ================================================================= расчёт: один снимок на рендер
 @st.cache_data(ttl=300, show_spinner=False)
-def _fetch_all(dis_goes: bool, dis_kp: bool, nonce: int):
-    """Кеш 5 мин против повторных запросов при каждом движении ползунка; nonce — счётчик обновления сессии."""
-    return goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False)
+def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
+    """Кеш 5 мин против повторных запросов при каждом движении ползунка; nonce — счётчик обновления сессии.
+    Четыре источника текущего режима: GOES, Kp, TLE и живой трёхсуточный бюллетень NOAA (C6)."""
+    return (goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False),
+            noaa_latest(disabled=dis_noaa))
 
 
 horizon_min = search_min + duration_min
@@ -234,7 +241,7 @@ except ValueError as e:
 try:
     if mode == 'live':
         with st.spinner('Источники: GOES, Kp, TLE — до 6 с на адрес при живом запросе, затем резервы и кеш…'):
-            fetched = _fetch_all(bool(disabled['goes']), bool(disabled['kp']), int(st.session_state['fetch_nonce']))
+            fetched = _fetch_all(disabled['goes'], disabled['kp'], disabled['noaa'], int(st.session_state['fetch_nonce']))
     else:
         fetched = None            # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
     with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
@@ -613,6 +620,26 @@ with tabs[4]:
             st.caption('Внешний прогноз, не наблюдение. Суточные вероятности относятся к суткам, а не к окну ВКД, '
                        'и в вероятность за окно не пересчитываются.')
     else:
+        # C3: в исторических режимах архив даёт настоящий ряд наблюдений — он рисуется тем же
+        # рисунком, что и в текущем режиме. В строгом режиме ряда нет (архив исключён по
+        # недоказанной публикации), и вместо картинки печатается причина из снимка.
+        _obs_line = next((o for o in (S.get('observations') or []) if o.get('channel') in ('goes_p_ge10MeV', 'goes')), None)
+        _tg = [datetime.fromisoformat(p['t']) for p in (_obs_line or {}).get('points', [])]
+        _vg = [float(p['value']) for p in (_obs_line or {}).get('points', [])]
+        _tk = [a for a, _b, _v in (R.kp_obs or [])]
+        _vk = [_v for _a, _b, _v in (R.kp_obs or [])]
+        hist_obs_fig = observations_figure(_tg, _vg, _tk, _vk, t0,
+                                           'GOES, протоны ≥10 МэВ, pfu — наблюдение из архива NASA iSWA за 2024',
+                                           'Kp — наблюдение из окончательного ряда GFZ',
+                                           'отсечка' if mode == 'history_forecast' else 'начало периода')
+        if hist_obs_fig is not None:
+            st.plotly_chart(hist_obs_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.caption('Наблюдения архива, не расчёт и не прогноз. Пороги — шкалы NOAA S и G.%s'
+                       % (' Ряд GOES — 5-минутные средние; Kp — 3-часовые интервалы.' if pro else ''))
+        else:
+            st.markdown('%s Численных наблюдений на этом горизонте нет: %s'
+                        % (pill('нет наблюдений', 'none'),
+                           status_ru(src.get('noaa_swpc_goes', {}).get('status') or '—', pro)), unsafe_allow_html=True)
         fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min)
         if fc_fig is not None:
             st.plotly_chart(fc_fig, width='stretch', config=PLOTLY_CONFIG)
@@ -636,7 +663,8 @@ with tabs[4]:
             st.caption('%s. Отсечка %s, горизонт до %s UTC.%s'
                        % (ver['note'], ver['cutoff_utc'][:16].replace('T', ' '), ver['horizon_to_utc'][:16].replace('T', ' '),
                           ' Наблюдения Kp — окончательный ряд GFZ по 3-часовым интервалам; '
-                          'события — уведомления DONKI, опубликованные после отсечки.' if pro else ''))
+                          'события — уведомления DONKI, опубликованные после отсечки. Слой: %s.'
+                          % ver.get('source_layer', '—') if pro else ''))
             vc1, vc2 = st.columns(2)
             if ver.get('kp_obs'):
                 vc1.dataframe([{'интервал с': x['from_utc'][5:16].replace('T', ' '), 'по': x['to_utc'][11:16], 'Kp': fmt(x['kp']),
@@ -688,7 +716,16 @@ with tabs[5]:
                 status = '%s; TLE: %s' % (status, tm['tle_fetch_status'])
             state, kind = STRICT_RU.get(v.get('strictness'), v.get('strictness') or '—'), ('ok' if v.get('strictness') == 'strict' else 'warn')
         elif mode != 'live' and k == 'noaa_swpc_goes':
-            status, state = 'архива наблюдений GOES за 2024 нет — линия без наблюдения, объявлено', 'нет архива'
+            # C3: численный архив наблюдений GOES 2024 подключён. Состояние и давность берём
+            # из снимка; прежняя зашитая фраза «архива нет» в «Историческом разборе» была неправдой.
+            if v.get('data_utc'):
+                state, hist_obs = 'архив наблюдений', False
+            elif bool(disabled.get('goes')):
+                state = 'исключён'
+            elif mode == 'history_forecast':
+                state = 'исключён строгим режимом'
+            else:
+                state = 'нет в архиве'
         elif mode != 'live' and k == 'gfz_kp':
             state = ('исключён' if kp_off_hist else 'сценарий' if (R.kp is not None and R.kp.source_id == 'scenario')
                      else 'архив' if R.kp is not None else 'нет до отсечки' if mode == 'history_forecast' else 'нет в архиве')
@@ -719,7 +756,7 @@ with tabs[5]:
     for k in src:
         if k.startswith('_'):
             continue
-        r = registry_row(k)
+        r = registry_row(k, origin=src[k].get('origin'))
         if r['величина'] == '—' and not k.startswith('noaa_forecast_'):
             continue
         reg_rows.append({'источник': source_name_ru(k), **r})
@@ -731,44 +768,53 @@ with tabs[5]:
     st.markdown('<div class="tcap">Таблица 4. Реестр источников: величина, единица, частота выпуска, что считается '
                 'временем публикации, условия использования и ограничение. Где лицензия не записана в ответе службы, '
                 'так и сказано — сервис её не додумывает.</div>', unsafe_allow_html=True)
-    if mode == 'history_forecast':
-        with st.expander('После отсечки не использовано: %s %s'
-                         % (nbsp_thousands(len(R.excluded)), plural_ru(len(R.excluded), ('запись', 'записи', 'записей'))),
+    # Записи архива, не вошедшие в расчёт. После стыка с адаптером A2 идентификаторы имеют вид
+    # «источник:выпуск:хеш[:тип]», а причин две семьи: отсечка по времени публикации и содержание
+    # самой записи. Смешивать их нельзя — иначе разбор, где отсечки нет вовсе, показывал
+    # «исключено 81 отсечкой». Поэтому обе колонки печатаются явно, и разбор тоже видит свой список.
+    _excl_arch = list((S.get('history') or {}).get('excluded_by_archive') or [])
+    _excl_all = [(x, True) for x in R.excluded] + [(x, False) for x in _excl_arch]
+    if mode != 'live' and _excl_all:
+        _n_cut = sum(1 for x, _ in _excl_all if excl_group_ru(x.partition(': ')[2]) == 'время публикации или доступность')
+        with st.expander('Не вошло в расчёт: %s %s%s'
+                         % (nbsp_thousands(len(_excl_all)), plural_ru(len(_excl_all), ('запись', 'записи', 'записей')),
+                            (' — из них %s по времени публикации' % nbsp_thousands(_n_cut)) if _n_cut else ''),
                          expanded=False):
-            st.caption('Записи архива, опубликованные позже отсечки или без времени публикации; ни одна не участвует в расчёте.'
-                       + (' Сначала итог по источникам и причинам, ниже — записи поимённо (интервалы Kp свёрнуты в одну строку).'
-                          if pro else ''))
-            _EXCL_SRC = {'gfz_kp_archive': 'Kp, окончательный ряд GFZ (3-часовые интервалы)', 'donki_gst': 'DONKI: Kp карточек бурь',
-                         'donki_msg': 'DONKI: уведомления', 'donki_enlil': 'DONKI: прогоны WSA-ENLIL', 'donki_sep': 'DONKI: карточки протонных событий',
-                         'donki_flr': 'DONKI: вспышки', 'donki_cme': 'DONKI: выбросы'}
-            _groups: dict[tuple[str, str], list[str]] = {}
-            for x in R.excluded:
+            st.caption(('Записи архива, опубликованные позже отсечки или без времени публикации, и записи, не подходящие '
+                        'по содержанию; ни одна не участвует в расчёте.' if mode == 'history_forecast' else
+                        'В этом режиме отсечки нет: записи не вошли в расчёт по содержанию — не то событие, '
+                        'не тот прибор или неразобранное тело сообщения.')
+                       + (' Сначала итог по источникам и причинам, ниже — записи поимённо '
+                          '(однотипные свёрнуты в одну строку).' if pro else ''))
+            _groups: dict[tuple[str, str, str], list[str]] = {}
+            for x, _ in _excl_all:
                 rid_, _, reason_ = x.partition(': ')
-                cat_ = ('без времени публикации' if 'неизвестно' in reason_ else 'опубликовано после отсечки' if 'после отсечки' in reason_ else reason_)
-                _groups.setdefault((rid_.split('#', 1)[0], cat_), []).append(rid_)
-            st.dataframe([{'источник': _EXCL_SRC.get(k_[0], k_[0]), 'причина': k_[1], 'записей': len(v_),
-                           'первая': v_[0].split('#', 1)[-1], 'последняя': v_[-1].split('#', 1)[-1]}
-                          for k_, v_ in sorted(_groups.items(), key=lambda kv: -len(kv[1]))], width='stretch', hide_index=True)
-            _rest = [x for x in R.excluded if not x.startswith('gfz_kp_archive#')]
-            _kp_n = len(R.excluded) - len(_rest)
+                _groups.setdefault((rid_.split(':')[0], excl_reason_ru(reason_), excl_group_ru(reason_)), []).append(rid_)
+            st.dataframe([{'источник': source_ru(k_[0]), 'почему не в расчёте': k_[2], 'причина': k_[1], 'записей': len(v_),
+                           'первый выпуск': record_release_ru(v_[0]), 'последний выпуск': record_release_ru(v_[-1])}
+                          for k_, v_ in sorted(_groups.items(), key=lambda kv: -len(kv[1]))], width='stretch', hide_index=True,
+                         column_config={'причина': st.column_config.TextColumn(width='large')})
             if pro:               # записи поимённо — только на профессиональном уровне (U5)
-                st.write(('- интервалы Kp GFZ: %d записей, одна причина — ряд окончательный, времени публикации по интервалам нет\n' % _kp_n if _kp_n else '')
-                         + '\n'.join('- ' + x for x in _rest[:200]) + ('\n- …' if len(_rest) > 200 else ''))
-            elif _kp_n:
-                st.write('- интервалы Kp GFZ: %d записей, одна причина — ряд окончательный, времени публикации по интервалам нет' % _kp_n)
-    # S8: снимок третьего круга может принести карту покрытия истории и версии записей источников.
-    # Ключей нет — блока нет; экран от их отсутствия не падает.
+                _named = ['- %s — %s' % (record_ru(rid_), k_[1])
+                          for k_, v_ in sorted(_groups.items(), key=lambda kv: -len(kv[1])) if len(v_) <= 5
+                          for rid_ in v_]
+                st.write('\n'.join(_named[:200]) + ('\n- …' if len(_named) > 200 else '') if _named else
+                         'Каждая группа выше содержит больше пяти однотипных записей — поимённый список не печатается.')
+    # Карта покрытия каналов от адаптера истории (A2) и версии использованных записей.
+    # Ключ снимка — 'coverage_map'; 'coverage' оставлен как прежнее имя на случай старого снимка.
     _hist = S.get('history') or {}
-    _hcov, _hver = _hist.get('coverage') or {}, _hist.get('source_versions') or {}
+    _hcov = _hist.get('coverage_map') or _hist.get('coverage') or {}
+    _hver = _hist.get('source_versions') or {}
     if pro and (_hcov or _hver):
         with st.expander('История: покрытие каналов и версии записей', expanded=False):
             if _hcov:
-                st.dataframe([{'канал': ch, 'состояние': (c or {}).get('status', '—'),
-                               'доля покрытия окна': fmt((c or {}).get('coverage_fraction')),
-                               'причина': status_ru((c or {}).get('reason') or '—', pro)}
-                              for ch, c in _hcov.items()], width='stretch', hide_index=True)
+                st.dataframe(coverage_rows_ru(_hcov), width='stretch', hide_index=True,
+                             column_config={'причина': st.column_config.TextColumn(width='large')})
+                st.caption('Доля горизонта окон, для которой у канала есть данные. Канал без покрытия объявляется '
+                           'отсутствующим, а не заполняется нулём.')
             if _hver:
-                st.caption('Версий записей источников: %s. Полный перечень — в манифесте выгрузки.'
+                st.caption('Версий записей источников: %s — по одной на каждую использованную запись. '
+                           'Полный перечень с хешами — в манифесте выгрузки.'
                            % fmt(sum(len(v or {}) for v in _hver.values())))
     if pro and tm['provenance'].get('limitations'):
         with st.expander('Орбита: происхождение и ограничения', expanded=False):

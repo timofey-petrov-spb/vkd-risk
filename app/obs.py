@@ -51,12 +51,20 @@ def kp_series(path: Optional[str]):
 
 
 def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: datetime) -> Optional[go.Figure]:
+    """Текущий режим: ряды читаются из кеша слоя источников по пути к сырой записи."""
     tg, vg = goes_series(goes_path)
     tk, vk = kp_series(kp_path)
+    return observations_figure(tg, vg, tk, vk, t0, 'GOES, протоны ≥10 МэВ, pfu — наблюдение NOAA SWPC',
+                               'Kp — наблюдение GFZ', 'запрос')
+
+
+def observations_figure(tg, vg, tk, vk, t0: datetime, goes_title: str, kp_title: str,
+                        mark_ru: str = 'запрос') -> Optional[go.Figure]:
+    """Тот же рисунок из готовых рядов: исторические режимы передают ряд архива, а не путь к кешу."""
     if not tg and not tk:
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                        subplot_titles=('GOES, протоны ≥10 МэВ, pfu — наблюдение NOAA SWPC', 'Kp — наблюдение GFZ'))
+                        subplot_titles=(goes_title, kp_title))
     if tg:
         fig.add_trace(go.Scatter(x=tg, y=vg, name='GOES ≥10 МэВ, pfu', line=dict(color=GREEN, width=1.5),
                                  hovertemplate='%{y:.3g} pfu<extra></extra>'), row=1, col=1)
@@ -69,7 +77,7 @@ def observations_panel(goes_path: Optional[str], kp_path: Optional[str], t0: dat
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
-    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='запрос', showarrow=False, xanchor='left', yanchor='bottom',
+    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text=mark_ru, showarrow=False, xanchor='left', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
     lo = min([v for v in vg if v > 0] or [0.1])
     # метки логарифмической оси задаём сами: иначе печатаются числа вида 192,3432 (U4)

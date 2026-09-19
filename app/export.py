@@ -197,6 +197,8 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('sources.json', _j(S['sources']))
         if S.get('verification') is not None:
             z.writestr('verification.json', _j(S['verification']))
+        if S.get('observations'):        # ряды наблюдений с единицей, источником и записью (C3)
+            z.writestr('observations.json', _j(S['observations']))
         z.writestr('manifest.json', _j({
             'schema_version': S.get('schema_version'), 'algorithm_version': S['algorithm_version'],
             'computed_utc': S['computed_utc'], 'mode': S.get('mode_id', S['mode']),

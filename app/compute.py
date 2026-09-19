@@ -136,7 +136,32 @@ EXCLUDED_RU = {
     'ambiguous_notification_versions': 'разные версии одного сообщения к отсечке — неоднозначно',
     'historic_publication_and_version_availability_not_proven':
         'историческая публикация и доступность именно этой версии не доказаны',
+    # причины адаптера A2 и разборщика уведомлений A1 приходят по-английски (vkd/sources/donki.py,
+    # vkd/sources/gfz_archive.py). На экране идентификаторов и английского быть не должно (О5),
+    # поэтому каждая переводится здесь дословно, без обобщения и без потери причины.
+    'out_of_scope: no explicit Earth arrival in primary summary':
+        'вне области: в теле уведомления нет объявленного прихода к Земле',
+    'out_of_scope: not a GOES observation at Earth':
+        'вне области: запись не является наблюдением GOES у Земли',
+    'context_only: weekly retrospective report is not a current event':
+        'только контекст: недельный обзор за прошедшую неделю — не текущее событие',
+    'publication_conflict: API/body issue times differ by at least one minute':
+        'расхождение времени публикации: в ответе службы и в теле сообщения оно отличается не меньше чем на минуту',
+    'unsupported: unrecognized_primary_summary':
+        'тело сообщения не разобрано: сводка в неизвестном формате',
+    'final_GFZ_index_without_historic_publication_review_only':
+        'окончательный индекс GFZ без собственного времени публикации — только для разбора после факта',
 }
+
+
+def excluded_ru(reason: str) -> str:
+    """Причина исключения записи по-русски. Непереведённая причина отдаётся как есть — молча
+    подменять её обобщением нельзя: в списке исключённого должна стоять настоящая причина."""
+    if reason in EXCLUDED_RU:
+        return EXCLUDED_RU[reason]
+    if reason.startswith('invalid: '):        # исключение разборщика: текст ошибки оставляем дословно
+        return 'запись не разобрана: ' + reason[len('invalid: '):]
+    return reason
 # исключения адаптера, которые НЕ являются отсечкой (запись вне отображаемого контекста запроса):
 # в список «после отсечки не использовано» они не попадают, иначе список перестаёт значить то, что назван
 _NOT_CUTOFF_REASONS = ('outside_requested_display_context',)
@@ -193,6 +218,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp, kp_raw = None, {}
         f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs, verification = [], {}, [], [], {}, [], [], None
+    observations: list = []          # ряды наблюдений для ленты времени и выгрузки (C3)
     excluded_archive: list = []
     catalog = None
     kp_src_note = None
@@ -220,7 +246,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         # «исключено отсечкой» — только там, где отсечка есть (строгий режим). В разборе
         # отсечки нет, и называть ею записи, непригодные по другим причинам, нельзя:
         # они идут отдельным списком с собственной причиной.
-        adapter_excluded = ['%s: %s' % (x['raw_record_id'], EXCLUDED_RU.get(x['reason'], x['reason']))
+        adapter_excluded = ['%s: %s' % (x['raw_record_id'], excluded_ru(x['reason']))
                             for x in (hist_meta.get('excluded') or [])
                             if not any(x['reason'].startswith(p) for p in _NOT_CUTOFF_REASONS)]
         excluded = list(cut.excluded) + (adapter_excluded if cutoff_utc is not None else [])
@@ -247,6 +273,22 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         else:
             goes_absent_ru = 'численных наблюдений GOES в архиве на этот момент нет (%s)' % (goes_cov_a2.get('reason') or 'запись отсутствует')
             goes_src_note = 'разбор: ' + goes_absent_ru
+        # C3: пятиминутный ряд наблюдений GOES ≥10 МэВ на ленту окна. Берётся из cut.samples,
+        # то есть в строгом режиме ряда нет по той же отсечке, что и у остальных записей, —
+        # экран не может показать наблюдение, которого на тот момент не было доказано.
+        if disabled.get('goes') != 'off':
+            _g_line = sorted((s for s in cut.samples
+                              if s.channel_id == GOES_CHANNEL and s.value is not None
+                              and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min)),
+                             key=lambda s: s.t_utc)
+            if _g_line:
+                observations.append({
+                    'channel': GOES_CHANNEL, 'label': 'GOES, протоны ≥10 МэВ — наблюдение',
+                    'unit': _g_line[0].unit, 'source_id': _g_line[0].source_id,
+                    'published_utc': (_g_line[0].published_utc.isoformat() if _g_line[0].published_utc else None),
+                    'record': _g_line[0].raw_record_id,
+                    'quality': _g_line[0].quality, 'n_points': len(_g_line),
+                    'points': [{'t': s.t_utc.isoformat(), 'value': float(s.value)} for s in _g_line]})
         if disabled.get('kp') == 'off':
             kp_src_note = 'источник исключён пользователем — данных нет'
         elif kp is None:
@@ -301,8 +343,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             if seps:
                 summary += '; протонное событие: первая публикация %s' % min(e.published_utc for e in seps).strftime('%d.%m %H:%MZ')
             verification = {
-                'note': 'в расчёт не входит: наблюдения и публикации после отсечки, только для сопоставления прогноза с фактом; '
-                        'источник факта — тот же архив в режиме разбора (vkd.history, history_review)',
+                # U5: имя программного слоя — отдельным ключом, чтобы оперативный уровень экрана
+                # печатал только русский текст, а происхождение факта оставалось прослеживаемым
+                'note': 'в расчёт не входит: наблюдения и публикации после отсечки, только для сопоставления прогноза '
+                        'с фактом; источник факта — тот же архив, прочитанный в режиме исторического разбора',
+                'source_layer': '%s, history_review' % HIST_SRC,
                 'cutoff_utc': cutoff_utc.isoformat(), 'horizon_to_utc': h_end.isoformat(),
                 'kp_obs': [{'from_utc': a.isoformat(), 'to_utc': b.isoformat(), 'kp': v, 'record': rid} for a, b, v, rid in kp_after],
                 'goes_obs_max': ({'t_utc': max(goes_after, key=lambda x: x[1])[0].isoformat(),
@@ -502,9 +547,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                              'age_min': round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60)
                              if kp and kp.source_id != 'scenario' else None}
         sources['donki_archive'] = {'role': 'уведомления DONKI (протонное событие, буря, прогноз прихода выброса)',
-                                    'status': 'архив уведомлений DONKI %s — %s%s; разбор исходных тел сообщений, отбор по времени публикации (%s)' % (
+                                    # имя программного слоя стоит в '_layers'; в тексте статуса,
+                                    # который читает аналитик, идентификаторов кода быть не должно (О5)
+                                    'status': 'архив уведомлений DONKI %s — %s%s; разбор исходных тел сообщений, отбор по времени публикации' % (
                                         c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'),
-                                        ', %d сообщений' % n_msg if n_msg else '', HIST_SRC),
+                                        ', %d сообщений' % n_msg if n_msg else ''),
                                     'live_ok': None, 'from_cache': None, 'origin': 'архив A1 (%s)' % cat_src,
                                     'fetched_utc': None, 'data_utc': iso(t0), 'age_min': None,
                                     'events_used': len(events), 'excluded_by_cutoff': len(excluded)}
@@ -575,6 +622,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'reason': line.reason, 'gaps': list(line.gaps), 'last_release_before_cutoff': line.last_release_before_cutoff,
                        'cells': [{'from': iso(s.valid_from_utc), 'to': iso(s.valid_to_utc), 'value': s.value} for s in line.samples]}
                       for line in fc_lines],
+        # ряды наблюдений: происхождение «наблюдение», единица и запись — при каждом ряде (C3)
+        'observations': observations,
         'coverage_declared': list(assessments[0].coverage_declared), 'coverage_missing': list(assessments[0].coverage_missing),
         'policy_note': POLICY_NOTE,
         'is_simulated': is_sim,
