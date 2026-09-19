@@ -158,9 +158,11 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
                background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
 .reco .scope b { color:var(--calc); font-weight:600; }
 .reco .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
-.r-insufficient { border-left-color:var(--none); } .r-insufficient h2 { color:var(--ink); }
-.r-all_need_check { border-left-color:var(--cond); } .r-all_need_check h2 { color:var(--cond); }
-.r-equivalent h2 { color:var(--ink); }
+/* Вид рамки и заголовка — по ВИДУ ОТВЕТА, а не по имени исхода: промежуток равнозначных начал
+   такой же ответ, как и точка, и красить его как отказ нельзя. Отказ — только «нет оснований». */
+.r-none { border-left-color:var(--none); } .r-none h2 { color:var(--ink); }
+.r-check { border-left-color:var(--cond); } .r-check h2 { color:var(--cond); }
+.r-dispute h2 { color:var(--ink); }
 .legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:0.84rem; color:var(--muted); }
 .tcap { font-size:0.82rem; color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
@@ -2536,6 +2538,61 @@ def scan_recommended(scan: dict):
     return cands[i] if isinstance(i, int) and 0 <= i < len(cands) else None
 
 
+def scan_best_indices(scan: dict) -> list[int]:
+    """Индексы лучшей группы, проверенные по списку кандидатов и упорядоченные по времени начала."""
+    cands = scan.get('candidates') or []
+    return sorted(i for i in (scan.get('best') or []) if isinstance(i, int) and 0 <= i < len(cands))
+
+
+def scan_answer(scan: dict) -> dict:
+    """Какой ответ дал перебор: точка, промежуток, спор величин, проверка аналитиком или отказ.
+
+    Это главная развилка блока рекомендации, и читать её надо буквально. Пустой
+    `recommended_index` НЕ означает отказа: на реальных данных перебор почти всегда отвечает
+    ПРОМЕЖУТКОМ, а не точкой — соседние начала неразличимы внутри собственной чувствительности
+    модели (допуск равнозначности взят из анализа чувствительности). Замеры движка на 110 датах
+    архива: недоминируемых кандидатов медиана шесть, единственный кандидат лишь в 12 прогонах,
+    а в 43 случаях из 55 лучшая группа — ПОДРЯД идущие начала с промежутком медианой 50 мин.
+    Если считать такой исход отказом, рекомендация пропадёт там, где она есть.
+
+    Отказ рисуется ТОЛЬКО при `insufficient`. `all_need_check` — не отказ: обстановка нештатная,
+    условие стоит у каждого начала, решение принимает аналитик.
+    """
+    cands = scan.get('candidates') or []
+    v = str(scan.get('verdict') or '')
+    if v == 'insufficient':
+        return {'kind': 'none'}
+    if v == 'all_need_check':
+        return {'kind': 'check'}
+    rec_i = scan.get('recommended_index')
+    if isinstance(rec_i, int) and 0 <= rec_i < len(cands):
+        return {'kind': 'point', 'first': cands[rec_i], 'last': cands[rec_i], 'n': 1}
+    best = scan_best_indices(scan)
+    if len(best) == 1:
+        return {'kind': 'point', 'first': cands[best[0]], 'last': cands[best[0]], 'n': 1}
+    if len(best) > 1:
+        # Подряд идущие начала — это один непрерывный промежуток: «выходить можно с 23:30 до 00:20».
+        # Разрыв в индексах означает другое: лучшие по минутам и по флюенсу стоят в разных местах
+        # срока, и это спор величин, а не промежуток.
+        span = (best[-1] - best[0]) == len(best) - 1
+        return {'kind': 'span' if span else 'dispute',
+                'first': cands[best[0]], 'last': cands[best[-1]], 'n': len(best)}
+    return {'kind': 'none'}
+
+
+def _day_time_ru(t) -> str:
+    """«19.09 в 16:20» — так человек и говорит; час без даты в ответе читался бы как «сегодня»."""
+    return '%s в %s' % (t.strftime('%d.%m'), t.strftime('%H:%M')) if t is not None else '—'
+
+
+def _span_ru(a, b) -> str:
+    """Границы промежутка: дата у второй печатается только при переходе через полночь."""
+    if a is None or b is None:
+        return '—'
+    return '%s — %s' % (a.strftime('%d.%m %H:%M'),
+                        b.strftime('%d.%m %H:%M') if a.date() != b.date() else b.strftime('%H:%M'))
+
+
 def _rank_key(c: dict):
     """Порядок таблицы лучших: сначала ранжированные по рангу, затем остальные по времени начала."""
     r = c.get('rank')
@@ -2787,45 +2844,78 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
     расчёта: при отказе на этом же месте крупно стоит причина и что нужно, чтобы он снялся.
     """
     v = str(scan.get('verdict') or '')
-    cand = scan_recommended(scan)
-    lines = ['<div class="reco r-%s">' % esc(v or 'none')]
-    if cand is not None and v == 'recommended':
-        a = _iso_dt(cand.get('start_utc'))
-        b = _iso_dt(cand.get('end_utc'))
-        dur = int(duration_min or scan.get('requested_duration_min') or 0)
-        lines.append('<h2>Выходить %s</h2>' % esc(dt_ru(a)))
-        span = '%s — %s' % (dt_ru(a), dt_ru(b, with_date=(a is None or b is None or a.date() != b.date())))
-        lines.append('<div class="when">окно %s%s</div>'
-                     % (esc(span), esc(', %d мин' % dur) if dur else ''))
+    ans = scan_answer(scan)
+    kind = ans['kind']
+    cand = ans.get('first')
+    dur = int(duration_min or scan.get('requested_duration_min') or 0)
+    dur_txt = ('%d мин' % dur) if dur else ''
+    dur_ru = (', ' + dur_txt) if dur_txt else ''
+    lines = ['<div class="reco r-%s">' % esc(kind)]
+    if kind == 'point':
+        a, b = _iso_dt(cand.get('start_utc')), _iso_dt(cand.get('end_utc'))
+        lines.append('<h2>Выходить %s UTC</h2>' % esc(_day_time_ru(a)))
+        lines.append('<div class="when">окно %s%s</div>' % (esc(_span_ru(a, b)), esc(dur_ru)))
+    elif kind == 'span':
+        # Промежуток — НОРМАЛЬНЫЙ ответ, а не отсутствие ответа: внутри него начала неразличимы
+        # в пределах чувствительности модели, и называть минуту значило бы обещать точность,
+        # которой у расчёта нет.
+        last = ans.get('last') or {}
+        a1, a2 = _iso_dt(cand.get('start_utc')), _iso_dt(last.get('start_utc'))
+        b1, b2 = _iso_dt(cand.get('end_utc')), _iso_dt(last.get('end_utc'))
+        lines.append('<h2>Выходить в промежутке %s UTC</h2>' % esc(_span_ru(a1, a2)))
+        lines.append('<div class="when">начало в этих границах, окно%s: самое раннее %s, самое позднее %s</div>'
+                     % (esc((' ' + dur_txt) if dur_txt else ''), esc(_span_ru(a1, b1)), esc(_span_ru(a2, b2))))
+    elif kind == 'dispute':
+        lines.append('<h2>Минуты в аномалии и флюенс указывают на разные начала</h2>')
+    elif kind == 'check':
+        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get('all_need_check', 'Нужна проверка аналитиком')))
     else:
-        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Рекомендации нет')))
+        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Оснований для рекомендации недостаточно')))
+    if kind == 'span':
+        lines.append('<div class="why">Внутри промежутка начала неразличимы в пределах чувствительности '
+                     'модели, поэтому сервис называет промежуток, а не минуту.</div>')
     why = scan.get('why')
     if why:
+        # Числа «почему» пишет движок — и при промежутке, и при споре величин он уже говорит
+        # словами промежутка. Свой текст поверх не сочиняем.
         lines.append('<div class="why">%s</div>' % esc(sentence_ru(screen_text(why))))
     lines.append('<div class="searched">%s</div>' % esc(screen_text(scan_searched_ru(scan))))
-    if v in ('insufficient', 'all_need_check'):
-        lines.append('<div class="stop">%s</div>' % esc(screen_text(refusal_lift_ru(v, missing_ru, mode))))
-    if v == 'equivalent':
-        rows = scan_best_rows(scan)
-        starts = ', '.join(r['начало выхода'] for r in rows[:3])
-        lines.append('<div class="stop">Равнозначные начала%s: различие внутри объявленного допуска, '
-                     'и выбор между ними сервис не делает — он принимается по причинам вне охвата, '
-                     'таким как план смены и ресурс.</div>' % (esc(' — ' + starts) if starts else ''))
+    if kind == 'none':
+        # Отказ — только здесь. Ни промежуток равнозначных начал, ни условия у всех начал
+        # отказом не являются, и рисовать их как отказ нельзя.
+        lines.append('<div class="stop">%s</div>' % esc(screen_text(refusal_lift_ru('insufficient', missing_ru, mode))))
+    elif kind == 'check':
+        lines.append('<div class="cond">%s</div>' % esc(screen_text(refusal_lift_ru('all_need_check', missing_ru, mode))))
+    elif kind == 'dispute':
+        lines.append('<div class="cond">Спор величин: одно начало лучше по минутам в аномалии, другое — '
+                     'по флюенсу, и сверх допуска равнозначности. Выбор за аналитиком; числа обеих '
+                     'сторон стоят строкой выше.</div>')
     scope = scan.get('scope')
     if scope:
         lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
-    conds = [screen_text(x) for x in ((cand or {}).get('conditions') or [])]
+    # Условия берутся по ВСЕЙ лучшей группе: ответ-промежуток называет несколько начал, и условие
+    # у любого из них относится к ответу целиком, а не к одному кандидату.
+    _cands_all = scan.get('candidates') or []
+    _group = [_cands_all[i] for i in scan_best_indices(scan)] if kind in ('span', 'dispute') else [cand]
+    conds, _seen = [], set()
+    for _c in _group:
+        for _x in ((_c or {}).get('conditions') or []):
+            _t = screen_text(_x)
+            if _t not in _seen:
+                _seen.add(_t)
+                conds.append(_t)
     if conds:
         lines.append('<div class="cond">Условия проверки: %s</div>' % esc('; '.join(conds[:3])))
     elif cand is not None:
         # Т6 и находка №4 десятого круга: «условий нет» и «условия не проверены» — разные
         # утверждения. Без покрытия обязательной линии условию взяться неоткуда, и молчание
         # условий там ничего не значит; плашка в любом случае серая, а не зелёная.
+        _what_ru = 'у рекомендованного окна' if kind == 'point' else 'у названных начал'
         lines.append('<div class="cond none">%s</div>'
                      % ('Условия по обязательной линии не проверялись: данных на это окно нет. '
                         'Отсутствие условия здесь не означает отсутствия воздействия.'
                         if str(cand.get('coverage') or '') == 'none' else
-                        'Условий проверки у рекомендованного окна нет'))
+                        'Условий проверки %s нет' % _what_ru))
     if pro:
         # Профессиональному уровню важно, один кандидат оказался в лучшей группе или несколько:
         # по разбору реальных данных ожидается один, и множество равнозначных — повод проверить

@@ -2270,8 +2270,15 @@ def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
 
 
-def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditions=()):
-    """Искусственный снимок перебора ровно той формы, что записана в разделе 1a техзадания."""
+def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditions=(),
+                  best=None, recommended_index=None):
+    """Искусственный снимок перебора ровно той формы, что записана в разделе 1a техзадания.
+
+    По умолчанию — ответ ТОЧКОЙ: один кандидат в лучшей группе и заполненный `recommended_index`.
+    На живых данных так бывает редко (по замерам движка — 12 прогонов из 110), поэтому исходы
+    «промежуток», «спор величин», «проверка аналитиком» и «отказ» собираются здесь же, своими
+    значениями `best`, `recommended_index` и `verdict`.
+    """
     cands = []
     for k in range(n):
         s = t0 + timedelta(minutes=step * k)
@@ -2283,7 +2290,9 @@ def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditi
             'search_to_utc': (t0 + timedelta(hours=12)).isoformat(), 'step_min': step, 'n_candidates': n,
             'rule': 'не хуже по обеим величинам и строго лучше хотя бы по одной',
             'tolerance_note': 'допуск равнозначности 20 мин по минутам и отношение 1,5 по флюенсу',
-            'candidates': cands, 'best': [n - 1], 'recommended_index': n - 1, 'verdict': verdict,
+            'candidates': cands, 'best': list(best) if best is not None else [n - 1],
+            'recommended_index': (n - 1) if (recommended_index is None and best is None) else recommended_index,
+            'verdict': verdict,
             'scope': 'сравнение сделано по минутам в аномалии и флюенсу захваченных протонов',
             'why': 'наименьшее воздействие из 7 проверенных начал: 29 мин в аномалии против 53 у худшего'}
 
@@ -2295,7 +2304,9 @@ def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     html_ = recommendation_panel(_scan_fixture(t0), {'coverage_missing': []}, duration_min=240)
     txt = _strip_tags(html_)
-    assert 'Выходить 19.09 13:00' in txt, txt
+    # «19.09 в 13:00 UTC» — так человек и говорит; час без даты читался бы как «сегодня»,
+    # а зона названа прямо в самой заметной строке экрана (раздел 3.2 техзадания).
+    assert 'Выходить 19.09 в 13:00 UTC' in txt, txt
     assert '240 мин' in txt, txt
     assert 'Перебрано 7 начал с шагом 10 мин' in txt, txt
     assert 'Область вывода:' in txt, txt
@@ -2416,3 +2427,76 @@ def test_chto_dalshe_ne_obeshchaet_vypuska_pri_strukturnom_probele():
     assert 'Следующий выпуск источника этот пробел не закроет' in vis, vis
     assert 'или новый выпуск' not in vis, vis
     assert 'перейти в исторический разбор' in vis, vis
+
+
+def test_otvet_pereborom_chashche_promezhutok_chem_tochka():
+    """Ответ перебора почти всегда ПРОМЕЖУТОК, а не точка: по замерам движка на 110 датах архива
+    недоминируемых кандидатов медиана шесть, единственный кандидат — лишь в 12 прогонах, а в 43
+    случаях из 55 лучшая группа это ПОДРЯД идущие начала. Пустой `recommended_index` при исходе
+    «равнозначны» — нормальный успешный случай, и рисовать на его месте отказ нельзя."""
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 9, 19, 23, 30, tzinfo=timezone.utc)
+    # подряд идущие начала → один промежуток
+    sc = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 1, 2, 3, 4, 5])
+    assert scan_answer(sc)['kind'] == 'span', scan_answer(sc)
+    txt = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
+    assert 'Выходить в промежутке 19.09 23:30 — 20.09 00:20 UTC' in txt, txt
+    assert 'неразличимы в пределах чувствительности модели' in txt, txt
+    assert 'начало в этих границах' in txt, txt
+    for bad in ('Оснований для рекомендации недостаточно', 'Чтобы отказ снялся', 'Рекомендации нет'):
+        assert bad not in txt, (bad, txt)
+    # один кандидат → ответ точкой
+    one = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[4])
+    assert scan_answer(one)['kind'] == 'point', scan_answer(one)
+    assert 'Выходить 20.09 в 00:10 UTC' in _strip_tags(recommendation_panel(one, {}, duration_min=240))
+    # разрыв в лучшей группе → спор величин, а не промежуток
+    gap = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 9])
+    assert scan_answer(gap)['kind'] == 'dispute', scan_answer(gap)
+    dis = _strip_tags(recommendation_panel(gap, {}, duration_min=240))
+    assert 'указывают на разные начала' in dis, dis
+    assert 'Выбор за аналитиком' in dis, dis
+    assert 'Чтобы отказ снялся' not in dis, dis
+
+
+def test_otkaz_tolko_pri_nedostatke_osnovaniy():
+    """Отказ рисуется ТОЛЬКО при исходе «оснований недостаточно». «Все начала требуют проверки» —
+    не отказ: обстановка нештатная, условие стоит у каждого начала, решает аналитик."""
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    chk = _scan_fixture(t0, verdict='all_need_check', best=[])
+    assert scan_answer(chk)['kind'] == 'check', scan_answer(chk)
+    txt = _strip_tags(recommendation_panel(chk, {}, mode='live'))
+    assert 'Все начала требуют проверки аналитиком' in txt, txt
+    assert 'Чтобы отказ снялся' not in txt, txt
+    assert 'решение аналитика' in txt, txt
+    no = _scan_fixture(t0, verdict='insufficient', best=[])
+    assert scan_answer(no)['kind'] == 'none', scan_answer(no)
+    ref = _strip_tags(recommendation_panel(no, {}, missing_ru=['наблюдение GOES устарело'], mode='live'))
+    assert 'Оснований для рекомендации недостаточно' in ref, ref
+    assert 'Чтобы отказ снялся' in ref, ref
+    assert 'Выходить' not in ref, ref
+
+
+def test_ekran_s_promezhutkom_pokazyvaet_otvet_a_ne_pustotu(monkeypatch):
+    """Тот же экран на снимке, где перебор ответил ПРОМЕЖУТКОМ и `recommended_index` пуст:
+    на месте ответа стоит промежуток, а не отказ и не пустое место."""
+    import app.compute as compute
+    real_run = compute.run
+
+    def fake_run(*a, **kw):
+        r = real_run(*a, **kw)
+        t0 = datetime.fromisoformat(r.S['request']['t0_utc'])
+        r.S['scan'] = _scan_fixture(t0, n=13, step=30, duration=int(r.S['request']['duration_min']),
+                                    verdict='equivalent', best=[2, 3, 4])
+        return r
+
+    monkeypatch.setattr(compute, 'run', fake_run)
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.radio('mode').set_value(MODES[1]).run()
+    assert not at.exception, at.exception
+    assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
+    body = texts(at)
+    assert 'Выходить в промежутке' in body, body[:600]
+    assert 'Оснований для рекомендации недостаточно' not in body.split('Разобрать конкретные окна')[0], body[:600]
+    assert 'Величины самого раннего начала из рекомендованного промежутка' in body, body[:600]

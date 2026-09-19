@@ -52,7 +52,7 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI
                     pill, plan_change_ru, plan_state, plural_ru, preset_matches,
                     ratio_ru, raw_record, recommendation_panel, record_label_ru, record_no_url_ru, record_release_ru,
                     record_url, registry_row, ribbon_caption_ru, robustness_gain_ru,
-                    saa_note_ru, scan_absent_ru, scan_best_rows, scan_of, scan_recommended, screen_text, short_reason,
+                    saa_note_ru, scan_absent_ru, scan_answer, scan_best_rows, scan_of, screen_text, short_reason,
                     source_issues, source_issues_short_ru, source_name_ru,
                     source_short, spread_offsets,
                     status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card,
@@ -554,7 +554,12 @@ _zip = build_zip(S, R.raw_records)
 # Перебор начал пишется параллельно с экраном. Ключа нет — экран показывает прежний разбор окон
 # и честно говорит, что перебора не было; выдуманных чисел он не подставляет (раздел 1a техзадания).
 scan = scan_of(S)
-scan_cand = scan_recommended(scan) if scan else None
+# Ответ перебора почти всегда ПРОМЕЖУТОК, а не точка: соседние начала неразличимы внутри
+# собственной чувствительности модели. Поэтому окно для блока «Что учтено» берётся из ответа
+# (первое начало названной группы), а не из `recommended_index`, который на живых данных чаще
+# всего пуст, и пустота эта отказом не является.
+scan_ans = scan_answer(scan) if scan is not None else None
+scan_cand = (scan_ans or {}).get('first')
 
 # ================================================================= блок 3: рекомендация
 c_main, c_btn = st.columns([6, 1.5])
@@ -638,8 +643,12 @@ if _acc_target is None and scan_cand is None:
     _acc_target = next((a for a in R.assessments
                         if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
                        (R.assessments[0] if R.assessments else None))
-_acc_head = ('Величины рекомендованного окна' if scan_cand is not None else
-             ('Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'))
+_ACC_HEAD_RU = {'point': 'Величины рекомендованного окна',
+                'span': 'Величины самого раннего начала из рекомендованного промежутка',
+                'dispute': 'Величины первого из названных начал'}
+_acc_head = _ACC_HEAD_RU.get((scan_ans or {}).get('kind')) if scan_cand is not None else None
+if not _acc_head:
+    _acc_head = 'Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'
 st.markdown('**%s** — каждая со своей единицей, происхождением и источником.' % _acc_head)
 if _acc_target is not None:
     for _line in accounted_lines(_acc_target, R.raw_records):
