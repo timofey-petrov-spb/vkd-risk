@@ -420,3 +420,32 @@ def test_doza_ne_uchastvuet_v_pravile_vybora_okna():
     r = recommend(assessments, th)
     text = ' '.join([r.rule_applied or ''] + list(r.missing or ()))
     assert 'доз' not in text.lower(), text
+
+
+def test_zapisi_dozy_popadayut_v_arkhiv_rascheta():
+    """Каждый идентификатор, названный фактором дозы, обязан иметь свои БАЙТЫ в архиве.
+
+    Иначе повтор сохранённого расчёта без сети не воспроизводит число: файл, по которому
+    доза посчитана, в архив не попал. Ровно это и поймал tests/test_closeout.py при первом
+    подключении фактора — три записи дозы не были зарегистрированы в манифесте.
+    """
+    from vkd.assess.dose import record_files
+    declared = {rid for rid, _path, _meta in record_files()}
+    cited = set(D.window_dose(1e6).record_ids)
+    # Идентификаторы прил. А регистрирует сама таблица потоков, они здесь не проверяются.
+    assert declared <= cited, declared - cited
+    assert {x for x in cited if not x.startswith('ost1044_A_')} == declared
+    for _rid, path, meta in record_files():
+        assert os.path.isfile(os.path.join(ROOT, path)), path
+        assert meta['sha256'] and meta['quality'] == 'model'
+
+
+def test_manifest_registriruet_fayly_dozy():
+    """Сквозная проверка через сам манифест: файлы дозы попадают в raw_records с байтами."""
+    from vkd.assess.dose import record_files
+    from vkd.integration.manifest import collect_records
+    raw = {}
+    collect_records(raw, {}, {'records': {}}, BeltTable('min'), ROOT)
+    for rid, _path, _meta in record_files():
+        assert rid in raw, rid
+        assert raw[rid]['content_base64']

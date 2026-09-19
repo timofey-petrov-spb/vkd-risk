@@ -237,10 +237,11 @@ def dose_10y_rad_Si(thickness_g_cm2: float, alt_km: float, inclination_deg: floa
                              % (thickness_g_cm2, _TABLE_NAMES[inc],
                                 ', '.join('%g' % t for t in thick)))
         row = table[thick.index(thickness_g_cm2)]
-        j = min(range(len(alts)), key=lambda k: (alts[k] < alt_km, abs(alts[k] - alt_km)))
-        # соседние узлы высоты, охватывающие alt_km
-        lo = max([k for k in range(len(alts)) if alts[k] <= alt_km], default=0)
-        hi = min([k for k in range(len(alts)) if alts[k] >= alt_km], default=len(alts) - 1)
+        # Соседние узлы высоты, ОХВАТЫВАЮЩИЕ alt_km. Не «ближайший узел»: 421 км ближе
+        # к 400, но лежит между 400 и 600, и брать одно значение вместо интерполяции
+        # значило бы занизить дозу на 11 %.
+        lo = max(k for k in range(len(alts)) if alts[k] <= alt_km)
+        hi = min(k for k in range(len(alts)) if alts[k] >= alt_km)
         per_inclination.append(_log_interp(alt_km, alts[lo], alts[hi], row[lo], row[hi])
                                if lo != hi else row[lo])
         ids.append('ost1044_%s_%s:%s' % (_TABLE_NAMES[inc].replace('.', '_').replace('К', 'K'),
@@ -251,6 +252,38 @@ def dose_10y_rad_Si(thickness_g_cm2: float, alt_km: float, inclination_deg: floa
                    'at_30_deg_rad': per_inclination[0], 'at_60_deg_rad': per_inclination[1],
                    'inclination_weight_60': w60, 'record_ids': tuple(ids),
                    'geometry': geometry, 'alt_km': alt_km}
+
+
+def record_files(geometry: str = DEFAULT_GEOMETRY) -> tuple:
+    """Файлы, до которых прослеживается доза: (идентификатор записи, путь от корня, метаданные).
+
+    Нужно выгрузке (`vkd/integration/manifest.py`): каждый идентификатор, названный
+    фактором окна, обязан иметь свои БАЙТЫ в архиве расчёта, иначе повтор без сети
+    не воспроизводит число. Идентификаторы собираются здесь же, где и в факторе, —
+    чтобы они не разъехались между двумя местами.
+
+    Спектры К.2.1/К.2.2 сюда НЕ входят: они участвуют только в проверке нормировки
+    (`cross_check_against_standard`), в значение дозы не входят и фактором не названы.
+    """
+    out = []
+    for inc in INCLINATION_NODES:
+        sha, fn = _table(inc, geometry)[3], _table(inc, geometry)[4]
+        out.append(('ost1044_%s_%s:%s' % (_TABLE_NAMES[inc].replace('.', '_').replace('К', 'K'),
+                                          geometry, sha[:12]),
+                    'data/ost1044/' + fn,
+                    {'source_id': 'ost1044_dose_tables', 'sha256': sha, 'quality': 'model',
+                     'citation': SOURCE_RU,
+                     'evidence_role': 'model_table; not an observation'}))
+    if 'norm' not in _CACHE:
+        normalisation()
+    sha = _CACHE['norm']['sha256']
+    out.append(('ost1044_dose_norm:%s' % sha[:12],
+                'data/ost1044_dose/orbit_mean_flux.json',
+                {'source_id': 'ost1044_dose_norm', 'sha256': sha, 'quality': 'model',
+                 'citation': 'средний по орбите уровень того же канала, наш расчёт; '
+                             'пересчитывается scripts/dose_normalisation.py',
+                 'evidence_role': 'derived_normalisation; not an observation'}))
+    return tuple(out)
 
 
 def normalisation(solar_activity: str = 'min', e_min_MeV: float = 30.0) -> Optional[dict]:
