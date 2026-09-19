@@ -2294,6 +2294,13 @@ def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
     # равнозначных — повод проверить допуски, а не признак хорошей обстановки.
     pro_txt = _strip_tags(recommendation_panel(_scan_fixture(t0), {}, pro=True, duration_min=240))
     assert 'В лучшей группе 1 из 7 перебранных начал' in pro_txt, pro_txt
+    # Т6 и находка №4 десятого круга: без покрытия обязательной линии «условий нет» — неправда,
+    # условию просто неоткуда взяться. Плашка серая в обоих случаях, но говорит разное.
+    sc = _scan_fixture(t0)
+    sc['candidates'][-1]['coverage'] = 'none'
+    no_cov = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
+    assert 'Условия по обязательной линии не проверялись' in no_cov, no_cov
+    assert 'не означает отсутствия воздействия' in no_cov, no_cov
 
 
 def test_otkaz_perebora_nazyvaet_prichinu_i_chto_nuzhno():
