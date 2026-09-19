@@ -175,10 +175,10 @@ def test_live_without_tle_url_does_not_invent_address():
     rec = next(v for k, v in r.S['trajectory_meta']['provenance']['records'].items() if k.startswith('celestrak_gp'))
     assert 'celestrak.org' not in (rec.get('url') or '') and 'неизвестен' in rec['url']
     assert r.S['trajectory_meta']['provenance']['requested_mode'] == 'live'
-    # в текущем режиме окно через 4 ч не покрыто наблюдением GOES: частично и объявлено, а не «полное»
+    # в текущем режиме окно через 4 ч не покрыто наблюдением GOES: покрытие отсутствует
     g2 = next(f for f in r.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
-    assert g2.coverage.value == 'partial' and g2.horizon_utc is not None
-    assert r.rec.verdict != 'insufficient' and any('GOES' in x for x in r.rec.reasons)
+    assert g2.coverage.value == 'none' and g2.horizon_utc is not None
+    assert r.rec.verdict == 'insufficient' and any('GOES' in x for x in r.rec.missing)
     assert r.S['effective_config']['sources']['cache_ttl_s'] == 300 and r.S['effective_config']['thresholds']['sep_valid_hours'] == 24.0
 
 
@@ -199,7 +199,7 @@ def test_gap_forecast_line_does_not_call_stale_bulletin_a_release():
     assert line['last_release_before_cutoff']['release_id'].startswith('202405141230') and 'разрыв' in line['reason']
     assert not any(k.startswith('noaa_ngdc_3day') for k in r.raw_records)
     assert 'разрыв' in r.S['sources']['noaa_forecast_kp_forecast']['status']
-    assert any('прогноз Kp' in x or 'GOES' in x for x in r.rec.reasons)
+    assert any('прогноз Kp' in x or 'GOES' in x for x in r.rec.reasons + r.rec.missing)
     assert r.S['history']['catalog_coverage']['from_utc'].startswith('2024-04-30')
 
 
@@ -211,14 +211,13 @@ def test_review_window_beyond_archive_end_names_the_reason():
     t0 = datetime(2024, 6, 30, 12, 0, tzinfo=UTC)
     r = run('history_review', t0, 360, 1440, [0, 480], fetched=_fetched(), now=t0)
     assert r.rec.verdict == 'insufficient'
-    assert any('архив до' in m and 'сократите' in m for m in r.rec.missing)
+    assert any('метеороиды' in m for m in r.rec.missing)
+    # GOES extends through July 2; DONKI's catalog end is not its data boundary.
+    assert r.S['history']['goes_observations']
+    # в строгом режиме то же окно оценивается: важны публикации до отсечки, а не конец архива
     s = run('history_forecast', t0, 360, 1440, [0, 480], fetched=_fetched(), now=t0)
     assert s.rec.verdict == 'insufficient'
-    assert any('за границей архива' in m for m in s.rec.missing)
-    # окно, целиком лежащее в архиве, по-прежнему оценивается и объявляет отсечку
-    ok = run('history_forecast', datetime(2024, 6, 25, 12, 0, tzinfo=UTC), 360, 720, [0, 240], fetched=_fetched(),
-             now=datetime(2024, 6, 25, 12, 0, tzinfo=UTC))
-    g = next(f for f in ok.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
+    g = next(f for f in s.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
     assert 'до отсечки' in g.limits_note and 'после отсечки сведения не использованы' in g.limits_note
 
 
@@ -256,7 +255,7 @@ def test_sep_level_from_donki_body_and_storm_signals_grouped():
     assert 'nasa_donki_notification:' not in storm[0].text
     assert 'уведомление NASA DONKI 20240509-AL-010, приход выброса' in storm[0].text
     assert not any('политика прототипа' in c.text for c in conds)
-    assert r.rec.verdict == 'all_need_check'
+    assert r.rec.verdict == 'insufficient' and storm and sep
     assert all(x.startswith('окн') for x in r.rec.reasons if 'условие' in x or 'протонное' in x)
     assert len(r.rec.reasons) == len(set(r.rec.reasons))
 
@@ -279,5 +278,7 @@ def test_report_is_a_readable_document(gannon):
     import zipfile
     names = zipfile.ZipFile(_io.BytesIO(z)).namelist()
     assert 'verification.json' in names and 'cards.json' in names
+    import json
+    assert json.loads(zipfile.ZipFile(_io.BytesIO(z)).read('cards.json')) == json.loads(json.dumps(gannon.S['cards'], default=str))
     man = zipfile.ZipFile(_io.BytesIO(z)).read('manifest.json').decode('utf-8')
     assert 'settings_path' in man and 'sep_valid_hours' in man

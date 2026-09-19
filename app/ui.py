@@ -177,7 +177,7 @@ STRICT_RU = {'strict': 'строгая', 'declared_reconstruction': 'объяв�
 EVENT_KIND_RU = {'SEP': 'протонное событие', 'GST': 'геомагнитная буря', 'FLR': 'вспышка', 'CME': 'выброс массы',
                  'CME_ARRIVAL': 'прогноз прихода выброса', 'IPS': 'межпланетный удар', 'HSS': 'высокоскоростной поток',
                  'RBE': 'усиление радиационного пояса', 'MPC': 'пересечение магнитопаузы', 'GST_KP': 'буря (Kp)'}
-SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
+SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
              'ost1044_belts': 'таблицы ОСТ 134-1044-2007 (захваченные протоны)',
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
              'noaa_swpc_3day_forecast': 'трёхсуточный бюллетень NOAA SWPC (живой выпуск)',
@@ -270,12 +270,12 @@ def record_url(rec) -> str | None:
         return None
     for key in ('url', 'link', 'messageURL'):
         v = rec.get(key)
-        if isinstance(v, str) and v.strip():
+        if isinstance(v, str) and v.strip().startswith(('https://', 'http://')):
             return v.strip()
     md = rec.get('metadata')
     if isinstance(md, dict):
         v = md.get('url')
-        if isinstance(v, str) and v.strip():
+        if isinstance(v, str) and v.strip().startswith(('https://', 'http://')):
             return v.strip()
     return None
 
@@ -1107,6 +1107,15 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
                 shown.append(dict(it, text=it['head']))   # перечень записей — в карточке окна ниже
                 continue
             (shown if keep else hidden).append(it)
+    if not pro and v == 'insufficient':
+        hidden = items  # retain all evidence; do not headline a winner from partial integrals
+        mechanisms = sorted({MECH_RU.get(m.mechanism_id, m.mechanism_id)
+                             for a in (assessments or []) for m in a.mechanisms
+                             if m.mandatory and m.coverage.value != 'full'})
+        shown = [{'text': 'Неполный охват: ' + ', '.join(mechanisms or ['обязательные линии']) + '.', 'kind': 'need'},
+                 {'text': 'Показаны только известные вклады; их недостаточно для выбора времени ВКД.', 'kind': 'need'}]
+        if any(it['kind'] == 'cond' for it in items):
+            shown.append({'text': 'Есть условия дополнительной проверки специалистом. Подробности — в объяснениях окон.', 'kind': 'cond'})
     if shown:
         lines.append('<ul>' + ''.join('<li%s>%s</li>' % (' class="evid"' if it['kind'] == 'cond' else '',
                                                          esc(screen_text(it['text']))) for it in shown) + '</ul>')
@@ -1335,7 +1344,7 @@ def window_card(i: int, a, best: bool, mode: str, saa_thr_nT: float | None = Non
                    for m in a.mechanisms if m.mandatory or m.coverage.value != 'none')
     why = coverage_reasons(a)
     why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(screen_text('; '.join(why)))) if why else ''
-    note = ('<div class="wnote">минуты в аномалии: |B| &lt; %s нТл, шаг трассы 1 мин — формула (3)</div>' % esc(nbsp_thousands(saa_thr_nT))) \
+    note = ('<div class="wnote">минуты в аномалии: |B| &lt; %s нТл, линейные пересечения порога между точками — формула (3)</div>' % esc(nbsp_thousands(saa_thr_nT))) \
         if saa_thr_nT is not None else ''
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
             '<div class="kv">%s</div>%s%s<div class="cov">покрытие: %s</div>%s</div>'
@@ -1424,14 +1433,14 @@ def verification_ru(summary: str, had_conditions: bool) -> str:
 METHOD_BLOCKS = [
     {'no': 1, 'group': 'Захваченные протоны',
      'title': 'Флюенс за окно',
-     'latex': r'\Phi(\ge E_{min}) \;=\; \sum_{i} J_i\,\Delta t, \qquad '
+     'latex': r'\Phi(\ge E_{min}) \;=\; \sum_{i\in K} \frac{J_i+J_{i+1}}{2}\,\Delta t_i, \qquad '
               r'J_i \;=\; \int_{E_{min}}^{E_{max}} f\!\left(L_i,\; B_i/B_{0,i},\; E\right)\,dE',
      'symbols': 'Φ — флюенс за окно, част./см²; J — интегральный всенаправленный поток выше E_min, см⁻²·с⁻¹; '
-                'Δt = 1 мин — шаг трассы; L и B/B_0 — магнитные координаты точки трассы; сумма берётся по точкам окна.',
+                'Δt_i — фактический интервал между точками в секундах; K — интервалы с известным потоком на обоих концах. Границы окна учитываются интерполяцией. L и B/B_0 — магнитные координаты.',
      'source': 'ОСТ 134-1044-2007, прил. А, табл. А.2.1 (минимум солнечной активности). Единицы — из вводного текста '
                'приложения: спектры всенаправленного потока, см⁻²·с⁻¹·МэВ⁻¹, без домножения на 4π.',
      'limits': 'Хвост выше E_max = 300 МэВ отброшен и объявлен. Вне сетки L = 1,14…9 модели нет — это «нет модели», '
-               'а не нуль; выше точки отражения поток физически нулевой.'},
+               'а не нуль; выше точки отражения поток физически нулевой. Разрывы свыше 60 с не заполняются, за край траектории расчёт не продолжается. При неполном охвате показан только известный вклад, не полный флюенс.'},
     {'no': 2, 'group': 'Захваченные протоны',
      'title': 'Интегрирование по энергии между узлами таблицы',
      'latex': r'f(E) = a\,E^{\,b}, \qquad b = \frac{\ln\left(f_{k+1}/f_k\right)}{\ln\left(E_{k+1}/E_k\right)}',
@@ -1446,7 +1455,7 @@ METHOD_BLOCKS = [
               r"\qquad \frac{B}{B_0} = \frac{\left|\mathbf{B}\right|_{IGRF}}{B_{eq}\,L^{-3}}",
      'symbols': "r′ — расстояние точки от смещённого центра диполя в радиусах Земли; λ′ — геомагнитная широта от "
                 "смещённой оси; d — смещение центра диполя (603 км, 0,095 R_E на май 2024; вектор смещения печатается в выгрузке расчёта, файл факторов); |B| — полное поле IGRF в точке трассы; "
-                "минуты в аномалии считаются по порогу |B| из настроек, шаг трассы 1 мин.",
+                "минуты в аномалии считаются по линейным пересечениям порога |B| между точками, начальный шаг 60 с; при проверке сходимости сетка уточняется.",
      'source': 'Fraser-Smith A. C. Centered and eccentric geomagnetic dipoles and their poles. Rev. Geophys. 25(1), 1987; '
                'коэффициенты IGRF — те же файлы, что у модуля орбиты.',
      'limits': 'Объявленное приближение до трассировки силовых линий: L и B_0 — от смещённого диполя, |B| — полное IGRF; '
@@ -1743,6 +1752,17 @@ def grid_cell_ru(v, windows_ru_iso: dict) -> str:
     return ('Окно %s (%s)' % (n, t.strftime('%H:%MZ'))) if n else t.strftime('%d.%m %H:%MZ')
 
 
+def grid_refinement_caption(report: dict) -> str:
+    states = {'converged_known_support': 'согласие сеток на известном участке достигнуто',
+              'resolution_limit_reached': 'достигнут минимальный шаг; заданное согласие не подтверждено',
+              'point_budget_exhausted': 'достигнут лимит вычислений; заданное согласие не подтверждено',
+              'source_changed': 'изменились исходные данные; сохранена предыдущая сетка',
+              'refinement_unavailable': 'уточнение не выполнено; сохранена предыдущая сетка',
+              'unavailable': 'орбита недоступна', 'not_requested': 'не запрашивалась'}
+    return ('Проверка сходимости: %s. Шаг %s с. Это проверка численного расчёта, '
+            'не физической точности; пробелы модели остаются.' %
+            (states.get(report.get('status'), 'статус неизвестен'), report.get('selected_step_seconds', '—')))
+
 # --- подписи под графиками. Текст живёт рядом с описанием рисунка, а не в app/main.py:
 # ряды ленты менялись дважды, и подпись, написанная у места вывода, каждый раз оставалась
 # описывать прежний вид («Ряд 1 — |B| на трассе», «Ряд 3 — события») и противоречила картинке.
@@ -1764,10 +1784,12 @@ def timeline_caption(mode: str, pro: bool = False) -> str:
         return ('Верхний ряд — сколько минут в аномалии накапливает каждое окно от своего начала; '
                 'красные полосы — пролёты аномалии. Нижний ряд — %s. '
                 'События и прогнозы — отдельным рядом, когда они есть на горизонте.' % mid)
-    return ('Верхний ряд — накопленные минуты в аномалии по каждому окну, ступенями от начала окна '
-            '(наш расчёт по IGRF): красные полосы — пролёты аномалии, цветные — сами окна. Слева от отметки '
-            'времени ступеней нет не по потере данных: экспозиция считается только внутри окон, а окон в прошлом '
-            'нет. Сырое |B| включается нажатием в легенде. Нижний ряд — %s; поток GOES выводится правой осью '
+    return ('Верхний ряд — накопленные минуты в аномалии по каждому окну от его начала '
+            '(линейные пересечения порога |B| по IGRF, фактические интервалы времени): '
+            'красные полосы — пролёты аномалии, цветные — сами окна. Пропуски внутри окна не заполняются; '
+            'итог неполного окна отмечается отдельно. Слева от отметки времени кривых нет: '
+            'экспозиция считается только внутри окон, а окон в прошлом нет. '
+            'Сырое |B| включается нажатием в легенде. Нижний ряд — %s; поток GOES выводится правой осью '
             'только тогда, когда достигает первого порога шкалы S, иначе печатается строкой под графиком. '
             'События и прогнозы — отдельным рядом, когда они есть на горизонте: положение по вертикали означает '
             'тип, не значение.' % mid)

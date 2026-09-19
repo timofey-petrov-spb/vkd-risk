@@ -57,6 +57,32 @@ def test_tolerance_is_spread_of_difference_and_consistent_with_grid():
         assert all(v == r.rec.preferred.start_utc.isoformat() for v in rob.preferred_starts.values())
 
 
+def test_future_archive_records_do_not_change_strict_snapshot(monkeypatch):
+    """Inject an actual late provider release at the real A2 registry boundary."""
+    import vkd.history.bundle as hb
+    from vkd.sources.registry import SourceRegistry
+    from tests.test_integration import _fetched
+    reg = SourceRegistry(ROOT)
+    sid = 'nasa_donki_notification'
+    late = next(r for r in reg.records(sid) if r['release_id'] == '20240510-AL-004')
+    class FilteredRegistry:
+        source_ids = reg.source_ids
+        def records(self, source):
+            return [r for r in reg.records(source) if r['raw_record_id'] != late['raw_record_id']]
+        def raw_bytes(self, rid):
+            return reg.raw_bytes(rid)
+    t0 = datetime(2024, 5, 10, 12, tzinfo=timezone.utc)
+    monkeypatch.setattr(hb, '_registry', lambda root, supplied: FilteredRegistry())
+    before = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+    monkeypatch.setattr(hb, '_registry', lambda root, supplied: reg)
+    after = run('history_forecast', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+    assert before.S['windows'] == after.S['windows']
+    assert before.S['recommendation'] == after.S['recommendation']
+    assert any(late['raw_record_id'] in s and 'опубликовано или доступно позже отсечки' in s for s in after.excluded)
+    assert not any(e.raw_record_id == late['raw_record_id'] for e in after.events)
+    assert late['raw_record_id'] not in after.raw_records
+    review = run('history_review', t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+    assert any(e.raw_record_id == late['raw_record_id'] for e in review.events)
 def test_future_archive_records_do_not_enter_the_strict_snapshot():
     """CONTRACT §8, строки 1–2, на уровне app.compute.run и НА РЕАЛЬНОМ поставщике (vkd.history).
 

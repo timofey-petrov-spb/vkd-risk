@@ -101,19 +101,19 @@ def test_same_overlap_rule_in_compare_and_compute():
 # ------------------------------------------------------- M3: наблюдение GOES не покрывает окно
 def test_goes_observation_outside_window_is_unknown_not_not_detected(belts):
     """Горизонт наблюдения GOES кончился до начала окна: «не выявлено» писать нельзя —
-    наличие события в окне неизвестно. Покрытие канала остаётся частичным (не NONE),
-    иначе любое окно через 20 ч давало бы «оснований недостаточно»."""
+    наличие события в окне неизвестно. Нулевое пересечение даёт NONE,
+    рекомендация блокируется при неполном обязательном охвате."""
     th = Thresholds()
     tr = traj(30 * 60, lambda i: i < 60)
     late = Window(T0 + timedelta(hours=20), 360)
     a = assess_window(late, tr, belts, goes(0.2), kp_sample(3.0, age_min=30), [], th, T0, mmod_hits=1e-6)
     f = next(x for x in a.mechanisms[0].factors if x.name.startswith('поток протонов GOES'))
     assert f.presence == Presence.UNKNOWN
-    assert f.coverage == Coverage.PARTIAL
+    assert f.coverage == Coverage.NONE
     assert 'ниже S1' in f.limits_note and '2024-05-03 11:55Z' in f.limits_note   # уровень и время наблюдения остались
     assert any('наблюдение GOES не покрывает окно' in n and 'до его начала' in n
                for n in a.mechanisms[0].coverage_notes)
-    assert a.mechanisms[0].coverage == Coverage.PARTIAL
+    assert a.mechanisms[0].coverage == Coverage.NONE
     # окно внутри горизонта: наличие определяется как прежде
     near = Window(T0, 50)
     b = assess_window(near, tr, belts, goes(0.2), kp_sample(3.0, age_min=30), [], th, T0, mmod_hits=1e-6)
@@ -144,7 +144,7 @@ def test_missing_kp_is_declared_in_coverage_and_never_improves_verdict(belts):
     # без Kp вердикт не может быть благоприятнее, чем с Kp
     rank = {'insufficient': 0, 'all_need_check': 1, 'trade_off': 2, 'equivalent': 3, 'preferred': 4}
     assert rank[r_off.verdict] <= rank[r_on.verdict]
-    assert 'покрытие частичное — объявлено' in r_off.rule_applied
+    assert 'нет полного покрытия' in r_off.rule_applied
 
 
 def test_strict_mode_without_kp_declares_the_cutoff_reason():
@@ -320,7 +320,9 @@ def test_publication_range_shows_year_when_it_differs_from_window_year():
 def test_scenario_card_never_claims_observation_or_publication():
     from vkd.windows.scenario import Scenario
     sc = Scenario('ui', sep_onset_offset_min=60, sep_level_pfu=5000.0, kp_override=8.0)
-    r = run('history_forecast', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON, scenario=sc)
+    r = run('history_review', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON, scenario=sc)
+    with pytest.raises(ValueError, match='строгий прогноз'):
+        run('history_forecast', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON, scenario=sc)
     sim = [c for c in r.cards if c.title.startswith('Окно 1 · Сценарий')]
     assert sim
     for c in sim:
@@ -346,7 +348,8 @@ def test_condition_sources_have_no_chopped_notes_or_code_identifiers():
     from vkd.explain.cards import record_ru
     assert 'уведомление NASA DONKI 20240510-AL-004, протонное событие' in joined
     # заметка записи не режется по символам: либо целиком, либо по границе слова с многоточием
-    shown = {e.event_id for c in conds for e in r.events if record_ru(e.event_id) in c.source_ru}
+    shown = {e.event_id for c in conds for e in r.events if e.raw_record_id in c.record_ids}
+    assert all(rid in r.raw_records for c in conds for rid in c.record_ids)
     assert shown
     for e in r.events:
         if e.event_id in shown and e.note:

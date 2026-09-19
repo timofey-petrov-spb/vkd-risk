@@ -24,7 +24,8 @@ from functools import lru_cache
 import numpy as np
 import plotly.graph_objects as go
 
-from app.ui import event_kind_ru      # имена типов событий по-русски; app/ui.py не знает о Plotly
+from vkd.orbit.exposure import threshold_exposure
+from app.ui import event_kind_ru, fmt      # имена типов событий по-русски; app/ui.py не знает о Plotly
 
 BLUE, RED, GREY, WIN = '#1f4e79', '#c0392b', '#7f8c8d', '#5dade2'
 GREEN, AMBER = '#1e8449', '#b9770e'
@@ -181,7 +182,7 @@ def ground_track(traj, windows, thr_nT: float, when: datetime, step_lon: float =
                                     name='аномалия: |B| ниже %s нТл на высоте %s' % (_nbsp_int(thr_nT), alt_ru),
                                     showlegend=(k == 0), hoverinfo='skip'))
     lon_l, lat_l = _split_dateline([p.lon_deg for p in traj], [p.lat_deg for p in traj])
-    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='трасса, шаг 1 мин', line=dict(color=GREY, width=1), hoverinfo='skip'))
+    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='траектория МКС', line=dict(color=GREY, width=1), hoverinfo='skip'))
     in_saa_pts = [p for p in traj if p.in_saa]
     if in_saa_pts:
         fig.add_trace(go.Scattergeo(lon=[p.lon_deg for p in in_saa_pts], lat=[p.lat_deg for p in in_saa_pts], mode='markers',
@@ -218,39 +219,26 @@ def _traj_step_min(traj) -> float:
     return d if d > 0 else 1.0
 
 
-def window_exposure(traj, w, step_min: float | None = None):
-    """Ступенчатое накопление минут в аномалии внутри окна: (времена, минуты, всего).
+def window_exposure(traj, w, step_min: float | None = None, *, threshold_nT=24000):
+    """Actual-dt cumulative exposure; legacy step_min cannot change elapsed time.
 
-    Ответ на вопрос «почему это окно лучше»: видно и сколько окно набирает всего,
-    и в какие именно минуты оно это набирает."""
+    A partial curve returns total=None, not a falsely complete zero or sum.
+    """
     if not traj:
-        return [], [], 0.0
-    step = _traj_step_min(traj) if step_min is None else step_min
-    end = w.start_utc + timedelta(minutes=w.duration_min)
-    xs, ys, acc = [], [], 0.0
-    for p in traj:
-        if p.t_utc < w.start_utc or p.t_utc > end:
-            continue
-        xs.append(p.t_utc); ys.append(acc)
-        if p.in_saa and p.t_utc < end:
-            acc += step
-    if not xs:
-        return [], [], 0.0
-    xs.append(end); ys.append(acc)
-    return xs, ys, acc
+        return [], [], None
+    profile=threshold_exposure([p.t_utc for p in traj],[p.B_nT for p in traj],
+        w.start_utc,w.start_utc+timedelta(minutes=w.duration_min),threshold=threshold_nT)
+    return list(profile.times), [v/60 if v is not None else None for v in profile.cumulative_seconds], (
+        profile.total_seconds/60 if profile.total_seconds is not None else None)
 
 
-def _saa_spans(traj):
-    """Отрезки трассы в аномалии: [(начало, конец), …] — полосы пролётов."""
-    spans, inside, t_from = [], False, None
-    for p in list(traj) + [None]:
-        flag = bool(p.in_saa) if p is not None else False
-        if flag and not inside:
-            t_from = p.t_utc
-        if inside and not flag:
-            spans.append((t_from, p.t_utc if p is not None else traj[-1].t_utc))
-        inside = flag
-    return spans
+def _saa_spans(traj, threshold_nT=24000):
+    """Threshold crossings, excluding missing endpoints and gaps over 60 s."""
+    if len(traj)<2:
+        return []
+    profile=threshold_exposure([p.t_utc for p in traj],[p.B_nT for p in traj],
+        traj[0].t_utc,traj[-1].t_utc,threshold=threshold_nT)
+    return list(profile.below_intervals)
 
 
 def _row_title(fig: go.Figure, row: int, text: str) -> None:
@@ -313,7 +301,7 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
                            showarrow=False, align='center', font=dict(size=10, color=GREY))
 
     # --- ряд 1: полосы пролётов аномалии и полосы окон
-    for a, b in _saa_spans(traj):
+    for a, b in _saa_spans(traj, thr_nT):
         fig.add_vrect(x0=a, x1=b, fillcolor=RED, opacity=0.13, line_width=0, layer='below', row=1, col=1)
     for i, w in enumerate(windows):
         x1 = w.start_utc + timedelta(minutes=w.duration_min)
@@ -323,24 +311,23 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
                            text='окно %d' % (i + 1), showarrow=False,
                            xanchor='left', yanchor='top', font=dict(size=11, color=win_color(i)))
 
-    # --- ряд 1: накопленные минуты по каждому окну; подпись итога стоит на конце ступени,
+    # --- ряд 1: накопленные минуты по каждому окну; подпись у последней известной точки,
     # поэтому в легенду окна не идут (легенда не длиннее четырёх строк)
-    step_min = _traj_step_min(traj)
     for i, w in enumerate(windows):
-        xs, ys, total = window_exposure(traj, w, step_min)
-        if not xs:
+        xs, ys, total = window_exposure(traj, w, threshold_nT=thr_nT)
+        if not xs or not any(v is not None for v in ys):
             continue
         fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', showlegend=False,
                                  name='окно %d: накоплено, мин' % (i + 1),
-                                 line=dict(color=win_color(i), width=2.4, shape='hv'),
-                                 hovertemplate='окно %d: %%{y:.0f} мин в аномалии<extra></extra>' % (i + 1)),
+                                 line=dict(color=win_color(i), width=2.4, shape='linear'), connectgaps=False,
+                                 hovertemplate='окно %d: %%{y:.2f} мин в аномалии<extra></extra>' % (i + 1)),
                       row=1, col=1, secondary_y=False)
-        # итог окна подписан прямо на конце ступени: цифра рядом с линией читается без легенды,
-        # а у правого края подпись уходит влево, чтобы не обрезалась
-        near_edge = xs[-1] > x_to - timedelta(hours=3)
-        fig.add_trace(go.Scatter(x=[xs[-1]], y=[ys[-1]], mode='markers+text', showlegend=False, hoverinfo='skip',
+        # Не переносим маркер в неизвестный хвост окна. Частичный итог не выдаём за полный.
+        last_x, last_y = next((x, y) for x, y in reversed(list(zip(xs, ys))) if y is not None)
+        near_edge = last_x > x_to - timedelta(hours=3)
+        fig.add_trace(go.Scatter(x=[last_x], y=[last_y], mode='markers+text', showlegend=False, hoverinfo='skip',
                                  marker=dict(size=7, color=win_color(i)),
-                                 text=['окно %d: %s мин' % (i + 1, _nbsp_int(total))],
+                                 text=['окно %d: %s' % (i + 1, (fmt(total) + ' мин') if total is not None else 'неполный охват')],
                                  textposition='top left' if near_edge else 'middle right',
                                  textfont=dict(size=11, color=win_color(i))), row=1, col=1, secondary_y=False)
     if traj:

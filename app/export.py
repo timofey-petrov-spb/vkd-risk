@@ -19,7 +19,7 @@ from typing import Any
 
 from types import SimpleNamespace
 
-from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, phrase_ru, raw_record,
+from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, grid_refinement_caption, phrase_ru, raw_record,
                     record_url, robustness_line_ru, rule_ru, screen_text, source_name_ru, status_ru, verification_ru)
 from vkd.explain.format import record_ru
 
@@ -379,6 +379,9 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
           '- допустимость реального выхода — за уполномоченными специалистами;',
           '- вероятность разгерметизации и попадания в космонавта;',
           '- дозу человека; поток GOES как поток у станции без обрезания.', '']
+    if S.get('grid_refinement', {}).get('status') not in (None, 'not_requested'):
+        L += ['', '## Численная сходимость', '', grid_refinement_caption(S['grid_refinement']),
+              'Подробности сравнения на одинаковых известных участках — grid_refinement.json в ZIP.']
     return _dates_outside_urls('\n'.join(L))
 
 
@@ -419,6 +422,11 @@ def _traj_line(tm: dict) -> str:
 
 def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
     buf = io.BytesIO()
+    import hashlib
+    raw_files = {rid: 'raw/%s_%s.json' % (rid.replace('/', '_').replace('#', '_').replace(':', '-'), hashlib.sha256(rid.encode()).hexdigest()[:8]) for rid in raw_records}
+    # Retain the legacy TLE name for tools that read this one well-known payload.
+    if 'iss.tle' in raw_files:
+        raw_files['iss.tle'] = 'raw/iss.tle.json'
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('report.md', report_md(S, raw_records))
         z.writestr('request.json', _j(S['request']))
@@ -427,6 +435,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('recommendation.json', _j(S['recommendation']))
         z.writestr('cards.json', _j(S['cards']))
         z.writestr('sources.json', _j(S['sources']))
+        if S.get('grid_refinement'):
+            z.writestr('grid_refinement.json', _j(S['grid_refinement']))
+        if S.get('numerical_integration'):
+            z.writestr('numerical_integration.json', _j(S['numerical_integration']))
         if S.get('verification') is not None:
             z.writestr('verification.json', _j(S['verification']))
         if S.get('observations'):        # ряды наблюдений с единицей, источником и записью (C3)
@@ -434,8 +446,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('manifest.json', _j({
             'schema_version': S.get('schema_version'), 'algorithm_version': S['algorithm_version'],
             'computed_utc': S['computed_utc'], 'mode': S.get('mode_id', S['mode']),
+            'raw_record_files': raw_files,
             'cutoff_utc': S['request'].get('cutoff_utc'), 'is_simulated': S.get('is_simulated', False),
-            'source_versions': S['sources'], 'raw_record_ids': sorted(raw_records),
+            'source_versions': S.get('source_versions', {}),
+            'coverage_map': S.get('coverage_map', {}), 'raw_record_ids': sorted(raw_records),
             'effective_config': S.get('effective_config') or {'thresholds': S['request']['thresholds']},
             'excluded_by_cutoff': S.get('history', {}).get('excluded_by_cutoff', []),
             'excluded_by_archive': S.get('history', {}).get('excluded_by_archive', []),
@@ -446,8 +460,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             'history_audit': {k: v for k, v in (S.get('history') or {}).items()
                               if k in ('adapter_version', 'coverage_map', 'limitations', 'archive_access',
                                        'source_versions', 'event_facts', 'provider')},
+            'grid_refinement': S.get('grid_refinement'),
+            'numerical_integration': S.get('numerical_integration'),
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))
         for rid, rec in raw_records.items():
-            z.writestr('raw/%s.json' % rid.replace('/', '_').replace('#', '_').replace(':', '-'), _j(rec))
+            z.writestr(raw_files[rid], _j(rec))
     return buf.getvalue()

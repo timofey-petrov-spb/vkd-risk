@@ -77,7 +77,11 @@ def test_goes_archive_is_an_observation_in_review_and_is_excluded_in_strict_mode
     assert g.t_utc <= T_CUT and g.t_utc > T_CUT - timedelta(minutes=10)      # ближайшее наблюдение до отсечки
     assert g.published_utc is None                                          # публикация не выдумывается
     gf = next(f for f in review.assessments[0].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
-    assert gf.value == pytest.approx(g.value) and gf.unit == 'pfu'
+    # Review uses actual cells within the window, not forward filling the last observation.
+    cells = review.S['history']['goes_observations']
+    end = (T_CUT + timedelta(hours=6)).isoformat()
+    assert gf.value == pytest.approx(max(c['value'] for c in cells if c['valid_from_utc'] < end and c['valid_to_utc'] > T_CUT.isoformat()))
+    assert gf.unit == 'pfu'
     assert review.S['sources']['noaa_swpc_goes']['coverage_fraction'] == pytest.approx(1.0)
 
     strict = run('history_forecast', T_CUT, 360, 720, [0, 240], fetched=_fetched(), now=T_CUT)
@@ -184,7 +188,8 @@ def test_live_storm_condition_from_noaa_forecast_works_now_too(tmp_path):
     r = run('live', t0, 360, 720, [0, 240], fetched=((g, g_raw, f_goes), kp3, (txt, f_tle), (samples, raw, fetch)), now=t0)
     storm = [c for m in r.assessments[0].mechanisms for c in m.conditions if c.kind == 'GST']
     assert len(storm) == 1 and 'прогноз NOAA: Kp 8' in storm[0].text
-    assert r.rec.verdict == 'all_need_check'
+    assert r.rec.verdict == 'insufficient'
+    assert all(any(m.needs_check for m in a.mechanisms) for a in r.assessments)
 
 
 # --------------------------------------------------------------------- C7: заглушек в конвейере нет

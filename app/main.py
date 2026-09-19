@@ -33,8 +33,8 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, MECH_RU, M
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, SEV_RU, STRICT_RU, VERDICT_TITLE,
                     age_ru, close_cut_parens, coverage_reasons, coverage_rows_ru, coverage_scope_ru, dedup_clauses,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
-                    grid_cell_ru, head, kind_pill, limit_ru, map_caption, nbsp_thousands, panel, pill, plural_ru,
-                    ratio_ru, raw_record, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
+                    grid_cell_ru, grid_refinement_caption, head, kind_pill, limit_ru, map_caption, nbsp_thousands, panel, pill, plural_ru, ratio_ru,
+                    raw_record, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
                     screen_text, short_reason, source_issues, source_name_ru, source_short, spread_offsets,
                     status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card)
 from app.viz import PLOTLY_CONFIG, ground_track, timeline
@@ -200,7 +200,12 @@ with st.sidebar:
         sc_kp = st.slider('Kp при скачке', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
+    if mode == 'history_forecast':
+        if sc_delay or sc_sep_on or sc_kp_on:
+            st.info('Сценарий «Что если» отключён для строгого прогноза. Для моделирования выберите исторический разбор или текущую обстановку.')
+        scenario = Scenario('none')
     TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
+    refine_grid = False
     if pro:
         with st.expander('Пороги и настройки', expanded=False):
             st.caption('Умолчания — из config/settings.toml; всё применённое попадает в снимок и выгрузку.')
@@ -213,6 +218,8 @@ with st.sidebar:
                          kp_check=st.number_input('Порог Kp для условия проверки', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
                                                   help='Применяется к наблюдению, уведомлениям о буре и прогнозам NOAA/ENLIL.'),
                          tle_max_age_days=st.number_input('Допустимый возраст TLE, сут', 1.0, 14.0, TH0.tle_max_age_days, 1.0, key='th_tle'))
+            refine_grid = st.checkbox('Проверить сходимость расчёта', value=False, key='refine_grid',
+                help='Повторный расчёт на сетках до 5 секунд. Проверяет численную устойчивость; не восполняет отсутствующую физическую модель.')
             T_months = st.slider('Длительность экспедиции для норм, мес', 1, 12, 6, key='T_months')
     else:
         th, T_months = TH0, 6
@@ -249,15 +256,11 @@ def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
 
 
 horizon_min = search_min + duration_min
-# R4-2: предупреждение о границе архива включается по ФАКТИЧЕСКИМ окнам, а не по всему периоду
-# поиска. Покрытие считается по окнам, и при сдвигах меньше периода сверху стояло «рекомендации
-# не будет», а вердикт тут же называл предпочтительное окно — два ответа об одном на одном экране.
-windows_end = t0 + timedelta(minutes=(max(offsets) if offsets else 0) + duration_min)
+windows_end = t0 + timedelta(minutes=max(offsets) + duration_min + scenario.work_delay_min)
 windows_beyond_archive = mode != 'live' and windows_end > ARCHIVE_TO
 if windows_beyond_archive:
-    st.warning('Последнее окно кончается %s UTC — за границей архива 30.06.2024. Покрытие обязательной линии за пределами '
-               'архива отсутствует, рекомендации не будет. Сократите сдвиг окна или длительность либо выберите более '
-               'раннюю дату.' % windows_end.strftime('%d.%m.%Y %H:%M'))
+    st.warning('Последнее окно за границей архива уведомлений DONKI (май–июнь 2024). Покрытие проверяется по фактическим '
+               'интервалам каждого источника; наличие нескольких соседних суток не гарантирует полноту всех линий.')
 try:                              # границы постановки проверяются до любого запроса (Т7): сообщение зрителю, расчёта нет
     validate_request(mode, t0, duration_min, search_min, offsets)
 except ValueError as e:
@@ -273,12 +276,15 @@ try:
         fetched, fetch_note = None, None   # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
     with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
         R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
-                scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note)
+                scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note,
+                refinement_policy={} if refine_grid else None)
 except Exception as e:            # noqa: BLE001 — экран не падает; подробности в лог, не зрителю (Т6, Т7)
     LOG.error('расчёт не выполнен: %s\n%s', e, traceback.format_exc())
     st.error('Расчёт не выполнен: %s. Измените запрос или повторите позже; подробности записаны в журнал сервера.' % type(e).__name__)
     st.stop()
 S, rec, meta, traj, rob = R.S, R.rec, R.meta, R.traj, R.rob
+if refine_grid:
+    st.caption(grid_refinement_caption(S.get('grid_refinement', {})))
 now = datetime.fromisoformat(S['computed_utc'])
 windows = [a.window for a in R.assessments]
 windows_ru = {a.window.start_utc: str(i + 1) for i, a in enumerate(R.assessments)}
@@ -309,8 +315,9 @@ horizon_to = t0 + timedelta(minutes=horizon_min)
 # а янтарный оставлен внешнему прогнозу и только ему (R4-28)
 orbit_kind = 'cond' if meta is None else 'calc'
 orbit_val = 'недоступна' if meta is None else METHOD_RU.get(meta.method, meta.method)
-orbit_sub = status_ru(tm['status'], pro) if meta is None else '%s · шаг трассы 1 мин, точек %s' % (
-    STRICT_RU.get(tm['strictness'], tm['strictness']), nbsp_thousands(tm['n_points']))
+orbit_sub = status_ru(tm['status'], pro) if meta is None else '%s · шаг трассы %s с, точек %s' % (
+    STRICT_RU.get(tm['strictness'], tm['strictness']),
+    fmt(tm.get('provenance', {}).get('step_seconds', 60)), nbsp_thousands(tm['n_points']))
 row1 = [('Время расчёта', dt_ru(now), 'все времена на экране — UTC', 'calc'),
         ('Режим', mode_ru, MODE_SUB[mode], 'calc'),
         ('Орбита', orbit_val, orbit_sub, orbit_kind),
@@ -428,7 +435,7 @@ for m_ in rec.missing:
     if 'космопогода' in m_ and mode == 'live' and (S['request'].get('disabled') or {}).get('goes') == 'off':
         extra = ' — GOES исключён пользователем'
     elif 'космопогода' in m_ and mode != 'live':
-        extra = ' — наблюдений GOES в архиве нет, а окна выходят за каталог DONKI (01.05–30.06.2024)' \
+        extra = ' — окна выходят за каталог уведомлений DONKI (01.05–30.06.2024)' \
             if windows_beyond_archive else ' — линия без данных на горизонте'
     missing_ru.append(m_ + extra)
 any_cond = any(m.needs_check for a in R.assessments for m in a.mechanisms)
@@ -700,7 +707,7 @@ with tabs[4]:
         if obs_fig is not None:
             st.plotly_chart(obs_fig, width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения источников за последние дни, не расчёт. Пороги — шкалы NOAA S и G.' + (
-                ' GOES меряет на геостационарной орбите и переносится на станцию только через геомагнитное обрезание.'
+                ' GOES меряет на геостационарной орбите. Обрезание — отдельный показатель; локальный поток МКС не рассчитан.'
                 if pro else ''))
         else:
             st.write('Рядов наблюдений нет: источники отключены или недоступны.')
