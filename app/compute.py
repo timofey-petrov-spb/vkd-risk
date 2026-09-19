@@ -27,6 +27,11 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
+from app.fetch_guard import fetch_live_sources
+# Форматирование чисел и времён — тем же средством, что экран (app/ui.py: ни одного вызова
+# Streamlit, только перевод величин в русский текст). Иначе одна и та же величина печатается
+# в снимке и на экране по-разному: «9,00» в сводке проверки против «9» в таблице под ней.
+from app.ui import dt_ru, fmt
 from vkd.assess.cutoff import apply_cutoff
 from vkd.assess.magcoords import belt_coordinates
 from vkd.assess.meteoroids import meteoroid_hits_track
@@ -59,6 +64,13 @@ ALGO_VERSION = '0.6.1'      # 19.09, третий круг: конвейер н�
                             #     у орбиты в текущем режиме рядом стоит 'url' — ФАКТИЧЕСКИЙ адрес получения;
                             #   S['verification']['kp_obs'][i]['origin'] — происхождение строки таблицы после отсечки
                             #     (сколько записей, какая взята, была ли величина уточнена)
+                            # Шестой круг, в пределах 0.6.1 (правило расчёта не менялось, изменился порядок
+                            # ПОЛУЧЕНИЯ живых источников и запись причины отказа):
+                            #   у всех живых источников один общий предел получения (app/fetch_guard.py,
+                            #     [sources].total_deadline_s); по его истечении — кеш, снимок, «данных нет»;
+                            #   S['sources']['_live_fetch']['limit_note'] — причина такого отказа словами;
+                            #     ключ с подчёркиванием, перечни источников его пропускают;
+                            #   run(..., fetch_note=…) — та же причина, когда источники получал вызывающий
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -302,10 +314,15 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         disabled: Optional[dict] = None, thresholds: Optional[Thresholds] = None,
         scenario: Optional[Scenario] = None, T_months: int = 6,
         fetched: Optional[tuple] = None, now: Optional[datetime] = None,
-        tle_override_path: Optional[str] = None) -> Result:
+        tle_override_path: Optional[str] = None, fetch_note: Optional[str] = None) -> Result:
     """tle_override_path — воспроизведение сохранённого расчёта текущего режима: орбита
     строится по сохранённому TLE, а не по текущему (Т8). В исторических режимах орбита
-    берётся из архива OEM (A1/A3) и от TLE не зависит; живые источники не вызываются."""
+    берётся из архива OEM (A1/A3) и от TLE не зависит; живые источники не вызываются.
+
+    fetch_note — причина отказа живых источников по ОБЩЕМУ пределу получения, если источники
+    получал вызывающий (экран получает их своим кешированным вызовом). Когда их получает сам
+    run, причина берётся у app.fetch_guard. Причина стоит и в статусе каждого источника, и
+    отдельным ключом снимка `sources['_live_fetch']` — чтобы выгрузка и примеры не гадали."""
     validate_request(mode, t0, duration_min, search_min, window_offsets_min)
     disabled = disabled or {'goes': False, 'kp': False}
     th = thresholds or Thresholds.from_settings()
@@ -318,9 +335,15 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
 
     # ------------------------------------------------------------ источники
     f_noaa, noaa_raw, noaa_samples = None, {}, ()
+    if fetch_note is not None and not isinstance(fetch_note, str):
+        raise ValueError('fetch_note — текст причины или None, получено %r' % (fetch_note,))
+    live_fetch_note = fetch_note if mode == 'live' else None
     if mode == 'live':
         if fetched is None:
-            fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
+            # Общий предел на все живые источники: без него первый рендер может не наступить
+            # вовсе (зависание DNS тайм-аутом requests не покрывается) — app/fetch_guard.py.
+            fetched, _limit_note = fetch_live_sources(disabled)
+            live_fetch_note = live_fetch_note or _limit_note
         fetched = tuple(fetched)
         if len(fetched) == 3:
             # живой прогноз NOAA не передан экраном — берём его здесь (C6): те же каналы,
@@ -472,18 +495,22 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                         and e.kind_of_event in ('SEP', 'GST')]
             first_storm = next(((a, v) for a, b, v, _, _ in kp_after if v >= th.kp_check), None)
             kp_max = max((v for _, _, v, _, _ in kp_after), default=None)
-            summary = 'условие поставлено в %s; факт: ' % t0.strftime('%H:%MZ')
-            summary += ('Kp %s с %s, максимум %s' % (('%.2f' % first_storm[1]).replace('.', ','), first_storm[0].strftime('%d.%m %H:%MZ'),
-                                                     ('%.2f' % kp_max).replace('.', ',')) if first_storm
-                        else ('максимум Kp %s, бури Kp ≥ %.0f не было' % (('%.2f' % kp_max).replace('.', ','), th.kp_check) if kp_max is not None
+            # Числа и времена сводки — теми же средствами, что экран (fmt, dt_ru): жёсткие форматы
+            # '%.2f' и '%.6g' печатали ту же величину иначе, чем таблица прямо под этой строкой
+            # («максимум 9,00» против «9» в ver['kp_obs'], «206,919 pfu» против «0,22 pfu» у GOES)
+            # и оставляли машинное «12:00Z» там, где весь экран пишет «10.05 12:00» (находка пятого круга).
+            summary = 'условие поставлено в %s; факт: ' % dt_ru(t0)
+            summary += ('Kp %s с %s, максимум %s' % (fmt(float(first_storm[1])), dt_ru(first_storm[0]),
+                                                     fmt(float(kp_max))) if first_storm
+                        else ('максимум Kp %s, бури Kp ≥ %s не было' % (fmt(float(kp_max)), fmt(float(th.kp_check))) if kp_max is not None
                               else 'наблюдений Kp в архиве (окончательный ряд GFZ, резерв — уведомления DONKI о буре) на горизонте нет'))
             if goes_after:
                 g_max = max(goes_after, key=lambda x: x[1])
                 summary += '; максимум наблюдённого потока GOES ≥10 МэВ %s pfu в %s' % (
-                    ('%.6g' % g_max[1]).replace('.', ','), g_max[0].strftime('%d.%m %H:%MZ'))
+                    fmt(float(g_max[1])), dt_ru(g_max[0]))
             seps = [e for e in ev_after if e.kind_of_event == 'SEP']
             if seps:
-                summary += '; протонное событие: первая публикация %s' % min(e.published_utc for e in seps).strftime('%d.%m %H:%MZ')
+                summary += '; протонное событие: первая публикация %s' % dt_ru(min(e.published_utc for e in seps))
             verification = {
                 # U5: имя программного слоя — отдельным ключом, чтобы оперативный уровень экрана
                 # печатал только русский текст, а происхождение факта оставалось прослеживаемым
@@ -683,6 +710,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                  'url': _tle_url if mode == 'live' else None,
                  'url_primary_failed': _tle_primary if mode == 'live' else None}
     sources = {'orbit': orbit_src}
+    if mode == 'live' and live_fetch_note:
+        # Ключ с подчёркиванием: это не источник, а обстоятельство их получения, и перечни
+        # источников (экран, реестр, таблица выгрузки) такие ключи пропускают. Само число
+        # предела стоит внутри причины (и в effective_config.sources) — второй раз, отдельным
+        # полем, его писать нельзя: получение могло идти с другим пределом, чем стоит сейчас в файле.
+        sources['_live_fetch'] = {'limit_note': live_fetch_note}
     if mode == 'live':
         sources['noaa_swpc_goes'] = _src(f_goes, 'протоны ≥10 МэВ', goes, key='goes')
         sources['noaa_swpc_goes']['record_ids'] = [goes.raw_record_id] if goes else []

@@ -23,9 +23,9 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 
-from app.compute import (ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_latest, kp_latest, noaa_latest, run,
-                         tle_latest, validate_request)
+from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, run, validate_request
 from app.export import _git_sha, build_zip
+from app.fetch_guard import LIMIT_MARK, fetch_live_sources, total_deadline_s
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_figure, observations_panel
 from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESETS,
@@ -44,6 +44,8 @@ from vkd.windows.compare import Thresholds
 from vkd.windows.scenario import Scenario
 
 UI = _settings_section('ui')          # умолчания элементов управления — config/settings.toml (Т7)
+SRC_CFG = _settings_section('sources')
+TOTAL_DEADLINE_S = total_deadline_s()   # общий предел получения живых источников, с (Т7; проверяется при запуске)
 MODE_IDS = {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}
 # В «Историческом разборе» отсечки нет вовсе, и слово «отсечка» на его экране быть не должно
 # даже в отрицании: жюри читает подписи по отдельности (R4-4).
@@ -234,9 +236,15 @@ if mode == 'live' and auto_min:
 @st.cache_data(ttl=300, show_spinner=False)
 def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
     """Кеш 5 мин против повторных запросов при каждом движении ползунка; nonce — счётчик обновления сессии.
-    Четыре источника текущего режима: GOES, Kp, TLE и живой трёхсуточный бюллетень NOAA (C6)."""
-    return (goes_latest(disabled=dis_goes), kp_latest(disabled=dis_kp), tle_latest(disabled=False),
-            noaa_latest(disabled=dis_noaa))
+    Четыре источника текущего режима: GOES, Kp, TLE и живой трёхсуточный бюллетень NOAA (C6).
+
+    Получение идёт через app.fetch_guard: у всех четырёх ОДИН общий предел ([sources].total_deadline_s).
+    Без него первый рендер на площадке с ограниченным исходящим доступом может не наступить вовсе —
+    зависание на разрешении имени тайм-аутами requests не покрывается. По истечении предела
+    возвращается тот же кортеж, собранный без сети (кеш → снимок репозитория → «данных нет»),
+    и названная причина; кеш этой функции держит её TTL, то есть повтор не чаще раза в 5 мин.
+    Возвращает (кортеж источников, причина отказа по общему пределу или None)."""
+    return fetch_live_sources({'goes': dis_goes, 'kp': dis_kp, 'noaa': dis_noaa})
 
 
 horizon_min = search_min + duration_min
@@ -256,13 +264,15 @@ except ValueError as e:
     st.stop()
 try:
     if mode == 'live':
-        with st.spinner('Источники: GOES, Kp, TLE — до 6 с на адрес при живом запросе, затем резервы и кеш…'):
-            fetched = _fetch_all(disabled['goes'], disabled['kp'], disabled['noaa'], int(st.session_state['fetch_nonce']))
+        with st.spinner('Источники: GOES, Kp, TLE, бюллетень NOAA — до %s с на адрес и не дольше %s с на все вместе; '
+                        'дальше кеш и снимок репозитория…' % (fmt(SRC_CFG.get('timeout_s', 6)), fmt(TOTAL_DEADLINE_S))):
+            fetched, fetch_note = _fetch_all(disabled['goes'], disabled['kp'], disabled['noaa'],
+                                             int(st.session_state['fetch_nonce']))
     else:
-        fetched = None            # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
+        fetched, fetch_note = None, None   # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
     with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
         R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
-                scenario=scenario, T_months=T_months, fetched=fetched)
+                scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note)
 except Exception as e:            # noqa: BLE001 — экран не падает; подробности в лог, не зрителю (Т6, Т7)
     LOG.error('расчёт не выполнен: %s\n%s', e, traceback.format_exc())
     st.error('Расчёт не выполнен: %s. Измените запрос или повторите позже; подробности записаны в журнал сервера.' % type(e).__name__)
@@ -396,6 +406,13 @@ if meta is None:
 issues = source_issues(src, th, mode, kp_excluded_hist=kp_off_hist, tle_fetch=tm.get('tle_fetch_status'), pro=pro,
                        disabled=S['request'].get('disabled') or {}, cutoff_utc=S['request'].get('cutoff_utc'),
                        orbit_created_utc=tm.get('created_utc'))
+if fetch_note and not any(LIMIT_MARK in x for x in issues):
+    # Общий предел получения источников назван РОВНО ОДИН раз (бриф §9.7): если он уже стоит
+    # в строке конкретного источника, который остался без данных, общей строки не нужно.
+    # Она нужна в другом случае — когда все источники подхватились из кеша и по отдельным
+    # строкам непонятно, почему живого запроса не было ни у одного.
+    issues.insert(0, 'Живые источники: %s%s. Взяты кеш и снимок репозитория — экран построен без сети.'
+                  % (fetch_note, ' (настройка total_deadline_s в config/settings.toml)' if pro else ''))
 if issues:
     st.warning('**Состояние источников:**\n' + '\n'.join('- ' + x for x in issues))
 
@@ -518,7 +535,10 @@ with tabs[0]:
                 if pro:                    # идентификатор записи виден только на профессиональном уровне (U5)
                     links.append('[%s](%s)' % (rid, u) if u else '`%s`' % rid)
                 elif u:
-                    links.append('[первоисточник %d](%s)' % (len(links) + 1, u))
+                    # Подпись ссылки — имя самой записи (выпуск источника), а не «первоисточник 1»:
+                    # в одной карточке стоят два уведомления с разными числами, и по безымянной
+                    # подписи нельзя понять, какая ссылка к какому числу (находка пятого круга).
+                    links.append('[%s](%s)' % (record_ru(rid, with_kind=False), u))
                 else:
                     no_link.append(rid)
             if links or no_link:
