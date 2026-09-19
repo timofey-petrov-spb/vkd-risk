@@ -56,7 +56,7 @@ SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → с�
 HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.7.0'  # actual-dt quadrature, temporal coverage, linear threshold crossings
+ALGO_VERSION = '0.8.0'  # 0.7.0 + объявленная область вывода вердикта при частичном покрытии (CONTRACT §4 п. 1, решение владельца 19.09)
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
