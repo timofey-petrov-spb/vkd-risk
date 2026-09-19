@@ -102,7 +102,8 @@ def main():
         t0 = t0 or now
         # исторические режимы: живые источники не запрашиваются (Т6) — входы только из архива, статус так и записан
         r = run(mode, t0, dur, search, offs, scenario=sc, now=now, fetched=(None if mode == 'live' else fetch_none()))
-        io.open(os.path.join(OUT, name + '.json'), 'w', encoding='utf-8').write(json.dumps(r.S, ensure_ascii=False, indent=1, default=str))
+        # JSON-снимок несёт коммит кода, как и манифест ZIP: повтор по JSON тоже может доказать версию (Т8)
+        io.open(os.path.join(OUT, name + '.json'), 'w', encoding='utf-8').write(json.dumps({**r.S, 'git_commit': sha}, ensure_ascii=False, indent=1, default=str))
         open(os.path.join(OUT, name + '.zip'), 'wb').write(build_zip(r.S, r.raw_records))
         rec = r.S['recommendation']
         n_kp_excl = sum(1 for x in r.excluded if x.startswith('gfz_kp_archive#') or x.startswith('donki_gst#'))

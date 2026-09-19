@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 import streamlit as st
 
 from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_latest, kp_latest, run, tle_latest, validate_request
-from app.export import build_zip
+from app.export import _git_sha, build_zip
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_panel
 from app.ui import (COV_RU, CSS, MECH_RU, METHOD_RU, STRICT_RU, coverage_reasons, event_kind_ru, fmt, head, kind_pill,
@@ -522,7 +522,7 @@ with tabs[4]:
             st.write('\n'.join('- ' + limit_ru(x) for x in tm['provenance']['limitations']))
             st.json({k: v for k, v in tm['provenance'].items() if k != 'limitations'}, expanded=False)
     c1, c2 = st.columns(2)
-    c1.download_button('Скачать расчёт (JSON)', json.dumps(S, ensure_ascii=False, indent=1, default=str),
+    c1.download_button('Скачать расчёт (JSON)', json.dumps({**S, 'git_commit': _git_sha()}, ensure_ascii=False, indent=1, default=str),
                        file_name=_fname + '.json', mime='application/json', width='stretch', key='dl_json')
     c2.download_button('Скачать архив: отчёт, запрос, факторы, сырые записи (ZIP)', _zip,
                        file_name=_fname + '.zip', mime='application/zip', width='stretch', key='dl_zip')

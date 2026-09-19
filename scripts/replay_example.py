@@ -55,7 +55,7 @@ def load_snapshot(path: str) -> dict:
                     'computed_utc': man.get('computed_utc'), 'trajectory_meta': meta, 'raw': raw, 'sources': j('sources.json')}
     S = json.load(io.open(path, encoding='utf-8'))
     return {'request': S['request'], 'recommendation': S['recommendation'], 'windows': S['windows'],
-            'mode_id': S.get('mode_id') or MODE_IDS[S['mode']], 'algorithm_version': S.get('algorithm_version'), 'git_commit': None,
+            'mode_id': S.get('mode_id') or MODE_IDS[S['mode']], 'algorithm_version': S.get('algorithm_version'), 'git_commit': S.get('git_commit'),
             'computed_utc': S.get('computed_utc'), 'trajectory_meta': S.get('trajectory_meta') or {}, 'raw': {}, 'sources': S.get('sources') or {}}
 
 
