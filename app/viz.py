@@ -28,6 +28,12 @@ EVENT_ORDER = ['SEP', 'GST', 'CME_ARRIVAL', 'FLR', 'CME']
 # правая ось GOES — логарифмическая: метки задаём сами, по-русски, без «192,3432» (U4)
 GOES_TICKVALS = [0.1, 1, 10, 100, 1000]
 GOES_TICKTEXT = ['0,1', '1', '10', '100', '1000']
+# Разделители чисел Plotly: запятая в дробной части и узкий неразрывный пробел в разрядах тысяч.
+# Своими подписями закрыты только логарифмические оси; всё остальное — деления осей и всплывающие
+# подписи (`hovertemplate`) — рисует Plotly, и по умолчанию это «7.67» и «24000» рядом с «7,67»
+# и «24 000» в тексте того же экрана (бриф §9.8: дроби с запятой). Первый знак — десятичный,
+# второй — разряды тысяч.
+SEPARATORS = ', '
 # заголовок ленты говорит, ЧТО показано и ОТКУДА — по режиму, одной строкой
 TIMELINE_TITLE = {
     'live': 'Поле на трассе МКС по IGRF — наш расчёт; Kp и поток GOES ≥10 МэВ — наблюдения NOAA SWPC и GFZ',
@@ -40,7 +46,8 @@ def style(fig: go.Figure, height: int, legend_top: bool = True, title: str | Non
     """Единый стиль: plotly_white, заголовок «что и откуда», легенда сверху, сетка светлая, шрифт экрана."""
     fig.update_layout(template='plotly_white', height=height, margin=dict(l=10, r=10, t=36, b=10),
                       font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
-                      hovermode='x unified', paper_bgcolor='white', plot_bgcolor='white')
+                      hovermode='x unified', paper_bgcolor='white', plot_bgcolor='white',
+                      separators=SEPARATORS)
     if title:
         fig.update_layout(title=dict(text=title, x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
                           margin=dict(l=10, r=10, t=76, b=10))
@@ -108,7 +115,7 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
         if not seg:
             continue
         sl, sa = _split_dateline([p.lon_deg for p in seg], [p.lat_deg for p in seg])
-        fig.add_trace(go.Scattergeo(lon=sl, lat=sa, mode='lines', name='окно %d: %s' % (i + 1, w.start_utc.strftime('%d.%m %H:%MZ')),
+        fig.add_trace(go.Scattergeo(lon=sl, lat=sa, mode='lines', name='окно %d: %s' % (i + 1, w.start_utc.strftime('%d.%m %H:%M')),
                                     line=dict(color=WIN if i else BLUE, width=3),
                                     hovertemplate='окно %d<br>%%{lat:.1f}°, %%{lon:.1f}°<extra></extra>' % (i + 1)))
         fig.add_trace(go.Scattergeo(lon=[seg[0].lon_deg], lat=[seg[0].lat_deg], mode='markers+text', text=['старт %d' % (i + 1)],
@@ -117,9 +124,11 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
     fig.update_geos(projection_type='equirectangular', showcountries=False, showcoastlines=True, coastlinecolor='#bbb',
                     showland=True, landcolor='#f7f7f7', showocean=True, oceancolor='#ffffff', lataxis_range=[-75, 75])
     fig.update_layout(template='plotly_white', height=440, margin=dict(l=0, r=0, t=76, b=0),
-                      title=dict(text='Область аномалии и трасса МКС — наш расчёт |B| по IGRF на средней высоте трассы',
+                      title=dict(text='Область аномалии и трасса МКС — наш расчёт |B| по IGRF на средней высоте трассы; '
+                                      'времена UTC',
                                  x=0, xanchor='left', font=dict(size=13, color='#1a1f2b')),
                       font=dict(family='Segoe UI, Inter, Roboto, Arial, sans-serif', size=12, color='#1a1f2b'),
+                      separators=SEPARATORS,
                       legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0, font=dict(size=11)))
     return fig
 
