@@ -57,8 +57,8 @@ python -m streamlit run app/main.py
 Один раз до неё — `python -m pip install -r requirements.txt`; проверки —
 `python -m pytest -q`.
 
-- Python 3.12–3.14. Проверено на 3.14.6 (Windows 11), коммит `3c0a5b6`:
-  407 проверок и 691 подпроверка, 154–155 с. `pyproject.toml` допускает `>=3.11` (`tomllib` для
+- Python 3.12–3.14. Проверено на 3.14.6 (Windows 11), коммит `99d189e`:
+  408 проверок и 691 подпроверка, 154 с. `pyproject.toml` допускает `>=3.11` (`tomllib` для
   файла настроек). Версии зависимостей закреплены точно
   в `requirements.txt` (numpy 2.5.1, pandas 2.3.3, scipy 1.18.0, sgp4 2.27,
   skyfield 1.55, ppigrf 2.1.0, requests 2.34.2, plotly 5.24.1,
@@ -119,7 +119,7 @@ python -m streamlit run app/main.py
   5 минут, чтобы движение ползунков не порождало запросы. Давность данных
   показывается всегда.
 - Тесты: `python -m pytest -q` запускает `tests/` (`pyproject.toml`,
-  `testpaths`): 407 проверок и 691 подпроверка за 154–155 с на коммите `3c0a5b6`
+  `testpaths`): 408 проверок и 691 подпроверка за 154 с на коммите `99d189e`
   (из них около 100 с — прогоны экрана через `AppTest`), сети не требуют.
   `tests/orbit`, `tests/history`, `tests/sources` написаны на `unittest`
   (область А), pytest собирает их вместе с остальными.
@@ -698,8 +698,8 @@ JSON даёт то же, что по ZIP. Для текущего
 разброса устойчивости от сохранённого допуска.
 
 Сохранённые примеры (`examples/`, индекс `examples/INDEX.md`, созданы
-`scripts/make_examples.py` 19.09.2026 02:42Z тем же конвейером, версия
-алгоритма `0.6.1`, коммит кода `579ec77`; исторические — на орбите OEM):
+`scripts/make_examples.py` 19.09.2026 03:27Z тем же конвейером, версия
+алгоритма `0.6.1`, коммит кода `2a341b1`; исторические — на орбите OEM):
 
 | пример | режим | вердикт |
 |---|---|---|
@@ -715,8 +715,8 @@ JSON даёт то же, что по ZIP. Для текущего
 
 ## 9. Тесты
 
-`python -m pytest -q` — 407 проверок и 691 подпроверка, все проходят
-(154–155 с на трёх прогонах, коммит `3c0a5b6`, Windows 11 / Python 3.14.6;
+`python -m pytest -q` — 408 проверок и 691 подпроверка, все проходят
+(154 с на трёх прогонах, коммит `99d189e`, Windows 11 / Python 3.14.6;
 подпроверки — 117
 выпусков NOAA, 26 OEM, точки эталонов).
 Числа в скобках — собранные pytest проверки в файле, с учётом
@@ -874,7 +874,7 @@ SEP по конвенции 24 ч на измеренный поток GOES.
 | `scripts/make_examples.py`, `scripts/replay_example.py` | Б | сохранённые примеры и их воспроизведение |
 | `scripts/ost_parse*.py` | инструменты | извлечение таблиц ОСТ из текста стандарта |
 | `examples/` | сдача | 9 сохранённых расчётов (JSON и ZIP), `INDEX.md`; `experiments/forecast_lines.json` |
-| `tests/` | оба | 407 проверок (раздел 9); `tests/orbit/fixtures/` — эталоны Vallado и pyIGRF с манифестом |
+| `tests/` | оба | 408 проверок (раздел 9); `tests/orbit/fixtures/` — эталоны Vallado и pyIGRF с манифестом |
 | `data/spaceweather/` | данные | снимки GOES, TLE, Kp/F10.7, прогноз на 27 суток, числа пятен, `igrf14coeffs.txt`; реестр в `README.md` |
 | `data/orbit/` | данные А | `IGRF13.shc`, `IGRF14.shc`, снимок `iss.tle` (18.09.2026), `manifest.json` с хешами, `validation_environment.json` |
 | `data/source_registry_2024/` | данные А | реестр A1: выпуски NOAA (`noaa/`), OEM NASA/JSC (`nasa_oem/`), сообщения DONKI (`donki/`), `registry.json`, карты покрытия, `verification.json` |
