@@ -23,6 +23,7 @@
 """
 from __future__ import annotations
 
+import math
 import os
 import re
 from datetime import datetime, timedelta, timezone
@@ -2194,8 +2195,10 @@ BLOCK_MARKS = [('ВКД-Риск', 'заголовок'),
                ('class="reco', 'рекомендация'),
                ('class="verdict', 'рекомендация'),
                ('Где и когда', 'глобус'),
-               ('Лента окон', 'лента окон'),
-               ('Что учтено и что нет', 'что учтено'),
+               # Двенадцатый круг, пункт 3: два графика ленты заменены одним «профилем воздействия».
+               ('Профиль воздействия на сроке поиска', 'профиль воздействия'),
+               # Пункт 1: «и что нет» уехало во вкладку «Методика», и в названии блока его больше нет.
+               ('Что учтено', 'что учтено'),
                ('Состояние источников: чем считали', 'состояние источников')]
 
 
@@ -2239,7 +2242,7 @@ def main_blocks(at: AppTest) -> list[str]:
 
 
 # Ровно та последовательность, что записана таблицей 3.0 техзадания одиннадцатого круга.
-EXPECTED_BLOCKS = ['заголовок', 'строка задачи', 'рекомендация', 'глобус', 'лента окон', 'что учтено',
+EXPECTED_BLOCKS = ['заголовок', 'строка задачи', 'рекомендация', 'глобус', 'профиль воздействия', 'что учтено',
                    'состояние источников', 'разбор окон', 'вкладки']
 
 
@@ -2294,7 +2297,7 @@ def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo(monkeypatch):
     body = texts(at)
     # Формулировки сокращены при разгрузке главного экрана; утверждения те же.
     assert 'Перебор начал не выполнялся' in body, body[:400]
-    assert 'Ленты нет: перебор начал не выполнялся' in body, body[:400]
+    assert 'Профиля нет: перебор начал не выполнялся' in body, body[:400]
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
     assert 'Выходить' not in body.split('Разобрать конкретные окна')[0], 'рекомендация без перебора выдумана'
 
@@ -2377,24 +2380,75 @@ def test_otkaz_perebora_nazyvaet_prichinu_i_chto_nuzhno():
     assert 'решение аналитика' in need and 'нештатная' in need, need
 
 
-def test_lenta_okon_dva_grafika_bez_bezrazmernyh_ballov():
-    """Раздел 3.3: два графика делят ось времени, у обоих подпись «ниже — лучше»; ни третьей оси,
-    ни нормировки, ни безразмерного балла."""
+def test_profil_odin_grafik_s_kruglymi_otmetkami_polosoy_i_pikom():
+    """Двенадцатый круг, пункт 3. Владелец о прежнем рисунке: «этот график мне совершенно не ясен,
+    его лучше убрать, он очень странный и совершенно непонятно, зачем он».
+
+    Разбор снимка 12 нашёл настоящую причину: подписи оси Y были САМИ ЗНАЧЕНИЯ ДАННЫХ —
+    «34·10⁶, 56·10⁶, 81·10⁵, 2619», то есть перечень точек, а не шкала. Теперь график один:
+    круглые степени десяти по оси Y, круглые часовые отметки по оси X, залитая полоса
+    рекомендованного промежутка, подписанный пик и полоса-подложка с минутами в аномалии."""
     from app.ui import ribbon_caption_ru, scan_best_rows, windows_ribbon
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     sc = _scan_fixture(t0)
-    fig = windows_ribbon(sc, 30.0)
-    ys = [fig.layout[k].title.text for k in ('yaxis', 'yaxis2')]
-    assert all(y and 'ниже — лучше' in y for y in ys), ys
-    assert 'минут в аномалии' in ys[0] and 'флюенс' in ys[1], ys
-    assert fig.layout.xaxis2.title.text and 'врем' in fig.layout.xaxis2.title.text
-    body = ' '.join(str(tr.name or '') for tr in fig.data) + ' ' + ribbon_caption_ru(sc, 30.0)
+    fig = windows_ribbon(sc, 30.0, duration_min=240)
+    # ось Y — круглые степени десяти, а не значения данных (главная находка пункта 3)
+    assert fig.layout.yaxis.type == 'log', fig.layout.yaxis.type
+    ticks = [str(t) for t in (fig.layout.yaxis.ticktext or ())]
+    assert ticks and all(re.fullmatch(r'10[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+', t) for t in ticks), ticks
+    vals = [float(v) for v in (fig.layout.yaxis.tickvals or ())]
+    assert vals and all(abs(math.log10(v) - round(math.log10(v))) < 1e-9 for v in vals), vals
+    # ось X — обычные часовые отметки
+    assert fig.layout.xaxis.tickformat == '%H:%M', fig.layout.xaxis.tickformat
+    assert int(fig.layout.xaxis.dtick) % (3600 * 1000) == 0, fig.layout.xaxis.dtick
+    names = [str(tr.name or '') for tr in fig.data]
+    assert 'рекомендованный промежуток' in names, names       # залитая полоса
+    assert 'пик на сроке' in names, names
+    assert 'минут в аномалии' in names, names                  # полоса-подложка, не второй график
+    band = next(tr for tr in fig.data if tr.name == 'рекомендованный промежуток')
+    assert band.fill == 'toself', band.fill
+    # пик подписан ВРЕМЕНЕМ
+    ann = [str(a.text) for a in (fig.layout.annotations or ())]
+    assert any(re.fullmatch(r'пик \d\d:\d\d', a) for a in ann), ann
+    body = ' '.join(names) + ' ' + ribbon_caption_ru(sc, 30.0, duration_min=240)
     for bad in ('балл', 'нормиров', 'индекс риска'):
         assert bad not in body, bad
+    # подпись — одна строка обычными словами про кривую, полосу и точку
+    cap = ribbon_caption_ru(sc, 30.0, duration_min=240)
+    assert 'Чем ниже кривая' in cap and 'полоса' in cap and 'точка' in cap, cap
     rows = scan_best_rows(sc)
     assert 1 <= len(rows) <= 5, rows
-    assert list(rows[0]) == ['начало выхода', 'минут в аномалии', 'флюенс, част./см²', 'условия проверки']
     assert rows[0]['начало выхода'] == '19.09 13:00', rows[0]
+
+
+def test_profil_ne_vybrasyvaet_tochki_pri_nulevom_flyuense():
+    """Логарифмическая шкала не определена в нуле, а Plotly такую точку молча выбрасывает.
+    Молчаливых выбрасываний в сервисе быть не может: при нуле шкала линейная и названа."""
+    from app.ui import windows_ribbon
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0)
+    sc['candidates'][2]['fluence'] = 0.0
+    fig = windows_ribbon(sc, 30.0, duration_min=240)
+    assert fig.layout.yaxis.type != 'log', fig.layout.yaxis.type
+    assert 'шкала линейная' in fig.layout.yaxis.title.text, fig.layout.yaxis.title.text
+
+
+def test_kolonka_usloviy_ischezaet_kogda_usloviy_net():
+    """Двенадцатый круг, пункт 4. Владелец: «что значит условия проверки и почему там везде нет,
+    нет, нет — либо убирай эту графу, либо исправляй». Колонки из одних «нет» на экране нет:
+    вместо неё одна строка. Как только условие появляется хоть у одного начала — колонка есть
+    и содержит название условия."""
+    from app.ui import scan_best_rows, scan_conditions_note_ru
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    rows = scan_best_rows(_scan_fixture(t0))
+    assert list(rows[0]) == ['начало выхода', 'минут в аномалии', 'флюенс, част./см²'], rows[0]
+    assert scan_conditions_note_ru(rows) == 'Ни одно из показанных начал не требует отдельной проверки.'
+    with_cond = _scan_fixture(t0, conditions=['геомагнитная буря Kp ≥ 7 в окне'])
+    rows2 = scan_best_rows(with_cond)
+    assert 'условия проверки' in rows2[0], rows2[0]
+    assert any('Kp' in str(r['условия проверки']) for r in rows2), rows2
+    assert scan_conditions_note_ru(rows2) == '', scan_conditions_note_ru(rows2)
+    assert scan_conditions_note_ru([]) == ''
 
 
 def test_chto_uchteno_nazyvaet_edinicu_proishozhdenie_i_istochnik():
@@ -2440,8 +2494,8 @@ def test_ekran_s_pereborom_risuet_rekomendaciyu_lentu_i_tablicu(monkeypatch):
     body = texts(at)
     assert 'Выходить ' in body, body[:500]
     assert 'Перебрано 7 начал с шагом 10 мин' in body, body[:500]
-    assert 'ниже — лучше' in body, body[:500]
-    assert main_charts(at) == 1, 'лента окон — один рисунок из двух графиков, других на главном нет'
+    assert 'Чем ниже кривая' in body, body[:500]              # подпись профиля обычными словами
+    assert main_charts(at) == 1, 'профиль воздействия — один рисунок, других на главном нет'
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться на экране'
     assert 'Таблица лучших начал' in body, body[:500]
 
@@ -2629,15 +2683,17 @@ def test_glavnyy_ekran_razgruzhen_i_nichego_ne_poteryano():
     at = run_app(MODES[0])
     assert not at.exception, at.exception
     labels = [str(e.label) for e in at.expander]
-    for need in ('Откуда взята каждая величина', 'Чего сервис не учёл', 'Подробнее о каждой величине полосы'):
+    # «Чего сервис не учёл» с двенадцатого круга живёт во вкладке «Методика» (пункт 1), и на
+    # главном экране этого раскрытия больше нет — проверяется отдельно, в тестах пункта 1.
+    for need in ('Откуда взята каждая величина', 'Подробнее о каждой величине полосы'):
         assert any(need in x for x in labels), (need, labels)
     body = texts(at)
     # прослеживаемость не потеряна: первоисточники и пропуски охвата на экране есть
     assert 'прогноза потока с разрешением по окну не существует' in body, body[:300]
     assert 'Цвет = происхождение' in body or 'Происхождение величин' in body, body[:300]
-    # приглушённая подпись ленты окон — одна строка
+    # приглушённая подпись профиля — одна строка
     from app.ui import ribbon_caption_ru
-    cap = ribbon_caption_ru({'candidates': []}, 30.0)
+    cap = ribbon_caption_ru({'candidates': []}, 30.0, duration_min=360)
     assert cap.count('.') <= 1 and len(cap) < 160, cap
 
 
@@ -2692,3 +2748,228 @@ def test_vvod_razlozhen_po_klassam_s_ikonkami():
     assert at.sidebar.checkbox('sc_sep_on') is not None
     assert any('Длительность выхода и срок задаются строкой задачи' in str(c.value) for c in at.sidebar.caption), \
         [str(c.value) for c in at.sidebar.caption]
+
+
+# ================================================================= двенадцатый круг: замечания 19.09
+# Разобранный список замечаний владельца — docs/design/TZ_ROUND12.md. Проверки ниже написаны по
+# пунктам 1…5 этого документа; каждая называет, что именно сказал владелец и чем это проверяется.
+
+# Слова, по которым главный экран читается как перечень наших недочётов. Владелец, дословно:
+# «то, что сервис не учёл, мы скажем отдельно, в программе не надо прописывать»; «что не даёт
+# глобус, тоже не надо писать»; «вообще недочёты не надо указывать в программе, подчисти это».
+DEFECT_WORDS = ['Чего сервис не учёл', 'Подробнее о глобусе', 'чего не даёт',
+                'Проверка после отсечки', 'Не учтено:', 'не включён']
+
+
+def main_visible(at: AppTest) -> str:
+    """Видимый текст ГЛАВНОЙ области: без вкладок и без тел свёрток.
+
+    Вкладки не обходим намеренно: пункт 1 требует не удалить ограничения, а собрать их в одном
+    месте — во вкладке «Методика». Свёртки не считаем по той же причине, по какой их завели:
+    их содержимое видно только по щелчку, а речь о том, что читается с первого взгляда.
+    """
+    out: list[str] = []
+
+    def walk(node):
+        kids = getattr(node, 'children', None) or {}
+        for e in (kids.values() if isinstance(kids, dict) else kids):
+            ty = str(getattr(e, 'type', '') or '')
+            label = str(getattr(e, 'label', '') or '')
+            if 'tab' in ty.lower():
+                continue
+            if 'expander' in ty.lower():
+                out.append(label)                       # виден только заголовок свёртки
+                continue
+            if getattr(e, 'children', None):
+                walk(e)
+                continue
+            try:
+                v = getattr(e, 'value', '')
+            except Exception:                           # noqa: BLE001 — значение таблицы не строка
+                v = ''
+            if isinstance(v, str) and v.strip():
+                out.append(re.sub(r'<details[^>]*>.*?</details>', ' ', v, flags=re.S))
+            elif label.strip():
+                out.append(label)
+    walk(at.main)
+    return _strip_tags('\n'.join(out))
+
+
+def tab_text(at: AppTest, name: str) -> str:
+    """Весь текст одной вкладки — сюда переехало то, что убрано с главного экрана."""
+    tab = next(t for t in at.tabs if t.label == name)
+    parts = [str(e.value) for e in tab.get('markdown')] + [str(e.value) for e in tab.get('caption')]
+    return _strip_tags('\n'.join(parts))
+
+
+@pytest.mark.parametrize('mode', MODES)
+@pytest.mark.parametrize('pro', [False, True])
+def test_glavnyy_ekran_bez_perechnya_nedochyotov(mode, pro):
+    """Пункт 1: на главном экране нет ни одного перечня наших недочётов — ни раскрытием,
+    ни строкой. Вместо них одна нейтральная строка со ссылкой на вкладку «Методика»."""
+    from app.ui import SCOPE_TAB_HINT_RU
+    at = run_app(mode, pro)
+    assert not at.exception, at.exception
+    vis = main_visible(at)
+    for bad in DEFECT_WORDS:
+        assert bad not in vis, (bad, [l for l in vis.split('\n') if bad in l][:2])
+    assert SCOPE_TAB_HINT_RU in vis, vis[-500:]
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_ogranicheniya_ne_propali_a_sobrany_v_metodike(mode):
+    """Обратная сторона пункта 1 и прямое требование критериев (О1, О2, О4, Т1): ограничения
+    охвата обязаны быть ВИДНЫ в сервисе. Они не удалены — они собраны в одном разделе вкладки
+    «Методика», и каждый пункт, убранный с главного экрана, там есть."""
+    from app.ui import LIMITS_SECTION_RU
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = tab_text(at, 'Методика')
+    assert LIMITS_SECTION_RU in body, body[:400]
+    assert 'Чего сервис не учёл' in body, body[:400]
+    # структурные пробелы названы поимённо и с причиной — теми же словами, что и прежде
+    assert 'прогноза потока с разрешением по окну не существует' in body, body[:600]
+    assert 'доза на человека' in body, body[:600]
+
+
+def test_posle_otsechki_obygrana_a_ne_ubrana():
+    """Пункт 1 и замечание владельца «проверка после отсечки мне тоже не ясна, либо убираем,
+    либо обыгрываем нормально»: с главного экрана плашка ушла, а во вкладке «Методика» сказано
+    своими словами, что это такое и почему это не часть расчёта."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert not at.exception, at.exception
+    assert 'Проверка после отсечки' not in main_visible(at), main_visible(at)[:600]
+    body = tab_text(at, 'Методика')
+    assert 'Проверка после отсечки' in body, body[:400]
+    assert 'В расчёт она не входит и на рекомендацию не влияет' in body, body[:800]
+
+
+@pytest.mark.parametrize('preset', ['now', 'gannon', 'quiet'])
+def test_blok_sravneniya_bez_doslovnyh_povtorov(preset):
+    """Пункт 2, настоящая ошибка. Владелец о снимках 20 и 21: «выглядит как вырви глаз».
+    На них текст правила напечатан ДВАЖДЫ подряд, слово в слово: один раз в строке «Правило»,
+    второй — в скобке внутри неё же (`rule_ru` менял только приставку «п.3–4:», а хвост оставлял
+    как есть, и он же уходил в `<span class="orig">`). На пресете «Тихая дата» это 330 знаков
+    повтора. Проверяется поиском повторяющихся предложений длиной от 40 знаков в ВИДИМОЙ части."""
+    for pro in (False, True):
+        at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+        at.run()
+        at.sidebar.button('preset_' + preset).click().run()
+        if pro:
+            at.sidebar.radio('level').set_value('Профессиональный').run()
+        assert not at.exception, at.exception
+        for html_ in [m.value for m in at.markdown if 'class="verdict' in m.value or 'class="reco' in m.value]:
+            vis = re.sub(r'\s+', ' ', _strip_tags(re.sub(r'<details class="vmore">.*?</details>', ' ',
+                                                         html_, flags=re.S))).strip()
+            sents = [s.strip() for s in re.split(r'(?<=[.;])\s+', vis) if len(s.strip()) >= 40]
+            dups = sorted({s for s in sents if sents.count(s) > 1})
+            assert not dups, (preset, pro, dups[:2])
+
+
+def test_blok_sravneniya_na_professionalnom_sokrashchyon_vdvoe():
+    """Пункт 2, вторая половина: «оставить на поверхности заголовок исхода, названное окно
+    с временем, одну строку «почему» с числами, плашку условий; всё остальное — под раскрытие»
+    и «семь буллетов свести к трём».
+
+    Измерено на пресете «Тихая дата», профессиональный уровень: видимая часть блока была 4 091
+    знак (весь блок без единой свёртки), стала 1 777 — в 2,3 раза меньше. Порог 2 100 стоит
+    защитой от нового разрастания: он вдвое меньше прежнего размера и с запасом над нынешним."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    at.sidebar.radio('level').set_value('Профессиональный').run()
+    assert not at.exception, at.exception
+    html_ = verdict_html(at)
+    vis = verdict_visible(at)
+    assert len(vis) <= 2100, (len(vis), vis)
+    assert html_.count('<li') <= 3, html_.count('<li')          # три буллета, не семь
+    assert '<details class="vmore">' in html_, 'на профессиональном уровне свёртки нет'
+    # ничего не выброшено: то, что ушло с поверхности, лежит в свёртке этого же блока
+    fold = verdict_folded(at)
+    assert 'Область вывода подробно' in fold, fold[:400]
+    assert 'Откуда допуск' in fold, fold[:400]
+    assert 'Откуда допуск' not in vis, vis
+
+
+def test_tipografika_verdikta_sovpadaet_s_rekomendaciey():
+    """Пункт 2: «ширина строки и размер шрифта те же, что в блоке рекомендации наверху: сейчас
+    здесь мельче». Проверяется по самим стилям, а не на глаз."""
+    from app.ui import CSS
+    size = lambda sel: re.search(r'\%s \{[^}]*font-size:([\d.]+)rem' % sel, CSS).group(1)
+    assert size('.verdict h2') == size('.reco h2'), (size('.verdict h2'), size('.reco h2'))
+    assert size('.verdict li') == size('.reco .why'), (size('.verdict li'), size('.reco .why'))
+    assert 'max-width:96ch' in re.search(r'\.verdict ul \{[^}]*\}', CSS).group(0)
+    assert 'max-width:96ch' in re.search(r'\.reco \.why \{[^}]*\}', CSS).group(0)
+
+
+def test_populyarnoe_obyasnenie_rovno_dva_predlozheniya_s_chislami():
+    """Пункт 5: «здесь надо пояснять популярным языком, почему надо выходить именно в этот
+    временной промежуток… также пиковое значение приводится на вот такое-то время, но при этом
+    перегружать текстом нельзя». Ровно два предложения, числа — из расчёта, терминов нет."""
+    from app.ui import plain_why_ru, recommendation_panel
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0)
+    txt = plain_why_ru(sc, sc['candidates'][-1], 360)
+    assert txt, 'популярного объяснения нет'
+    assert len(re.findall(r'[.!?](?:\s|$)', txt)) == 2, txt
+    for bad in ('флюенс', 'част./см', 'геомагнит', 'пороговое', 'ранжирован'):
+        assert bad not in txt, (bad, txt)
+    # числа те же, что в снимке расчёта: 29 мин у рекомендованного начала из 360, 53 у худшего
+    assert '29 минут из 360' in txt, txt
+    assert '53 минут' in txt, txt
+    assert re.search(r'приходится на \d\d:\d\d', txt), txt
+    # блок стоит под крупным ответом, а техническая фраза движка уезжает на клик глубже
+    html_ = recommendation_panel(sc, {}, duration_min=360)
+    assert 'class="plain"' in html_, html_[:400]
+    vis = _strip_tags(re.sub(r'<details class="vmore">.*?</details>', ' ', html_, flags=re.S))
+    assert '29 минут из 360' in vis, vis
+    assert 'наименьшее воздействие из 7 проверенных начал' not in vis, vis   # она в свёртке
+    assert 'наименьшее воздействие из 7 проверенных начал' in _strip_tags(html_), html_[:600]
+
+
+def test_populyarnoe_obyasnenie_ne_vydumyvaet_chisel():
+    """Того же пункта обратная сторона: нет числа — нет предложения. Пустое место честнее
+    правдоподобной фразы, и выдуманного числа на экране не появляется никогда."""
+    from app.ui import plain_why_ru
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0)
+    assert plain_why_ru(sc, None, 360) == ''
+    no_flu = {**sc, 'candidates': [dict(c, fluence=None) for c in sc['candidates']]}
+    assert plain_why_ru(no_flu, no_flu['candidates'][-1], 360) == ''
+    zero = {**sc, 'candidates': [dict(c, fluence=0.0) for c in sc['candidates']]}
+    assert plain_why_ru(zero, zero['candidates'][-1], 360) == ''
+    # длительности нет ни в запросе, ни в снимке — «столько-то минут из скольких» не из чего собрать
+    no_dur = {k: v for k, v in sc.items() if k != 'requested_duration_min'}
+    assert plain_why_ru(no_dur, no_dur['candidates'][-1], 0) == ''
+    # отказ и спор величин популярного объяснения не получают: обещать «выходить в промежутке»
+    # там, где сервис как раз отказался называть окно, нельзя
+    from app.ui import recommendation_panel
+    ref = _scan_fixture(t0, verdict='insufficient')
+    ref['recommended_index'] = None
+    assert 'class="plain"' not in recommendation_panel(ref, {}, duration_min=360)
+
+
+def test_populyarnoe_obyasnenie_na_zhivom_ekrane():
+    """Тот же блок на живом экране, на пресете «Тихая дата»: там перебор называет промежуток,
+    и два предложения обязаны стоять под ответом. На буре Гэннон ответа нет по существу
+    (условие у каждого начала), и популярного объяснения там быть не должно — иначе сервис
+    объяснял бы, почему выходить именно тогда, когда он выходить не рекомендует."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    reco = [m.value for m in at.markdown if 'class="reco' in m.value]
+    assert reco and 'class="plain"' in reco[0], reco[:1]
+    plain = re.search(r'<div class="plain">(.*?)</div>', reco[0], re.S).group(1)
+    assert len(re.findall(r'[.!?](?:\s|$)', plain)) == 2, plain
+    for bad in ('флюенс', 'част./см', 'геомагнит'):
+        assert bad not in plain, (bad, plain)
+    assert re.search(r'\d', plain), plain
+    at2 = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at2.run()
+    at2.sidebar.button('preset_gannon').click().run()
+    assert not at2.exception, at2.exception
+    reco2 = [m.value for m in at2.markdown if 'class="reco' in m.value]
+    assert reco2 and 'class="plain"' not in reco2[0], 'на буре объяснять нечего: окна сервис не называет'
