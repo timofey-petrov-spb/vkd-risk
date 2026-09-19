@@ -1032,7 +1032,12 @@ def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
     _details = [str(m.value) for e in at.expander if 'Полоса источников' in str(e.label)
                 for m in e.get('markdown')]
     assert any('начало периода поиска' in x for x in _details), _details
-    warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
+    # Тринадцатый круг: перечень по источникам стоит раскрытием во ВСЕХ режимах, а не жёлтой
+    # плашкой на главном экране (владелец просит убрать прозу). Само сообщение не потеряно и
+    # по-прежнему печатается ровно один раз — проверка ищет его и в плашках, и в раскрытии.
+    warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info) \
+        + '\n'.join(str(m.value) for e in at.expander if 'Состояние источников' in str(e.label)
+                    for m in e.get('markdown'))
     assert warns.count('GOES ≥10 МэВ: численного наблюдения') == 1, warns
 
 
