@@ -2270,8 +2270,11 @@ def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
 
 
+_NOTSET = object()
+
+
 def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditions=(),
-                  best=None, recommended_index=None):
+                  best=None, recommended_index=None, answer_kind=_NOTSET, answer_span=None):
     """Искусственный снимок перебора ровно той формы, что записана в разделе 1a техзадания.
 
     По умолчанию — ответ ТОЧКОЙ: один кандидат в лучшей группе и заполненный `recommended_index`.
@@ -2294,7 +2297,10 @@ def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditi
             'recommended_index': (n - 1) if (recommended_index is None and best is None) else recommended_index,
             'verdict': verdict,
             'scope': 'сравнение сделано по минутам в аномалии и флюенсу захваченных протонов',
-            'why': 'наименьшее воздействие из 7 проверенных начал: 29 мин в аномалии против 53 у худшего'}
+            'why': 'наименьшее воздействие из 7 проверенных начал: 29 мин в аномалии против 53 у худшего',
+            # `answer_kind` кладётся только когда его задали: снимок БЕЗ этого ключа проверяет
+            # прежний разбор (движок ещё не слит), снимок С ключом — договор движка.
+            **({} if answer_kind is _NOTSET else {'answer_kind': answer_kind, 'answer_span': answer_span})}
 
 
 def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
@@ -2439,7 +2445,7 @@ def test_otvet_pereborom_chashche_promezhutok_chem_tochka():
     t0 = datetime(2026, 9, 19, 23, 30, tzinfo=timezone.utc)
     # подряд идущие начала → один промежуток
     sc = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 1, 2, 3, 4, 5])
-    assert scan_answer(sc)['kind'] == 'span', scan_answer(sc)
+    assert scan_answer(sc)['kind'] == 'interval', scan_answer(sc)
     txt = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
     assert 'Выходить в промежутке 19.09 23:30 — 20.09 00:20 UTC' in txt, txt
     assert 'неразличимы в пределах чувствительности модели' in txt, txt
@@ -2452,10 +2458,10 @@ def test_otvet_pereborom_chashche_promezhutok_chem_tochka():
     assert 'Выходить 20.09 в 00:10 UTC' in _strip_tags(recommendation_panel(one, {}, duration_min=240))
     # разрыв в лучшей группе → спор величин, а не промежуток
     gap = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 9])
-    assert scan_answer(gap)['kind'] == 'dispute', scan_answer(gap)
+    assert scan_answer(gap)['kind'] == 'tradeoff', scan_answer(gap)
     dis = _strip_tags(recommendation_panel(gap, {}, duration_min=240))
-    assert 'указывают на разные начала' in dis, dis
-    assert 'Выбор за аналитиком' in dis, dis
+    assert 'Выбор между окнами сервис не делает' in dis, dis
+    assert 'выбор за аналитиком' in dis, dis
     assert 'Чтобы отказ снялся' not in dis, dis
 
 
@@ -2501,3 +2507,44 @@ def test_ekran_s_promezhutkom_pokazyvaet_otvet_a_ne_pustotu(monkeypatch):
     assert 'Выходить в промежутке' in body, body[:600]
     assert 'Оснований для рекомендации недостаточно' not in body.split('Разобрать конкретные окна')[0], body[:600]
     assert 'Величины самого раннего начала из рекомендованного промежутка' in body, body[:600]
+
+
+def test_dogovor_answer_kind_chetyre_znacheniya():
+    """Договор движка: `answer_kind` принимает 'point', 'interval', 'tradeoff' и ПУСТО.
+
+    Пустое значение означает «ответа нет вовсе» — 15 прогонов из 110 на архиве. Без него при
+    вердикте «все начала требуют проверки» пришло бы 'interval', и над окнами, каждое из которых
+    требует решения аналитика, встало бы крупное «Выходить в промежутке»: ровно то утверждение,
+    которое опровергается числами рядом с ним.
+    """
+    from app.ui import recommendation_panel, scan_answer
+    t0 = datetime(2026, 5, 4, 1, 0, tzinfo=timezone.utc)
+    span = {'from_utc': (t0 + timedelta(minutes=30)).isoformat(),
+            'to_utc': (t0 + timedelta(minutes=80)).isoformat()}
+    iv = _scan_fixture(t0, n=60, step=10, verdict='equivalent', best=[0, 1, 38, 39, 40, 41, 48, 49, 50],
+                       recommended_index=None, answer_kind='interval', answer_span=span)
+    ans = scan_answer(iv)
+    assert ans['kind'] == 'interval', ans
+    # Промежуток берётся из `answer_span` КАК ЕСТЬ: по крайним элементам `best` он тянулся бы
+    # через разрыв и утверждал бы равнозначность начал, которые правило отбросило.
+    assert ans['from'] == datetime.fromisoformat(span['from_utc']), ans
+    assert ans['to'] == datetime.fromisoformat(span['to_utc']), ans
+    txt = _strip_tags(recommendation_panel(iv, {}, duration_min=240))
+    assert 'Выходить в промежутке 04.05 01:30 — 02:20 UTC' in txt, txt
+    assert 'любое начало в этих границах' in txt, txt        # теми же словами, что строка отчёта
+    assert '08:20' not in txt, 'промежуток протянут через разрыв лучшей группы'
+    # пустой answer_kind: отказ и «все требуют проверки» различаются по вердикту
+    none_chk = _scan_fixture(t0, verdict='all_need_check', best=[], recommended_index=None,
+                             answer_kind=None, answer_span=None)
+    assert scan_answer(none_chk)['kind'] == 'check', scan_answer(none_chk)
+    chk = _strip_tags(recommendation_panel(none_chk, {}, mode='live'))
+    assert 'Выходить в промежутке' not in chk and 'Выходить' not in chk, chk
+    assert 'Все начала требуют проверки аналитиком' in chk, chk
+    none_ref = _scan_fixture(t0, verdict='insufficient', best=[], recommended_index=None,
+                             answer_kind=None, answer_span=None)
+    assert scan_answer(none_ref)['kind'] == 'none', scan_answer(none_ref)
+    # 'point' берёт кандидата по recommended_index
+    pt = _scan_fixture(t0, n=60, step=10, verdict='recommended', best=[5], recommended_index=5,
+                       answer_kind='point')
+    assert scan_answer(pt)['kind'] == 'point'
+    assert 'Выходить 04.05 в 01:50 UTC' in _strip_tags(recommendation_panel(pt, {}, duration_min=240))

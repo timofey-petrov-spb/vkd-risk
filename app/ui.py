@@ -162,7 +162,7 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
    такой же ответ, как и точка, и красить его как отказ нельзя. Отказ — только «нет оснований». */
 .r-none { border-left-color:var(--none); } .r-none h2 { color:var(--ink); }
 .r-check { border-left-color:var(--cond); } .r-check h2 { color:var(--cond); }
-.r-dispute h2 { color:var(--ink); }
+.r-tradeoff h2 { color:var(--ink); }
 .legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:0.84rem; color:var(--muted); }
 .tcap { font-size:0.82rem; color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
@@ -2544,26 +2544,73 @@ def scan_best_indices(scan: dict) -> list[int]:
     return sorted(i for i in (scan.get('best') or []) if isinstance(i, int) and 0 <= i < len(cands))
 
 
+def _span_bounds(span):
+    """Границы промежутка из `answer_span` — в том виде, в каком их кладёт движок.
+
+    Форма поля у движка своя, и экран принимает обе записи: пару ключей и пару значений.
+    Ничего не достраивается: не разобралось — промежутка нет.
+    """
+    if isinstance(span, dict):
+        a = span.get('from_utc') or span.get('start_utc') or span.get('from') or span.get('start')
+        b = span.get('to_utc') or span.get('end_utc') or span.get('to') or span.get('end')
+    elif isinstance(span, (list, tuple)) and len(span) == 2:
+        a, b = span
+    else:
+        return None, None
+    return _iso_dt(a), _iso_dt(b)
+
+
 def scan_answer(scan: dict) -> dict:
     """Какой ответ дал перебор: точка, промежуток, спор величин, проверка аналитиком или отказ.
 
-    Это главная развилка блока рекомендации, и читать её надо буквально. Пустой
-    `recommended_index` НЕ означает отказа: на реальных данных перебор почти всегда отвечает
-    ПРОМЕЖУТКОМ, а не точкой — соседние начала неразличимы внутри собственной чувствительности
-    модели (допуск равнозначности взят из анализа чувствительности). Замеры движка на 110 датах
-    архива: недоминируемых кандидатов медиана шесть, единственный кандидат лишь в 12 прогонах,
-    а в 43 случаях из 55 лучшая группа — ПОДРЯД идущие начала с промежутком медианой 50 мин.
-    Если считать такой исход отказом, рекомендация пропадёт там, где она есть.
+    Главная развилка блока рекомендации, и читать её надо буквально по договору: движок кладёт
+    `answer_kind` со значениями 'point' | 'interval' | 'tradeoff' | None, и ПУСТОЕ значение
+    означает «ответа нет вовсе» — либо вердикт отказывает, либо все начала под условием проверки
+    (15 прогонов из 110 на архиве). Без этого различия при `all_need_check` над окнами, каждое из
+    которых требует решения аналитика, встало бы крупное «Выходить в промежутке» — то самое
+    утверждение, которое опровергается числами рядом с ним.
 
-    Отказ рисуется ТОЛЬКО при `insufficient`. `all_need_check` — не отказ: обстановка нештатная,
-    условие стоит у каждого начала, решение принимает аналитик.
+    Промежуток берётся из `answer_span` КАК ЕСТЬ и сам не достраивается: движок называет
+    сплошной кусок лучшей группы вокруг начала с наименьшим флюенсом, а в `best` при этом могут
+    стоять и другие равнозначные начала, идущие не подряд. Тянуть промежуток через разрыв значило
+    бы утверждать равнозначность начал, которые правило отбросило.
+
+    Отказ — ТОЛЬКО при `insufficient`. `all_need_check` не отказ: обстановка нештатная, условие
+    стоит у каждого начала, решение принимает аналитик.
+
+    Снимок без `answer_kind` (движок ещё не слит) разбирается прежним путём: по `recommended_index`
+    и по тому, идут ли начала лучшей группы подряд.
     """
     cands = scan.get('candidates') or []
     v = str(scan.get('verdict') or '')
-    if v == 'insufficient':
-        return {'kind': 'none'}
-    if v == 'all_need_check':
-        return {'kind': 'check'}
+    by_verdict = {'insufficient': 'none', 'all_need_check': 'check'}
+
+    def _cand_at(t):
+        return next((c for c in cands if _iso_dt(c.get('start_utc')) == t), None) if t is not None else None
+
+    if 'answer_kind' in scan:
+        ak = scan.get('answer_kind')
+        if ak == 'point':
+            rec_i = scan.get('recommended_index')
+            c = cands[rec_i] if isinstance(rec_i, int) and 0 <= rec_i < len(cands) else None
+            if c is None:
+                best = scan_best_indices(scan)
+                c = cands[best[0]] if best else None
+            if c is not None:
+                return {'kind': 'point', 'first': c, 'last': c, 'n': 1}
+        elif ak == 'interval':
+            a, b = _span_bounds(scan.get('answer_span'))
+            if a is not None and b is not None:
+                return {'kind': 'interval', 'from': a, 'to': b,
+                        'first': _cand_at(a), 'last': _cand_at(b), 'n': len(scan_best_indices(scan))}
+        elif ak == 'tradeoff':
+            best = scan_best_indices(scan)
+            return {'kind': 'tradeoff', 'first': cands[best[0]] if best else None,
+                    'last': cands[best[-1]] if best else None, 'n': len(best)}
+        return {'kind': by_verdict.get(v, 'none')}
+    # --- прежний разбор для снимка без `answer_kind`
+    if v in by_verdict:
+        return {'kind': by_verdict[v]}
     rec_i = scan.get('recommended_index')
     if isinstance(rec_i, int) and 0 <= rec_i < len(cands):
         return {'kind': 'point', 'first': cands[rec_i], 'last': cands[rec_i], 'n': 1}
@@ -2571,12 +2618,12 @@ def scan_answer(scan: dict) -> dict:
     if len(best) == 1:
         return {'kind': 'point', 'first': cands[best[0]], 'last': cands[best[0]], 'n': 1}
     if len(best) > 1:
-        # Подряд идущие начала — это один непрерывный промежуток: «выходить можно с 23:30 до 00:20».
-        # Разрыв в индексах означает другое: лучшие по минутам и по флюенсу стоят в разных местах
-        # срока, и это спор величин, а не промежуток.
-        span = (best[-1] - best[0]) == len(best) - 1
-        return {'kind': 'span' if span else 'dispute',
-                'first': cands[best[0]], 'last': cands[best[-1]], 'n': len(best)}
+        cont = (best[-1] - best[0]) == len(best) - 1
+        first, last = cands[best[0]], cands[best[-1]]
+        if cont:
+            return {'kind': 'interval', 'from': _iso_dt(first.get('start_utc')),
+                    'to': _iso_dt(last.get('start_utc')), 'first': first, 'last': last, 'n': len(best)}
+        return {'kind': 'tradeoff', 'first': first, 'last': last, 'n': len(best)}
     return {'kind': 'none'}
 
 
@@ -2855,23 +2902,26 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
         a, b = _iso_dt(cand.get('start_utc')), _iso_dt(cand.get('end_utc'))
         lines.append('<h2>Выходить %s UTC</h2>' % esc(_day_time_ru(a)))
         lines.append('<div class="when">окно %s%s</div>' % (esc(_span_ru(a, b)), esc(dur_ru)))
-    elif kind == 'span':
+    elif kind == 'interval':
         # Промежуток — НОРМАЛЬНЫЙ ответ, а не отсутствие ответа: внутри него начала неразличимы
         # в пределах чувствительности модели, и называть минуту значило бы обещать точность,
-        # которой у расчёта нет.
-        last = ans.get('last') or {}
-        a1, a2 = _iso_dt(cand.get('start_utc')), _iso_dt(last.get('start_utc'))
-        b1, b2 = _iso_dt(cand.get('end_utc')), _iso_dt(last.get('end_utc'))
+        # которой у расчёта нет. Слова те же, что в строке отчёта выгрузки: «любое начало
+        # в промежутке …» — экран и отчёт обязаны говорить одинаково.
+        a1, a2 = ans.get('from'), ans.get('to')
+        _dur = timedelta(minutes=dur) if dur else None
+        b1 = _iso_dt((ans.get('first') or {}).get('end_utc')) or ((a1 + _dur) if (a1 and _dur) else None)
+        b2 = _iso_dt((ans.get('last') or {}).get('end_utc')) or ((a2 + _dur) if (a2 and _dur) else None)
         lines.append('<h2>Выходить в промежутке %s UTC</h2>' % esc(_span_ru(a1, a2)))
-        lines.append('<div class="when">начало в этих границах, окно%s: самое раннее %s, самое позднее %s</div>'
+        lines.append('<div class="when">любое начало в этих границах, окно%s: самое раннее %s, самое позднее %s</div>'
                      % (esc((' ' + dur_txt) if dur_txt else ''), esc(_span_ru(a1, b1)), esc(_span_ru(a2, b2))))
-    elif kind == 'dispute':
-        lines.append('<h2>Минуты в аномалии и флюенс указывают на разные начала</h2>')
+    elif kind == 'tradeoff':
+        lines.append('<h2>Выбор между окнами сервис не делает</h2>')
+        lines.append('<div class="when">по минутам в аномалии лучше одно начало, по флюенсу другое</div>')
     elif kind == 'check':
         lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get('all_need_check', 'Нужна проверка аналитиком')))
     else:
         lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Оснований для рекомендации недостаточно')))
-    if kind == 'span':
+    if kind == 'interval':
         lines.append('<div class="why">Внутри промежутка начала неразличимы в пределах чувствительности '
                      'модели, поэтому сервис называет промежуток, а не минуту.</div>')
     why = scan.get('why')
@@ -2886,17 +2936,16 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
         lines.append('<div class="stop">%s</div>' % esc(screen_text(refusal_lift_ru('insufficient', missing_ru, mode))))
     elif kind == 'check':
         lines.append('<div class="cond">%s</div>' % esc(screen_text(refusal_lift_ru('all_need_check', missing_ru, mode))))
-    elif kind == 'dispute':
-        lines.append('<div class="cond">Спор величин: одно начало лучше по минутам в аномалии, другое — '
-                     'по флюенсу, и сверх допуска равнозначности. Выбор за аналитиком; числа обеих '
-                     'сторон стоят строкой выше.</div>')
+    elif kind == 'tradeoff':
+        lines.append('<div class="cond">Спор величин сверх допуска равнозначности: выбор за аналитиком, '
+                     'числа обеих сторон стоят строкой выше.</div>')
     scope = scan.get('scope')
     if scope:
         lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
     # Условия берутся по ВСЕЙ лучшей группе: ответ-промежуток называет несколько начал, и условие
     # у любого из них относится к ответу целиком, а не к одному кандидату.
     _cands_all = scan.get('candidates') or []
-    _group = [_cands_all[i] for i in scan_best_indices(scan)] if kind in ('span', 'dispute') else [cand]
+    _group = [_cands_all[i] for i in scan_best_indices(scan)] if kind in ('interval', 'tradeoff') else [cand]
     conds, _seen = [], set()
     for _c in _group:
         for _x in ((_c or {}).get('conditions') or []):

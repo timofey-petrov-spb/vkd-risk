@@ -644,8 +644,8 @@ if _acc_target is None and scan_cand is None:
                         if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
                        (R.assessments[0] if R.assessments else None))
 _ACC_HEAD_RU = {'point': 'Величины рекомендованного окна',
-                'span': 'Величины самого раннего начала из рекомендованного промежутка',
-                'dispute': 'Величины первого из названных начал'}
+                'interval': 'Величины самого раннего начала из рекомендованного промежутка',
+                'tradeoff': 'Величины первого из названных начал'}
 _acc_head = _ACC_HEAD_RU.get((scan_ans or {}).get('kind')) if scan_cand is not None else None
 if not _acc_head:
     _acc_head = 'Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'
