@@ -167,6 +167,20 @@ def test_plotnost_i_klassy_yarkosti():
     assert alphas == sorted(alphas, reverse=True), alphas
 
 
+def test_pri_malom_pole_padaet_a_ne_otdayot_nebo_bez_yarkih_zvyozd():
+    """Если звёзд слишком мало, самому яркому классу достаётся ноль — и функция падает.
+
+    Молчать здесь нельзя: весь расчёт наихудшего контраста опирается на то, что звезда первого
+    класса на поле есть. Поле без неё выглядело бы работающим и тихо обесценило бы расчёт.
+    """
+    for too_few in (1, 3, 10, 30):
+        with pytest.raises(RuntimeError, match='ноль звёзд'):
+            b.magnitude_counts(too_few)
+    # На рабочем числе и чуть ниже все классы населены.
+    assert all(c > 0 for c in b.magnitude_counts(84))
+    assert all(c > 0 for c in b.magnitude_counts(b.STAR_COUNT))
+
+
 def test_zvyozdy_ne_nakladyvayutsya():
     """Ни одна пара звёзд не ближе MIN_SEPARATION.
 
