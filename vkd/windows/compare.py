@@ -1025,7 +1025,7 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                           + (('сближения SOCRATES',) if conj else ()),
         coverage_missing=(('статистика метеороидов — не подключена',) if mmod_hits is None else ())
                          + (() if conj else ('сближения SOCRATES — нет данных',))
-                         + (('сезонный вклад рассчитан как инженерная оценка; неопределённость каталога не устранена',)
+                         + (('всплески метеорных потоков конкретного года; абсолютная нормировка каталога не подтверждена',)
                             if mmod_seasonal and mmod_seasonal.get('streams_included') else
                             ('вклад метеорных потоков даты в число попаданий — не рассчитан',))
                          + ('техногенный мусор статистически — не включён',),
