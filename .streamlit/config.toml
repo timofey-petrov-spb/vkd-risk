@@ -8,9 +8,10 @@ secondaryBackgroundColor = "#f3f5f7"
 textColor = "#1a1a1a"
 font = "sans serif"
 
+# Зрителю — только тип ошибки без трассировки и локальных путей (Т7); полная трассировка пишется в лог сервера.
 [client]
 toolbarMode = "minimal"
-showErrorDetails = true
+showErrorDetails = "type"
 
 [browser]
 gatherUsageStats = false

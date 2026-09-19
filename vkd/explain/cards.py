@@ -9,19 +9,35 @@
   5. применённое правило или модель;
   6. ограничения и обоснование уверенности;
   7. происхождение: наблюдение, внешний прогноз или наш расчёт — различимо.
+
+Карточки строятся для КАЖДОГО окна (window_index): условие окна 2 объясняется
+так же, как условие окна 1. Условия берутся из структурных Condition, поэтому
+период — это интервал события, а источник — записи DONKI/NOAA с временем публикации,
+а не окно и таблица порогов (разбор 19.09, О4). Величины без данных подписываются
+по происхождению: наблюдение без записи — «наблюдения нет», а не «наш расчёт».
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
-from vkd.types import (Coverage, EnvironmentSample, FactorValue, Kind,
-                       MechanismAssessment, WindowAssessment)
+from vkd.explain.format import fmt_ru
+from vkd.types import (Condition, Coverage, EnvironmentSample, EventInterval, FactorValue, Kind, Presence,
+                       WindowAssessment)
 
 KIND_RU = {Kind.OBSERVATION: 'наблюдение', Kind.EXTERNAL_FORECAST: 'внешний прогноз',
            Kind.OWN_CALCULATION: 'наш расчёт'}
 COVERAGE_RU = {Coverage.FULL: 'полное', Coverage.PARTIAL: 'частичное', Coverage.NONE: 'отсутствует'}
+PRESENCE_RU = {Presence.DETECTED: 'воздействие есть', Presence.NOT_DETECTED: 'не выявлено',
+               Presence.UNKNOWN: 'неизвестно (данных нет)'}
+QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
+SOURCE_RU = {
+    'ecss_grun:grun-ecss-2020-v1': 'ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); '
+                                   'спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md)',
+    'imo_calendar': 'календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR',
+}
+HOURS_PER_YEAR = 8766.0
 
 
 @dataclass(frozen=True)
@@ -36,6 +52,8 @@ class Card:
     limits_ru: str
     record_ids: tuple[str, ...]
     severity: str          # "info" | "limiting" | "critical"
+    window_index: Optional[int] = None     # номер окна (с 1), к которому относится карточка
+    window_ru: str = ''                    # «окно 2024-05-10 12:00 — 18:00 UTC, 360 мин»
 
 
 # Значение для ВКД по каждой величине — одна фраза, откуда следует угроза.
@@ -43,24 +61,53 @@ _IMPACT = {
     'минут в аномалии': 'Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных '
                         'протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше '
                         'экспозиция при прочих равных. Это условие на траектории, не доза человека.',
-    'флюенс захваченных протонов': 'Интеграл потока захваченных протонов вдоль пути за окно. Показатель '
-                                   'относительного сравнения окон между собой; в дозу не переводится без '
-                                   'модели защиты и ткани.',
+    'флюенс захваченных протонов': 'Интеграл всенаправленного потока захваченных протонов вдоль пути за окно — '
+                                   'целевая величина сравнения окон по космопогоде (минуты в аномалии — её объяснение). '
+                                   'В дозу не переводится без модели защиты и ткани.',
+    'минут доступности протонов': 'Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже '
+                                  'жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может '
+                                  'достигать станции. Связывает измерение на геостационарной орбите с траекторией.',
     'поток протонов GOES ≥10 МэВ': 'Наблюдаемый поток на геостационарной орбите — индикатор солнечного '
                                    'протонного события. У станции на 51,6° большая часть таких протонов '
-                                   'отсекается геомагнитным обрезанием; переносится не напрямую.',
+                                   'отсекается геомагнитным обрезанием; переносится не напрямую — см. фактор '
+                                   '«минут доступности протонов ≥10 МэВ по обрезанию».',
+    'Kp, последнее наблюдение': 'Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий '
+                                'модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.',
     'ожидаемое число попаданий, пластина 1 м²': 'Статистика природных метеороидов на опорную площадь за окно. '
                                                 'Не вероятность повреждения скафандра и не попадание в космонавта.',
+    'активных метеорных потоков': 'Признак активности главного метеорного потока на дату окна. Поток добавляет частицы '
+                                  'к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).',
     'сближений с TCA в окне': 'Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; '
                               'вероятность попадания фрагмента в космонавта отсюда не следует.',
     'прогноз Kp NOAA': 'Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам, выпущенный до '
-                       'отсечки. Kp ≥ 7 (G3) — сильная геомагнитная буря: геомагнитное обрезание ослабевает и поток '
-                       'протонов на орбите станции растёт. Это внешний прогноз, не наблюдение.',
+                       'отсечки. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное '
+                       'событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — '
+                       'триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.',
     'вероятность S1 и выше': 'Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам '
                              'целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.',
     'вероятность протонного события': 'Суточная вероятность протонного события по прогнозу NOAA daypre. Относится '
                                        'к суткам целиком; в вероятность за окно не пересчитывается.',
 }
+
+_COND_IMPACT = {
+    'critical': ('Приоритетное предупреждение (S ≥ 3): NOAA рекомендует избегать радиационной опасности при ВКД; '
+                 'окно требует срочной проверки специалистом. Команды прервать или продолжать ВКД из индекса не следуют.'),
+    'limiting': ('Предупреждение: окно не выбирается автоматически и требует проверки аналитиком. '
+                 'Это правило команды, не эксплуатационная норма; шкалы NOAA сами по себе не запрещают и не разрешают ВКД.'),
+}
+_COND_LIMITS = {
+    'SEP': ('Уверенность: событие наблюдено (уведомление DONKI или карточка по прибору); конец события не объявляется — '
+            'действие принято по настройке sep_valid_hours, поэтому пересечение с окном условно. Уровень S — из текста '
+            'записи, если он там есть.'),
+    'GST': ('Уверенность: Kp измеряется по 3-часовым интервалам; уровень уведомления — из тела сообщения; прогноз '
+            'WSA-ENLIL имеет типичный разброс времени прихода порядка ±6–12 ч (оценка CCMC, не наша), «Kp до N» — '
+            'оценка kp_90 (верхняя при южном поле — kp_180); прогноз NOAA — по 3-часовым ячейкам выпуска. Наблюдение '
+            'сейчас распространено на окно как условие проверки объявленно, не молча.'),
+    'GOES': ('Уверенность: последнее наблюдение GOES с давностью; на будущие участки окна не распространяется; '
+             'перенос на станцию — через обрезание, см. фактор доступности.'),
+    'CONJ': 'Уверенность: качественное сообщение SOCRATES; усечённая выдача не означает отсутствия других сближений.',
+}
+_COND_TAIL = 'Пороги S1/S3 и G3 — шкалы NOAA SWPC; отнесение к условиям проверки — правило команды, меняется в config/settings.toml.'
 
 
 def _period(a: WindowAssessment) -> str:
@@ -69,66 +116,156 @@ def _period(a: WindowAssessment) -> str:
                                          end.strftime('%H:%M'), a.window.duration_min)
 
 
-def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample]) -> str:
+def _traj_line(meta) -> str:
+    if meta is None:
+        return 'траектория: орбита недоступна'
+    if meta.method == 'oem_interp':
+        return 'траектория: OEM NASA/JSC (%s), создан %s, интерполяция; поле %s%s' % (
+            meta.source_id, meta.created_utc.strftime('%Y-%m-%d %H:%MZ') if meta.created_utc else '?', meta.field_model,
+            '; объявленная реконструкция' if meta.is_reconstruction else '')
+    return 'траектория: SGP4 по TLE (%s), эпоха %s, получен %s; поле %s%s' % (
+        meta.source_id, meta.epoch_utc.strftime('%Y-%m-%d %H:%MZ') if meta.epoch_utc else '?',
+        meta.fetched_utc.strftime('%Y-%m-%d %H:%MZ') if meta.fetched_utc else '?', meta.field_model,
+        '; объявленная реконструкция' if meta.is_reconstruction else '')
+
+
+def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, traj_ids: set) -> str:
     parts = []
     for rid in f.record_ids:
         s = samples.get(rid)
-        if s is None:
-            parts.append(rid)
-            continue
-        pub = s.published_utc.strftime('%Y-%m-%d %H:%MZ') if s.published_utc else 'время публикации неизвестно'
-        parts.append('%s, запись %s, момент %s, публикация %s, получено %s, качество %s' % (
-            s.source_id, s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
-            s.fetched_utc.strftime('%H:%MZ'), s.quality))
-    return '; '.join(parts) if parts else 'источник: собственный расчёт по траектории'
+        if s is not None:
+            pub = s.published_utc.strftime('%Y-%m-%d %H:%MZ') if s.published_utc else 'время публикации неизвестно'
+            parts.append('%s, запись %s, момент %s, публикация %s, получено %s, %s' % (
+                s.source_id, s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
+                s.fetched_utc.strftime('%Y-%m-%d %H:%MZ'), QUALITY_RU.get(s.quality, s.quality)))
+        elif rid in traj_ids or rid == 'trajectory':
+            parts.append('%s (запись %s)' % (_traj_line(meta), rid))
+        elif rid.startswith('ost1044_A'):
+            parts.append('ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись %s' % rid)
+        elif rid in SOURCE_RU:
+            parts.append(SOURCE_RU[rid])
+        else:
+            parts.append('запись %s' % rid)
+    if parts:
+        return '; '.join(dict.fromkeys(parts))
+    # записи нет: подпись по происхождению, а не «собственный расчёт» для наблюдения
+    first = (f.limits_note or '').split(';')[0].strip()
+    if f.kind == Kind.OBSERVATION:
+        return 'наблюдения нет: %s' % (first or 'записи источника за период нет')
+    if f.kind == Kind.EXTERNAL_FORECAST:
+        return 'выпуска прогноза нет: %s' % (first or 'источник не подключён или выпуска до отсечки нет')
+    return 'наш расчёт по траектории: %s' % (first or 'расчёт невозможен')
 
 
-def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample]) -> list[Card]:
+def _data_line(f: FactorValue) -> str:
+    if f.value is None:
+        return 'нет значения'
+    if f.name.startswith('Kp') or f.name.startswith('прогноз Kp'):
+        return 'Kp %s' % fmt_ru(f.value)
+    txt = fmt_ru(f.value, f.unit)
+    if f.name.startswith('ожидаемое число попаданий') and f.value > 0:
+        return txt
+    return txt
+
+
+def _mmod_interpretation(f: FactorValue, duration_min: int) -> str:
+    if f.value is None or f.value <= 0:
+        return ''
+    per_year = f.value * HOURS_PER_YEAR / (duration_min / 60.0)
+    return ('; %s за окно ≈ одно попадание частицы ≥1 мг на 1 м² за ~%s лет непрерывной экспозиции'
+            % (fmt_ru(f.value), fmt_ru(1.0 / per_year) if per_year > 0 else '—'))
+
+
+def cards_for_window(a: WindowAssessment, samples: dict[str, EnvironmentSample],
+                     events: Sequence[EventInterval] = (), window_index: Optional[int] = None,
+                     meta=None, trajectory_ids: Sequence[str] = (), cutoff_utc: Optional[datetime] = None) -> list[Card]:
     cards: list[Card] = []
     period = _period(a)
+    prefix = ('Окно %d · ' % window_index) if window_index is not None else ''
+    traj_ids = set(trajectory_ids)
+    ev_by_id = {e.event_id: e for e in events}
     for m in a.mechanisms:
         for f in m.factors:
             key = next((k for k in _IMPACT if f.name.startswith(k)), None)
-            value = ('%.4g %s' % (f.value, f.unit)) if f.value is not None else 'нет значения'
-            limits = 'покрытие %s; наличие воздействия: %s' % (COVERAGE_RU[f.coverage], f.presence.value)
+            limits = 'покрытие %s; наличие воздействия: %s' % (COVERAGE_RU[f.coverage], PRESENCE_RU[f.presence])
+            if f.horizon_utc is not None:
+                limits += '; горизонт данных до %s' % f.horizon_utc.strftime('%Y-%m-%d %H:%MZ')
             if f.limits_note:
                 limits += '; ' + f.limits_note
+            if f.name.startswith('ожидаемое число попаданий'):
+                limits += _mmod_interpretation(f, a.window.duration_min)
             if f.kind == Kind.OWN_CALCULATION:
                 limits += '; уверенность зависит от точности траектории и границ модели, не от статистики'
             cards.append(Card(
-                title=f.name, kind=f.kind,
+                title=prefix + f.name, kind=f.kind,
                 impact_ru=_IMPACT.get(key, 'значение для ВКД описано в правиле'),
                 period_ru=period,
-                data_ru=value,
-                source_ru=_source_line(f, samples),
+                data_ru=_data_line(f),
+                source_ru=_source_line(f, samples, meta, traj_ids),
                 rule_ru=f.rule_applied,
                 limits_ru=limits,
                 record_ids=f.record_ids,
-                severity='info',
+                severity='info', window_index=window_index, window_ru=period,
             ))
-        for reason in m.needs_check_reasons:
-            sev = 'critical' if 'приоритетное' in reason else 'limiting'
-            sim = 'МОДЕЛИРУЕМОЕ' in reason
-            # идентификаторы записей, давших условие, — после «DONKI — » (О4: от предупреждения к первоисточнику)
-            ids = tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ()
-            # заголовок — до первого «: » (двоеточие со пробелом), чтобы не резать время вида 13:59Z;
-            # происхождение: прогнозы (NOAA, ENLIL) — внешний прогноз, события и индексы — наблюдение
-            cards.append(Card(
-                title=('Сценарий: ' if sim else 'Условие: ') + reason.split(': ')[0],
-                kind=Kind.OWN_CALCULATION if sim else (Kind.EXTERNAL_FORECAST if 'прогноз' in reason else Kind.OBSERVATION),
-                impact_ru=('Приоритетное предупреждение (S ≥ 3): NOAA рекомендует избегать радиационной опасности '
-                           'при ВКД; окно требует срочной проверки специалистом. Команды прервать или продолжать ВКД '
-                           'из индекса не следуют.' if sev == 'critical'
-                           else 'Предупреждение: окно исключено из автоматического выбора и требует ручной проверки '
-                                'аналитиком. Это консервативная политика прототипа, не эксплуатационная норма.'),
-                period_ru=period,
-                data_ru=reason,
-                source_ru='пороги: NOAA Space Weather Scales (S1 10, S2 100, S3 1000 pfu по ≥10 МэВ; G3 = Kp 7); '
-                          'граница класса — решение команды, обоснование в docs/KRITERII_PLAN.md разделы 5 и 7',
-                rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки',
-                limits_ru='порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; '
-                          'при иной шкале организации порог меняется в конфигурации',
-                record_ids=ids,
-                severity=sev,
-            ))
+        conds = m.conditions or tuple(_condition_from_text(r) for r in m.needs_check_reasons)
+        for c in conds:
+            cards.append(_condition_card(c, a, period, prefix, ev_by_id, samples, window_index, cutoff_utc))
     return cards
+
+
+def _condition_from_text(reason: str) -> Condition:
+    """Совместимость: условие только в виде текста (старые оценки без структуры)."""
+    return Condition('GOES' if reason.startswith('GOES') else ('SEP' if 'протонное' in reason else 'GST'),
+                     'critical' if 'приоритетное' in reason else 'limiting', reason,
+                     tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ())
+
+
+def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str, ev_by_id: dict,
+                    samples: dict, window_index: Optional[int], cutoff_utc: Optional[datetime]) -> Card:
+    end = a.window.start_utc + timedelta(minutes=a.window.duration_min)
+    # 2. период — интервал события/действия и его пересечение с окном
+    if c.interval_utc and c.interval_utc[0] is not None:
+        a0, a1 = c.interval_utc[0], c.interval_utc[1] or end
+        lo, hi = max(a0, a.window.start_utc), min(a1, end)
+        overlap = max(0.0, (hi - lo).total_seconds() / 60.0)
+        period_ru = 'событие/действие %s — %s; пересекает окно %s — %s (%.0f мин); %s' % (
+            a0.strftime('%d.%m %H:%MZ'), a1.strftime('%d.%m %H:%MZ'), lo.strftime('%H:%MZ'), hi.strftime('%H:%MZ'), overlap, period)
+    else:
+        period_ru = period
+    # 4. источник и время публикации — по записям события
+    src = list(c.sources_ru)
+    pubs = []
+    for rid in c.event_ids:
+        e = ev_by_id.get(rid)
+        s = samples.get(rid)
+        if e is not None:
+            pubs.append('%s %s (%s%s)' % (
+                e.event_id, 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
+                e.source_id, (', ' + e.note[:80]) if e.note else ''))
+        elif s is not None:
+            pubs.append('%s, момент %s, публикация %s, получено %s' % (
+                s.raw_record_id, s.t_utc.strftime('%d.%m %H:%MZ'),
+                s.published_utc.strftime('%d.%m %H:%MZ') if s.published_utc else 'в реальном времени (NOAA/GFZ)',
+                s.fetched_utc.strftime('%d.%m %H:%MZ')))
+    if pubs:
+        shown = pubs[:6]
+        src.append('записи: ' + '; '.join(shown) + ('; … всего %d (полный список — cards.json, raw/)' % len(pubs) if len(pubs) > 6 else ''))
+    if cutoff_utc is not None:
+        src.append('все записи опубликованы до отсечки %s' % cutoff_utc.strftime('%Y-%m-%d %H:%MZ'))
+    source_ru = '; '.join(src) if src else 'источник указан в тексте условия'
+    kind = (Kind.OWN_CALCULATION if c.is_simulated else
+            (Kind.OBSERVATION if c.kind in ('GOES', 'SEP') else Kind.EXTERNAL_FORECAST))
+    if c.kind == 'GST' and not c.is_simulated and any('наблюдение Kp' in s for s in c.sources_ru) and len(c.sources_ru) == 1:
+        kind = Kind.OBSERVATION
+    return Card(
+        title=prefix + ('Сценарий: ' if c.is_simulated else 'Условие: ') + c.text.split(': ')[0],
+        kind=kind,
+        impact_ru=_COND_IMPACT[c.severity],
+        period_ru=period_ru,
+        data_ru=c.text.split(';')[0] + ('; уровень: %s' % c.level_note if c.level_note else ''),
+        source_ru=source_ru,
+        rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки; %s' % _COND_TAIL,
+        limits_ru=_COND_LIMITS.get(c.kind, '') + (' Сценарий «что если»: значения моделируемые, в live-кеш и replay не попадают.' if c.is_simulated else ''),
+        record_ids=c.event_ids,
+        severity=c.severity, window_index=window_index, window_ru=period,
+    )

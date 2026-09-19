@@ -10,6 +10,8 @@
   * пять исходов Recommendation сохранены, «все требуют проверки» отличается
     от «недостаточно данных»;
   * наличие воздействия и полнота данных — два разных поля.
+ВЕРСИЯ 2.2 (19.09, область Б, обратно совместима): Condition и поля
+MechanismAssessment.conditions / coverage_notes с умолчаниями — стык Codex не меняется.
 Заморозка — после записи Codex «согласовано» в журнале.
 """
 from __future__ import annotations
@@ -19,7 +21,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-SCHEMA_VERSION = '2.1'
+SCHEMA_VERSION = '2.2'
 
 
 class Kind(str, Enum):
@@ -199,6 +201,21 @@ class FactorValue:
 
 
 @dataclass(frozen=True)
+class Condition:
+    """Условие дополнительной проверки (CONTRACT v3.1, раздел 4, п. 2) в структурном виде:
+    текст — для экрана, остальное — для карточки объяснения (О4: период события, источники,
+    время публикации) без разбора строки. needs_check_reasons остаются текстами условий."""
+    kind: str                          # "SEP" | "GST" | "GOES" | "KP" | "CONJ"
+    severity: str                      # "critical" (приоритетное, S ≥ 3) | "limiting" (предупреждение)
+    text: str                          # полный текст условия (совпадает с элементом needs_check_reasons)
+    event_ids: tuple[str, ...] = ()    # записи источников, давшие условие
+    interval_utc: tuple = ()           # (начало, конец) действия условия; конец может быть принят по конвенции
+    level_note: str = ''               # уровень: «S3», «Kp до 8», «уровень не указан»
+    sources_ru: tuple[str, ...] = ()   # по одной строке на источник сигнала: что, когда, публикация
+    is_simulated: bool = False
+
+
+@dataclass(frozen=True)
 class MechanismAssessment:
     mechanism_id: str
     mandatory: bool
@@ -207,6 +224,8 @@ class MechanismAssessment:
     needs_check: bool
     needs_check_reasons: tuple[str, ...] = ()
     priority: bool = False             # S ≥ 3: приоритетное предупреждение, срочная проверка специалистом
+    conditions: tuple[Condition, ...] = ()      # те же условия в структурном виде
+    coverage_notes: tuple[str, ...] = ()        # чего именно не хватает (по каналам), если покрытие не полное
 
 
 @dataclass(frozen=True)

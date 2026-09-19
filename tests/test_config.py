@@ -24,6 +24,11 @@ def test_repo_settings_file_matches_thresholds_fields(monkeypatch):
     for k, v in raw.items():
         assert getattr(th, k) == pytest.approx(float(v))
     assert cfg.section('history').get('enlil_kp_fields') == ['kp_90']
+    # каждая настройка либо читается кодом, либо тест падает (Т7: мёртвых ключей нет)
+    assert th.sep_valid_hours == float(cfg.section('history')['sep_valid_hours'])
+    assert th.kp_max_age_min == float(raw['kp_max_age_min']) and th.fluence_equiv_ratio == float(raw['fluence_equiv_ratio'])
+    ui = cfg.section('ui')
+    assert len(ui['window_offsets_min']) >= 2 and all(0 < o <= ui['search_min'] for o in ui['window_offsets_min'])
     tle = cfg.section('sources')['urls']['tle']
     assert isinstance(tle, list) and len(tle) >= 2 and tle[0].startswith('https://celestrak.org/')   # резервная цепочка
     cfg.settings.cache_clear()

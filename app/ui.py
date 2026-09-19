@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Оформление экрана: стили, плашки статусов, панель вердикта, карточки окон, полоса состояния.
+"""Оформление экрана: стили, плашки статусов, панель вердикта, карточки окон, полоса состояния,
+словари перевода идентификаторов модулей в подписи для пользователя.
 
 Только разметка. Ничего не считает и не решает: все значения приходят из снимка расчёта.
 Правило оформления — три происхождения (наблюдение, внешний прогноз, наш расчёт) и
 четыре состояния (в порядке, внимание, критично, нет данных) везде одними и теми же цветами.
+На оперативном уровне на экране нет идентификаторов кода: методы, типы событий, источники и
+ограничения модулей переводятся словарями ниже; неизвестная строка выводится как есть с пометкой.
 """
 from __future__ import annotations
 
 import html
-from datetime import timedelta
+import re
+from datetime import datetime, timedelta
 
 CSS = """
 <style>
@@ -38,9 +42,14 @@ h1, h2, h3 { letter-spacing: -0.01em; }
            background:var(--bg); margin:4px 0 14px 0; }
 .verdict h2 { margin:0 0 4px 0; font-size:1.35rem; }
 .verdict .rule { color:var(--muted); font-size:0.92rem; margin-bottom:8px; }
+.verdict .rule .orig { color:#9aa0a6; font-size:0.84rem; }
 .verdict .win { font-size:1.05rem; font-weight:600; }
 .verdict ul { margin:6px 0 0 18px; padding:0; }
 .verdict li { margin:2px 0; font-size:0.93rem; }
+.verdict li.more { color:var(--muted); list-style:none; margin-left:-18px; font-size:0.86rem; }
+.verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; background:var(--calc-bg); color:var(--calc);
+                 font-size:0.88rem; }
+.verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
 .v-preferred { border-left-color:var(--ok); background:linear-gradient(90deg, var(--ok-bg) 0, #fff 60%); }
 .v-equivalent { border-left-color:var(--none); background:linear-gradient(90deg, var(--none-bg) 0, #fff 60%); }
 .v-trade_off { border-left-color:var(--calc); background:linear-gradient(90deg, var(--calc-bg) 0, #fff 60%); }
@@ -61,6 +70,7 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .cond.crit { background:var(--crit-bg); color:#922b21; }
 .cond.ok { background:var(--ok-bg); color:#196f3d; }
 .cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
+.covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
 .legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:0.84rem; color:var(--muted); }
 div[data-testid="stMetric"] { background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
@@ -81,6 +91,48 @@ COV_KIND = {'full': 'ok', 'partial': 'warn', 'none': 'crit'}
 MECH_RU = {'spaceweather': 'космопогода', 'mmod_stat': 'метеороиды', 'conjunctions': 'сближения'}
 KIND_PILL = {'observation': ('наблюдение', 'obs'), 'external_forecast': ('внешний прогноз', 'fc'), 'own_calculation': ('наш расчёт', 'calc')}
 
+# --- словари перевода идентификаторов модулей (О5: без английских идентификаторов на экране) ---
+METHOD_RU = {'sgp4': 'SGP4 по TLE', 'oem_interp': 'OEM NASA/JSC (интерполяция)'}
+STRICT_RU = {'strict': 'строгая', 'declared_reconstruction': 'объявленная реконструкция',
+             'reconstruction': 'реконструкция', 'unavailable': 'недоступна'}
+EVENT_KIND_RU = {'SEP': 'протонное событие', 'GST': 'геомагнитная буря', 'FLR': 'вспышка', 'CME': 'выброс массы',
+                 'CME_ARRIVAL': 'прогноз прихода выброса', 'IPS': 'межпланетный удар', 'HSS': 'высокоскоростной поток',
+                 'RBE': 'усиление радиационного пояса', 'MPC': 'пересечение магнитопаузы', 'GST_KP': 'буря (Kp)'}
+SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
+             'ost1044_belts': 'таблицы ОСТ 134-1044-2007 (захваченные протоны)',
+             'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
+             'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
+             'noaa_forecast_kp_forecast': 'прогноз Kp NOAA (выпуск до отсечки)',
+             'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
+             'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки'}
+# Ограничения модуля орбиты (A3) — перевод по точному совпадению; неизвестная строка выводится
+# как есть с пометкой «текст модуля орбиты».
+LIMIT_RU = {
+    'TLE age limit is an engineering guard, not a position-error guarantee; manoeuvres are not predicted.':
+        'Предел возраста TLE — инженерное ограничение, не оценка ошибки положения; манёвры не предсказываются.',
+    'IGRF is the internal main field; no storm-time external field is modelled.':
+        'IGRF — внутреннее главное поле; внешнее поле бури не моделируется.',
+    'L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.':
+        'L, B/B_0 и вертикальное обрезание — центральный наклонный диполь, не трассированная L Мак-Илвейна '
+        'и не направленная жёсткость обрезания во время бури.',
+    'Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.':
+        'Полное |B| по IGRF и дипольное B/B_0 — разные величины; смешивать их для оценки экваториального поля нельзя.',
+    'SAA flag is the configured |B| threshold proxy, not an official region boundary.':
+        'Признак аномалии — порог |B| из настроек, не официальная граница области.',
+    'OEM timestamps of creation/modification do not prove historical public availability.':
+        'Времена создания и изменения OEM не доказывают, что файл был публично доступен в тот момент.',
+}
+# Правило предпочтения — пять шагов, понятных без внутреннего договора (DEMO-6, O5-14).
+RULE_RU = [
+    ('п.1', 'шаг 1 из 5, охват: у обязательной линии нет данных — рекомендация невозможна'),
+    ('п.2: все окна', 'шаг 2 из 5, условия: у каждого окна есть условие проверки, автоматический выбор не делается — решение за аналитиком'),
+    ('п.2: единственное', 'шаг 2 из 5, условия: только одно окно без условий проверки'),
+    ('п.3–4', 'шаги 3–4 из 5, сравнение и сведение: меньше минут в аномалии, линия метеороидов не противоречит'),
+    ('п.4', 'шаг 4 из 5, сведение: механизмы указывают на разные окна — компромисс без победителя'),
+    ('п.5', 'шаг 5 из 5, допуск равнозначности'),
+]
+BOOL_RU = {True: 'да', False: 'нет', None: '—'}
+
 
 def esc(s) -> str:
     return html.escape(str(s), quote=False)
@@ -91,6 +143,7 @@ def pill(text, kind='none') -> str:
 
 
 def fmt(v, unit='') -> str:
+    """Число по-русски: запятая, порядок как 10^n; безразмерная единица «1» не печатается."""
     if v is None:
         return '—'
     if isinstance(v, float):
@@ -105,7 +158,7 @@ def fmt(v, unit='') -> str:
             s = ('%.2f' % v).rstrip('0').rstrip('.').replace('.', ',')
     else:
         s = str(v)
-    return s + (' ' + unit if unit else '')
+    return s + (' ' + unit if unit and unit not in ('1',) else '')
 
 
 def head(title: str, sub: str) -> str:
@@ -123,34 +176,234 @@ def strip(items) -> str:
     return '<div class="strip">' + '<span class="sep">·</span>'.join(parts) + '</div>'
 
 
-def verdict_panel(rec, S: dict, windows_ru: dict) -> str:
+def rule_ru(rule_applied: str) -> str:
+    """«п.5: разница 48 мин меньше допуска 49 мин» → «шаг 5 из 5, допуск равнозначности: разница …»."""
+    for prefix, text in RULE_RU:
+        if rule_applied.startswith(prefix):
+            if prefix == 'п.5':
+                return text + ' — ' + rule_applied.partition(': ')[2] + ' (разброс минут в аномалии на сетке порогов); окна неразличимы'
+            if prefix == 'п.3–4' and 'частичное' in rule_applied:
+                return text + '; покрытие частичное — объявлено'
+            return text
+    return rule_applied
+
+
+def source_short(v: dict) -> tuple[str, str]:
+    """Короткий статус источника для полосы состояния: (текст, kind)."""
+    st_ = (v.get('status') or '').lower()
+    if 'исключён' in st_:
+        return 'исключён пользователем', 'crit'
+    if v.get('live_ok') is False and v.get('from_cache'):
+        age = v.get('age_min')
+        return ('кеш, давность %d мин' % round(age)) if age is not None else 'кеш', 'warn'
+    if 'данных нет' in st_ or 'не разбирается' in st_:
+        return 'нет ответа и кеша — данных нет', 'crit'
+    if v.get('live_ok'):
+        return 'живой запрос', 'ok'
+    return (v.get('status') or 'нет данных'), 'none'
+
+
+def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_fetch: str | None = None) -> list[str]:
+    """Проблемы источников для одного st.warning под полосой состояния (О5-2): исключён, кеш, устарел.
+    Ничего не решает — переводит статусы снимка в предложения для пользователя."""
+    out = []
+    if mode == 'live':
+        for sid, name in (('noaa_swpc_goes', 'GOES ≥10 МэВ (NOAA SWPC)'), ('gfz_kp', 'Kp (GFZ)')):
+            v = src.get(sid) or {}
+            st_ = (v.get('status') or '').lower()
+            if 'исключён' in st_:
+                out.append('%s: исключён пользователем — %s' % (
+                    name, 'обязательная линия без покрытия, рекомендации не будет' if sid == 'noaa_swpc_goes'
+                    else 'условие по наблюдению Kp не проверяется, покрытие объявлено'))
+            elif v.get('live_ok') is False and v.get('from_cache'):
+                age = v.get('age_min')
+                out.append('%s: живого ответа нет, взят кеш%s — покрытие частичное, объявлено'
+                           % (name, (', давность %d мин' % round(age)) if age is not None else ''))
+            elif v.get('live_ok') is False:
+                out.append('%s: %s' % (name, v.get('status') or 'нет данных'))
+            elif sid == 'noaa_swpc_goes' and v.get('age_min') is not None and th is not None \
+                    and v['age_min'] > th.goes_max_age_min:
+                out.append('GOES ≥10 МэВ: наблюдение устарело (%d мин при допустимых %.0f) — для будущих участков '
+                           'окна покрытие частичное' % (round(v['age_min']), th.goes_max_age_min))
+        o = src.get('orbit') or {}
+        if o.get('live_ok') is False and o.get('from_cache'):
+            out.append('TLE: живого ответа нет — орбита построена по %s (%s)' % (
+                'снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу', tle_origin(tle_fetch)))
+        if o.get('age_h') is not None and o['age_h'] > 24:
+            out.append('TLE: эпоха старше суток (%.0f ч) — точность положения снижается, предел %s сут задан порогом'
+                       % (o['age_h'], fmt(th.tle_max_age_days) if th is not None else '—'))
+    else:
+        if kp_excluded_hist:
+            out.append('Kp: исключён пользователем из архива (проверка отказа) — условие по наблюдению Kp не проверяется')
+        o = src.get('orbit') or {}
+        if o.get('strictness') == 'declared_reconstruction':
+            out.append('Орбита: OEM NASA/JSC создан до отсечки, но его публичная доступность в тот момент не доказана — '
+                       'объявленная реконструкция')
+    return out
+
+
+def _win_num(windows_ru: dict, t) -> str:
+    return windows_ru.get(t, '')
+
+
+def _hhmm_to_window(assessments, hhmm: str):
+    for i, a in enumerate(assessments or []):
+        if a.window.start_utc.strftime('%H:%MZ') == hhmm:
+            return i + 1
+    return None
+
+
+def _wins_ru(nums: list[int]) -> str:
+    nums = sorted(set(nums))
+    if len(nums) == 1:
+        return 'окно %d' % nums[0]
+    return 'окна ' + ' и '.join(str(n) for n in nums) if len(nums) == 2 else 'окна ' + ', '.join(str(n) for n in nums)
+
+
+def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: int = 6) -> tuple[list[str], int]:
+    """Список условий панели вердикта с указанием окна и без дубликатов (О3-3).
+    Возвращает (строки, сколько не показано)."""
+    mech_ru = mech_ru or MECH_RU
+    out: list[str] = []
+    if rec.verdict == 'all_need_check' and assessments:
+        by: dict[str, list[int]] = {}
+        for i, a in enumerate(assessments):
+            for m in a.mechanisms:
+                for r in m.needs_check_reasons:
+                    by.setdefault(_short_reason(r), []).append(i + 1)
+        for text, nums in by.items():
+            out.append('%s: %s' % (_wins_ru(nums), text))
+    else:
+        seen = set()
+        per = dict(getattr(rec, 'per_mechanism_comparison', None) or {})
+        per_txt = {v: k for k, v in per.items()}
+        for r in rec.reasons:
+            if r in seen:
+                continue
+            seen.add(r)
+            txt = _short_reason(r) if ' DONKI — ' in r else r
+            mech = per_txt.get(r)
+            if mech:
+                m = re.match(r'^(\d\d:\d\dZ): (.*)$', txt)
+                if m:
+                    n = _hhmm_to_window(assessments, m.group(1))
+                    txt = '%s — %s: %s' % (mech_ru.get(mech, mech), ('окно %d (%s)' % (n, m.group(1))) if n else m.group(1), m.group(2))
+                else:
+                    txt = '%s: %s' % (mech_ru.get(mech, mech), txt)
+            out.append(txt)
+    if len(out) > max_items:
+        return out[:max_items], len(out) - max_items
+    return out, 0
+
+
+def robustness_pill(rec, rob: dict) -> str:
+    """О7: «устойчив» печатается только когда выбор есть (DEMO-17)."""
+    grid = rob.get('preferred_by_grid') or {}
+    vals = set(grid.values())
+    if rec.preferred is None and grid and vals == {None}:
+        return pill('сетка порогов исход не меняет: везде без автовыбора', 'none')
+    if rob.get('stable'):
+        return pill('выбор устойчив на сетке порогов' if rec.preferred is not None else 'ранжирование устойчиво на сетке порогов', 'ok')
+    return pill('выбор меняется на сетке порогов' if rec.preferred is not None else 'ранжирование меняется на сетке порогов', 'warn')
+
+
+def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = False,
+                  plan_change: str | None = None, missing_ru=None, policy_short: str | None = None) -> str:
     v = rec.verdict
     title = VERDICT_TITLE.get(v, v)
-    lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title),
-             '<div class="rule">Правило: %s</div>' % esc(rec.rule_applied)]
+    rule = 'Правило: ' + esc(rule_ru(rec.rule_applied))
+    if pro:
+        rule += ' <span class="orig">(%s)</span>' % esc(rec.rule_applied)
+    lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title), '<div class="rule">%s</div>' % rule]
     if rec.preferred is not None:
-        lines.append('<div class="win">Окно %s — %s</div>' % (windows_ru.get(rec.preferred.start_utc, ''), esc(_win_span(rec.preferred))))
-    bullets = [_short_reason(r) if ' DONKI — ' in r else r for r in rec.reasons]
-    if rec.missing:
-        bullets += ['Чего не хватает: ' + x for x in rec.missing]
+        lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
+    bullets, more = verdict_reasons(rec, assessments)
+    missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
+    bullets += ['Чего не хватает: ' + x for x in missing]
     if bullets:
-        lines.append('<ul>' + ''.join('<li>%s</li>' % esc(b) for b in bullets[:6]) + '</ul>')
+        lis = ''.join('<li>%s</li>' % esc(b) for b in bullets)
+        if more:
+            lis += '<li class="more">… ещё %d, см. карточки окон и вкладку «Окна и факторы»</li>' % more
+        lines.append('<ul>' + lis + '</ul>')
+    if plan_change:
+        lines.append('<div class="plan">%s</div>' % esc(plan_change))
+    if policy_short:
+        lines.append('<div class="policy">%s</div>' % esc(policy_short))
     rob = S.get('robustness') or {}
     lines.append('<div class="cov">%s %s Охват: %s. Не учтено: %s.</div>' % (
-        pill('выбор устойчив на сетке порогов' if rob.get('stable') else 'выбор меняется на сетке порогов', 'ok' if rob.get('stable') else 'warn'),
+        robustness_pill(rec, rob),
         pill('сценарий «что если»', 'warn') if S.get('is_simulated') else '',
         esc(', '.join(S.get('coverage_declared', []))), esc(', '.join(S.get('coverage_missing', [])))))
     lines.append('</div>')
     return ''.join(lines)
 
 
-def _win_span(w) -> str:
+def win_span(w) -> str:
+    """«10.05 22:00 — 11.05 00:00 UTC, 120 мин»: дата конца печатается, если окно переходит через полночь."""
     end = w.start_utc + timedelta(minutes=w.duration_min)
-    return '%s — %s UTC, %d мин' % (w.start_utc.strftime('%d.%m %H:%M'), end.strftime('%H:%M'), w.duration_min)
+    end_s = end.strftime('%d.%m %H:%M') if end.date() != w.start_utc.date() else end.strftime('%H:%M')
+    return '%s — %s UTC, %d мин' % (w.start_utc.strftime('%d.%m %H:%M'), end_s, w.duration_min)
+
+
+_win_span = win_span     # прежнее имя
+
+
+def _cov_reason(f) -> str | None:
+    """Причина неполного покрытия одного фактора — одной фразой для карточки окна (DEMO-11)."""
+    note = f.limits_note or ''
+    name = f.name
+    m = re.search(r'доля точек с моделью (\d+) %', note)
+    if name.startswith('флюенс') and m:
+        return 'флюенс: модель ОСТ есть для %s %% точек трассы' % m.group(1)
+    if name.startswith('поток протонов GOES'):
+        if 'наблюдений GOES нет' in note and 'DONKI о протонных' in note:
+            return 'GOES: наблюдений за 2024 нет, канал по датированным уведомлениям DONKI'
+        if 'наблюдений GOES нет' in note and 'каталог' in note:
+            return 'GOES: наблюдений за 2024 нет; каталог DONKI покрывает период, событий не объявлено'
+        m2 = re.search(r'давность (\d+) мин', note)
+        if 'устарело' in note and m2:
+            return 'GOES: наблюдение устарело (давность %s мин) — для будущих участков' % m2.group(1)
+        if 'нет данных' in note:
+            return 'GOES: данных нет'
+    if name == 'минут в аномалии':
+        return 'трасса покрывает окно не полностью'
+    m3 = re.search(r'трасса покрывает (\d+) % окна', note)
+    if m3:
+        return 'метеороиды: трасса покрывает %s %% окна' % m3.group(1)
+    m4 = re.search(r'покрытие окна ячейками (\d+) %', note)
+    if m4 and name.startswith('прогноз'):
+        return 'прогноз Kp: ячейки покрывают %s %% окна' % m4.group(1)
+    if m4:
+        return '%s: ячейки покрывают %s %% окна' % (name.split(',')[0], m4.group(1))
+    first = note.split(';')[0].strip()
+    return ('%s: %s' % (name.split(',')[0], first)) if first else None
+
+
+def coverage_reasons(a) -> list[str]:
+    """Причины неполного покрытия по обязательным механизмам окна, без повторов."""
+    out, seen = [], set()
+    for m in a.mechanisms:
+        if not (m.mandatory or m.coverage.value != 'none') or m.coverage.value == 'full':
+            continue
+        for f in m.factors:
+            if f.coverage.value == 'full':
+                continue
+            r = _cov_reason(f)
+            if r and r not in seen:
+                seen.add(r)
+                out.append(r)
+    return out
+
+
+def fluence_label(flu) -> str:
+    """Подпись канала из имени фактора: «флюенс протонов ≥30 МэВ, част./см²» (O5-10, DEMO-20)."""
+    if flu is None:
+        return 'флюенс протонов, част./см²'
+    return flu.name.replace('захваченных ', '') + ', ' + (flu.unit or 'част./см²')
 
 
 def window_card(i: int, a, best: bool, mode: str) -> str:
-    """Карточка окна: заголовок, состояние, ключевые величины, условия, покрытие по механизмам."""
+    """Карточка окна: заголовок, состояние, ключевые величины, условия, покрытие по механизмам с причиной."""
     f = {x.name: x for m in a.mechanisms for x in m.factors}
     reasons = [r for m in a.mechanisms for r in m.needs_check_reasons]
     crit = any('приоритетное' in r for r in reasons)
@@ -162,12 +415,12 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
     goes = f.get('поток протонов GOES ≥10 МэВ')
     kpf = f.get('прогноз Kp NOAA, максимум в окне')
     rows = [('минут в аномалии', fmt(saa.value if saa else None, 'мин'), True),
-            ('флюенс протонов ≥E, част./см²', fmt(flu.value if flu else None), False),
+            (fluence_label(flu), fmt(flu.value if flu else None), False),
             ('метеороиды, попаданий на 1 м²', fmt(mm.value if mm else None), False)]
     if mode == 'live':
         rows.append(('GOES ≥10 МэВ, pfu', fmt(goes.value if goes else None), False))
     else:
-        rows.append(('прогноз Kp NOAA, макс.', fmt(kpf.value if kpf else None), False))
+        rows.append(('прогноз Kp NOAA, макс. в окне', fmt(kpf.value if kpf else None), False))
     kv = ''.join('<div class="k">%s</div><div class="v%s">%s</div>' % (esc(k), ' big' if big else '', esc(v)) for k, v, big in rows)
     conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(_short_reason(r))) for r in reasons[:4])
     if len(reasons) > 4:
@@ -176,9 +429,11 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
         conds = '<div class="cond ok">Условий проверки нет по данным до отсечки</div>' if mode == 'history_forecast' else '<div class="cond ok">Условий проверки нет</div>'
     cov = ' '.join(pill('%s: %s' % (MECH_RU.get(m.mechanism_id, m.mechanism_id), COV_RU[m.coverage.value]), COV_KIND[m.coverage.value])
                    for m in a.mechanisms if m.mandatory or m.coverage.value != 'none')
+    why = coverage_reasons(a)
+    why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc('; '.join(why))) if why else ''
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
-            '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div></div>'
-            % (cls, i + 1, ' · предпочтительное' if best else '', esc(_win_span(a.window)), pill(*state), kv, conds, cov))
+            '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div>%s</div>'
+            % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv, conds, cov, why_html))
 
 
 def _short_reason(r: str) -> str:
@@ -188,6 +443,56 @@ def _short_reason(r: str) -> str:
     return head_ + (': ' + tail if tail else '')
 
 
+def short_reason(r: str) -> str:
+    return _short_reason(r)
+
+
 def kind_pill(kind_value: str) -> str:
     t, k = KIND_PILL.get(kind_value, (kind_value, 'none'))
     return pill(t, k)
+
+
+def limit_ru(s: str) -> str:
+    """Ограничение модуля орбиты по-русски; неизвестное — как есть с пометкой."""
+    if s in LIMIT_RU:
+        return LIMIT_RU[s]
+    if re.search(r'[А-Яа-я]', s):
+        return s
+    return s + ' (текст модуля орбиты)'
+
+
+def event_kind_ru(k: str) -> str:
+    return EVENT_KIND_RU.get((k or '').upper(), k)
+
+
+def source_name_ru(sid: str) -> str:
+    return SOURCE_RU.get(sid, sid)
+
+
+def tle_origin(tle_fetch_status: str | None) -> str:
+    """«получено живьём с celestrak.org» / «кеш, давность N мин» / «снимок репозитория, давность N мин»."""
+    s = tle_fetch_status or ''
+    m = re.search(r'живьём с ([\w.\-]+)', s)
+    if m:
+        return 'живьём с ' + m.group(1)
+    if 'снимок репозитория' in s:
+        m2 = re.search(r'давность (\d+) мин', s)
+        return 'снимок репозитория' + (', давность %s ч' % round(int(m2.group(1)) / 60) if m2 else '')
+    if 'кеш' in s:
+        m2 = re.search(r'давность (\d+) мин', s)
+        return 'кеш' + (', давность %s мин' % m2.group(1) if m2 else '')
+    if 'воспроизведение' in s:
+        return 'из сохранённого расчёта'
+    return s or '—'
+
+
+def grid_cell_ru(v, windows_ru_iso: dict) -> str:
+    """Ячейка таблицы устойчивости: «Окно 1 (23:21Z)» или объяснение отсутствия выбора (O5-6)."""
+    if not v:
+        return 'нет предпочтительного (равнозначны или отказ)'
+    try:
+        t = datetime.fromisoformat(v)
+    except (TypeError, ValueError):
+        return str(v)
+    n = windows_ru_iso.get(t)
+    return ('Окно %s (%s)' % (n, t.strftime('%H:%MZ'))) if n else t.strftime('%d.%m %H:%MZ')

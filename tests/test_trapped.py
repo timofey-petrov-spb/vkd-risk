@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """Численные проверки интегрирования и границ модели поясов (CONTRACT.md v3, раздел 8)."""
 import math
+import os
+from datetime import datetime, timezone
 
 import numpy as np
 import pytest
 
-from vkd.assess.trapped import BeltTable, integrate_power_law
+from vkd.assess.trapped import BeltTable, FLUX_UNIT_RU, integrate_power_law
 
 E_OST = np.array([0.2, 0.6, 1.25, 3, 5, 12.5, 30, 50, 125, 300])   # узлы протонов прил. А
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @pytest.mark.parametrize('b', [-1.0, -1.5, -2.0, -3.0])
@@ -45,33 +48,97 @@ def test_table_loads_and_units():
     t = BeltTable('min')
     assert list(t.energies_MeV) == list(E_OST)
     assert t.Ls[0] == pytest.approx(1.14) and t.Ls[-1] == pytest.approx(9.0)
+    # единицы: всенаправленный поток см⁻²·с⁻¹, без «на стерадиан» (CONTRACT R3, вводный текст прил. А)
+    assert 'ср' not in FLUX_UNIT_RU and 'всенаправленный' in t.flux_unit_ru
+    assert t.raw_record_id.startswith('ost1044_A_') and len(t.raw_record_id.split(':')[1]) == 12
+    assert t.file == 'data/ost1044_belts/A_2_1.csv'
 
 
 def test_no_model_outside_L_grid():
     t = BeltTable('min')
     r = t.integral_flux(0.9, 1.2, 30.0)
-    assert r.value_per_cm2_s_sr is None and r.status == 'no_model_L'
+    assert r.value_per_cm2_s is None and r.status == 'no_model_L'
     r = t.integral_flux(12.0, 1.2, 30.0)
-    assert r.value_per_cm2_s_sr is None and r.status == 'no_model_L'
+    assert r.value_per_cm2_s is None and r.status == 'no_model_L'
     assert t.integral_flux(None, 1.0, 30.0).status == 'no_model_L'
 
 
 def test_beyond_mirror_is_physical_zero_not_missing():
     t = BeltTable('min')
     r = t.integral_flux(1.3, 1e6, 30.0)
-    assert r.value_per_cm2_s_sr == 0.0 and r.status == 'beyond_mirror'
+    assert r.value_per_cm2_s == 0.0 and r.status == 'beyond_mirror'
 
 
 def test_inconsistent_BB0_flagged_not_clamped_silently():
     t = BeltTable('min')
     r_low, r_eq = t.integral_flux(1.3, 0.9, 30.0), t.integral_flux(1.3, 1.0, 30.0)
     assert r_low.status == 'inconsistent_BB0' and r_eq.status == 'ok'
-    assert r_low.value_per_cm2_s_sr == pytest.approx(r_eq.value_per_cm2_s_sr)
+    assert r_low.value_per_cm2_s == pytest.approx(r_eq.value_per_cm2_s)
 
 
 def test_flux_decreases_with_BB0_and_L_interpolation_is_between_rows():
     t = BeltTable('min')
     a, b = t.integral_flux(1.3, 1.0, 30.0), t.integral_flux(1.3, 1.5, 30.0)
-    assert a.value_per_cm2_s_sr >= b.value_per_cm2_s_sr
-    lo, mid, hi = (t.integral_flux(L, 1.0, 30.0).value_per_cm2_s_sr for L in (1.3, 1.35, 1.4))
+    assert a.value_per_cm2_s >= b.value_per_cm2_s
+    lo, mid, hi = (t.integral_flux(L, 1.0, 30.0).value_per_cm2_s for L in (1.3, 1.35, 1.4))
     assert min(lo, hi) <= mid <= max(lo, hi)
+
+
+def _synthetic_table(rows):
+    """Таблица из заданных строк (L, B/B0, спектр) без файла — для аналитических проверок интерполяции."""
+    t = BeltTable.__new__(BeltTable)
+    t.energies_MeV = E_OST.copy()
+    t.table = {}
+    for L, bb, spec in rows:
+        t.table.setdefault(L, []).append((bb, np.asarray(spec, dtype=float)))
+    for L in t.table:
+        t.table[L].sort(key=lambda p: p[0])
+    t.Ls = np.array(sorted(t.table))
+    return t
+
+
+def test_L_interpolation_is_logarithmic_between_rows():
+    """Т3: между оболочками с потоком, отличающимся в 100 раз, середина — геометрическое среднее
+    (ошибка < 1e-9), а не арифметическое (которое завышало бы её в ~5 раз)."""
+    spec_hi, spec_lo = 1000.0 * E_OST ** -2.0, 10.0 * E_OST ** -2.0
+    t = _synthetic_table([(1.0, 1.0, spec_hi), (1.0, 2.0, spec_hi), (2.0, 1.0, spec_lo), (2.0, 2.0, spec_lo)])
+    f_lo, f_hi, f_mid = (t.integral_flux(L, 1.0, 30.0).value_per_cm2_s for L in (2.0, 1.0, 1.5))
+    assert f_mid == pytest.approx(math.sqrt(f_lo * f_hi), rel=1e-9)
+    assert f_mid < 0.5 * (f_lo + f_hi) / 2       # арифметика была бы много выше
+    # по B/B0 — тоже логарифм
+    t2 = _synthetic_table([(1.0, 1.0, spec_hi), (1.0, 2.0, spec_lo)])
+    b_lo, b_hi, b_mid = (t2.integral_flux(1.0, bb, 30.0).value_per_cm2_s for bb in (2.0, 1.0, 1.5))
+    assert b_mid == pytest.approx(math.sqrt(b_lo * b_hi), rel=1e-9)
+
+
+def test_real_table_midpoint_follows_log_law():
+    """Строки 1,20 и 1,30 табл. А.2.1 различаются в сотни раз: середина по логарифму, а не линейно."""
+    t = BeltTable('min')
+    f120, f130, f125 = (t.integral_flux(L, 1.21, 30.0).value_per_cm2_s for L in (1.20, 1.30, 1.25))
+    assert f130 / f120 > 100
+    assert f125 == pytest.approx(math.sqrt(f120 * f130), rel=0.15)     # B/B0 узлы строк различаются, точное равенство не ожидается
+    assert f125 < 0.1 * (f120 + f130) / 2
+
+
+def test_zero_node_falls_back_to_linear():
+    spec_hi, spec_zero = 100.0 * E_OST ** -2.0, np.zeros_like(E_OST)
+    t = _synthetic_table([(1.0, 1.0, spec_hi), (2.0, 1.0, spec_zero)])
+    f_mid = t.integral_flux(1.5, 1.0, 30.0).value_per_cm2_s
+    assert f_mid == pytest.approx(0.5 * t.integral_flux(1.0, 1.0, 30.0).value_per_cm2_s, rel=1e-9)
+
+
+def test_orbit_average_flux_order_of_magnitude_guard():
+    """Проверка ПОРЯДКА величины (не валидация): средний по 24 ч трассы OEM 10.05.2024 всенаправленный
+    поток ≥30 МэВ по табл. А.2.1 с эксцентричным диполем лежит в диапазоне 10…1000 см⁻²·с⁻¹.
+    Ловит грубые ошибки единиц (лишний 4π, шаг 60 с вместо минут), не подтверждает модель по внешнему эталону —
+    независимого цитируемого числа AP-8 MIN для 400 км/51,6° в репозитории пока нет (объявлено)."""
+    from vkd.assess.magcoords import belt_coordinates
+    from vkd.orbit import trajectory
+    t0 = datetime(2024, 5, 10, 12, tzinfo=timezone.utc)
+    _, pts = trajectory(t0, 1440, 24000, mode='history_review', cutoff_utc=t0)
+    ecc, _ = belt_coordinates(pts, os.path.join(ROOT, 'data', 'orbit', 'IGRF13.shc'))
+    t = BeltTable('min')
+    vals = [t.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s for p in ecc]
+    known = [v for v in vals if v is not None]
+    mean = sum(known) / len(vals)          # точки без модели — вне пояса, вклад 0 (объявленная граница сетки)
+    assert 10.0 < mean < 1000.0, mean
