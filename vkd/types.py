@@ -127,6 +127,12 @@ class TrajectoryPoint:
     mag_method: MagMethod
     mag_status: str                    # "ok" | "outside_model" | "approximation" | "inconsistent_BB0"
     in_saa: Optional[bool]
+    # Чем посчитана cutoff_GV именно в этой точке; поле со значением по умолчанию, чтобы старые
+    # позиционные вызовы не ломались. "ost_zh1_table" — таблица Ж.1 ОСТ 134-1044-2007 с пересчётом
+    # высоты (Ж.3); "dipole_centred" — запасная вертикальная формула Штёрмера на центральном
+    # наклонённом диполе (вне широт таблицы или при недоступном файле); "none" — значения нет;
+    # None — происхождение не проставлено (точка построена не модулем орбиты).
+    cutoff_kind: Optional[str] = None
 
 
 @dataclass(frozen=True)
