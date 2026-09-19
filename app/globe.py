@@ -349,21 +349,21 @@ _TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <title>Глобус ВКД-Риск</title>
 <style>
-  /* Палитра сцены — та же, что у страницы: фон #0e1117, текст #e8ebf2, приглушённый #a7b0c0,
-     разделитель #242b38. Космос тёмный, и единственное яркое пятно в кадре — сама Земля.
+  /* Палитра сцены — та же, что у страницы: фон #08090b, текст #e4e7ea, приглушённый #9da1a8,
+     разделитель #202328. Космос тёмный, и единственное яркое пятно в кадре — сама Земля.
      Гарнитура одна на всё: панели, подписи меток на шаре и строка бегунка. */
-  /* Гарнитура: Public Sans (шрифт государственного стандарта США, которым набран сайт NASA),
+  /* Гарнитура: IBM Plex Sans (шрифт государственного стандарта США, которым набран сайт NASA),
      дальше системная без засечек. Адресом шрифт не подключается — посторонних адресов в
      компоненте нет; не окажется в системе, встанет следующий, а кегли и начертания заданы
      числами и не поплывут.
      Межстрочное у мелкого текста свободное (1,55): мелкое читают построчно, ему нужен воздух.
      У крупного оно тесное — см. подписи меток на шаре. Одинаковое межстрочное везде — первое,
      что выдаёт любительскую вёрстку. */
-  html,body{margin:0;height:100%;background:#0e1117;color:#e8ebf2;overflow:hidden;
-    font-family:"Public Sans",Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.55;
+  html,body{margin:0;height:100%;background:#08090b;color:#e4e7ea;overflow:hidden;
+    font-family:"IBM Plex Sans",Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.55;
     -webkit-font-smoothing:antialiased}
   #scene{position:absolute;inset:0}
-  .panel{position:absolute;background:rgba(22,27,38,0.88);border:1px solid #242b38;border-radius:8px;
+  .panel{position:absolute;background:rgba(22,27,38,0.88);border:1px solid #202328;border-radius:8px;
     padding:11px 13px}
   #legend{left:14px;top:14px;font-size:12px;font-weight:500}
   #ctl{right:14px;top:14px;padding:0;background:none;border:none}
@@ -373,25 +373,25 @@ _TEMPLATE = r"""<!DOCTYPE html>
   #foot{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:flex-end;
     gap:16px;justify-content:space-between;pointer-events:none}
   #foot>*{pointer-events:auto}
-  #stat{flex:1;min-width:0;text-align:right;font-size:12px;color:#a7b0c0}
+  #stat{flex:1;min-width:0;text-align:right;font-size:12px;color:#9da1a8}
   /* Ширина 320 px подобрана по самой длинной подписи «дд.мм чч:мм UTC · |B| 24 000 нТл · в аномалии». */
   #tl{position:static;width:320px;flex:none;display:none}
-  #tl .ttl{color:#a7b0c0;font-size:12px;margin-bottom:7px}
+  #tl .ttl{color:#9da1a8;font-size:12px;margin-bottom:7px}
   /* Бегунок нарисован сам, а не оставлен браузеру: дорожка цветом разделителя, ползунок цветом
      нашего расчёта. Своя рамка фокуса нужна затем, чтобы вместо неё браузер не рисовал
      собственную оранжевую — оранжевого в палитре экрана нет. */
   #tl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:16px;margin:2px 0 7px;
     background:transparent;cursor:pointer}
-  #tl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:#242b38}
+  #tl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:#202328}
   #tl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;
-    margin-top:-5px;border-radius:50%;background:#7ab8f5;border:2px solid #0e1117}
-  #tl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#242b38}
-  #tl input[type=range]::-moz-range-thumb{width:12px;height:12px;border:2px solid #0e1117;
-    border-radius:50%;background:#7ab8f5}
-  #tl input[type=range]:focus{outline:2px solid #7ab8f5;outline-offset:3px}
+    margin-top:-5px;border-radius:50%;background:#a1bed5;border:2px solid #08090b}
+  #tl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#202328}
+  #tl input[type=range]::-moz-range-thumb{width:12px;height:12px;border:2px solid #08090b;
+    border-radius:50%;background:#a1bed5}
+  #tl input[type=range]:focus{outline:2px solid #a1bed5;outline-offset:3px}
   /* Цифры моноширинные (tabular-nums): при перетаскивании бегунка время и поле меняются каждый
      кадр, и на пропорциональных цифрах строка дёргалась бы по ширине на каждом знаке. */
-  #tl .val{white-space:nowrap;font-weight:600;font-size:14px;color:#e8ebf2;line-height:1.2;
+  #tl .val{white-space:nowrap;font-weight:600;font-size:14px;color:#e4e7ea;line-height:1.2;
     font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
   /* Легенда — сетка с одинаковым шагом строк и одинаковыми образцами, а не список разной длины. */
   .row{display:flex;align-items:center;gap:11px;height:24px}
@@ -399,13 +399,13 @@ _TEMPLATE = r"""<!DOCTYPE html>
   .bx{width:26px;height:13px;border-radius:3px;flex:none;opacity:.55}
   /* Приглушённое в легенде показано так же, как на шаре: тот же цвет, меньшая насыщенность. */
   .dim{opacity:.45}
-  button{background:rgba(22,27,38,0.88);color:#e8ebf2;border:1px solid #242b38;border-radius:8px;
+  button{background:rgba(22,27,38,0.88);color:#e4e7ea;border:1px solid #202328;border-radius:8px;
     padding:8px 13px;cursor:pointer;font-size:12px;font-family:inherit}
-  button:hover{border-color:#7ab8f5;color:#7ab8f5}
+  button:hover{border-color:#a1bed5;color:#a1bed5}
   #err{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    padding:28px;text-align:center;line-height:1.65;background:#0e1117;color:#e8ebf2}
+    padding:28px;text-align:center;line-height:1.65;background:#08090b;color:#e4e7ea}
   #err b{display:block;margin-bottom:8px;font-size:14px}
-  #err .hint{margin-top:12px;color:#7ab8f5;border:1px solid #7ab8f5;border-radius:8px;padding:8px 13px}
+  #err .hint{margin-top:12px;color:#a1bed5;border:1px solid #a1bed5;border-radius:8px;padding:8px 13px}
 </style>
 <script>/*__VKD_DATA__*/</script>
 </head>
@@ -430,14 +430,14 @@ var D = window.VKD || null;
    Строка данных несёт цвет ПРОИСХОЖДЕНИЯ величины (синий — наш расчёт), а оттенок под тёмную
    сцену выбирает компонент: от этого строка данных не меняется ни на байт, и прежний экран,
    который сверяет её контрольную сумму, ничего не замечает. */
-var DARK = {"#1f4e79": "#7ab8f5", "#5dade2": "#4f8fc0", "#85c1e9": "#3f6f97",
-            "#c0392b": "#f58b7f", "#7f8c8d": "#9aa5b5"};
+var DARK = {"#1f4e79": "#a1bed5", "#5dade2": "#7b93a6", "#85c1e9": "#5c6e7c",
+            "#c0392b": "#c17d68", "#7f8c8d": "#91969c"};
 function dark(c) { var k = String(c).toLowerCase(); return DARK[k] || c; }
 /* Трасса горизонта — цвет вспомогательных линий, аномалия — красный тёмной темы: насыщенный,
    но не кислотный. Кант меток белый: на тёмной текстуре океана он их и держит. */
-var TRACK_C = 0x9aa5b5, SAA_C = 0xf58b7f, HALO_C = 0xffffff;
+var TRACK_C = 0x91969c, SAA_C = 0xc17d68, HALO_C = 0xffffff;
 /* Свечение атмосферы: цвет нашего расчёта, три тонкие оболочки по краю диска. */
-var AIR_C = 0x7ab8f5;
+var AIR_C = 0xa1bed5;
 var scene, camera, renderer, globe, texInfo = "текстура загружается…", maxTex = 0;
 var camR = 2.9, camLat = 0.30, camLon = 0.6, dragging = false, px = 0, py = 0, idle = 0;
 var spinning = true, lastFrame = 0;
@@ -645,7 +645,7 @@ function buildTrack() {
    с удвоенной плотностью. Высота плашки 40 px и высота в сцене 0,09 — как было; ширина в сцене
    берётся из тех же пропорций, поэтому буквы не растягиваются. */
 var LBL_H = 34, LBL_PAD = 13, LBL_WORLD_H = 0.080;
-var LBL_FONT = "600 14px 'Public Sans', Inter, 'Segoe UI', Arial, sans-serif";
+var LBL_FONT = "600 14px 'IBM Plex Sans', Inter, 'Segoe UI', Arial, sans-serif";
 
 function label(text, color, v) {
   var cv = document.createElement("canvas"), s = 2, c = cv.getContext("2d");
@@ -659,7 +659,7 @@ function label(text, color, v) {
   c.fillStyle = "rgba(14,17,23,0.82)";
   c.strokeStyle = dark(color); c.lineWidth = 1.5;
   c.beginPath(); c.rect(1, 1, w - 2, LBL_H - 2); c.fill(); c.stroke();
-  c.fillStyle = "#e8ebf2";
+  c.fillStyle = "#e4e7ea";
   c.font = LBL_FONT;
   c.textAlign = "center"; c.textBaseline = "middle";
   c.fillText(text, w / 2, LBL_H / 2);
@@ -876,7 +876,7 @@ function init() {
   }
   maxTex = renderer.getContext().getParameter(renderer.getContext().MAX_TEXTURE_SIZE);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x0e1117, 1);
+  renderer.setClearColor(0x08090b, 1);
   renderer.setSize(host.clientWidth, host.clientHeight);
   host.appendChild(renderer.domElement);
   scene = new THREE.Scene();
