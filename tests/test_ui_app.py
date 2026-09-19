@@ -2410,11 +2410,11 @@ def test_profil_odin_grafik_s_kruglymi_otmetkami_polosoy_i_pikom():
     # пик подписан ВРЕМЕНЕМ
     ann = [str(a.text) for a in (fig.layout.annotations or ())]
     assert any(re.fullmatch(r'пик \d\d:\d\d', a) for a in ann), ann
-    body = ' '.join(names) + ' ' + ribbon_caption_ru(sc, 30.0, duration_min=240)
+    body = ' '.join(names) + ' ' + ribbon_caption_ru(sc, duration_min=240)
     for bad in ('балл', 'нормиров', 'индекс риска'):
         assert bad not in body, bad
     # подпись — одна строка обычными словами про кривую, полосу и точку
-    cap = ribbon_caption_ru(sc, 30.0, duration_min=240)
+    cap = ribbon_caption_ru(sc, duration_min=240)
     assert 'Чем ниже кривая' in cap and 'полоса' in cap and 'точка' in cap, cap
     rows = scan_best_rows(sc)
     assert 1 <= len(rows) <= 5, rows
@@ -2693,7 +2693,7 @@ def test_glavnyy_ekran_razgruzhen_i_nichego_ne_poteryano():
     assert 'Цвет = происхождение' in body or 'Происхождение величин' in body, body[:300]
     # приглушённая подпись профиля — одна строка
     from app.ui import ribbon_caption_ru
-    cap = ribbon_caption_ru({'candidates': []}, 30.0, duration_min=360)
+    cap = ribbon_caption_ru({'candidates': []}, duration_min=360)
     assert cap.count('.') <= 1 and len(cap) < 160, cap
 
 

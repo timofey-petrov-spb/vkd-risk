@@ -668,14 +668,14 @@ if traj:
 else:
     st.write('Трассы нет: орбита недоступна.')
 
-# ================================================================= блок 5: лента окон
+# ================================================================= блок 5: профиль воздействия
 st.markdown('<div class="sect">Профиль воздействия на сроке поиска</div>', unsafe_allow_html=True)
 if scan is not None:
     # Пункт 3: один график вместо двух панелей с ломаными. Ось Y — круглые степени десяти,
     # рекомендованный промежуток залит, пик подписан временем (app.ui.windows_ribbon).
     st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV, duration_min=duration_min)),
                     width='stretch', config=PLOTLY_CONFIG)
-    st.caption(ribbon_caption_ru(scan, th.e_min_MeV, duration_min=duration_min))
+    st.caption(ribbon_caption_ru(scan, duration_min=duration_min))
     _best_rows = scan_best_rows(scan)
     if _best_rows:
         st.dataframe(_best_rows, width='stretch', hide_index=True,
