@@ -205,6 +205,25 @@ def test_dva_predlozheniya_obychnymi_slovami(name):
     assert 'минут' in why and ('раз' in why or 'не набирается' in why)
 
 
+@pytest.mark.parametrize('value,expected', [
+    (1.0, 'минута'), (2.0, 'минуты'), (4.0, 'минуты'), (5.0, 'минут'), (11.0, 'минут'),
+    (21.0, 'минута'), (107.0, 'минут'), (5.69, 'минуты'), (0.5, 'минуты'),
+])
+def test_sklonenie_minut_v_populyarnoy_fraze(value, expected):
+    """Русский счёт: «1 минута», «2 минуты», «5 минут», «21 минута», «5,7 минуты».
+    Ошибка склонения в двух предложениях, которые человек читает первыми, видна сразу."""
+    assert R._minutes_ru(value).endswith(expected), R._minutes_ru(value)
+
+
+@pytest.mark.parametrize('value,expected', [
+    (1.5, 'в 1,5 раза'), (2.4, 'в 2,4 раза'), (5.0, 'в 5 раз'), (21.0, 'в 21 раз'),
+    (22.0, 'в 22 раза'), (600.0, 'в 600 раз'), (1412.0, 'в 1400 раз'),
+])
+def test_sklonenie_raz_v_populyarnoy_fraze(value, expected):
+    """«в 2,4 раза», «в 21 раз», «в 600 раз»; отношение округляется до двух значащих цифр."""
+    assert R._times_ru(value) == expected
+
+
 def test_populyarnoe_obyasnenie_nazyvaet_hudsheye_vremya_i_pik():
     """Числа объяснения — те самые, что в снимке: худшее время по минутам и время пика."""
     S, _pdf, text = built('quiet_2024-05-03_12Z')
@@ -254,6 +273,16 @@ def test_shrift_bez_kirillicy_otvergaetsya_s_nazvaniem_nepokrytyh_znakov(monkeyp
     with pytest.raises(R.PdfNotBuilt) as err:
         R.choose_font(set('Рекомендация'))
     assert 'нет шрифта' in str(err.value) and 'U+04' in str(err.value)
+
+
+def test_vzyatyy_shrift_nazvan_v_svoystvah_fayla():
+    """Каким шрифтом набрано — записано в свойствах файла: при разборе «почему буквы такие»
+    это первый вопрос, и ответ на него не должен требовать чтения кода."""
+    import pypdf
+    _S, pdf, _text = built('quiet_2024-05-03_12Z')
+    meta = pypdf.PdfReader(io.BytesIO(pdf)).metadata
+    assert meta is not None and 'ВКД-Риск' in (meta.get('/Creator') or '')
+    assert '.ttf' in (meta.get('/Creator') or '').lower(), 'в свойствах не назван файл шрифта'
 
 
 def test_font_zadannyy_operatorom_idyot_pervym(monkeypatch):

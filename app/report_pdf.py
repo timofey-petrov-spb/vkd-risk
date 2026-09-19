@@ -42,8 +42,8 @@ import struct
 from datetime import timedelta
 
 from app.export import (COV_RU, DISABLED_RU, KIND_RU, MODE_ID_RU, SCAN_VERDICT_RU, VERDICT_TITLE,
-                        _as_screen_factor, _dates_outside_urls, _dt, _git_sha, _min_md,
-                        _mode_id, _robustness_line, _scan_answer_md, _span_end, _SRC_KEY_RU, _t,
+                        _as_screen_factor, _dates_outside_urls, _dt, _git_sha, _mode_id,
+                        _robustness_line, _scan_answer_md, _span_end, _SRC_KEY_RU, _t,
                         _tolerance_line, _traj_line, _win_title, fmt)
 from app.ui import dates_ru, factor_value_ru, phrase_ru, screen_text, source_name_ru, status_ru
 
@@ -76,6 +76,11 @@ LEADING_RATIO = 1.25                     # межстрочный интерва
 
 # Заголовки разделов — в том порядке, в котором они обязаны идти в готовом документе.
 # Тест сверяет порядок по этому же списку, а не по своей копии строк.
+#
+# О нумерации. В ТЗ разделы перечислены с первого по шестой, и титул там первый. В документе
+# титульный лист номера не несёт — так принято в отчётах, — поэтому печатные номера идут с
+# единицы у входных данных. Порядок и состав при этом ровно те, что названы в ТЗ, и в
+# docstring каждого раздела ниже стоит его номер ПО ТЗ.
 SECTION_TITLES = (
     'ВКД-Риск',
     '1. Входные данные',
@@ -434,7 +439,7 @@ def _minutes_ru(x: float) -> str:
     """«4 минуты», «74 минут», «5,7 минуты» — обычные правила русского счёта.
 
     Округление здесь своё, а не экранное: до десятых при значении меньше десяти минут и до
-    целых дальше. Экранное правило (`_min_md`) округляет 5,69 до 6, и в популярной фразе
+    целых дальше. Экранное правило минут (`app.export._min_md`) округляет 5,69 до 6, и в популярной фразе
     получилось бы «6 минут» против «5,69» в таблице двумя абзацами выше — читатель имеет
     право считать это разными числами. Дробное число требует родительного падежа
     единственного числа («5,7 минуты»), целое — по последней цифре.
@@ -466,6 +471,8 @@ def _times_ru(ratio: float) -> str:
     else:
         n = float('%.2g' % ratio)
         s = '%d' % round(n)
+    if ',' in s:
+        return 'в %s раза' % s        # дробное число требует родительного падежа: «в 2,4 раза»
     last, last2 = int(n) % 10, int(n) % 100
     word = 'раз' if (last == 0 or last >= 5 or 11 <= last2 <= 14) else ('раза' if last != 1 else 'раз')
     return 'в %s %s' % (s, word)
@@ -535,7 +542,8 @@ def plain_why_ru(S: dict) -> str:
 
 # ---------------------------------------------------------------- разделы
 def _title_block(S: dict) -> list[Block]:
-    """Раздел 1 — титул: название сервиса, время расчёта, режим, версия алгоритма, коммит."""
+    """Раздел 1 по ТЗ — титул (печатного номера не несёт): название сервиса, время расчёта,
+    режим, версия алгоритма, коммит кода."""
     req = S.get('request') or {}
     commit = S.get('git_commit') or _git_sha()
     rows = [['Дата и время расчёта', _dt(S.get('computed_utc'), '%d.%m.%Y %H:%M UTC')],
@@ -583,7 +591,7 @@ def _sources_rows(S: dict) -> list[list[str]]:
 
 
 def _input_blocks(S: dict) -> list[Block]:
-    """Раздел 2 — входные данные: чем спросили и на чём считали."""
+    """Раздел 2 по ТЗ, печатается как «1. Входные данные»: чем спросили и на чём считали."""
     req, sc = S.get('request') or {}, (S.get('scan') or {})
     frm, to = _search_span(S)
     # Состояния отключённых источников называются теми же словами, что в боковой панели экрана
@@ -650,7 +658,7 @@ def _factor_rows(win: dict, mode_id: str | None) -> list[list[str]]:
 
 
 def _factors_blocks(S: dict) -> list[Block]:
-    """Раздел 3 — количественная оценка факторов."""
+    """Раздел 3 по ТЗ, печатается как «2. Количественная оценка факторов»."""
     out = [_h(SECTION_TITLES[2])]
     rank = _ranking_rows(S)
     rec = _recommended_candidate(S)
@@ -702,7 +710,8 @@ def _conditions_of(S: dict) -> tuple[list[str], int]:
 
 
 def _recommendation_blocks(S: dict) -> list[Block]:
-    """Раздел 4 — рекомендация: когда выходить, почему обычными словами, условия."""
+    """Раздел 4 по ТЗ, печатается как «3. Рекомендация»: когда выходить, почему обычными
+    словами, условия проверки."""
     sc, r = S.get('scan') or {}, (S.get('recommendation') or {})
     verdict = (SCAN_VERDICT_RU.get(sc.get('verdict')) if sc else None) or \
         VERDICT_TITLE.get(r.get('verdict'), str(r.get('verdict') or '—'))
@@ -741,7 +750,8 @@ def _recommendation_blocks(S: dict) -> list[Block]:
 
 
 def _limits_blocks(S: dict) -> list[Block]:
-    """Раздел 5 — границы применимости. Здесь собрано то, что с главного экрана убрано: охват,
+    """Раздел 5 по ТЗ, печатается как «4. Границы применимости». Здесь собрано то, что убрано
+    с главного экрана пунктом 1 того же ТЗ: охват,
     непокрытые механизмы, область вывода, устойчивость, допуск и чего сервис не заявляет."""
     r, sc = S.get('recommendation') or {}, (S.get('scan') or {})
     out = [_h(SECTION_TITLES[4]),
@@ -779,7 +789,7 @@ def _limits_blocks(S: dict) -> list[Block]:
 
 
 def _appendix_blocks(S: dict) -> list[Block]:
-    """Раздел 6 — приложение: все перебранные начала таблицей."""
+    """Раздел 6 по ТЗ, печатается как «5. Приложение»: все перебранные начала таблицей."""
     sc = S.get('scan') or {}
     out = [_h(SECTION_TITLES[5])]
     cands = sc.get('candidates') or []
@@ -990,7 +1000,10 @@ def build_pdf(S: dict) -> bytes:
     from reportlab.platypus import SimpleDocTemplate
 
     blocks = document_blocks(S)
-    font = choose_font(set(document_text(blocks)) - set(' \n'))
+    footer = _footer_text(S)
+    # Колонтитул рисуется мимо абзацев, прямо на холсте, и его знаки тоже обязаны быть в шрифте:
+    # иначе номер страницы и подпись внизу встали бы квадратами в проверенном документе.
+    font = choose_font(set(document_text(blocks) + footer + 'стр. из 0123456789') - set(' \n'))
     pdfmetrics.registerFont(TTFont(font.regular, font.regular_path))
     if font.bold_is_real:
         pdfmetrics.registerFont(TTFont(font.bold, font.bold_path))
@@ -999,8 +1012,11 @@ def build_pdf(S: dict) -> bytes:
         buf, pagesize=A4, leftMargin=MARGIN_LEFT_MM * mm, rightMargin=MARGIN_RIGHT_MM * mm,
         topMargin=MARGIN_TOP_MM * mm, bottomMargin=MARGIN_BOTTOM_MM * mm,
         title='%s — отчёт о расчёте %s' % (SERVICE_TITLE, _dt(S.get('computed_utc'), '%d.%m.%Y %H:%M UTC')),
-        author='ВКД-Риск', subject='Планирование выхода в открытый космос', lang='ru')
-    doc.build(_flowables(blocks, font), canvasmaker=_numbered_canvas(font.regular, _footer_text(S)))
+        author='ВКД-Риск', subject='Планирование выхода в открытый космос', lang='ru',
+        # Какой шрифт взят — в свойствах файла, а не на странице: на странице это лишнее, а при
+        # разборе «почему буквы такие» первый вопрос именно этот.
+        creator='ВКД-Риск · шрифт %s' % font.describe())
+    doc.build(_flowables(blocks, font), canvasmaker=_numbered_canvas(font.regular, footer))
     return buf.getvalue()
 
 
