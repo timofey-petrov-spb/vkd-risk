@@ -43,12 +43,12 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI
                     MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESET_CHANGED_RU, PRESETS,
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE, SEV_RU, STRICT_RU,
                     TASK_HINT_RU, VERDICT_TITLE,
-                    accounted_lines, accounted_lines_from_scan,
+                    SCAN_SOURCES_RU, accounted_lines, accounted_lines_from_scan, accounted_sources,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
                     coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
                     grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands,
-                    not_accounted_ru, panel,
+                    not_accounted_ru, panel, split_panel_rows,
                     pill, plan_change_ru, plan_state, plural_ru, preset_matches,
                     ratio_ru, raw_record, recommendation_panel, record_label_ru, record_no_url_ru, record_release_ru,
                     record_url, registry_row, ribbon_caption_ru, robustness_gain_ru,
@@ -296,10 +296,11 @@ search_h = int(_t2.number_input('Начать в ближайшие, ч', min_va
                                 help='Срок, внутри которого сервис ищет начало выхода; постановка — до суток.'))
 search_min = int(search_h) * 60
 _t3.markdown('<div class="btnpad"></div>', unsafe_allow_html=True)   # кнопка встаёт вровень с полями
-_t3.button('Найти окна', key='find_windows', width='stretch',
-           help='Повторяет поиск на тех же данных: поля пересчитываются и без нажатия.')
-_t4.caption('Выход на **%s**, начать в ближайшие **%s**. Режим: **%s** — %s; меняется в боковой панели. %s'
-            % (hm_ru(duration_min), hm_ru(search_min), mode_ru, MODE_SUB[mode], TASK_HINT_RU))
+_t3.button('Найти окна', key='find_windows', width='stretch', help=TASK_HINT_RU)
+# Одна приглушённая строка на блок: длительность и срок уже стоят в самих полях, повторять их
+# словами незачем. Как работает кнопка — в её подсказке, а не третьей строкой на экране.
+_t4.caption('Выход на %s, начать в ближайшие %s · режим: %s · времена UTC'
+            % (hm_ru(duration_min), hm_ru(search_min), mode_ru))
 
 # --- сдвиги окон ручного разбора: значения берутся из состояния ДО расчёта, сами ползунки стоят
 # в свёрнутом разделе «Разобрать конкретные окна» ниже (раздел 3.1 техзадания). Порядок обязателен:
@@ -531,7 +532,10 @@ else:
                      'уведомления и карточки событий NASA DONKI', 'obs' if _cat else 'none'))
 if S['is_simulated']:
     row2.append(('Сценарий «что если»', 'моделируемые значения', 'часть величин задана пользователем, не источником', 'fc'))
-_panel_html = panel([row1, row2])       # печатается в блоке 7 «Состояние источников»
+# Полоса печатается в блоке 7 «Состояние источников»: короткие подписи в ячейках, полные —
+# раскрытием под полосой (у шести ячеек подряд подпись в три строки читать было нечем).
+_panel_short_rows, _panel_details = split_panel_rows([row1, row2])
+_panel_html = panel(_panel_short_rows)
 # Признак исключения источника берётся из ЗАПРОСА (что выставил пользователь), а не из подстроки
 # «исключён» в тексте статуса: слой источников дописывает это слово в свои штатные пояснения (R4-11).
 issues = source_issues(src, th, mode, kp_excluded_hist=kp_off_hist, tle_fetch=tm.get('tle_fetch_status'), pro=pro,
@@ -624,9 +628,17 @@ if traj:
                 _gkw = {'recommended': rec.preferred} if (_GLOBE_RECOMMENDED and rec.preferred) else {}
                 _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0, **_gkw)
             globe.render_globe(_gp)
-            st.caption(globe.caption(_gp))
-            if pro:
-                st.caption(globe.tech_line(_gp))
+            # Подпись глобуса длинная и своя: на первом экране остаётся первая фраза — что
+            # нарисовано, — остальное вместе с технической строкой уходит раскрытием.
+            _gcap = globe.caption(_gp)
+            _gc_head, _gc_dot, _gc_rest = _gcap.partition('. ')
+            st.caption(_gc_head + ('.' if _gc_dot else ''))
+            if _gc_rest or pro:
+                with st.expander('Подробнее о глобусе: чем посчитано и чего не даёт', expanded=False):
+                    if _gc_rest:
+                        st.caption(_gc_rest)
+                    if pro:
+                        st.caption(globe.tech_line(_gp))
         except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
             LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
             st.warning('Глобус не построен (%s). Переключите вид на «Плоская карта» — данные те же.'
@@ -672,17 +684,24 @@ _ACC_HEAD_RU = {'point': 'Величины рекомендованного ок
 _acc_head = _ACC_HEAD_RU.get((scan_ans or {}).get('kind')) if scan_cand is not None else None
 if not _acc_head:
     _acc_head = 'Величины предпочтительного окна' if rec.preferred is not None else 'Величины окна 1'
-st.markdown('**%s** — каждая со своей единицей, происхождением и источником.' % _acc_head)
+st.markdown('**%s** — со своей единицей и происхождением.' % _acc_head)
+_acc_sources = []
 if _acc_target is not None:
-    for _line in accounted_lines(_acc_target, R.raw_records):
+    for _line in accounted_lines(_acc_target):
         st.markdown(_line, unsafe_allow_html=True)
+    _acc_sources = accounted_sources(_acc_target, R.raw_records)
 elif scan_cand is not None:
-    st.caption('Полный разбор рекомендованного окна считается только для показанных кандидатов; '
-               'ниже — величины, по которым перебор их и сравнивал.')
     for _line in accounted_lines_from_scan(scan_cand, th.e_min_MeV):
         st.markdown(_line, unsafe_allow_html=True)
+    _acc_sources = list(SCAN_SOURCES_RU)
 else:
     st.write('Величин нет: окна не посчитаны.')
+# Источник каждой величины — раскрытием: прослеживаемость сохранена целиком, но вторую половину
+# строки у каждой из десяти величин первый экран больше не несёт.
+if _acc_sources:
+    with st.expander('Откуда взята каждая величина: первоисточник и формула', expanded=False):
+        for _line in _acc_sources:
+            st.markdown(_line)
 # Легенда происхождения стоит ровно здесь, рядом с плашками, и один раз на весь экран.
 if pro:
     st.markdown('<div class="legend">Происхождение величин: %s — измерено источником; %s — выпуск с указанием времени публикации; '
@@ -693,13 +712,23 @@ else:
     st.markdown('<div class="legend">Цвет = происхождение: синий — наш расчёт, зелёный — наблюдение, '
                 'янтарный — внешний прогноз, красный — условие проверки или аномалия, серый — данных нет.</div>',
                 unsafe_allow_html=True)
-st.markdown('**Чего сервис не учёл** — поимённо и с причиной.')
-for _line in not_accounted_ru(S, mode):
-    st.markdown('- ' + _line)
+# «Чего не учли» — раскрытием, и число пунктов названо прямо в заголовке: пропуски никуда не
+# делись и видны одним кликом, но шесть длинных строк на первом экране забивали сам ответ.
+_not_acc = not_accounted_ru(S, mode)
+if _not_acc:
+    with st.expander('Чего сервис не учёл: %s %s — поимённо и с причиной'
+                     % (fmt(len(_not_acc)), plural_ru(len(_not_acc), ('пункт', 'пункта', 'пунктов'))),
+                     expanded=False):
+        for _line in _not_acc:
+            st.markdown('- ' + _line)
 
 # ================================================================= блок 7: состояние источников
 st.markdown('<div class="sect">Состояние источников: чем считали</div>', unsafe_allow_html=True)
 st.markdown(_panel_html, unsafe_allow_html=True)
+if _panel_details:
+    with st.expander('Подробнее о каждой величине полосы: происхождение, момент и давность', expanded=False):
+        for _lbl, _full in _panel_details:
+            st.markdown('- **%s** — %s' % (_lbl, _full))
 if meta is None:
     st.error('**Орбита недоступна.** %s Оценка без траектории невозможна: покрытие обязательной линии отсутствует, '
              'рекомендации нет. Заглушка не подставляется.' % status_ru(tm['status'], pro))
