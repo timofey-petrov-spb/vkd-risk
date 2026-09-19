@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import html
+import math
 import re
 from datetime import datetime, timedelta
 
@@ -2871,7 +2872,6 @@ def _decade_ticks(lo: float, hi: float) -> tuple[list[float], list[str]]:
     подписи Plotly — латинские сокращения, а на экране рядом стоит «2,43·10⁶».
     Восемь подписей — предел читаемости оси высотой около 260 пикселей; дальше шаг через порядок.
     """
-    import math
     k0, k1 = int(math.floor(math.log10(lo))), int(math.ceil(math.log10(hi)))
     if k1 <= k0:
         k1 = k0 + 1
@@ -2922,6 +2922,14 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 360, duration_min=N
     # (CONTRACT.md, раздел 7, правило о молчаливых клампах): при нуле или отрицательном значении
     # шкала остаётся линейной, и подпись оси называет это прямо.
     log_ok = bool(good_flu) and min(good_flu) > 0
+    # Границы оси берутся РОВНО по круглым отметкам, а не автоподбором: тогда залитая полоса
+    # рекомендации рисуется во всю высоту поля и читается как полоса, а не как висящий
+    # посреди графика прямоугольник.
+    tickvals, ticktext = _decade_ticks(min(good_flu), max(good_flu)) if log_ok else ([], [])
+    # Поле чуть шире крайних отметок: точка, лежащая ровно на нижней отметке, наполовину уходила
+    # за ось и читалась как обрыв кривой. 0,06 порядка — примерно 15 % высоты одной декады.
+    _LOG_PAD = 0.06
+    y_range = [math.log10(tickvals[0]) - _LOG_PAD, math.log10(tickvals[-1]) + _LOG_PAD] if log_ok else None
     # Доли высоты: профиль занимает почти всё, полоса-подложка — тонкая лента снизу.
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05,
                         row_heights=[0.82, 0.18])
@@ -2937,7 +2945,7 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 360, duration_min=N
         if a_from == a_to:
             half = timedelta(minutes=float(scan.get('step_min') or 10) / 2.0)
             a_from, a_to = a_from - half, a_to + half
-        lo_y, hi_y = (min(good_flu) / 3.0, max(good_flu) * 3.0) if log_ok else (0.0, max(good_flu) * 1.1)
+        lo_y, hi_y = (10.0 ** y_range[0], 10.0 ** y_range[1]) if log_ok else (0.0, max(good_flu) * 1.1)
         fig.add_trace(go.Scatter(x=[a_from, a_from, a_to, a_to], y=[lo_y, hi_y, hi_y, lo_y],
                                  mode='lines', fill='toself', name='рекомендованный промежуток',
                                  line={'color': 'rgba(0,0,0,0)'}, fillcolor=CALC_BLUE, opacity=0.16,
@@ -2964,8 +2972,8 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 360, duration_min=N
                              hovertemplate='начало %{x|%d.%m %H:%M} · %{y} мин в аномалии<extra></extra>'),
                   row=2, col=1)
     if log_ok:
-        tickvals, ticktext = _decade_ticks(min(good_flu), max(good_flu))
         fig.update_yaxes(type='log', tickmode='array', tickvals=tickvals, ticktext=ticktext,
+                         range=y_range,
                          title_text='набрано за окно, част./см² (%s)' % LOWER_IS_BETTER_RU, row=1, col=1)
     else:
         fig.update_yaxes(title_text='набрано за окно, част./см², шкала линейная (%s)' % LOWER_IS_BETTER_RU,
