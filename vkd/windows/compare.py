@@ -39,6 +39,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
 from vkd.assess import dose as suit_dose
+from vkd.assess import debris as debris_model
 from vkd.assess.coverage import gaps_ru, uncovered_minutes_by_reason
 from vkd.assess.meteoroids import SHOWERS_SOURCE_RU, active_showers
 from vkd.assess.trapped import BeltTable
@@ -923,6 +924,25 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     ) + tuple(fc_factors)
 
     # --- механизм 2: статистика метеороидов ECSS по высоте трассы (B2 по A5) --------
+    # Техногенный мусор по ГОСТ Р 25645.167-2005. Считается ЗДЕСЬ, а не передаётся извне:
+    # модели нужны только времена и высоты точек, они уже есть в срезе трассы окна, и лишний
+    # параметр в сигнатуре сломал бы позиционные вызовы из перебора начал.
+    # Наклонение берётся как максимум модуля широты по трассе окна: за шесть часов станция
+    # проходит около четырёх витков и доходит до крайних широт, то есть до наклонения. Жёсткой
+    # константы 51,6 градуса здесь нет намеренно — сервис не должен предполагать конкретный аппарат.
+    debris_res = None
+    try:
+        _lat_max = max(abs(p.lat_deg) for p in traj)
+        debris_res = debris_model.debris_hits_track(
+            [p.t_utc for p in traj], [p.alt_km for p in traj],
+            inclination_deg=_lat_max, area_m2=1.0)
+    except (ValueError, KeyError, TypeError, OSError, ZeroDivisionError) as exc:
+        # Отказ модели объявляется причиной, а не подменяется нулём: ноль попаданий и
+        # невозможность посчитать попадания — разные утверждения (CONTRACT, правило 9).
+        debris_res = None
+        debris_error_ru = 'расчёт техногенного мусора не выполнен: %s' % type(exc).__name__
+    else:
+        debris_error_ru = None
     mm_cov = Coverage.NONE if mmod_hits is None else (
         Coverage.PARTIAL if mmod_cov_fraction > 0 else Coverage.NONE)
     showers = active_showers(win.start_utc)
@@ -936,6 +956,14 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                              else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
                                   '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены; ' + MMOD_ROLE_RU
                                   + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),
+                 FactorValue('техногенный мусор, попаданий в пластину 1 м² за окно',
+                             None if debris_res is None else debris_res.N, 'шт', Kind.OWN_CALCULATION,
+                             Presence.UNKNOWN if debris_res is None else Presence.DETECTED,
+                             Coverage.NONE if debris_res is None else Coverage.PARTIAL,
+                             () if debris_res is None else ('gost167:tehnogennoe-veschestvo-2005',) + traj_ids,
+                             debris_error_ru or debris_res.rule,
+                             debris_error_ru or (debris_res.limits_ru
+                                 + '; поток усреднён по витку, поэтому окна этой величиной не различаются')),
                  FactorValue('активных метеорных потоков на дату (календарь IMO)', float(len(showers)), 'шт', Kind.OWN_CALCULATION,
                              Presence.DETECTED if showers else Presence.NOT_DETECTED, Coverage.FULL, ('imo_calendar',),
                              SHOWERS_SOURCE_RU + '; признак активности потока на дату — в число попаданий не входит '
@@ -982,6 +1010,19 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                           'Сумма 49 профилей с тенью Земли и относительной скоростью; входит в итоговое число.'),
                 mm_factor('средняя модель Grün без сезонного перераспределения (для сравнения)',
                           mmod_seasonal['N_mean_background'], 'Контрольная величина; к итогу повторно не прибавляется.')]
+        # Техногенный мусор стоит в ТОМ ЖЕ механизме, потому что это второе слагаемое одного и
+        # того же воздействия — удар частицы в пластину. Складывать два числа нельзя: порог
+        # частицы у стандартов разный (мусор ≥0,1 см, метеороиды ≥0,001 г), поэтому они
+        # печатаются раздельно, каждое со своим порогом в правиле.
+        mm_factors.append(FactorValue(
+            'техногенный мусор, попаданий в пластину 1 м² за окно',
+            None if debris_res is None else debris_res.N, 'шт', Kind.OWN_CALCULATION,
+            Presence.UNKNOWN if debris_res is None else Presence.DETECTED,
+            Coverage.NONE if debris_res is None else Coverage.PARTIAL,
+            () if debris_res is None else ('gost167:tehnogennoe-veschestvo-2005',) + traj_ids,
+            debris_error_ru or debris_res.rule,
+            debris_error_ru or (debris_res.limits_ru
+                + '; поток усреднён по витку, поэтому окна этой величиной не различаются')))
         m2 = MechanismAssessment(
             mechanism_id='mmod_stat', mandatory=True, factors=tuple(mm_factors),
             coverage=Coverage.PARTIAL if available else Coverage.NONE, needs_check=False,
