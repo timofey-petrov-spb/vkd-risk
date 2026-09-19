@@ -574,7 +574,7 @@ def panel(rows) -> str:
     return ''.join(out)
 
 
-def split_panel_rows(rows, max_len: int = 64):
+def split_panel_rows(rows, max_len: int = 80):
     """Разделить подписи ячеек полосы на короткую и полную.
 
     Владелец о прежней полосе: «мелким текстом и текстом разных тонов адекватно с ходу
