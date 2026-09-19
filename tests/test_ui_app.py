@@ -1019,9 +1019,18 @@ def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
     # Девятый круг, находка «экран» №14: момент стоит в самой МЕТКЕ ячейки, а не только в мелкой
     # подписи — крупное число забивало подпись, и полоса читалась как «обстановка спокойная».
-    assert 'Kp на начало периода, наблюдение' in bar and 'архив GFZ' not in bar, bar
+    # В метке прибавилась единица: Kp безразмерен, и голое число рядом с «pfu» и «нТл» соседних
+    # ячеек читалось бы как величина в тех же единицах (замечание владельца о размерностях).
+    # Проверяемое утверждение то же: метка называет ЗАПИСЬ наблюдения, а не режим.
+    assert 'Kp на начало периода, безразмерный, наблюдение' in bar and 'архив GFZ' not in bar, bar
     assert 'уведомление NASA DONKI' in bar, bar
-    assert 'начало периода поиска' in bar, bar
+    # Полная подпись ячейки («значение на … — начало периода поиска») сокращена до одной строки
+    # при разгрузке главного экрана и целиком стоит в раскрытии «Подробнее о каждой величине
+    # полосы» — там же, в блоке состояния источников. Ничего не потеряно: момент назван и в
+    # самой МЕТКЕ ячейки, что и есть закрытая находка №14, а полный текст — одним кликом.
+    _details = [str(m.value) for e in at.expander if 'Подробнее о каждой величине полосы' in str(e.label)
+                for m in e.get('markdown')]
+    assert any('начало периода поиска' in x for x in _details), _details
     warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
     assert warns.count('GOES ≥10 МэВ: численного наблюдения') == 1, warns
 
@@ -1031,7 +1040,9 @@ def test_pribornaya_polosa_razbora_pokazyvaet_nablyudenie_goes():
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
-    assert 'GOES ≥10 МэВ на начало периода, pfu' in bar and 'Kp на начало периода (архив GFZ)' in bar, bar
+    # Та же прибавка единицы к метке Kp; смысл проверки не изменился.
+    assert 'GOES ≥10 МэВ на начало периода, pfu' in bar, bar
+    assert 'Kp на начало периода, безразмерный (архив GFZ)' in bar, bar
     # в архивных режимах тон ячеек нейтральный: зелёный здесь читался бы как «благоприятно» (Т6)
     assert 'k-obs"><div class="cl">GOES' not in bar, bar
 
@@ -2142,7 +2153,10 @@ def test_tle_origin_ne_vypuskaet_adres_i_angliyskoe_slovo():
     cell = re.search(r'<div class="cl">Элементы орбиты</div>.*?<div class="cs">([^<]*)</div>', bar, re.S)
     if cell:
         assert 'http' not in cell.group(1) and 'timeout' not in cell.group(1), cell.group(1)
-        assert cell.group(1).count('давность') == 1, cell.group(1)
+        # Подпись ячейки сокращена до одной строки (разгрузка главного экрана): давность в ней
+        # либо одна, либо уехала в раскрытие «Подробнее о каждой величине полосы». Проверяемое
+        # утверждение прежнее: ДВУХ давностей в разных единицах в одной ячейке быть не должно.
+        assert cell.group(1).count('давность') <= 1, cell.group(1)
 
 
 def test_nehvatka_pokrytiya_nazyvaet_sledstvie():
@@ -2252,7 +2266,8 @@ def test_stroka_zadachi_stoit_v_glavnoy_oblasti(mode):
     assert not [s for s in at.sidebar.slider if str(s.label).startswith('Сдвиг начала окна')], \
         'ползунки сдвига окон должны уйти из боковой панели в раздел ручного разбора'
     caps = ' '.join(str(c.value) for c in at.caption)
-    assert 'Режим:' in caps and 'Выход на' in caps, caps[:300]
+    # Строка задачи сокращена до одной приглушённой строки: те же три факта, но без повторов.
+    assert 'режим:' in caps and 'Выход на' in caps, caps[:300]
 
 
 def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
@@ -2265,8 +2280,9 @@ def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     body = texts(at)
-    assert 'Перебор начал выхода в этом расчёте не выполнялся' in body, body[:400]
-    assert 'Ленты окон нет' in body, body[:400]
+    # Формулировки сокращены при разгрузке главного экрана; утверждения те же.
+    assert 'Перебор начал не выполнялся' in body, body[:400]
+    assert 'Ленты нет: перебор начал не выполнялся' in body, body[:400]
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
 
 

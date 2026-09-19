@@ -574,7 +574,7 @@ def panel(rows) -> str:
     return ''.join(out)
 
 
-def split_panel_rows(rows, max_len: int = 48):
+def split_panel_rows(rows, max_len: int = 64):
     """Разделить подписи ячеек полосы на короткую и полную.
 
     Владелец о прежней полосе: «мелким текстом и текстом разных тонов адекватно с ходу
@@ -590,7 +590,15 @@ def split_panel_rows(rows, max_len: int = 48):
         out_row = []
         for label, value, sub, kind in row:
             full = str(sub or '')
-            head_ = full.split(' · ')[0].strip()
+            # Берём подряд столько смысловых частей, сколько влезает в одну строку: у ячейки
+            # «Элементы орбиты» это эпоха И давность, а не одна эпоха — давность здесь несёт смысл.
+            kept = []
+            for part in [x.strip() for x in full.split(' · ') if x.strip()]:
+                candidate = ' · '.join(kept + [part])
+                if kept and len(candidate) > max_len:
+                    break
+                kept.append(part)
+            head_ = ' · '.join(kept)
             if len(head_) > max_len:
                 head_ = head_[:max_len].rstrip(' ,;.') + '…'
             out_row.append((label, value, head_, kind))
