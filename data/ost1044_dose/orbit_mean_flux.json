@@ -1,0 +1,318 @@
+{
+ "model_id": "ost1044_belt_dose_norm_v1",
+ "generated_by": "scripts/dose_normalisation.py",
+ "method_ru": "средний по орбите уровень потока захваченных протонов, посчитанный тем же кодом, что и флюенс окна: trajectory → magcoords → trapped → integrate_time; известный вклад делится на ПОЛНУЮ длительность периода, как у окна",
+ "period": {
+  "from_utc": "2024-05-01T00:00:00+00:00",
+  "to_utc": "2024-06-30T00:00:00+00:00",
+  "days": 60.0,
+  "step_seconds": 60,
+  "chunk_minutes": 1920,
+  "chunks": 45,
+  "trajectory_method": "oem_interp",
+  "field_model": "IGRF-13",
+  "saa_B_threshold_nT": 22000.0
+ },
+ "orbit": {
+  "mean_alt_km": 421.15530770646023,
+  "min_alt_km": 409.3095937370195,
+  "max_alt_km": 439.39607831173583,
+  "inclination_deg": 51.6,
+  "inclination_note_ru": "наклонение МКС; в расчёт нормировки не вводится — оно уже заложено в самой эфемериде"
+ },
+ "channels": {
+  "min|12.5": {
+   "solar_activity": "min",
+   "e_min_MeV": 12.5,
+   "table": "А.2.1",
+   "raw_record_id": "ost1044_A_А_2_1:59e573afafa8",
+   "mean_flux_per_cm2_s": 141.81933713477028,
+   "mean_flux_over_covered_time_per_cm2_s": 175.07059191947636,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 44754779135.642265
+  },
+  "min|30": {
+   "solar_activity": "min",
+   "e_min_MeV": 30.0,
+   "table": "А.2.1",
+   "raw_record_id": "ost1044_A_А_2_1:59e573afafa8",
+   "mean_flux_per_cm2_s": 70.06424776889615,
+   "mean_flux_over_covered_time_per_cm2_s": 86.49165605418813,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 22110595053.917175
+  },
+  "min|50": {
+   "solar_activity": "min",
+   "e_min_MeV": 50.0,
+   "table": "А.2.1",
+   "raw_record_id": "ost1044_A_А_2_1:59e573afafa8",
+   "mean_flux_per_cm2_s": 32.022496686550035,
+   "mean_flux_over_covered_time_per_cm2_s": 39.53055741845868,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 10105531414.354713
+  },
+  "max|12.5": {
+   "solar_activity": "max",
+   "e_min_MeV": 12.5,
+   "table": "А.2.2",
+   "raw_record_id": "ost1044_A_А_2_2:b244936014d2",
+   "mean_flux_per_cm2_s": 91.27756316413551,
+   "mean_flux_over_covered_time_per_cm2_s": 112.67868920390497,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 28805008273.08523
+  },
+  "max|30": {
+   "solar_activity": "max",
+   "e_min_MeV": 30.0,
+   "table": "А.2.2",
+   "raw_record_id": "ost1044_A_А_2_2:b244936014d2",
+   "mean_flux_per_cm2_s": 46.42683356179778,
+   "mean_flux_over_covered_time_per_cm2_s": 57.31216487697283,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 14651194428.097895
+  },
+  "max|50": {
+   "solar_activity": "max",
+   "e_min_MeV": 50.0,
+   "table": "А.2.2",
+   "raw_record_id": "ost1044_A_А_2_2:b244936014d2",
+   "mean_flux_per_cm2_s": 21.365891261036055,
+   "mean_flux_over_covered_time_per_cm2_s": 26.37538226823139,
+   "coverage_fraction": 0.8100694444444444,
+   "fluence_10y_per_cm2": 6742562500.592714
+  }
+ },
+ "convergence": {
+  "mean_at_half_period_per_cm2_s": 69.1690196881058,
+  "half_period_days": 29.333333333333332,
+  "relative_change_half_to_full": 0.012777245304098845,
+  "note_ru": "изменение среднего при удвоении периода усреднения; это показатель сходимости выборки, а не граница физической погрешности модели",
+  "progress": [
+   {
+    "chunks": 1,
+    "days": 1.3333333333333333,
+    "mean_flux_per_cm2_s": 59.04948803602635
+   },
+   {
+    "chunks": 2,
+    "days": 2.6666666666666665,
+    "mean_flux_per_cm2_s": 66.15079572854003
+   },
+   {
+    "chunks": 3,
+    "days": 4.0,
+    "mean_flux_per_cm2_s": 70.0007772233039
+   },
+   {
+    "chunks": 4,
+    "days": 5.333333333333333,
+    "mean_flux_per_cm2_s": 66.16602799694701
+   },
+   {
+    "chunks": 5,
+    "days": 6.666666666666667,
+    "mean_flux_per_cm2_s": 67.30051796943275
+   },
+   {
+    "chunks": 6,
+    "days": 8.0,
+    "mean_flux_per_cm2_s": 68.06996552693293
+   },
+   {
+    "chunks": 7,
+    "days": 9.333333333333334,
+    "mean_flux_per_cm2_s": 66.09946905079096
+   },
+   {
+    "chunks": 8,
+    "days": 10.666666666666666,
+    "mean_flux_per_cm2_s": 68.1750161960866
+   },
+   {
+    "chunks": 9,
+    "days": 12.0,
+    "mean_flux_per_cm2_s": 68.65892816249212
+   },
+   {
+    "chunks": 10,
+    "days": 13.333333333333334,
+    "mean_flux_per_cm2_s": 67.31435613399915
+   },
+   {
+    "chunks": 11,
+    "days": 14.666666666666666,
+    "mean_flux_per_cm2_s": 68.97049366118304
+   },
+   {
+    "chunks": 12,
+    "days": 16.0,
+    "mean_flux_per_cm2_s": 69.30760746789606
+   },
+   {
+    "chunks": 13,
+    "days": 17.333333333333332,
+    "mean_flux_per_cm2_s": 68.76368858312054
+   },
+   {
+    "chunks": 14,
+    "days": 18.666666666666668,
+    "mean_flux_per_cm2_s": 69.88434305771234
+   },
+   {
+    "chunks": 15,
+    "days": 20.0,
+    "mean_flux_per_cm2_s": 69.21699379264733
+   },
+   {
+    "chunks": 16,
+    "days": 21.333333333333332,
+    "mean_flux_per_cm2_s": 69.42832137844965
+   },
+   {
+    "chunks": 17,
+    "days": 22.666666666666668,
+    "mean_flux_per_cm2_s": 69.81851025583484
+   },
+   {
+    "chunks": 18,
+    "days": 24.0,
+    "mean_flux_per_cm2_s": 68.9054322887668
+   },
+   {
+    "chunks": 19,
+    "days": 25.333333333333332,
+    "mean_flux_per_cm2_s": 69.11021551316962
+   },
+   {
+    "chunks": 20,
+    "days": 26.666666666666668,
+    "mean_flux_per_cm2_s": 69.61727397740407
+   },
+   {
+    "chunks": 21,
+    "days": 28.0,
+    "mean_flux_per_cm2_s": 68.66102990051795
+   },
+   {
+    "chunks": 22,
+    "days": 29.333333333333332,
+    "mean_flux_per_cm2_s": 69.1690196881058
+   },
+   {
+    "chunks": 23,
+    "days": 30.666666666666668,
+    "mean_flux_per_cm2_s": 69.47929289942766
+   },
+   {
+    "chunks": 24,
+    "days": 32.0,
+    "mean_flux_per_cm2_s": 68.75570469135756
+   },
+   {
+    "chunks": 25,
+    "days": 33.333333333333336,
+    "mean_flux_per_cm2_s": 69.17820086354604
+   },
+   {
+    "chunks": 26,
+    "days": 34.666666666666664,
+    "mean_flux_per_cm2_s": 69.23619635336564
+   },
+   {
+    "chunks": 27,
+    "days": 36.0,
+    "mean_flux_per_cm2_s": 69.08403497151383
+   },
+   {
+    "chunks": 28,
+    "days": 37.333333333333336,
+    "mean_flux_per_cm2_s": 69.49837727372648
+   },
+   {
+    "chunks": 29,
+    "days": 38.666666666666664,
+    "mean_flux_per_cm2_s": 69.24869611950197
+   },
+   {
+    "chunks": 30,
+    "days": 40.0,
+    "mean_flux_per_cm2_s": 69.35769727860344
+   },
+   {
+    "chunks": 31,
+    "days": 41.333333333333336,
+    "mean_flux_per_cm2_s": 69.85892432161181
+   },
+   {
+    "chunks": 32,
+    "days": 42.666666666666664,
+    "mean_flux_per_cm2_s": 69.38375996562505
+   },
+   {
+    "chunks": 33,
+    "days": 44.0,
+    "mean_flux_per_cm2_s": 69.74461046938247
+   },
+   {
+    "chunks": 34,
+    "days": 45.333333333333336,
+    "mean_flux_per_cm2_s": 69.8709867093669
+   },
+   {
+    "chunks": 35,
+    "days": 46.666666666666664,
+    "mean_flux_per_cm2_s": 69.4852006075095
+   },
+   {
+    "chunks": 36,
+    "days": 48.0,
+    "mean_flux_per_cm2_s": 69.74146556902815
+   },
+   {
+    "chunks": 37,
+    "days": 49.333333333333336,
+    "mean_flux_per_cm2_s": 69.9161126250962
+   },
+   {
+    "chunks": 38,
+    "days": 50.666666666666664,
+    "mean_flux_per_cm2_s": 69.46709739495881
+   },
+   {
+    "chunks": 39,
+    "days": 52.0,
+    "mean_flux_per_cm2_s": 69.67689308182517
+   },
+   {
+    "chunks": 40,
+    "days": 53.333333333333336,
+    "mean_flux_per_cm2_s": 69.87226500265126
+   },
+   {
+    "chunks": 41,
+    "days": 54.666666666666664,
+    "mean_flux_per_cm2_s": 69.77753217204821
+   },
+   {
+    "chunks": 42,
+    "days": 56.0,
+    "mean_flux_per_cm2_s": 69.97082220122161
+   },
+   {
+    "chunks": 43,
+    "days": 57.333333333333336,
+    "mean_flux_per_cm2_s": 69.95567472405239
+   },
+   {
+    "chunks": 44,
+    "days": 58.666666666666664,
+    "mean_flux_per_cm2_s": 69.91249366688972
+   },
+   {
+    "chunks": 45,
+    "days": 60.0,
+    "mean_flux_per_cm2_s": 70.06424776889615
+   }
+  ]
+ }
+}

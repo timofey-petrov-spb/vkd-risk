@@ -27,6 +27,11 @@ def collect_records(raw_records, history_versions, orbit_provenance, belts, root
         add_file(rid, meta, base / meta['raw_path'])
     add_file(belts.raw_record_id, {'source_id': 'ost1044_belts', 'raw_path': belts.file,
              'sha256': belts.sha256, 'citation': belts.source, 'quality': 'model'}, root/belts.file)
+    # Дозовые таблицы прил. К и средний по орбите уровень: фактор дозы называет эти записи,
+    # значит их байты обязаны лежать в архиве — иначе повтор без сети не воспроизводит число.
+    from vkd.assess.dose import record_files
+    for rid, path, meta in record_files():
+        add_file(rid, dict(meta, raw_path=path), root/path)
     for rid, source in [('ecss_grun:grun-ecss-2020-v1','ecss_grun'), ('imo_calendar','imo_calendar')]:
         path = 'vkd/assess/meteoroids.py'
         add_file(rid, {'source_id': source, 'raw_path': path, 'quality': 'model',

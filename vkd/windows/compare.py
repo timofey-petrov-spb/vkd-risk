@@ -38,6 +38,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
+from vkd.assess import dose as suit_dose
 from vkd.assess.coverage import gaps_ru, uncovered_minutes_by_reason
 from vkd.assess.meteoroids import SHOWERS_SOURCE_RU, active_showers
 from vkd.assess.trapped import BeltTable
@@ -883,6 +884,17 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                                    else '; выпуска с ячейками на это окно нет')),
                 horizon_utc=hz))
 
+    # --- поглощённая доза за защитой скафандра (прил. К ОСТ 134-1044-2007) ------------
+    # Считается ИЗ ТОГО ЖЕ флюенса, линейно по нему, поэтому покрытие у неё то же, что у
+    # флюенса, и порядок окон она менять не может. В правило сравнения окон доза НЕ входит
+    # именно поэтому: она добавила бы четвёртый признак, повторяющий второй.
+    # Фаза СА берётся у самой таблицы потоков — средний уровень нормировки обязан быть её же.
+    dose_res = suit_dose.window_dose(fluence, e_min_MeV=th.e_min_MeV,
+                                     solar_activity=getattr(belts, 'solar_activity', 'min'))
+    dose_note = '; '.join(x for x in (suit_dose.explain_ru(dose_res),
+                                      suit_dose.band_ru(dose_res) if dose_res.band_mGy else '',
+                                      suit_dose.LIMITS_RU) if x)
+
     factors_m1 = (
         FactorValue('минут в аномалии', minutes_saa, 'мин', Kind.OWN_CALCULATION,
                     _presence(minutes_saa), cov_saa, traj_ids, 'время по линейным пересечениям |B| ниже порога %.0f нТл (настройка, варьируется в чувствительности)' % th.saa_B_threshold_nT,
@@ -896,6 +908,11 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                     belts.source + '; единицы потока: %s; интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
                     % (belts.flux_unit_short_ru, belts.interpolation_ru),
                     '; '.join(fl_note)),
+        FactorValue('поглощённая доза за защитой скафандра %g г/см²' % dose_res.thickness_g_cm2,
+                    dose_res.value_mGy, suit_dose.DOSE_UNIT_RU, Kind.OWN_CALCULATION,
+                    _presence(dose_res.value_mGy), cov_fl,
+                    traj_ids + (belts.raw_record_id,) + tuple(dose_res.record_ids),
+                    suit_dose.RULE_RU, dose_note),
     ) + tuple(cut_factors) + (
         FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
                     (Presence.UNKNOWN if goes_val is None or (goes_frac is not None and goes_frac <= 0.0) else
