@@ -1,7 +1,7 @@
 {
  "schema_version": "2.3",
  "algorithm_version": "0.10.0",
- "computed_utc": "2026-09-19T11:56:00+00:00",
+ "computed_utc": "2026-09-19T13:17:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -102,7 +102,7 @@
    "auto_refresh_min": 5,
    "scan_step_min": 10
   },
-  "settings_path": "/Users/aleksandrboda/Documents/Codex/2026-09-17/project_1/vkd-risk-seasonal/config/settings.toml",
+  "settings_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt12\\seasonal\\config\\settings.toml",
   "mmod": {
    "area_m2": 1.0,
    "m_min_g": 0.001,
@@ -1953,20 +1953,20 @@
    "fluence": {
     "duration_seconds": 21600.0,
     "covered_seconds": 18120.0,
-    "known_integral": 1839173.782791726,
+    "known_integral": 1839173.7827917256,
     "below_threshold_seconds": null,
     "grid_compared_seconds": 18000.0,
-    "grid_absolute_delta": 970923.4805171837,
-    "grid_relative_delta": 0.5279128539138893
+    "grid_absolute_delta": 970923.480517186,
+    "grid_relative_delta": 0.5279128539138906
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
     "known_integral": 768280620.7628945,
-    "below_threshold_seconds": 3042.4016062287715,
+    "below_threshold_seconds": 3042.4016062287737,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 625743.9296092689,
-    "grid_relative_delta": 0.0008144731400199992
+    "grid_absolute_delta": 625743.9296092535,
+    "grid_relative_delta": 0.0008144731400199792
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
@@ -1977,20 +1977,20 @@
    "fluence": {
     "duration_seconds": 21600.0,
     "covered_seconds": 17580.0,
-    "known_integral": 533.60264374311,
+    "known_integral": 533.6026437431271,
     "below_threshold_seconds": null,
     "grid_compared_seconds": 17160.0,
-    "grid_absolute_delta": 533.60264374311,
+    "grid_absolute_delta": 533.6026437431271,
     "grid_relative_delta": 1.0
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
-    "known_integral": 827758506.1003846,
-    "below_threshold_seconds": 294.24366536354717,
+    "known_integral": 827758506.1003847,
+    "below_threshold_seconds": 294.24366536354773,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 627368.5875922036,
-    "grid_relative_delta": 0.0007579125831612063
+    "grid_absolute_delta": 627368.5875921664,
+    "grid_relative_delta": 0.0007579125831611612
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
@@ -2175,7 +2175,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 5.0788719793173327e-26,
+     "expected_hits": 5.0788719793173316e-26,
      "unblocked_duration_s": 13605.0
     },
     {
@@ -2264,7 +2264,7 @@
      "tails_cut_1pct": 5.579868775957776e-07,
      "solar_minus_0_02deg": 5.57810799795688e-07,
      "solar_plus_0_02deg": 5.579495494608833e-07,
-     "catalogue_of_date": 5.592948066251303e-07,
+     "catalogue_of_date": 5.592948066251304e-07,
      "no_earth_shadow": 5.635741506462745e-07
     },
     "invalid_hypotheses": {},
@@ -2488,7 +2488,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.6378415462499413e-26,
+     "expected_hits": 4.6378415462499396e-26,
      "unblocked_duration_s": 13295.0
     },
     {
@@ -2572,12 +2572,12 @@
      "base": 5.580674218196574e-07,
      "half_step": 5.580643581574705e-07,
      "catalogue_already_plate": 5.433301000478172e-07,
-     "bootids_110": 5.585443046197717e-07,
+     "bootids_110": 5.585443046197718e-07,
      "peak_only_normalization": 5.557154295746642e-07,
      "tails_cut_1pct": 5.581517394488142e-07,
      "solar_minus_0_02deg": 5.579882972581692e-07,
      "solar_plus_0_02deg": 5.581381564329004e-07,
-     "catalogue_of_date": 5.595170774031539e-07,
+     "catalogue_of_date": 5.595170774031538e-07,
      "no_earth_shadow": 5.641205881171961e-07
     },
     "invalid_hypotheses": {},
@@ -2801,7 +2801,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.9047626890230093e-26,
+     "expected_hits": 4.904762689023008e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -2890,7 +2890,7 @@
      "tails_cut_1pct": 5.580592792984199e-07,
      "solar_minus_0_02deg": 5.578834725140802e-07,
      "solar_plus_0_02deg": 5.580231243073326e-07,
-     "catalogue_of_date": 5.59375184032174e-07,
+     "catalogue_of_date": 5.593751840321741e-07,
      "no_earth_shadow": 5.636473011723993e-07
     },
     "invalid_hypotheses": {},
@@ -3114,7 +3114,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.889219908390153e-26,
+     "expected_hits": 4.889219908390152e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -3203,7 +3203,7 @@
      "tails_cut_1pct": 5.58164727125154e-07,
      "solar_minus_0_02deg": 5.579898474351907e-07,
      "solar_plus_0_02deg": 5.581298504735654e-07,
-     "catalogue_of_date": 5.594875863370077e-07,
+     "catalogue_of_date": 5.594875863370078e-07,
      "no_earth_shadow": 5.636624402140138e-07
     },
     "invalid_hypotheses": {},
@@ -3427,7 +3427,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.8818456064075605e-26,
+     "expected_hits": 4.8818456064075593e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -3516,7 +3516,7 @@
      "tails_cut_1pct": 5.583268608254813e-07,
      "solar_minus_0_02deg": 5.581534169442403e-07,
      "solar_plus_0_02deg": 5.582931526620913e-07,
-     "catalogue_of_date": 5.596488515466741e-07,
+     "catalogue_of_date": 5.596488515466742e-07,
      "no_earth_shadow": 5.63640586401644e-07
     },
     "invalid_hypotheses": {},
@@ -3740,7 +3740,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.8767037184631615e-26,
+     "expected_hits": 4.876703718463161e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -3829,7 +3829,7 @@
      "tails_cut_1pct": 5.585710987353052e-07,
      "solar_minus_0_02deg": 5.583975670355454e-07,
      "solar_plus_0_02deg": 5.58546697452848e-07,
-     "catalogue_of_date": 5.599113099989595e-07,
+     "catalogue_of_date": 5.599113099989596e-07,
      "no_earth_shadow": 5.636204592196329e-07
     },
     "invalid_hypotheses": {},
@@ -4053,7 +4053,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.865876401770627e-26,
+     "expected_hits": 4.865876401770626e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -4142,7 +4142,7 @@
      "tails_cut_1pct": 5.582965076726393e-07,
      "solar_minus_0_02deg": 5.581254382049671e-07,
      "solar_plus_0_02deg": 5.58274118594478e-07,
-     "catalogue_of_date": 5.596326475303763e-07,
+     "catalogue_of_date": 5.596326475303764e-07,
      "no_earth_shadow": 5.636141576274564e-07
     },
     "invalid_hypotheses": {},
@@ -4366,7 +4366,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.9862440382490905e-26,
+     "expected_hits": 4.9862440382490894e-26,
      "unblocked_duration_s": 13625.0
     },
     {
@@ -4455,7 +4455,7 @@
      "tails_cut_1pct": 5.578970860671482e-07,
      "solar_minus_0_02deg": 5.577339033109062e-07,
      "solar_plus_0_02deg": 5.578788402718789e-07,
-     "catalogue_of_date": 5.59211993527403e-07,
+     "catalogue_of_date": 5.592119935274031e-07,
      "no_earth_shadow": 5.636150054523813e-07
     },
     "invalid_hypotheses": {},
@@ -4679,7 +4679,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 5.068895814745054e-26,
+     "expected_hits": 5.068895814745053e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -4766,7 +4766,7 @@
      "bootids_110": 5.583156067077637e-07,
      "peak_only_normalization": 5.554868110593975e-07,
      "tails_cut_1pct": 5.579257178418462e-07,
-     "solar_minus_0_02deg": 5.577624235356714e-07,
+     "solar_minus_0_02deg": 5.577624235356713e-07,
      "solar_plus_0_02deg": 5.579076306152974e-07,
      "catalogue_of_date": 5.592438933400494e-07,
      "no_earth_shadow": 5.636338064219608e-07
@@ -4992,7 +4992,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 5.068895814745054e-26,
+     "expected_hits": 5.068895814745053e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -5077,11 +5077,11 @@
      "half_step": 5.577913729693869e-07,
      "catalogue_already_plate": 5.422652208667898e-07,
      "bootids_110": 5.582766690476675e-07,
-     "peak_only_normalization": 5.554478555443053e-07,
+     "peak_only_normalization": 5.554478555443052e-07,
      "tails_cut_1pct": 5.57888781951372e-07,
      "solar_minus_0_02deg": 5.577229650771735e-07,
      "solar_plus_0_02deg": 5.578692140882542e-07,
-     "catalogue_of_date": 5.592142134561229e-07,
+     "catalogue_of_date": 5.59214213456123e-07,
      "no_earth_shadow": 5.636949911296997e-07
     },
     "invalid_hypotheses": {},
@@ -5230,7 +5230,7 @@
     },
     {
      "name": "κCygnids",
-     "expected_hits": 1.2458783367484638e-15,
+     "expected_hits": 1.2458783367484636e-15,
      "unblocked_duration_s": 12930.0
     },
     {
@@ -5305,7 +5305,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 5.020627594561366e-26,
+     "expected_hits": 5.0206275945613646e-26,
      "unblocked_duration_s": 13775.0
     },
     {
@@ -5543,7 +5543,7 @@
     },
     {
      "name": "κCygnids",
-     "expected_hits": 1.2531201459880888e-15,
+     "expected_hits": 1.2531201459880886e-15,
      "unblocked_duration_s": 12930.0
     },
     {
@@ -5618,7 +5618,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.785575958551846e-26,
+     "expected_hits": 4.7855759585518456e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -5648,7 +5648,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.286595715691085e-31,
+     "expected_hits": 2.2865957156910848e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -5707,7 +5707,7 @@
      "tails_cut_1pct": 5.5804632279525e-07,
      "solar_minus_0_02deg": 5.578723308213538e-07,
      "solar_plus_0_02deg": 5.5802047874097e-07,
-     "catalogue_of_date": 5.59380619804455e-07,
+     "catalogue_of_date": 5.593806198044551e-07,
      "no_earth_shadow": 5.638804972058042e-07
     },
     "invalid_hypotheses": {},
@@ -5856,7 +5856,7 @@
     },
     {
      "name": "κCygnids",
-     "expected_hits": 1.29261293116026e-15,
+     "expected_hits": 1.2926129311602598e-15,
      "unblocked_duration_s": 13465.0
     },
     {
@@ -5931,7 +5931,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.7676384865055266e-26,
+     "expected_hits": 4.7676384865055255e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -6020,7 +6020,7 @@
      "tails_cut_1pct": 5.581082567036035e-07,
      "solar_minus_0_02deg": 5.579349058581371e-07,
      "solar_plus_0_02deg": 5.580837520556897e-07,
-     "catalogue_of_date": 5.594488573024918e-07,
+     "catalogue_of_date": 5.594488573024919e-07,
      "no_earth_shadow": 5.639134696751436e-07
     },
     "invalid_hypotheses": {},
@@ -6244,7 +6244,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.758688513122418e-26,
+     "expected_hits": 4.758688513122417e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -6557,7 +6557,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.7538219519173953e-26,
+     "expected_hits": 4.753821951917395e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -6587,7 +6587,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.265003685111938e-31,
+     "expected_hits": 2.2650036851119376e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -6646,7 +6646,7 @@
      "tails_cut_1pct": 5.584498797032646e-07,
      "solar_minus_0_02deg": 5.582785959690328e-07,
      "solar_plus_0_02deg": 5.584280157401206e-07,
-     "catalogue_of_date": 5.597981608174934e-07,
+     "catalogue_of_date": 5.597981608174935e-07,
      "no_earth_shadow": 5.638757995923532e-07
     },
     "invalid_hypotheses": {},
@@ -6795,7 +6795,7 @@
     },
     {
      "name": "κCygnids",
-     "expected_hits": 1.2850548353777722e-15,
+     "expected_hits": 1.285054835377772e-15,
      "unblocked_duration_s": 13455.0
     },
     {
@@ -6870,7 +6870,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.7455781452916077e-26,
+     "expected_hits": 4.745578145291607e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -6900,7 +6900,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.259583466605401e-31,
+     "expected_hits": 2.2595834666054007e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -7108,7 +7108,7 @@
     },
     {
      "name": "κCygnids",
-     "expected_hits": 1.224935313367674e-15,
+     "expected_hits": 1.2249353133676738e-15,
      "unblocked_duration_s": 12930.0
     },
     {
@@ -7213,7 +7213,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.2542006764910767e-31,
+     "expected_hits": 2.2542006764910763e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -7585,7 +7585,7 @@
      "tails_cut_1pct": 5.579443941059048e-07,
      "solar_minus_0_02deg": 5.577833657552473e-07,
      "solar_plus_0_02deg": 5.579292756100863e-07,
-     "catalogue_of_date": 5.592818157796116e-07,
+     "catalogue_of_date": 5.592818157796118e-07,
      "no_earth_shadow": 5.638753096747015e-07
     },
     "invalid_hypotheses": {},
@@ -7839,7 +7839,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.240961064103502e-31,
+     "expected_hits": 2.2409610641035014e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -7893,12 +7893,12 @@
      "base": 5.578448433519356e-07,
      "half_step": 5.578430528034379e-07,
      "catalogue_already_plate": 5.424490243509525e-07,
-     "bootids_110": 5.583217235435934e-07,
+     "bootids_110": 5.583217235435935e-07,
      "peak_only_normalization": 5.554929495494103e-07,
      "tails_cut_1pct": 5.579288349886377e-07,
      "solar_minus_0_02deg": 5.577674188936024e-07,
      "solar_plus_0_02deg": 5.57914122561344e-07,
-     "catalogue_of_date": 5.592736063334998e-07,
+     "catalogue_of_date": 5.592736063334999e-07,
      "no_earth_shadow": 5.639236049583097e-07
     },
     "invalid_hypotheses": {},
@@ -8206,12 +8206,12 @@
      "base": 5.578702501616477e-07,
      "half_step": 5.578681225462329e-07,
      "catalogue_already_plate": 5.425184719006355e-07,
-     "bootids_110": 5.583471394394443e-07,
+     "bootids_110": 5.583471394394444e-07,
      "peak_only_normalization": 5.555181551888205e-07,
      "tails_cut_1pct": 5.579625295812094e-07,
      "solar_minus_0_02deg": 5.577922924183602e-07,
      "solar_plus_0_02deg": 5.579400639368452e-07,
-     "catalogue_of_date": 5.593083461386725e-07,
+     "catalogue_of_date": 5.593083461386727e-07,
      "no_earth_shadow": 5.64016122986603e-07
     },
     "invalid_hypotheses": {},
@@ -8435,7 +8435,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.7163797795412956e-26,
+     "expected_hits": 4.716379779541295e-26,
      "unblocked_duration_s": 13345.0
     },
     {
@@ -8524,7 +8524,7 @@
      "tails_cut_1pct": 5.580600263771192e-07,
      "solar_minus_0_02deg": 5.578880336358577e-07,
      "solar_plus_0_02deg": 5.580367433126537e-07,
-     "catalogue_of_date": 5.594124260958451e-07,
+     "catalogue_of_date": 5.594124260958449e-07,
      "no_earth_shadow": 5.641141505881912e-07
     },
     "invalid_hypotheses": {},
@@ -8748,7 +8748,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.650129867177495e-26,
+     "expected_hits": 4.6501298671774934e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -8778,7 +8778,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.2161649675169646e-31,
+     "expected_hits": 2.216164967516964e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -8837,7 +8837,7 @@
      "tails_cut_1pct": 5.581110966372666e-07,
      "solar_minus_0_02deg": 5.579395636319553e-07,
      "solar_plus_0_02deg": 5.580891743030278e-07,
-     "catalogue_of_date": 5.594714732773411e-07,
+     "catalogue_of_date": 5.594714732773409e-07,
      "no_earth_shadow": 5.641661369271687e-07
     },
     "invalid_hypotheses": {},
@@ -9061,7 +9061,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.639312506480198e-26,
+     "expected_hits": 4.639312506480196e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -9145,12 +9145,12 @@
      "base": 5.582009180521903e-07,
      "half_step": 5.581979365916334e-07,
      "catalogue_already_plate": 5.439690153863441e-07,
-     "bootids_110": 5.586777712245392e-07,
+     "bootids_110": 5.586777712245393e-07,
      "peak_only_normalization": 5.558489773730737e-07,
      "tails_cut_1pct": 5.582922983471573e-07,
      "solar_minus_0_02deg": 5.581220989847686e-07,
      "solar_plus_0_02deg": 5.582716020231224e-07,
-     "catalogue_of_date": 5.59652921065083e-07,
+     "catalogue_of_date": 5.596529210650827e-07,
      "no_earth_shadow": 5.641628424512336e-07
     },
     "invalid_hypotheses": {},
@@ -9374,7 +9374,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.634127513210977e-26,
+     "expected_hits": 4.6341275132109754e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -9458,12 +9458,12 @@
      "base": 5.582820535235767e-07,
      "half_step": 5.582781670919069e-07,
      "catalogue_already_plate": 5.443259676583346e-07,
-     "bootids_110": 5.58758897544647e-07,
+     "bootids_110": 5.587588975446471e-07,
      "peak_only_normalization": 5.559301726097612e-07,
      "tails_cut_1pct": 5.583722710412752e-07,
      "solar_minus_0_02deg": 5.582032671027739e-07,
      "solar_plus_0_02deg": 5.583527058698836e-07,
-     "catalogue_of_date": 5.597299352304769e-07,
+     "catalogue_of_date": 5.597299352304767e-07,
      "no_earth_shadow": 5.641390170094386e-07
     },
     "invalid_hypotheses": {},
@@ -9687,7 +9687,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.627795439881333e-26,
+     "expected_hits": 4.627795439881331e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -9717,7 +9717,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.197222965649513e-31,
+     "expected_hits": 2.1972229656495124e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -9771,12 +9771,12 @@
      "base": 5.587450641944426e-07,
      "half_step": 5.587426692296536e-07,
      "catalogue_already_plate": 5.461141152268661e-07,
-     "bootids_110": 5.592219262567037e-07,
+     "bootids_110": 5.592219262567038e-07,
      "peak_only_normalization": 5.563931027345337e-07,
      "tails_cut_1pct": 5.588345899671009e-07,
      "solar_minus_0_02deg": 5.586635981111543e-07,
      "solar_plus_0_02deg": 5.588181589993804e-07,
-     "catalogue_of_date": 5.602337547816458e-07,
+     "catalogue_of_date": 5.602337547816457e-07,
      "no_earth_shadow": 5.641247162689793e-07
     },
     "invalid_hypotheses": {},
@@ -10000,7 +10000,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.8138992008384333e-26,
+     "expected_hits": 4.8138992008384316e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -10030,7 +10030,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.186336734714084e-31,
+     "expected_hits": 2.1863367347140836e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -10084,7 +10084,7 @@
      "base": 5.579049957440089e-07,
      "half_step": 5.579041264495109e-07,
      "catalogue_already_plate": 5.426727902788186e-07,
-     "bootids_110": 5.583818806915752e-07,
+     "bootids_110": 5.583818806915753e-07,
      "peak_only_normalization": 5.555530948079849e-07,
      "tails_cut_1pct": 5.579859482742319e-07,
      "solar_minus_0_02deg": 5.578357204179461e-07,
@@ -10313,7 +10313,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.8138992008384333e-26,
+     "expected_hits": 4.8138992008384316e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -10343,7 +10343,7 @@
     },
     {
      "name": "αHydrusids",
-     "expected_hits": 2.1796576462589226e-31,
+     "expected_hits": 2.179657646258922e-31,
      "unblocked_duration_s": 21600.0
     },
     {
@@ -10626,7 +10626,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.8138992008384333e-26,
+     "expected_hits": 4.8138992008384316e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -10939,7 +10939,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.664104260649322e-26,
+     "expected_hits": 4.66410426064932e-26,
      "unblocked_duration_s": 13515.0
     },
     {
@@ -11028,7 +11028,7 @@
      "tails_cut_1pct": 5.580898191166816e-07,
      "solar_minus_0_02deg": 5.579283868482149e-07,
      "solar_plus_0_02deg": 5.58069785013017e-07,
-     "catalogue_of_date": 5.59454972615134e-07,
+     "catalogue_of_date": 5.594549726151339e-07,
      "no_earth_shadow": 5.643485829128824e-07
     },
     "invalid_hypotheses": {},
@@ -11252,7 +11252,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.53627737686305e-26,
+     "expected_hits": 4.5362773768630483e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -11565,7 +11565,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.523395311643832e-26,
+     "expected_hits": 4.5233953116438304e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -11878,7 +11878,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.517383478523934e-26,
+     "expected_hits": 4.517383478523932e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -11967,7 +11967,7 @@
      "tails_cut_1pct": 5.584235074786509e-07,
      "solar_minus_0_02deg": 5.582648409271858e-07,
      "solar_plus_0_02deg": 5.584072899219446e-07,
-     "catalogue_of_date": 5.598031292323263e-07,
+     "catalogue_of_date": 5.598031292323261e-07,
      "no_earth_shadow": 5.644091583633274e-07
     },
     "invalid_hypotheses": {},
@@ -12191,7 +12191,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.512290587138059e-26,
+     "expected_hits": 4.5122905871380576e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -12504,7 +12504,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.500770651040241e-26,
+     "expected_hits": 4.50077065104024e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -12593,7 +12593,7 @@
      "tails_cut_1pct": 5.584373713511591e-07,
      "solar_minus_0_02deg": 5.582817498066303e-07,
      "solar_plus_0_02deg": 5.584263011907622e-07,
-     "catalogue_of_date": 5.598365807422727e-07,
+     "catalogue_of_date": 5.598365807422726e-07,
      "no_earth_shadow": 5.643828997477111e-07
     },
     "invalid_hypotheses": {},
@@ -12817,7 +12817,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.643594387977198e-26,
+     "expected_hits": 4.643594387977197e-26,
      "unblocked_duration_s": 13725.0
     },
     {
@@ -12906,7 +12906,7 @@
      "tails_cut_1pct": 5.580319566259479e-07,
      "solar_minus_0_02deg": 5.578839150761493e-07,
      "solar_plus_0_02deg": 5.58024511304681e-07,
-     "catalogue_of_date": 5.594055384684344e-07,
+     "catalogue_of_date": 5.594055384684343e-07,
      "no_earth_shadow": 5.643831061430219e-07
     },
     "invalid_hypotheses": {},
@@ -13130,7 +13130,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.69128563417358e-26,
+     "expected_hits": 4.691285634173579e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -13219,7 +13219,7 @@
      "tails_cut_1pct": 5.580607890410356e-07,
      "solar_minus_0_02deg": 5.579125848254334e-07,
      "solar_plus_0_02deg": 5.580534860556051e-07,
-     "catalogue_of_date": 5.594378832952783e-07,
+     "catalogue_of_date": 5.594378832952782e-07,
      "no_earth_shadow": 5.64407408396571e-07
     },
     "invalid_hypotheses": {},
@@ -13443,7 +13443,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.69128563417358e-26,
+     "expected_hits": 4.691285634173579e-26,
      "unblocked_duration_s": 13890.0
     },
     {
@@ -13532,7 +13532,7 @@
      "tails_cut_1pct": 5.580238323169406e-07,
      "solar_minus_0_02deg": 5.578717414769971e-07,
      "solar_plus_0_02deg": 5.580138265602812e-07,
-     "catalogue_of_date": 5.594078929012338e-07,
+     "catalogue_of_date": 5.594078929012337e-07,
      "no_earth_shadow": 5.644791729042553e-07
     },
     "invalid_hypotheses": {},
@@ -13756,7 +13756,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.6076731532004283e-26,
+     "expected_hits": 4.607673153200427e-26,
      "unblocked_duration_s": 13675.0
     },
     {
@@ -13845,7 +13845,7 @@
      "tails_cut_1pct": 5.581188318760167e-07,
      "solar_minus_0_02deg": 5.579595305346256e-07,
      "solar_plus_0_02deg": 5.581025704587448e-07,
-     "catalogue_of_date": 5.595044715986132e-07,
+     "catalogue_of_date": 5.595044715986131e-07,
      "no_earth_shadow": 5.645851693967775e-07
     },
     "invalid_hypotheses": {},
@@ -14069,7 +14069,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4255972691508597e-26,
+     "expected_hits": 4.4255972691508585e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -14158,7 +14158,7 @@
      "tails_cut_1pct": 5.582058163847362e-07,
      "solar_minus_0_02deg": 5.580467029445297e-07,
      "solar_plus_0_02deg": 5.581907510233113e-07,
-     "catalogue_of_date": 5.596003850149496e-07,
+     "catalogue_of_date": 5.596003850149495e-07,
      "no_earth_shadow": 5.646728771347904e-07
     },
     "invalid_hypotheses": {},
@@ -14382,7 +14382,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4105464486748127e-26,
+     "expected_hits": 4.4105464486748115e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -14471,7 +14471,7 @@
      "tails_cut_1pct": 5.582883430248248e-07,
      "solar_minus_0_02deg": 5.581299971126041e-07,
      "solar_plus_0_02deg": 5.582746738182922e-07,
-     "catalogue_of_date": 5.596887264540453e-07,
+     "catalogue_of_date": 5.596887264540452e-07,
      "no_earth_shadow": 5.647027432562819e-07
     },
     "invalid_hypotheses": {},
@@ -14695,7 +14695,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4032925496540304e-26,
+     "expected_hits": 4.403292549654029e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -14784,7 +14784,7 @@
      "tails_cut_1pct": 5.584845184630791e-07,
      "solar_minus_0_02deg": 5.583277072847076e-07,
      "solar_plus_0_02deg": 5.584720726109561e-07,
-     "catalogue_of_date": 5.598837088743905e-07,
+     "catalogue_of_date": 5.598837088743904e-07,
      "no_earth_shadow": 5.646873742285455e-07
     },
     "invalid_hypotheses": {},
@@ -15008,7 +15008,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.398799862229958e-26,
+     "expected_hits": 4.398799862229957e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -15097,7 +15097,7 @@
      "tails_cut_1pct": 5.587492827369099e-07,
      "solar_minus_0_02deg": 5.585922335870229e-07,
      "solar_plus_0_02deg": 5.587390196007147e-07,
-     "catalogue_of_date": 5.601716838251346e-07,
+     "catalogue_of_date": 5.601716838251345e-07,
      "no_earth_shadow": 5.646653733567605e-07
     },
     "invalid_hypotheses": {},
@@ -15321,7 +15321,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.3899829885155127e-26,
+     "expected_hits": 4.3899829885155115e-26,
      "unblocked_duration_s": 13220.0
     },
     {
@@ -15410,7 +15410,7 @@
      "tails_cut_1pct": 5.587674426532029e-07,
      "solar_minus_0_02deg": 5.586108957740952e-07,
      "solar_plus_0_02deg": 5.587596446384155e-07,
-     "catalogue_of_date": 5.602031264980626e-07,
+     "catalogue_of_date": 5.602031264980625e-07,
      "no_earth_shadow": 5.646543855982097e-07
     },
     "invalid_hypotheses": {},
@@ -15634,7 +15634,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4772740458694503e-26,
+     "expected_hits": 4.477274045869449e-26,
      "unblocked_duration_s": 13555.0
     },
     {
@@ -15723,7 +15723,7 @@
      "tails_cut_1pct": 5.581051703954854e-07,
      "solar_minus_0_02deg": 5.579589069315584e-07,
      "solar_plus_0_02deg": 5.581018436096019e-07,
-     "catalogue_of_date": 5.594995344173546e-07,
+     "catalogue_of_date": 5.594995344173545e-07,
      "no_earth_shadow": 5.646509366046742e-07
     },
     "invalid_hypotheses": {},
@@ -15947,7 +15947,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.568607327170524e-26,
+     "expected_hits": 4.5686073271705226e-26,
      "unblocked_duration_s": 13880.0
     },
     {
@@ -16036,7 +16036,7 @@
      "tails_cut_1pct": 5.581254775866524e-07,
      "solar_minus_0_02deg": 5.579795688607632e-07,
      "solar_plus_0_02deg": 5.581227099673532e-07,
-     "catalogue_of_date": 5.595230154077632e-07,
+     "catalogue_of_date": 5.595230154077631e-07,
      "no_earth_shadow": 5.646653734739264e-07
     },
     "invalid_hypotheses": {},
@@ -16260,7 +16260,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.568607327170524e-26,
+     "expected_hits": 4.5686073271705226e-26,
      "unblocked_duration_s": 13880.0
     },
     {
@@ -16349,7 +16349,7 @@
      "tails_cut_1pct": 5.581033685973277e-07,
      "solar_minus_0_02deg": 5.579562269268986e-07,
      "solar_plus_0_02deg": 5.58100280292663e-07,
-     "catalogue_of_date": 5.595083944634871e-07,
+     "catalogue_of_date": 5.59508394463487e-07,
      "no_earth_shadow": 5.647238902548663e-07
     },
     "invalid_hypotheses": {},
@@ -16573,7 +16573,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.551585014757572e-26,
+     "expected_hits": 4.551585014757571e-26,
      "unblocked_duration_s": 13835.0
     },
     {
@@ -16662,7 +16662,7 @@
      "tails_cut_1pct": 5.581651382874274e-07,
      "solar_minus_0_02deg": 5.580083927125195e-07,
      "solar_plus_0_02deg": 5.581535033117916e-07,
-     "catalogue_of_date": 5.595703307442484e-07,
+     "catalogue_of_date": 5.595703307442483e-07,
      "no_earth_shadow": 5.648265580828818e-07
     },
     "invalid_hypotheses": {},
@@ -16886,7 +16886,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.3240609392404494e-26,
+     "expected_hits": 4.324060939240448e-26,
      "unblocked_duration_s": 13235.0
     },
     {
@@ -16975,7 +16975,7 @@
      "tails_cut_1pct": 5.582657243298433e-07,
      "solar_minus_0_02deg": 5.581084558794289e-07,
      "solar_plus_0_02deg": 5.582545960516564e-07,
-     "catalogue_of_date": 5.596796531593706e-07,
+     "catalogue_of_date": 5.596796531593705e-07,
      "no_earth_shadow": 5.649277527886533e-07
     },
     "invalid_hypotheses": {},
@@ -17199,7 +17199,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.298300470049996e-26,
+     "expected_hits": 4.2983004700499946e-26,
      "unblocked_duration_s": 13210.0
     },
     {
@@ -17288,7 +17288,7 @@
      "tails_cut_1pct": 5.583145679733284e-07,
      "solar_minus_0_02deg": 5.58157817230757e-07,
      "solar_plus_0_02deg": 5.583049034665842e-07,
-     "catalogue_of_date": 5.59736888778329e-07,
+     "catalogue_of_date": 5.597368887783289e-07,
      "no_earth_shadow": 5.649775861752412e-07
     },
     "invalid_hypotheses": {},
@@ -17512,7 +17512,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.2894851683757766e-26,
+     "expected_hits": 4.2894851683757755e-26,
      "unblocked_duration_s": 13210.0
     },
     {
@@ -17601,7 +17601,7 @@
      "tails_cut_1pct": 5.585184011507352e-07,
      "solar_minus_0_02deg": 5.5836310381403e-07,
      "solar_plus_0_02deg": 5.585099886713612e-07,
-     "catalogue_of_date": 5.59940088436024e-07,
+     "catalogue_of_date": 5.599400884360239e-07,
      "no_earth_shadow": 5.64973232402529e-07
     },
     "invalid_hypotheses": {},
@@ -17825,7 +17825,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.2850106805642315e-26,
+     "expected_hits": 4.2850106805642303e-26,
      "unblocked_duration_s": 13210.0
     },
     {
@@ -17914,7 +17914,7 @@
      "tails_cut_1pct": 5.586864466371487e-07,
      "solar_minus_0_02deg": 5.585317390499908e-07,
      "solar_plus_0_02deg": 5.58679713916463e-07,
-     "catalogue_of_date": 5.601158009183017e-07,
+     "catalogue_of_date": 5.601158009183016e-07,
      "no_earth_shadow": 5.649508614944497e-07
     },
     "invalid_hypotheses": {},
@@ -18138,7 +18138,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.278302207279198e-26,
+     "expected_hits": 4.278302207279197e-26,
      "unblocked_duration_s": 13210.0
     },
     {
@@ -18227,7 +18227,7 @@
      "tails_cut_1pct": 5.591093583993722e-07,
      "solar_minus_0_02deg": 5.589522419708227e-07,
      "solar_plus_0_02deg": 5.591100879256674e-07,
-     "catalogue_of_date": 5.60579702919275e-07,
+     "catalogue_of_date": 5.605797029192749e-07,
      "no_earth_shadow": 5.649366949712063e-07
     },
     "invalid_hypotheses": {},
@@ -18451,7 +18451,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.3166414255919945e-26,
+     "expected_hits": 4.3166414255919934e-26,
      "unblocked_duration_s": 13385.0
     },
     {
@@ -18540,7 +18540,7 @@
      "tails_cut_1pct": 5.583765786757514e-07,
      "solar_minus_0_02deg": 5.582277421404629e-07,
      "solar_plus_0_02deg": 5.583851331878349e-07,
-     "catalogue_of_date": 5.598071003329978e-07,
+     "catalogue_of_date": 5.598071003329977e-07,
      "no_earth_shadow": 5.649304866527195e-07
     },
     "invalid_hypotheses": {},
@@ -18764,7 +18764,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4521283084480246e-26,
+     "expected_hits": 4.4521283084480235e-26,
      "unblocked_duration_s": 13880.0
     },
     {
@@ -18853,7 +18853,7 @@
      "tails_cut_1pct": 5.582100303486612e-07,
      "solar_minus_0_02deg": 5.580649142953514e-07,
      "solar_plus_0_02deg": 5.582107570186375e-07,
-     "catalogue_of_date": 5.596262015751801e-07,
+     "catalogue_of_date": 5.5962620157518e-07,
      "no_earth_shadow": 5.64936739762476e-07
     },
     "invalid_hypotheses": {},
@@ -19077,7 +19077,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4521283084480246e-26,
+     "expected_hits": 4.4521283084480235e-26,
      "unblocked_duration_s": 13880.0
     },
     {
@@ -19166,7 +19166,7 @@
      "tails_cut_1pct": 5.58207632741473e-07,
      "solar_minus_0_02deg": 5.580621841272116e-07,
      "solar_plus_0_02deg": 5.582087047682352e-07,
-     "catalogue_of_date": 5.596302808679539e-07,
+     "catalogue_of_date": 5.596302808679538e-07,
      "no_earth_shadow": 5.649809622221894e-07
     },
     "invalid_hypotheses": {},
@@ -19390,7 +19390,7 @@
     },
     {
      "name": "αCentaurids",
-     "expected_hits": 4.4521283084480246e-26,
+     "expected_hits": 4.4521283084480235e-26,
      "unblocked_duration_s": 13880.0
     },
     {
@@ -19479,7 +19479,7 @@
      "tails_cut_1pct": 5.582304788030667e-07,
      "solar_minus_0_02deg": 5.580770687448726e-07,
      "solar_plus_0_02deg": 5.582247376182263e-07,
-     "catalogue_of_date": 5.596558070796823e-07,
+     "catalogue_of_date": 5.596558070796824e-07,
      "no_earth_shadow": 5.650751243148186e-07
     },
     "invalid_hypotheses": {},
@@ -19792,7 +19792,7 @@
      "tails_cut_1pct": 5.583395258262419e-07,
      "solar_minus_0_02deg": 5.581827791219794e-07,
      "solar_plus_0_02deg": 5.583314610496623e-07,
-     "catalogue_of_date": 5.597706368207874e-07,
+     "catalogue_of_date": 5.597706368207875e-07,
      "no_earth_shadow": 5.651846588816639e-07
     },
     "invalid_hypotheses": {},
@@ -20105,7 +20105,7 @@
      "tails_cut_1pct": 5.584080349823997e-07,
      "solar_minus_0_02deg": 5.582516710628824e-07,
      "solar_plus_0_02deg": 5.584013755899664e-07,
-     "catalogue_of_date": 5.598481944133706e-07,
+     "catalogue_of_date": 5.598481944133708e-07,
      "no_earth_shadow": 5.652540735063281e-07
     },
     "invalid_hypotheses": {},
@@ -20418,7 +20418,7 @@
      "tails_cut_1pct": 5.585562858066537e-07,
      "solar_minus_0_02deg": 5.584011015338419e-07,
      "solar_plus_0_02deg": 5.58550994603672e-07,
-     "catalogue_of_date": 5.600023625507491e-07,
+     "catalogue_of_date": 5.600023625507492e-07,
      "no_earth_shadow": 5.652641173652698e-07
     },
     "invalid_hypotheses": {},
@@ -20731,7 +20731,7 @@
      "tails_cut_1pct": 5.586709750025831e-07,
      "solar_minus_0_02deg": 5.585171218973828e-07,
      "solar_plus_0_02deg": 5.586669019419483e-07,
-     "catalogue_of_date": 5.601172492935786e-07,
+     "catalogue_of_date": 5.601172492935787e-07,
      "no_earth_shadow": 5.652438731608913e-07
     },
     "invalid_hypotheses": {},
@@ -21044,7 +21044,7 @@
      "tails_cut_1pct": 5.592082062289826e-07,
      "solar_minus_0_02deg": 5.590525465122234e-07,
      "solar_plus_0_02deg": 5.592075642222834e-07,
-     "catalogue_of_date": 5.606996500825504e-07,
+     "catalogue_of_date": 5.606996500825505e-07,
      "no_earth_shadow": 5.652265043125222e-07
     },
     "invalid_hypotheses": {},
@@ -22294,7 +22294,7 @@
      "bootids_110": 5.587017783594403e-07,
      "peak_only_normalization": 5.558730076259988e-07,
      "tails_cut_1pct": 5.582978746484233e-07,
-     "solar_minus_0_02deg": 5.581403719347686e-07,
+     "solar_minus_0_02deg": 5.581403719347687e-07,
      "solar_plus_0_02deg": 5.582950327776529e-07,
      "catalogue_of_date": 5.597562781245695e-07,
      "no_earth_shadow": 5.653321699347636e-07
@@ -41728,7 +41728,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 50.70669343714619,
+       "value": 50.70669343714623,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -41743,7 +41743,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 1839173.782791726,
+       "value": 1839173.7827917256,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -42047,7 +42047,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 4.904061089392453,
+       "value": 4.904061089392462,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -42062,7 +42062,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 533.60264374311,
+       "value": 533.6026437431271,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -42093,7 +42093,7 @@
       },
       {
        "name": "минут доступности протонов ≥100 МэВ по обрезанию",
-       "value": 4.060248364363113,
+       "value": 4.060248364363109,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -45902,8 +45902,8 @@
    {
     "start_utc": "2024-05-10T19:00:00+00:00",
     "end_utc": "2024-05-11T01:00:00+00:00",
-    "saa_min": 50.70669343714619,
-    "fluence": 1839173.782791726,
+    "saa_min": 50.70669343714623,
+    "fluence": 1839173.7827917256,
     "mmod_hits": 5.578873681177452e-07,
     "coverage": "partial",
     "conditions": [
@@ -45916,8 +45916,8 @@
    {
     "start_utc": "2024-05-10T19:10:00+00:00",
     "end_utc": "2024-05-11T01:10:00+00:00",
-    "saa_min": 50.70669343714619,
-    "fluence": 1839173.782791726,
+    "saa_min": 50.70669343714623,
+    "fluence": 1839173.7827917256,
     "mmod_hits": 5.579604903995979e-07,
     "coverage": "partial",
     "conditions": [
@@ -45930,8 +45930,8 @@
    {
     "start_utc": "2024-05-10T19:20:00+00:00",
     "end_utc": "2024-05-11T01:20:00+00:00",
-    "saa_min": 50.70669343714619,
-    "fluence": 1839173.782791726,
+    "saa_min": 50.70669343714623,
+    "fluence": 1839173.7827917256,
     "mmod_hits": 5.580670395660351e-07,
     "coverage": "partial",
     "conditions": [
@@ -45944,8 +45944,8 @@
    {
     "start_utc": "2024-05-10T19:30:00+00:00",
     "end_utc": "2024-05-11T01:30:00+00:00",
-    "saa_min": 50.70669343714619,
-    "fluence": 1838925.856635515,
+    "saa_min": 50.70669343714623,
+    "fluence": 1838925.8566355149,
     "mmod_hits": 5.582304744594839e-07,
     "coverage": "partial",
     "conditions": [
@@ -45958,8 +45958,8 @@
    {
     "start_utc": "2024-05-10T19:40:00+00:00",
     "end_utc": "2024-05-11T01:40:00+00:00",
-    "saa_min": 42.86773481845749,
-    "fluence": 1079544.9741574987,
+    "saa_min": 42.86773481845753,
+    "fluence": 1079544.9741574994,
     "mmod_hits": 5.584755690080673e-07,
     "coverage": "partial",
     "conditions": [
@@ -45972,8 +45972,8 @@
    {
     "start_utc": "2024-05-10T19:50:00+00:00",
     "end_utc": "2024-05-11T01:50:00+00:00",
-    "saa_min": 32.86773481845749,
-    "fluence": 727413.5662220762,
+    "saa_min": 32.86773481845753,
+    "fluence": 727413.5662220772,
     "mmod_hits": 5.582033422542277e-07,
     "coverage": "partial",
     "conditions": [
@@ -45986,8 +45986,8 @@
    {
     "start_utc": "2024-05-10T20:00:00+00:00",
     "end_utc": "2024-05-11T02:00:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.578100701823942e-07,
     "coverage": "partial",
     "conditions": [
@@ -46000,8 +46000,8 @@
    {
     "start_utc": "2024-05-10T20:10:00+00:00",
     "end_utc": "2024-05-11T02:10:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.578387251175786e-07,
     "coverage": "partial",
     "conditions": [
@@ -46014,8 +46014,8 @@
    {
     "start_utc": "2024-05-10T20:20:00+00:00",
     "end_utc": "2024-05-11T02:20:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.577997878447626e-07,
     "coverage": "partial",
     "conditions": [
@@ -46028,8 +46028,8 @@
    {
     "start_utc": "2024-05-10T20:30:00+00:00",
     "end_utc": "2024-05-11T02:30:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.578628157305882e-07,
     "coverage": "partial",
     "conditions": [
@@ -46042,8 +46042,8 @@
    {
     "start_utc": "2024-05-10T20:40:00+00:00",
     "end_utc": "2024-05-11T02:40:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.579501004143376e-07,
     "coverage": "partial",
     "conditions": [
@@ -46056,8 +46056,8 @@
    {
     "start_utc": "2024-05-10T20:50:00+00:00",
     "end_utc": "2024-05-11T02:50:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.580130231797404e-07,
     "coverage": "partial",
     "conditions": [
@@ -46070,8 +46070,8 @@
    {
     "start_utc": "2024-05-10T21:00:00+00:00",
     "end_utc": "2024-05-11T03:00:00+00:00",
-    "saa_min": 32.29869387028605,
-    "fluence": 726409.4142565605,
+    "saa_min": 32.298693870286094,
+    "fluence": 726409.4142565614,
     "mmod_hits": 5.582272376413489e-07,
     "coverage": "partial",
     "conditions": [
@@ -46084,8 +46084,8 @@
    {
     "start_utc": "2024-05-10T21:10:00+00:00",
     "end_utc": "2024-05-11T03:10:00+00:00",
-    "saa_min": 30.370342464114323,
-    "fluence": 694228.7252041111,
+    "saa_min": 30.370342464114362,
+    "fluence": 694228.7252041122,
     "mmod_hits": 5.583569969491456e-07,
     "coverage": "partial",
     "conditions": [
@@ -46098,8 +46098,8 @@
    {
     "start_utc": "2024-05-10T21:20:00+00:00",
     "end_utc": "2024-05-11T03:20:00+00:00",
-    "saa_min": 20.370342464114323,
-    "fluence": 90402.18269837405,
+    "saa_min": 20.370342464114362,
+    "fluence": 90402.18269837409,
     "mmod_hits": 5.584771383985234e-07,
     "coverage": "partial",
     "conditions": [
@@ -46112,8 +46112,8 @@
    {
     "start_utc": "2024-05-10T21:30:00+00:00",
     "end_utc": "2024-05-11T03:30:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.578368148263922e-07,
     "coverage": "partial",
     "conditions": [
@@ -46126,8 +46126,8 @@
    {
     "start_utc": "2024-05-10T21:40:00+00:00",
     "end_utc": "2024-05-11T03:40:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.578603932651638e-07,
     "coverage": "partial",
     "conditions": [
@@ -46140,8 +46140,8 @@
    {
     "start_utc": "2024-05-10T21:50:00+00:00",
     "end_utc": "2024-05-11T03:50:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.578448433519356e-07,
     "coverage": "partial",
     "conditions": [
@@ -46154,8 +46154,8 @@
    {
     "start_utc": "2024-05-10T22:00:00+00:00",
     "end_utc": "2024-05-11T04:00:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.578702501616477e-07,
     "coverage": "partial",
     "conditions": [
@@ -46168,8 +46168,8 @@
    {
     "start_utc": "2024-05-10T22:10:00+00:00",
     "end_utc": "2024-05-11T04:10:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.579664589000971e-07,
     "coverage": "partial",
     "conditions": [
@@ -46182,8 +46182,8 @@
    {
     "start_utc": "2024-05-10T22:20:00+00:00",
     "end_utc": "2024-05-11T04:20:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 76540.38520518475,
+    "saa_min": 15.838655893968685,
+    "fluence": 76540.38520518484,
     "mmod_hits": 5.580184379062011e-07,
     "coverage": "partial",
     "conditions": [
@@ -46196,8 +46196,8 @@
    {
     "start_utc": "2024-05-10T22:30:00+00:00",
     "end_utc": "2024-05-11T04:30:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 77073.98784892786,
+    "saa_min": 15.838655893968685,
+    "fluence": 77073.98784892797,
     "mmod_hits": 5.582009180521903e-07,
     "coverage": "partial",
     "conditions": [
@@ -46210,8 +46210,8 @@
    {
     "start_utc": "2024-05-10T22:40:00+00:00",
     "end_utc": "2024-05-11T04:40:00+00:00",
-    "saa_min": 15.838655893968646,
-    "fluence": 77073.98784892786,
+    "saa_min": 15.838655893968685,
+    "fluence": 77073.98784892797,
     "mmod_hits": 5.582820535235767e-07,
     "coverage": "partial",
     "conditions": [
@@ -46224,8 +46224,8 @@
    {
     "start_utc": "2024-05-10T22:50:00+00:00",
     "end_utc": "2024-05-11T04:50:00+00:00",
-    "saa_min": 10.542209489712766,
-    "fluence": 4968.642570851005,
+    "saa_min": 10.542209489712791,
+    "fluence": 4968.6425708511,
     "mmod_hits": 5.587450641944426e-07,
     "coverage": "partial",
     "conditions": [
@@ -46238,8 +46238,8 @@
    {
     "start_utc": "2024-05-10T23:00:00+00:00",
     "end_utc": "2024-05-11T05:00:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.580674218196574e-07,
     "coverage": "partial",
     "conditions": [
@@ -46252,8 +46252,8 @@
    {
     "start_utc": "2024-05-10T23:10:00+00:00",
     "end_utc": "2024-05-11T05:10:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.579049957440089e-07,
     "coverage": "partial",
     "conditions": [
@@ -46266,8 +46266,8 @@
    {
     "start_utc": "2024-05-10T23:20:00+00:00",
     "end_utc": "2024-05-11T05:20:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.579113396377777e-07,
     "coverage": "partial",
     "conditions": [
@@ -46280,8 +46280,8 @@
    {
     "start_utc": "2024-05-10T23:30:00+00:00",
     "end_utc": "2024-05-11T05:30:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.578991408548972e-07,
     "coverage": "partial",
     "conditions": [
@@ -46294,8 +46294,8 @@
    {
     "start_utc": "2024-05-10T23:40:00+00:00",
     "end_utc": "2024-05-11T05:40:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.579989796089994e-07,
     "coverage": "partial",
     "conditions": [
@@ -46308,8 +46308,8 @@
    {
     "start_utc": "2024-05-10T23:50:00+00:00",
     "end_utc": "2024-05-11T05:50:00+00:00",
-    "saa_min": 4.904061089392453,
-    "fluence": 533.60264374311,
+    "saa_min": 4.904061089392462,
+    "fluence": 533.6026437431271,
     "mmod_hits": 5.580695914586432e-07,
     "coverage": "partial",
     "conditions": [
@@ -46322,8 +46322,8 @@
    {
     "start_utc": "2024-05-11T00:00:00+00:00",
     "end_utc": "2024-05-11T06:00:00+00:00",
-    "saa_min": 6.473139238776269,
-    "fluence": 11338.102520446006,
+    "saa_min": 6.473139238776233,
+    "fluence": 11338.102520446053,
     "mmod_hits": 5.58196661016175e-07,
     "coverage": "partial",
     "conditions": [
@@ -46336,8 +46336,8 @@
    {
     "start_utc": "2024-05-11T00:10:00+00:00",
     "end_utc": "2024-05-11T06:10:00+00:00",
-    "saa_min": 9.44374830490389,
-    "fluence": 32196.49415558705,
+    "saa_min": 9.443748304903893,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.583359552000088e-07,
     "coverage": "partial",
     "conditions": [
@@ -46350,8 +46350,8 @@
    {
     "start_utc": "2024-05-11T00:20:00+00:00",
     "end_utc": "2024-05-11T06:20:00+00:00",
-    "saa_min": 9.44374830490389,
-    "fluence": 32196.49415558705,
+    "saa_min": 9.443748304903893,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.587468242609095e-07,
     "coverage": "partial",
     "conditions": [
@@ -46364,8 +46364,8 @@
    {
     "start_utc": "2024-05-11T00:30:00+00:00",
     "end_utc": "2024-05-11T06:30:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.583539123828302e-07,
     "coverage": "partial",
     "conditions": [
@@ -46378,8 +46378,8 @@
    {
     "start_utc": "2024-05-11T00:40:00+00:00",
     "end_utc": "2024-05-11T06:40:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.579541064821812e-07,
     "coverage": "partial",
     "conditions": [
@@ -46392,8 +46392,8 @@
    {
     "start_utc": "2024-05-11T00:50:00+00:00",
     "end_utc": "2024-05-11T06:50:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.579829283859038e-07,
     "coverage": "partial",
     "conditions": [
@@ -46406,8 +46406,8 @@
    {
     "start_utc": "2024-05-11T01:00:00+00:00",
     "end_utc": "2024-05-11T07:00:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.579426771316838e-07,
     "coverage": "partial",
     "conditions": [
@@ -46420,8 +46420,8 @@
    {
     "start_utc": "2024-05-11T01:10:00+00:00",
     "end_utc": "2024-05-11T07:10:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.580309422414827e-07,
     "coverage": "partial",
     "conditions": [
@@ -46434,8 +46434,8 @@
    {
     "start_utc": "2024-05-11T01:20:00+00:00",
     "end_utc": "2024-05-11T07:20:00+00:00",
-    "saa_min": 4.539687215511437,
-    "fluence": 32196.49415558705,
+    "saa_min": 4.539687215511432,
+    "fluence": 32196.494155587367,
     "mmod_hits": 5.581186170562297e-07,
     "coverage": "partial",
     "conditions": [
@@ -46448,8 +46448,8 @@
    {
     "start_utc": "2024-05-11T01:30:00+00:00",
     "end_utc": "2024-05-11T07:30:00+00:00",
-    "saa_min": 11.791492575454457,
-    "fluence": 34666.25535779366,
+    "saa_min": 11.791492575454415,
+    "fluence": 34666.255357794005,
     "mmod_hits": 5.582022240317762e-07,
     "coverage": "partial",
     "conditions": [
@@ -46462,8 +46462,8 @@
    {
     "start_utc": "2024-05-11T01:40:00+00:00",
     "end_utc": "2024-05-11T07:40:00+00:00",
-    "saa_min": 21.791492575454456,
-    "fluence": 231218.93986347,
+    "saa_min": 21.791492575454413,
+    "fluence": 231218.939863471,
     "mmod_hits": 5.58399777324751e-07,
     "coverage": "partial",
     "conditions": [
@@ -46476,8 +46476,8 @@
    {
     "start_utc": "2024-05-11T01:50:00+00:00",
     "end_utc": "2024-05-11T07:50:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.586655098190815e-07,
     "coverage": "partial",
     "conditions": [
@@ -46490,8 +46490,8 @@
    {
     "start_utc": "2024-05-11T02:00:00+00:00",
     "end_utc": "2024-05-11T08:00:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.586850226074689e-07,
     "coverage": "partial",
     "conditions": [
@@ -46504,8 +46504,8 @@
    {
     "start_utc": "2024-05-11T02:10:00+00:00",
     "end_utc": "2024-05-11T08:10:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.580301374198551e-07,
     "coverage": "partial",
     "conditions": [
@@ -46518,8 +46518,8 @@
    {
     "start_utc": "2024-05-11T02:20:00+00:00",
     "end_utc": "2024-05-11T08:20:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.58050901330988e-07,
     "coverage": "partial",
     "conditions": [
@@ -46532,8 +46532,8 @@
    {
     "start_utc": "2024-05-11T02:30:00+00:00",
     "end_utc": "2024-05-11T08:30:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.580280156557654e-07,
     "coverage": "partial",
     "conditions": [
@@ -46546,8 +46546,8 @@
    {
     "start_utc": "2024-05-11T02:40:00+00:00",
     "end_utc": "2024-05-11T08:40:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.580807090924784e-07,
     "coverage": "partial",
     "conditions": [
@@ -46560,8 +46560,8 @@
    {
     "start_utc": "2024-05-11T02:50:00+00:00",
     "end_utc": "2024-05-11T08:50:00+00:00",
-    "saa_min": 22.716034236803655,
-    "fluence": 235515.23252936197,
+    "saa_min": 22.716034236803623,
+    "fluence": 235515.23252936293,
     "mmod_hits": 5.581812853426423e-07,
     "coverage": "partial",
     "conditions": [
@@ -46574,8 +46574,8 @@
    {
     "start_utc": "2024-05-11T03:00:00+00:00",
     "end_utc": "2024-05-11T09:00:00+00:00",
-    "saa_min": 27.54020150716246,
-    "fluence": 244703.209087202,
+    "saa_min": 27.540201507162433,
+    "fluence": 244703.20908720297,
     "mmod_hits": 5.582311181698546e-07,
     "coverage": "partial",
     "conditions": [
@@ -46588,8 +46588,8 @@
    {
     "start_utc": "2024-05-11T03:10:00+00:00",
     "end_utc": "2024-05-11T09:10:00+00:00",
-    "saa_min": 37.54020150716246,
-    "fluence": 859102.6680860729,
+    "saa_min": 37.540201507162436,
+    "fluence": 859102.6680860755,
     "mmod_hits": 5.584363026423305e-07,
     "coverage": "partial",
     "conditions": [
@@ -46602,8 +46602,8 @@
    {
     "start_utc": "2024-05-11T03:20:00+00:00",
     "end_utc": "2024-05-11T09:20:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.586054806945451e-07,
     "coverage": "partial",
     "conditions": [
@@ -46616,8 +46616,8 @@
    {
     "start_utc": "2024-05-11T03:30:00+00:00",
     "end_utc": "2024-05-11T09:30:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.590290466238208e-07,
     "coverage": "partial",
     "conditions": [
@@ -46630,8 +46630,8 @@
    {
     "start_utc": "2024-05-11T03:40:00+00:00",
     "end_utc": "2024-05-11T09:40:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.583024643840814e-07,
     "coverage": "partial",
     "conditions": [
@@ -46644,8 +46644,8 @@
    {
     "start_utc": "2024-05-11T03:50:00+00:00",
     "end_utc": "2024-05-11T09:50:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.581386503165008e-07,
     "coverage": "partial",
     "conditions": [
@@ -46658,8 +46658,8 @@
    {
     "start_utc": "2024-05-11T04:00:00+00:00",
     "end_utc": "2024-05-11T10:00:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.581362590380835e-07,
     "coverage": "partial",
     "conditions": [
@@ -46672,8 +46672,8 @@
    {
     "start_utc": "2024-05-11T04:10:00+00:00",
     "end_utc": "2024-05-11T10:10:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.58151717251237e-07,
     "coverage": "partial",
     "conditions": [
@@ -46686,8 +46686,8 @@
    {
     "start_utc": "2024-05-11T04:20:00+00:00",
     "end_utc": "2024-05-11T10:20:00+00:00",
-    "saa_min": 44.66316606955617,
-    "fluence": 953971.5037852748,
+    "saa_min": 44.663166069556155,
+    "fluence": 953971.5037852773,
     "mmod_hits": 5.582579324806309e-07,
     "coverage": "partial",
     "conditions": [
@@ -46700,8 +46700,8 @@
    {
     "start_utc": "2024-05-11T04:30:00+00:00",
     "end_utc": "2024-05-11T10:30:00+00:00",
-    "saa_min": 45.25623622241892,
-    "fluence": 954331.0093384931,
+    "saa_min": 45.25623622241889,
+    "fluence": 954331.0093384956,
     "mmod_hits": 5.583273340298938e-07,
     "coverage": "partial",
     "conditions": [
@@ -46714,8 +46714,8 @@
    {
     "start_utc": "2024-05-11T04:40:00+00:00",
     "end_utc": "2024-05-11T10:40:00+00:00",
-    "saa_min": 55.25623622241892,
-    "fluence": 1326397.4992180262,
+    "saa_min": 55.25623622241889,
+    "fluence": 1326397.4992180238,
     "mmod_hits": 5.584768572673392e-07,
     "coverage": "partial",
     "conditions": [
@@ -46728,8 +46728,8 @@
    {
     "start_utc": "2024-05-11T04:50:00+00:00",
     "end_utc": "2024-05-11T10:50:00+00:00",
-    "saa_min": 65.25623622241892,
-    "fluence": 1968490.8705878707,
+    "saa_min": 65.25623622241889,
+    "fluence": 1968490.8705878714,
     "mmod_hits": 5.585928219753447e-07,
     "coverage": "partial",
     "conditions": [
@@ -46742,8 +46742,8 @@
    {
     "start_utc": "2024-05-11T05:00:00+00:00",
     "end_utc": "2024-05-11T11:00:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.591308566775582e-07,
     "coverage": "partial",
     "conditions": [
@@ -46756,8 +46756,8 @@
    {
     "start_utc": "2024-05-11T05:10:00+00:00",
     "end_utc": "2024-05-11T11:10:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.586158273827962e-07,
     "coverage": "partial",
     "conditions": [
@@ -46770,8 +46770,8 @@
    {
     "start_utc": "2024-05-11T05:20:00+00:00",
     "end_utc": "2024-05-11T11:20:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.582300362766438e-07,
     "coverage": "partial",
     "conditions": [
@@ -46784,8 +46784,8 @@
    {
     "start_utc": "2024-05-11T05:30:00+00:00",
     "end_utc": "2024-05-11T11:30:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.582478941062002e-07,
     "coverage": "partial",
     "conditions": [
@@ -46798,8 +46798,8 @@
    {
     "start_utc": "2024-05-11T05:40:00+00:00",
     "end_utc": "2024-05-11T11:40:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.582249010851498e-07,
     "coverage": "partial",
     "conditions": [
@@ -46812,8 +46812,8 @@
    {
     "start_utc": "2024-05-11T05:50:00+00:00",
     "end_utc": "2024-05-11T11:50:00+00:00",
-    "saa_min": 68.45814284280003,
-    "fluence": 1972699.4597670475,
+    "saa_min": 68.45814284280002,
+    "fluence": 1972699.459767048,
     "mmod_hits": 5.583318673800132e-07,
     "coverage": "partial",
     "conditions": [
@@ -46826,8 +46826,8 @@
    {
     "start_utc": "2024-05-11T06:00:00+00:00",
     "end_utc": "2024-05-11T12:00:00+00:00",
-    "saa_min": 66.8890646934162,
-    "fluence": 1961894.9598903446,
+    "saa_min": 66.88906469341624,
+    "fluence": 1961894.959890345,
     "mmod_hits": 5.584192672784675e-07,
     "coverage": "partial",
     "conditions": [
@@ -46840,8 +46840,8 @@
    {
     "start_utc": "2024-05-11T06:10:00+00:00",
     "end_utc": "2024-05-11T12:10:00+00:00",
-    "saa_min": 70.37220818609987,
-    "fluence": 1951658.2832314577,
+    "saa_min": 70.37220818609988,
+    "fluence": 1951658.283231458,
     "mmod_hits": 5.585236294203496e-07,
     "coverage": "partial",
     "conditions": [
@@ -46854,8 +46854,8 @@
    {
     "start_utc": "2024-05-11T06:20:00+00:00",
     "end_utc": "2024-05-11T12:20:00+00:00",
-    "saa_min": 80.37220818609987,
-    "fluence": 2900931.176581765,
+    "saa_min": 80.37220818609988,
+    "fluence": 2900931.1765817646,
     "mmod_hits": 5.586988884273578e-07,
     "coverage": "partial",
     "conditions": [
@@ -46868,7 +46868,7 @@
    {
     "start_utc": "2024-05-11T06:30:00+00:00",
     "end_utc": "2024-05-11T12:30:00+00:00",
-    "saa_min": 90.37220818609987,
+    "saa_min": 90.37220818609988,
     "fluence": 2950202.2364522405,
     "mmod_hits": 5.591092598280785e-07,
     "coverage": "partial",
@@ -46937,5 +46937,5 @@
   "answer_kind": null,
   "answer_span": null
  },
- "git_commit": "91b1637d061e3a501b71909b9b268343c97a340e"
+ "git_commit": "78311a0d6ff68ed97774dd57505bb6c2bc682b7a"
 }
