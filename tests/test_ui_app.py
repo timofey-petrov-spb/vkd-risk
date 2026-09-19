@@ -1768,6 +1768,16 @@ def test_otkaz_ot_rekomendacii_ne_nazyvaet_luchshee_okno():
     ровно та рекомендация, в которой заголовок только что отказал. Числа остаются, вывод снят,
     причина отказа стоит первой."""
     from app.ui import comparison_without_pick_ru
+    for pro in (False, True):
+        # Двенадцатый круг: на профессиональном уровне видимых буллетов стало три, и отбор
+        # в эту тройку обязан ставить причину отказа впереди сравнения — иначе находка №6
+        # возвращается тем же способом, каким была закрыта.
+        at = run_app(MODES[0], pro=pro)
+        at.sidebar.selectbox('dis_goes').set_value('исключён: нет данных').run()
+        assert not at.exception, at.exception
+        первый = re.findall(r'<li[^>]*>(.*?)</li>', verdict_html(at), re.S)
+        assert первый, verdict_html(at)
+        assert 'мин в аномалии' not in первый[0], (pro, первый[:2])
     at = run_app(MODES[0])
     at.sidebar.selectbox('dis_goes').set_value('исключён: нет данных').run()
     assert not at.exception, at.exception
@@ -2948,6 +2958,26 @@ def test_populyarnoe_obyasnenie_rovno_dva_predlozheniya_s_chislami():
     assert '29 минут из 360' in vis, vis
     assert 'наименьшее воздействие из 7 проверенных начал' not in vis, vis   # она в свёртке
     assert 'наименьшее воздействие из 7 проверенных начал' in _strip_tags(html_), html_[:600]
+
+
+def test_populyarnoe_obyasnenie_ne_govorit_menshe_vsego_bez_osnovaniy():
+    """«Меньше всего времени в аномалии» — сильное утверждение, и правило выбора окна его НЕ
+    гарантирует: оно отбирает начала, которых не превосходит ни одно другое сразу по двум
+    величинам, и рекомендованное может проигрывать по минутам тому, кто сильно хуже по потоку.
+    Там, где минимум не у рекомендованного начала, превосходной степени в тексте нет — иначе
+    первая же строка ответа опровергалась бы таблицей под ним."""
+    from app.ui import plain_why_ru
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    sc = _scan_fixture(t0)
+    # у последнего кандидата минимум минут — превосходная степень уместна
+    assert 'меньше всего' in plain_why_ru(sc, sc['candidates'][-1], 360)
+    # а у него же, но когда минуты в аномалии ниже у соседа, — нет
+    подмена = {**sc, 'candidates': [dict(c) for c in sc['candidates']]}
+    подмена['candidates'][0]['saa_min'] = 1.0
+    txt = plain_why_ru(подмена, подмена['candidates'][-1], 360)
+    assert txt and 'меньше всего' not in txt, txt
+    assert '29 минут из 360' in txt and 'в худшее время на сроке' in txt, txt
+    assert len(re.findall(r'[.!?](?:\s|$)', txt)) == 2, txt
 
 
 def test_populyarnoe_obyasnenie_ne_vydumyvaet_chisel():
