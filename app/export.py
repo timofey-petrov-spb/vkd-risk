@@ -2,6 +2,8 @@
 """Выгрузка расчёта единым снимком (постановка, «Интерфейс и форма результата»; Т8).
 
 Архив содержит: report.md (читаемо, самостоятельный документ для руководителя работ),
+report.pdf (тот же расчёт свёрстанным отчётом из шести разделов, `app/report_pdf.py`; если
+собрать его нечем, вместо него лежит report_pdf_ne_sobran.txt с причиной),
 request.json, trajectory_meta.json, factors.json, recommendation.json, cards.json
 (карточки по окнам), sources.json, scan.json (перебор начал выхода, если он делался),
 verification.json (прогноз из прошлого: что наблюдалось после отсечки), manifest.json и raw/<record_id>.json — сырые записи,
@@ -535,6 +537,24 @@ def _traj_line(tm: dict) -> str:
         'объявленная реконструкция' if tm.get('is_reconstruction') else 'без реконструкции', tm.get('field_model'))
 
 
+def build_pdf_entry(S: dict) -> tuple[str, bytes | str]:
+    """Отчёт PDF для архива: (имя файла, содержимое) либо (имя файла с причиной, текст причины).
+
+    Импорт отложен сюда намеренно: `app.report_pdf` читает форматеры этого модуля, и импорт
+    наверху файла замкнул бы круг. Сборка PDF отделена от выгрузки полностью — выгрузка обязана
+    собраться и тогда, когда PDF собрать нечем (нет библиотеки вёрстки, нет шрифта с кириллицей),
+    и тогда вместо отчёта в архив кладётся причина, а не пустой файл и не молчание.
+    """
+    from app import report_pdf
+    pdf, reason = report_pdf.build_pdf_or_reason(S)
+    if pdf:
+        return 'report.pdf', pdf
+    return 'report_pdf_ne_sobran.txt', (
+        'Отчёт PDF не собран.\n\nПричина: %s\n\n'
+        'Это не влияет на остальную выгрузку: те же сведения полностью содержатся в report.md, '
+        'а числа — в factors.json, recommendation.json, scan.json и sources.json.\n' % reason)
+
+
 def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
     buf = io.BytesIO()
     import hashlib
@@ -544,6 +564,11 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         raw_files['iss.tle'] = 'raw/iss.tle.json'
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('report.md', report_md(S, raw_records))
+        # Отчёт PDF по канонам (ТЗ круга 12, пункт 8): шесть разделов в строгом порядке.
+        # Не собрался — в архиве лежит причина, а не тишина; имя файла попадает в манифест,
+        # чтобы по одному манифесту было видно, полон архив или нет.
+        pdf_name, pdf_body = build_pdf_entry(S)
+        z.writestr(pdf_name, pdf_body)
         z.writestr('request.json', _j(S['request']))
         z.writestr('trajectory_meta.json', _j(S['trajectory_meta']))
         z.writestr('factors.json', _j(S['windows']))
@@ -581,6 +606,7 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
                                        'source_versions', 'event_facts', 'provider')},
             'numerical_integration': S.get('numerical_integration'),
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
+            'report_pdf': pdf_name,
         }))
         for rid, rec in raw_records.items():
             z.writestr(raw_files[rid], _j(rec))
