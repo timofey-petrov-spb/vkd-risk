@@ -60,19 +60,32 @@ CSS = r"""
         --none:#9aa5b5; --none-bg:#1c212b; --none-line:#2b323f;
         /* прежние имена состояний — те же четыре тона, чтобы правила ниже читались одинаково */
         --ok:var(--obs); --ok-bg:var(--obs-bg); --warn:var(--fc); --warn-bg:var(--fc-bg);
-        --crit:var(--cond); --crit-bg:var(--cond-bg); }
+        --crit:var(--cond); --crit-bg:var(--cond-bg);
+        /* ТРИ размера шрифта на главном экране и ДВЕ степени приглушённости — больше нет.
+           Тринадцатый круг: владелец просит типографику в духе NASA и Роскосмоса — крупный
+           ответ, ярлыки капителью, ничего между ними. Размеры заданы здесь один раз, и правила
+           ниже берут только их: иначе «почти такой же, но на два процента мельче» расползается
+           по файлу, как это и случилось к двенадцатому кругу (пятнадцать разных кеглей).
+             --fs-1 — ответ, крупные числа и название сервиса;
+             --fs-2 — значения и обычный текст;
+             --fs-3 — ярлыки капителью, приглушённые подписи, заголовки раскрытий.
+           Приглушённость: --ink и --muted. Третьего тона текста на экране нет; --none остаётся
+           цветом ПРОИСХОЖДЕНИЯ «данных нет», а не степенью серости. */
+        --fs-1:1.9rem; --fs-2:1rem; --fs-3:0.8rem;
+        /* воздух между блоками: один шаг сетки и его удвоение, руками числа больше не ставим */
+        --gap:14px; --gap-2:30px; }
 html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink);
         font-variant-numeric: tabular-nums; }
 .stApp, .main, section[data-testid="stSidebar"] { background: var(--bg); }
-.block-container { padding-top: 3.2rem; padding-bottom: 2rem; max-width: 1400px; }
+.block-container { padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeric: tabular-nums; }
 .vk-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:2px; }
-.vk-title { font-size:1.55rem; font-weight:700; margin:0; }
-.vk-sub { color:var(--muted); font-size:0.92rem; }
-.sect { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
-        margin:10px 0 4px 0; }
-.pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.78rem; font-weight:600;
+.vk-title { font-size:var(--fs-1); font-weight:700; margin:0; }
+.vk-sub { color:var(--muted); font-size:var(--fs-2); }
+.sect { font-size:var(--fs-3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+        margin:var(--gap-2) 0 var(--gap) 0; }
+.pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:var(--fs-3); font-weight:600;
         line-height:1.5; border:1px solid transparent; margin:1px 4px 1px 0; white-space:nowrap; }
 .pill-ok { background:var(--obs-bg); color:var(--obs); border-color:var(--obs-line); }
 .pill-warn { background:var(--fc-bg); color:var(--fc); border-color:var(--fc-line); }
@@ -82,15 +95,15 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .pill-obs { background:var(--obs-bg); color:var(--obs); border-color:var(--obs-line); }
 .pill-fc { background:var(--fc-bg); color:var(--fc); border-color:var(--fc-line); }
 /* приборная полоса: две строки фиксированной сетки, метка — значение — давность и происхождение */
-.panel { border:1px solid var(--line); border-radius:10px; background:var(--soft); margin:6px 0 12px 0; overflow:hidden; }
+.panel { border:1px solid var(--line); border-radius:10px; background:var(--soft); margin:6px 0 var(--gap) 0; overflow:hidden; }
 .prow { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
 .prow + .prow { border-top:1px solid var(--line); }
 .cell { padding:7px 12px 8px 12px; border-left:3px solid var(--none-line); box-shadow:inset 1px 0 0 var(--line); min-width:0; }
 .cell:first-child { box-shadow:none; }
-.cl { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+.cl { font-size:var(--fs-3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cv { font-size:1.05rem; font-weight:600; line-height:1.35; overflow-wrap:anywhere; }
-.cs { font-size:0.78rem; color:var(--muted); line-height:1.35; overflow-wrap:anywhere; }
+.cv { font-size:var(--fs-2); font-weight:600; line-height:1.35; overflow-wrap:anywhere; }
+.cs { font-size:var(--fs-3); color:var(--muted); line-height:1.35; overflow-wrap:anywhere; }
 .k-calc { border-left-color:var(--calc); } .k-calc .cv { color:var(--calc); }
 .k-obs  { border-left-color:var(--obs); }  .k-obs .cv  { color:var(--obs); }
 .k-fc   { border-left-color:var(--fc); }   .k-fc .cv   { color:var(--fc); }
@@ -103,38 +116,38 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
    1,55/0,95 в рекомендации, и два блока об одном и том же читались как разные по важности).
    Ширина строки ограничена одинаково в обоих блоках: сплошная строка в 1400 px не читается —
    глаз теряет начало следующей. 96ch при 0,95 rem — около 740 px. */
-.verdict h2 { margin:0 0 4px 0; font-size:1.55rem; }
-.verdict .rule { color:var(--muted); font-size:0.95rem; margin-bottom:8px; max-width:96ch; }
-.verdict .rule .orig { color:var(--muted); font-size:0.84rem; }
-.verdict .win { font-size:1.05rem; font-weight:600; }
+.verdict h2 { margin:0 0 4px 0; font-size:var(--fs-1); }
+.verdict .rule { color:var(--muted); font-size:var(--fs-2); margin-bottom:8px; max-width:96ch; }
+.verdict .rule .orig { color:var(--muted); font-size:var(--fs-3); }
+.verdict .win { font-size:var(--fs-2); font-weight:600; }
 .verdict ul { margin:6px 0 0 18px; padding:0; max-width:96ch; }
-.verdict li { margin:3px 0; font-size:0.95rem; }
-.verdict li.more { color:var(--muted); list-style:none; margin-left:-18px; font-size:0.86rem; }
+.verdict li { margin:3px 0; font-size:var(--fs-2); }
+.verdict li.more { color:var(--muted); list-style:none; margin-left:-18px; font-size:var(--fs-3); }
 .verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
-                 background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
-.verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+                 background:var(--calc-bg); color:var(--calc); font-size:var(--fs-3); }
+.verdict .policy { margin:8px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
 /* Объявленная область вывода. НЕ в свёртке ни на одном уровне: вердикт без своей области —
    это утверждение шире, чем посчитано. Рамка слева тем же цветом, что у нашего расчёта:
    область говорит о нашем расчёте, а не о тревоге. */
 .verdict .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
-                  background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
+                  background:var(--calc-bg); color:var(--ink); font-size:var(--fs-3); }
 .verdict .scope b { color:var(--calc); font-weight:600; }
 /* «Что дальше» — последняя видимая строка блока: что проверить, до какого момента действует
    условие, когда пересчитать. Наш расчёт по снимку, поэтому тон синий, как у всего расчётного. */
 .verdict .next { margin:10px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--calc);
-                 background:var(--calc-bg); color:var(--calc); font-size:0.9rem; }
+                 background:var(--calc-bg); color:var(--calc); font-size:var(--fs-2); }
 /* «на один клик глубже» (бриф §9.1): как считался допуск, устойчив ли выбор и остальные пояснения.
    Обычный <details>, а не свёртка Streamlit: блок вердикта — одна разметка, и свёртка обязана
    стоять ВНУТРИ неё, иначе она уезжает под карточки окон. */
 .verdict details.vmore { margin:8px 0 0 0; }
-.verdict details.vmore > summary { cursor:pointer; color:var(--muted); font-size:0.84rem; list-style:none;
+.verdict details.vmore > summary { cursor:pointer; color:var(--muted); font-size:var(--fs-3); list-style:none;
                                    user-select:none; }
 .verdict details.vmore > summary::-webkit-details-marker { display:none; }
 .verdict details.vmore > summary::before { content:"\25B8\00A0"; }
 .verdict details.vmore[open] > summary::before { content:"\25BE\00A0"; }
-.verdict details.vmore .vm { margin:6px 0 0 0; font-size:0.86rem; color:var(--muted); }
+.verdict details.vmore .vm { margin:6px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
 .verdict details.vmore ul { margin:6px 0 0 18px; }
-.verdict details.vmore li { font-size:0.86rem; color:var(--muted); }
+.verdict details.vmore li { font-size:var(--fs-3); color:var(--muted); }
 /* вердикт — наш расчёт (синий); условие у всех окон — красный; нет оснований — серый. Без заливок. */
 .v-preferred { border-left-color:var(--calc); }
 .v-equivalent { border-left-color:var(--calc); }
@@ -147,20 +160,20 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .wcard.flag { border-left-color:var(--fc); }
 .wcard.crit { border-left-color:var(--cond); }
 .wcard .wh { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
-.wcard .wt { font-weight:700; font-size:1.02rem; }
-.wcard .wtime { color:var(--muted); font-size:0.86rem; }
-.kv { display:grid; grid-template-columns: 1fr auto; gap:3px 10px; font-size:0.9rem; margin:8px 0 6px 0; }
+.wcard .wt { font-weight:700; font-size:var(--fs-2); }
+.wcard .wtime { color:var(--muted); font-size:var(--fs-3); }
+.kv { display:grid; grid-template-columns: 1fr auto; gap:3px 10px; font-size:var(--fs-2); margin:8px 0 6px 0; }
 .kv .k { color:var(--muted); }
 .kv .v { font-weight:600; text-align:right; font-variant-numeric: tabular-nums; }
-.kv .v.big { font-size:1.35rem; }
+.kv .v.big { font-size:var(--fs-1); }
 .kv .u { color:var(--muted); font-weight:400; }
-.wnote { font-size:0.78rem; color:var(--muted); margin:-2px 0 6px 0; }
-.cond { font-size:0.85rem; margin:4px 0 0 0; padding:6px 8px; border-radius:8px; border-left:3px solid var(--fc);
+.wnote { font-size:var(--fs-3); color:var(--muted); margin:-2px 0 6px 0; }
+.cond { font-size:var(--fs-3); margin:4px 0 0 0; padding:6px 8px; border-radius:8px; border-left:3px solid var(--fc);
         background:var(--fc-bg); color:var(--fc); }
 .cond.crit { border-left-color:var(--cond); background:var(--cond-bg); color:var(--cond); }
 .cond.none { border-left-color:var(--none-line); background:var(--none-bg); color:var(--none); }
-.cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
-.covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
+.cov { margin-top:8px; font-size:var(--fs-3); color:var(--muted); }
+.covwhy { margin-top:4px; font-size:var(--fs-3); color:var(--muted); }
 /* подкладка под кнопку строки задачи: она встаёт вровень с полями ввода, у которых своя подпись.
    Высота вынесена сюда, а не в разметку: числа с десятичной точкой на экране быть не должно. */
 .btnpad { height:1.75rem; }
@@ -168,35 +181,78 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
    серая или красная, чтобы заголовок не был увереннее расчёта. */
 .reco { border:1px solid var(--line); border-radius:12px; padding:16px 20px; background:var(--bg);
         border-left:3px solid var(--calc); margin:4px 0 14px 0; }
-.reco h2 { margin:0 0 2px 0; font-size:1.55rem; color:var(--calc); }
-.reco .when { font-size:1.05rem; font-weight:600; margin-bottom:6px; }
-.reco .why { font-size:0.95rem; margin:4px 0 2px 0; max-width:96ch; }
+.reco h2 { margin:0 0 2px 0; font-size:var(--fs-1); color:var(--calc); }
+.reco .when { font-size:var(--fs-2); font-weight:600; margin-bottom:6px; }
+.reco .why { font-size:var(--fs-2); margin:4px 0 2px 0; max-width:96ch; }
 /* Популярное объяснение: ровно два предложения обычными словами под крупным ответом.
    Чуть крупнее служебных строк и без приглушения — это то, что читают первым после заголовка. */
-.reco .plain { font-size:1.0rem; line-height:1.45; margin:6px 0 2px 0; max-width:96ch; color:var(--ink); }
-.reco .searched { font-size:0.84rem; color:var(--muted); margin:4px 0 0 0; }
+.reco .plain { font-size:var(--fs-2); line-height:1.45; margin:6px 0 2px 0; max-width:96ch; color:var(--ink); }
+.reco .searched { font-size:var(--fs-3); color:var(--muted); margin:4px 0 0 0; }
 .reco .stop { margin:8px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--cond);
-              background:var(--cond-bg); color:var(--cond); font-size:0.9rem; }
+              background:var(--cond-bg); color:var(--cond); font-size:var(--fs-2); }
 .reco .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
-               background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
+               background:var(--calc-bg); color:var(--ink); font-size:var(--fs-3); }
 .reco .scope b { color:var(--calc); font-weight:600; }
-.reco .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+.reco .policy { margin:8px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
 /* «на один клик глубже» внутри блока рекомендации — тот же приём, что в блоке вердикта */
 .reco details.vmore { margin:6px 0 0 0; }
-.reco details.vmore > summary { cursor:pointer; color:var(--muted); font-size:0.84rem; list-style:none;
+.reco details.vmore > summary { cursor:pointer; color:var(--muted); font-size:var(--fs-3); list-style:none;
                                 user-select:none; }
 .reco details.vmore > summary::-webkit-details-marker { display:none; }
 .reco details.vmore > summary::before { content:"\25B8\00A0"; }
 .reco details.vmore[open] > summary::before { content:"\25BE\00A0"; }
-.reco details.vmore .vm { margin:6px 0 0 0; font-size:0.86rem; color:var(--muted); }
+.reco details.vmore .vm { margin:6px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
 /* Вид рамки и заголовка — по ВИДУ ОТВЕТА, а не по имени исхода: промежуток равнозначных начал
    такой же ответ, как и точка, и красить его как отказ нельзя. Отказ — только «нет оснований». */
 .r-none { border-left-color:var(--none); } .r-none h2 { color:var(--ink); }
 .r-check { border-left-color:var(--cond); } .r-check h2 { color:var(--cond); }
 .r-tradeoff h2 { color:var(--ink); }
-.legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
-.small { font-size:0.84rem; color:var(--muted); }
-.tcap { font-size:0.82rem; color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
+
+/* ================= ДВА ЯЗЫКА ЦВЕТА: происхождение величины и цвет решения =================
+   Ловушка тринадцатого круга, и она настоящая. На этом экране цвет с самого начала означает
+   ПРОИСХОЖДЕНИЕ величины: синий — наш расчёт, зелёный — наблюдение источника, янтарный —
+   внешний прогноз, красный — условие или отказ. Эксперты хакатона просят другого: «выходить —
+   зелёным, не выходить — красным». Это ВТОРОЙ язык, и просто перекрасить вердикт в зелёный
+   значило бы сделать зелёный двузначным: жюри читало бы «зелёное число» как «хорошее число».
+
+   Поэтому языки разведены НЕ цветом, а ФОРМОЙ, и тонов при этом остаётся те же пять:
+     * происхождение величины — ПЛАШКА: маленькая, скруглённая до 999 px, в строку с текстом,
+       кегль --fs-3, со своей тонкой рамкой (правила .pill-* выше);
+     * решение — ПОЛОСА ВО ВСЮ ШИРИНУ: прямые углы, широкая цветная грань слева в 10 px,
+       сплошная заливка, кегль --fs-1 капителью. Спутать её с плашкой нельзя ни по размеру,
+       ни по форме, ни по месту.
+   Одна строка на экране (DECISION_LEGEND) говорит это словами, рядом с легендой происхождения.
+
+   Контраст каждой НОВОЙ пары посчитан по формуле относительной яркости (порог 4,5:1):
+     решение «выходить»  — #5ed39a на заливке #12301f — 7,67; на фоне страницы — 10,13;
+     решение «не выходить» — #f58b7f на заливке #3a1d1a — 6,48; на фоне страницы — 7,99;
+     решение «за аналитиком» — #e7b45c на заливке #332711 — 7,70; на фоне страницы — 9,97;
+     причина в полосе (основной тон) — #e8ebf2 на #12301f — 11,98; на #3a1d1a — 12,84;
+                                        на #332711 — 12,23;
+     ярлык в полосе (приглушённый) — #a7b0c0 на #12301f — 6,55; на #3a1d1a — 7,01;
+                                      на #332711 — 6,68.
+   Ниже 4,5 не опускается ни одна пара; наименьшая — 6,48. */
+.decision { display:block; margin:6px 0 var(--gap) 0; padding:18px 22px 20px 22px;
+            border-left:10px solid var(--dec); background:var(--dec-bg); }
+.decision .dk { display:block; font-size:var(--fs-3); font-weight:700; letter-spacing:0.18em;
+                text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.decision .dv { display:block; font-size:var(--fs-1); font-weight:700; line-height:1.12;
+                color:var(--dec); letter-spacing:-0.01em; }
+/* Короткая причина — ТОЛЬКО при отказе и при решении аналитика: красная полоса без причины
+   читается как поломка сервиса. Не больше восьми слов, полный текст — раскрытием ниже. */
+.decision .dwhy { display:block; font-size:var(--fs-2); color:var(--ink); margin-top:8px; }
+.d-go   { --dec:var(--obs);  --dec-bg:var(--obs-bg); }
+.d-stop { --dec:var(--cond); --dec-bg:var(--cond-bg); }
+.d-ask  { --dec:var(--fc);   --dec-bg:var(--fc-bg); }
+/* Крупные числа под решением: тот же каркас приборной полосы, но значение кеглем ответа.
+   Ярлык — капителью, справа от числа — то же у худшего начала на сроке. Сравнение
+   «выбрано против худшего» и есть объяснение, только числами, без единого слова связки. */
+.panel.stat .cv { font-size:var(--fs-1); font-weight:700; line-height:1.15; }
+.panel.stat .cell { padding:12px 16px 14px 16px; }
+.panel.stat .cs { margin-top:2px; }
+.legend { font-size:var(--fs-3); color:var(--muted); margin:2px 0 10px 0; }
+.small { font-size:var(--fs-3); color:var(--muted); }
+.tcap { font-size:var(--fs-3); color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
 div[data-testid="stMetric"] { background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
 div[data-testid="stExpander"] details { border-radius:10px; }
 footer { visibility:hidden; }
@@ -242,6 +298,11 @@ SEV_RU = {'critical': 'КРИТИЧНО', 'limiting': 'ВНИМАНИЕ', 'info'
 COLOR_LEGEND = ('Цвет означает происхождение: синий — наш расчёт, зелёный — наблюдение источника (в том числе взятое '
                 'из кеша: давность стоит подписью), янтарный — внешний прогноз. Красный — условие проверки, аномалия '
                 'или отказ источника; серый — данных нет.')
+# Тринадцатый круг: на главном экране от легенды остаётся РЯД ПЛАШЕК и один ярлык под ним.
+# Плашка сама себя называет — «наш расчёт», «наблюдение», «внешний прогноз», — и перечислять
+# то же самое ещё и словами значит писать одно и то же дважды. Полная формулировка (COLOR_LEGEND)
+# стоит во вкладке «Методика» и на профессиональном уровне.
+COLOR_LEGEND_SHORT = 'Цвет величины — её происхождение.'
 # Причина, по которой на сетке порогов нет предпочтительного окна, — короткой вставкой в одну фразу
 # об устойчивости (R4-18). Отличается от NO_PICK_ON_GRID_RU падежом и тем, что не повторяет «на сетке».
 NO_PICK_REASON_RU = {
@@ -586,11 +647,17 @@ def age_ru(minutes, limit_min=None, limit_ru: str | None = None) -> str:
     return s + ((' (предел %s)' % lim) if lim else '')
 
 
-def panel(rows) -> str:
+def panel(rows, cls: str = '') -> str:
     """Приборная полоса в две строки (PROPOSAL_A п. 3). rows — список строк, строка — список ячеек
     (метка, значение, подпись, kind). kind из calc|obs|fc|cond|none задаёт левую границу и цвет числа.
-    Давность печатается только здесь: в карточках окон её нет (дублирование = шум)."""
-    out = ['<div class="panel">']
+    Давность печатается только здесь: в карточках окон её нет (дублирование = шум).
+
+    `cls` добавляет класс к полосе. Значение одно — 'stat': тот же каркас, но значение кеглем
+    ответа. Ряд крупных чисел под решением собран этим же кодом намеренно: у ячейки уже есть
+    левая грань цветом происхождения, ярлык капителью и подпись — второго каркаса ради трёх
+    чисел заводить незачем.
+    """
+    out = ['<div class="panel%s">' % ((' ' + cls) if cls else '')]
     for row in rows:
         out.append('<div class="prow">')
         for label, value, sub, kind in row:
@@ -991,8 +1058,10 @@ def source_issues_short_ru(issues: list[str]) -> str:
         m = _AGE_IN_LINE_RE.search(str(x))
         age = m.group(0).replace('давность ', '').strip() if m else ''
         parts.append(('%s %s' % (name, age)) if age else name)
-    return ('Источники: %s — покрытие частичное и объявлено. Подробности — ниже и во вкладке «Данные».'
-            % ', '.join(parts))
+    # Тринадцатый круг: строка стала ЯРЛЫКОМ — имена источников с давностями и три слова о
+    # покрытии. «Подробности — ниже и во вкладке „Данные“» с экрана убрано: раскрытие с перечнем
+    # стоит прямо под этой строкой и само себя называет.
+    return 'Источники: %s — покрытие частичное, объявлено' % ', '.join(parts)
 
 
 def coverage_consequence_ru(missing: list[str] | tuple) -> str:
@@ -2643,7 +2712,7 @@ WHY_BUDGET = 320
 WHY_MORE_RU = 'Почему целиком: все проверенные начала и их условия'
 # Заголовок свёртки с правилом перебора и допуском равнозначности. Сам текст пишет движок, и он
 # длинный по существу: правило состоит из пяти условий, каждое из которых надо назвать целиком.
-RULE_MORE_RU = 'По какому правилу выбрано: правило перебора и допуск равнозначности'
+RULE_MORE_RU = 'Правило выбора и допуск равнозначности'
 
 
 def scan_of(S: dict):
@@ -2835,9 +2904,40 @@ def scan_best_rows(scan: dict, limit: int = 5) -> list[dict]:
                'минут в аномалии': fmt(c.get('saa_min')),
                'флюенс, част./см²': fmt_fluence(c.get('fluence'))}
         if any_cond:
-            row['условия проверки'] = '; '.join(conds_by_i[i]) if conds_by_i[i] else 'нет'
+            # Название, а не абзац. Прежде сюда попадал весь текст условия со всеми записями:
+            # на буре Гэннон это 1 522 знака в КАЖДОЙ из пяти строк — семь с половиной тысяч
+            # знаков прозы в таблице чисел. Полный текст никуда не делся: он стоит раскрытием
+            # «Условия проверки целиком» в блоке решения и в карточках окон.
+            _names = sorted({cond_name_ru(x) for x in conds_by_i[i]})
+            row['условия проверки'] = ('; '.join(_names[:2])
+                                       + (' и ещё %d' % (len(_names) - 2) if len(_names) > 2 else ''))                 if _names else 'нет'
         rows.append(row)
     return rows
+
+
+_COND_CUT_RE = re.compile(r'(?<!\d):\s')
+_COND_TAIL_RE = re.compile(r'\s*\([^)]{16,}\)\s*$')
+
+
+def cond_name_ru(text: str) -> str:
+    """Короткое НАЗВАНИЕ условия проверки для таблицы: «GOES ≥10 МэВ = 145 pfu (S2)».
+
+    Условие приходит из слоя расчёта одной длинной строкой: величина, уровень, наблюдение,
+    следствие, правило, записи-основания. В таблице чисел нужна первая часть — что именно
+    сработало; всё остальное открывается раскрытием в блоке решения, где стоит полный текст
+    каждого условия со своими записями и временами публикации (критерий О4 — доступно, а не
+    напечатано на первом экране).
+    """
+    t = str(text or '').strip()
+    # Двоеточие РАЗДЕЛА, а не времени: «наблюдение 11.05 02:45» внутри названия резать нельзя,
+    # иначе в таблице окажется обрывок «(S1, наблюдение 11.05 02».
+    head_ = _COND_CUT_RE.split(t, 1)[0].strip()
+    head_ = head_.split(' — ')[0].strip()
+    # Длинный пояснительный хвост в скобках («(4 сигнала по 8 записям)») — не название.
+    head_ = _COND_TAIL_RE.sub('', head_).strip()
+    if len(head_) > 48:
+        head_ = head_[:48].rstrip(' ,;.(') + '…'
+    return head_ or t[:48]
 
 
 def scan_conditions_note_ru(rows: list[dict] | None) -> str:
@@ -2848,7 +2948,9 @@ def scan_conditions_note_ru(rows: list[dict] | None) -> str:
     """
     if not rows:
         return ''
-    return '' if 'условия проверки' in rows[0] else 'Ни одно из показанных начал не требует отдельной проверки.'
+    # Тринадцатый круг: на главном экране прозы нет, и эта строка тоже стала ярлыком в три слова.
+    # Факт тот же — условия проверялись и их нет; фраза целиком стоит во вкладке «Методика».
+    return '' if 'условия проверки' in rows[0] else 'Условий проверки нет'
 
 
 def ribbon_caption_ru(scan: dict, duration_min=None) -> str:
@@ -3348,101 +3450,144 @@ def plain_why_ru(scan: dict, cand: dict | None, duration_min: int | None = None)
     return first + ' ' + second
 
 
+# ================================================================= цвет решения (тринадцатый круг)
+# Эксперты хакатона, дословно по смыслу: «вкусовщина: выходить в промежутке — зелёным цветом;
+# если не выходить — красным текстом». Требование выполняется, но НЕ перекраской величин:
+# зелёный на этом экране уже занят происхождением «наблюдение источника», и сделать его
+# двузначным нельзя. Разведены ФОРМЫ — см. большой комментарий в CSS у класса .decision.
+#
+# Соответствие исходов и цветов решения:
+#   'point', 'interval'  → зелёный: есть куда выходить (предпочтительное окно либо промежуток
+#                          равнозначных начал — оба ответ, а не отсутствие ответа);
+#   'none'               → красный: оснований для рекомендации недостаточно;
+#   'check', 'tradeoff'  → янтарный: сервис решения не принимает, решает аналитик. Спор величин
+#                          сверх допуска — тот же случай, и красить его отказом было бы неправдой.
+DECISION_TONE = {'point': 'go', 'interval': 'go', 'none': 'stop', 'check': 'ask', 'tradeoff': 'ask'}
+# Ярлык над крупной строкой решения — капителью, одним словом. Это подпись к ПОЛОСЕ, а не фраза,
+# и он один на все исходы: что именно решено, говорит сама крупная строка под ним.
+DECISION_LABEL_RU = {'go': 'Решение', 'stop': 'Решение', 'ask': 'Решение'}
+# Крупная строка полосы. «ВЫХОДИТЬ НЕ РЕКОМЕНДУЕТСЯ» здесь не годится: первым словом красной
+# полосы во весь экран стоит «ВЫХОДИТЬ», и при беглом взгляде отказ читается как разрешение.
+DECISION_VALUE_RU = {'none': 'РЕКОМЕНДАЦИИ НЕТ', 'check': 'РЕШАЕТ АНАЛИТИК', 'tradeoff': 'РЕШАЕТ АНАЛИТИК'}
+# Одна строка на экране о том, что цветов на нём два и они о разном. Стоит там же, где легенда
+# происхождения, — рядом с плашками, один раз на весь экран (техзадание одиннадцатого круга, п. 4.6).
+DECISION_LEGEND = 'Цвет величины — происхождение, цвет решения — вывод.'
+# Короткая причина в самой полосе: не больше восьми слов. Красная полоса без причины читается
+# как поломка сервиса, а не как честный отказ; полный текст — раскрытием в том же блоке.
+DECISION_CAUSE_RU = {'none': 'нет данных обязательной линии на срок',
+                     'check': 'условие проверки стоит у каждого начала',
+                     'tradeoff': 'величины указывают на разные начала'}
+
+
+def decision_band(kind: str, value_ru: str, cause_ru: str = '') -> str:
+    """Полоса решения во всю ширину: ярлык, крупный ответ, при отказе — короткая причина.
+
+    Больше в полосе нет ничего. Числа стоят отдельным рядом под ней, обоснования — раскрытиями.
+    """
+    tone = DECISION_TONE.get(str(kind), 'stop')
+    out = ['<div class="decision d-%s">' % tone,
+           '<span class="dk">%s</span>' % esc(DECISION_LABEL_RU.get(tone, 'Решение')),
+           '<span class="dv">%s</span>' % esc(value_ru)]
+    if cause_ru:
+        out.append('<span class="dwhy">%s</span>' % esc(cause_ru))
+    out.append('</div>')
+    return ''.join(out)
+
+
+def _worst(cands, key: str):
+    """Наибольшее значение величины среди всех перебранных начал — «худшее время на сроке».
+
+    Из головы здесь ничего не берётся: нет ни одного числа — нет и сравнения.
+    """
+    vals = [c.get(key) for c in cands if isinstance(c.get(key), (int, float))]
+    return max(vals) if vals else None
+
+
+def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None) -> list:
+    """Ряд крупных чисел под решением: величина, значение, рядом — худшее на сроке.
+
+    Тринадцатый круг, требование владельца: «сравнение „выбрано против худшего“ — это и есть
+    объяснение, только числами». Поэтому фразы «почему» словами на поверхности больше нет,
+    а её числа стоят здесь: минуты в аномалии, флюенс и доказательство того, что сервис искал
+    (сколько начал перебрано и с каким шагом).
+
+    Ни одного слова связки. Ярлык — название величины с единицей, подпись — «худшее NN».
+    Величины, которой в переборе нет, здесь тоже нет: пустая ячейка честнее правдоподобной.
+    """
+    cands = [c for c in (scan.get('candidates') or []) if isinstance(c, dict)]
+    rows = []
+    # Единица стоит в ПОДПИСИ под числом, а не в ярлыке: ярлык печатается капителью, и «ЧАСТ./СМ²»
+    # прописными — уже не единица, а опечатка. Ярлык называет величину, подпись — единицу, канал
+    # и то же число у худшего начала на сроке.
+    saa = (cand or {}).get('saa_min')
+    if isinstance(saa, (int, float)):
+        w = _worst(cands, 'saa_min')
+        rows.append(('Минут в аномалии', fmt(round(float(saa), 1)),
+                     'мин' + (' · худшее %s' % fmt(round(float(w))) if isinstance(w, (int, float)) else ''), 'calc'))
+    flu = (cand or {}).get('fluence')
+    if isinstance(flu, (int, float)):
+        w = _worst(cands, 'fluence')
+        e_ru = (', ≥%s МэВ' % fmt(e_min_MeV)) if e_min_MeV is not None else ''
+        rows.append(('Флюенс', fmt_fluence(flu),
+                     'част./см²' + e_ru + (' · худшее %s' % fmt_fluence(w) if isinstance(w, (int, float)) else ''),
+                     'calc'))
+    n = int(scan.get('n_candidates') or len(cands))
+    step = scan.get('step_min')
+    rows.append(('Перебрано начал', nbsp_thousands(n),
+                 ('шаг %s мин' % fmt(step)) if step else '', 'calc'))
+    return [rows]
+
+
 def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'live',
                          missing_ru=None, duration_min: int | None = None) -> str:
-    """Крупный блок ответа: когда выходить, почему, область вывода, условия.
+    """Блок ответа: полоса решения, ряд крупных чисел и раскрытия со всем остальным.
 
-    Это первое, что читает человек после своей же строки задачи. Заголовок не бывает увереннее
-    расчёта: при отказе на этом же месте крупно стоит причина и что нужно, чтобы он снялся.
+    Тринадцатый круг, решение владельца: «мне надо, чтобы прозы вообще не было, просто очень
+    красивый визуал как у NASA или Роскосмоса и никаких текстов». На поверхности блока не
+    остаётся ни одного предложения, кроме короткой причины при отказе (не больше восьми слов):
+    красная полоса без причины читается как поломка сервиса, а не как честный отказ.
+
+    Ничего не удалено. Популярное объяснение, правило выбора, допуск равнозначности, объявленная
+    область вывода, перечень условий и полный текст «почему» стоят раскрытиями В ЭТОМ ЖЕ блоке,
+    с внятными заголовками, — эксперты просили экран, который «жюри может потыкать». Критерий О4
+    требует, чтобы это было ДОСТУПНО, а не чтобы лежало на первом экране.
     """
-    v = str(scan.get('verdict') or '')
     ans = scan_answer(scan)
     kind = ans['kind']
     cand = ans.get('first')
     dur = int(duration_min or scan.get('requested_duration_min') or 0)
     dur_txt = ('%d мин' % dur) if dur else ''
-    dur_ru = (', ' + dur_txt) if dur_txt else ''
     lines = ['<div class="reco r-%s">' % esc(kind)]
+    # --- полоса решения: крупно и только ответ
+    cause = ''
     if kind == 'point':
         a, b = _iso_dt(cand.get('start_utc')), _iso_dt(cand.get('end_utc'))
-        lines.append('<h2>Выходить %s UTC</h2>' % esc(_day_time_ru(a)))
-        lines.append('<div class="when">окно %s%s</div>' % (esc(_span_ru(a, b)), esc(dur_ru)))
+        lines.append(decision_band(kind, 'ВЫХОДИТЬ %s UTC' % _span_ru(a, b)))
     elif kind == 'interval':
         # Промежуток — НОРМАЛЬНЫЙ ответ, а не отсутствие ответа: внутри него начала неразличимы
         # в пределах чувствительности модели, и называть минуту значило бы обещать точность,
-        # которой у расчёта нет. Слова те же, что в строке отчёта выгрузки: «любое начало
-        # в промежутке …» — экран и отчёт обязаны говорить одинаково.
-        a1, a2 = ans.get('from'), ans.get('to')
-        _dur = timedelta(minutes=dur) if dur else None
-        b1 = _iso_dt((ans.get('first') or {}).get('end_utc')) or ((a1 + _dur) if (a1 and _dur) else None)
-        b2 = _iso_dt((ans.get('last') or {}).get('end_utc')) or ((a2 + _dur) if (a2 and _dur) else None)
-        lines.append('<h2>Выходить в промежутке %s UTC</h2>' % esc(_span_ru(a1, a2)))
-        lines.append('<div class="when">любое начало в этих границах, окно%s: самое раннее %s, самое позднее %s</div>'
-                     % (esc((' ' + dur_txt) if dur_txt else ''), esc(_span_ru(a1, b1)), esc(_span_ru(a2, b2))))
-    elif kind == 'tradeoff':
-        lines.append('<h2>Выбор между окнами сервис не делает</h2>')
-        lines.append('<div class="when">по минутам в аномалии лучше одно начало, по флюенсу другое</div>')
-    elif kind == 'check':
-        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get('all_need_check', 'Нужна проверка аналитиком')))
+        # которой у расчёта нет.
+        lines.append(decision_band(kind, 'ВЫХОДИТЬ %s UTC' % _span_ru(ans.get('from'), ans.get('to'))))
     else:
-        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Оснований для рекомендации недостаточно')))
-    # Пункт 5: популярное объяснение — сразу под крупным ответом, ДО любых служебных строк.
-    # Это первое, что человек читает после самого ответа, и единственное место экрана, где о
-    # воздействиях сказано без единого термина. Собирается из чисел расчёта; чисел нет — блока нет.
-    plain = plain_why_ru(scan, cand, dur) if kind in ('point', 'interval') else ''
-    if plain:
-        lines.append('<div class="plain">%s</div>' % esc(plain))
-    if kind == 'interval':
-        lines.append('<div class="why">Внутри промежутка начала неразличимы в пределах чувствительности '
-                     'модели, поэтому сервис называет промежуток, а не минуту.</div>')
-    why = scan.get('why')
-    if why and plain:
-        # Популярное объяснение уже сказало главное обычными словами. Техническая фраза движка
-        # говорит то же самое числами и жаргоном слоёв, и на поверхности рядом с популярной это
-        # два сообщения об одном и том же (бриф §9.7) — она целиком уезжает на клик глубже.
-        # Ничего не потеряно: перечень всех проверенных начал и их условий открывается щелчком.
-        lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
-                     % (esc(WHY_MORE_RU), esc(sentence_ru(screen_text(status_ru(why, pro))))))
-    elif why:
-        # Числа «почему» пишет движок — и при промежутке, и при споре величин он уже говорит
-        # словами промежутка. Свой текст поверх не сочиняем, но переводим слова слоёв так же,
-        # как переводятся все готовые строки экрана: на оперативном уровне жаргона быть не должно.
-        #
-        # Длина этого текста не ограничена движком: на буре Гэннон он перечисляет условие КАЖДОГО
-        # проверенного начала и выходит за две тысячи знаков — первый экран таким не читается.
-        # Поэтому на оперативном уровне на поверхности остаётся начало (там движок и ставит главное
-        # с числами), а полный текст стоит раскрытием в том же блоке — ровно тем же приёмом, каким
-        # сокращён блок вердикта. Ничего не выброшено: перечень условий доступен одним кликом.
-        why_txt = sentence_ru(screen_text(status_ru(why, pro)))
-        # На профессиональном уровне бюджет вдвое шире: аналитик читает подряд. Но и там текст не
-        # остаётся бесконечным — замечание владельца о загруженности главной страницы уровня не
-        # выделяет, а перечень условий всех начал одинаково нечитаем на обоих.
-        budget = WHY_BUDGET * 2 if pro else WHY_BUDGET
-        if len(why_txt) > budget:
-            cut = max(why_txt.rfind('; ', 0, budget), why_txt.rfind('. ', 0, budget))
-            cut = cut if cut > budget // 3 else budget
-            head_ru = close_cut_parens(why_txt[:cut].rstrip(' ;,.')) + '…'
-            lines.append('<div class="why">%s</div>' % esc(head_ru))
-            lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
-                         % (esc(WHY_MORE_RU), esc(why_txt)))
-        else:
-            lines.append('<div class="why">%s</div>' % esc(why_txt))
-    lines.append('<div class="searched">%s</div>' % esc(screen_text(scan_searched_ru(scan))))
-    if kind == 'none':
-        # Отказ — только здесь. Ни промежуток равнозначных начал, ни условия у всех начал
-        # отказом не являются, и рисовать их как отказ нельзя.
-        lines.append('<div class="stop">%s</div>' % esc(screen_text(refusal_lift_ru('insufficient', missing_ru, mode))))
-    elif kind == 'check':
-        lines.append('<div class="cond">%s</div>' % esc(screen_text(refusal_lift_ru('all_need_check', missing_ru, mode))))
-    elif kind == 'tradeoff':
-        lines.append('<div class="cond">Спор величин сверх допуска равнозначности: выбор за аналитиком, '
-                     'числа обеих сторон стоят строкой выше.</div>')
-    scope = scan.get('scope')
-    if scope:
-        lines.append('<div class="scope"><b>Область вывода:</b> %s</div>'
-                     % esc(sentence_ru(screen_text(status_ru(scope, pro)))))
-    # Условия берутся по ВСЕЙ лучшей группе: ответ-промежуток называет несколько начал, и условие
-    # у любого из них относится к ответу целиком, а не к одному кандидату.
+        _k = kind if kind in DECISION_VALUE_RU else 'none'
+        cause = DECISION_CAUSE_RU[_k]
+        lines.append(decision_band(kind, DECISION_VALUE_RU[_k], cause))
+    # --- ряд крупных чисел: сравнение «выбрано против худшего» и есть объяснение, только числами
+    if kind in ('point', 'interval') and cand is not None:
+        _e = (S.get('thresholds') or {}).get('e_min_MeV') if isinstance(S, dict) else None
+        lines.append(panel(scan_stat_rows(scan, cand, _e), cls='stat'))
+        if dur_txt:
+            # Длительность и границы крайних окон промежутка — ярлыком, а не фразой.
+            if kind == 'interval':
+                _d = timedelta(minutes=dur)
+                a1, a2 = ans.get('from'), ans.get('to')
+                b1 = _iso_dt((ans.get('first') or {}).get('end_utc')) or ((a1 + _d) if a1 else None)
+                b2 = _iso_dt((ans.get('last') or {}).get('end_utc')) or ((a2 + _d) if a2 else None)
+                lines.append('<div class="searched">окно %s · самое раннее %s · самое позднее %s</div>'
+                             % (esc(dur_txt), esc(_span_ru(a1, b1)), esc(_span_ru(a2, b2))))
+            else:
+                lines.append('<div class="searched">окно %s</div>' % esc(dur_txt))
+    # --- условия проверки: короткими плашками, полный текст — раскрытием ниже
     _cands_all = scan.get('candidates') or []
     _group = [_cands_all[i] for i in scan_best_indices(scan)] if kind in ('interval', 'tradeoff') else [cand]
     conds, _seen = [], set()
@@ -3453,39 +3598,66 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
                 _seen.add(_t)
                 conds.append(_t)
     if conds:
-        lines.append('<div class="cond">Условия проверки: %s</div>' % esc('; '.join(conds[:3])))
-    elif cand is not None:
-        # Т6 и находка №4 десятого круга: «условий нет» и «условия не проверены» — разные
-        # утверждения. Без покрытия обязательной линии условию взяться неоткуда, и молчание
-        # условий там ничего не значит; плашка в любом случае серая, а не зелёная.
-        _what_ru = 'у рекомендованного окна' if kind == 'point' else 'у названных начал'
-        # `coverage` кандидата считается ТОЛЬКО по каналам ранжирования — трасса, порог поля,
-        # модель флюенса. Каналы, одинаковые для всех окон, в него не входят и стоят в объявленной
-        # области вывода, поэтому читать «нет покрытия» как «обязательная линия пуста» нельзя.
-        lines.append('<div class="cond none">%s</div>'
-                     % ('Величины, которые различают начала, на это окно не посчитаны: данных нет. '
-                        'Отсутствие условия здесь не означает отсутствия воздействия.'
-                        if str(cand.get('coverage') or '') == 'none' else
-                        'Условий проверки %s нет' % _what_ru))
-    if pro:
-        # Профессиональному уровню важно, один кандидат оказался в лучшей группе или несколько:
-        # по разбору реальных данных ожидается один, и множество равнозначных — повод проверить
-        # допуски, а не признак хорошей обстановки. Числа берутся из договора, ничего не считаем.
-        lines.append('<div class="policy">В лучшей группе %s из %s перебранных начал.</div>'
-                     % (fmt(len(scan.get('best') or [])), fmt(len(scan.get('candidates') or []))))
-    rule = scan.get('rule')
-    tol = scan.get('tolerance_note')
-    # Правило и допуск приходят из движка строчными — здесь они становятся двумя предложениями,
-    # а не одним слипшимся: «…хотя бы по одной. допуск равнозначности…» читается как обрыв.
+        lines.append('<div class="legend">%s</div>'
+                     % ''.join(pill(cond_name_ru(c), 'crit') for c in conds[:3]))
+    # --- всё остальное: раскрытиями, с ярлыками-заголовками
     _s = lambda x: sentence_ru(screen_text(status_ru(x, pro)))
+    more = []
+    plain = plain_why_ru(scan, cand, dur) if kind in ('point', 'interval') else ''
+    if plain:
+        if kind == 'interval':
+            plain += (' Внутри промежутка начала неразличимы в пределах чувствительности модели, '
+                      'поэтому сервис называет промежуток, а не минуту.')
+        more.append(('Почему это окно: обычными словами', plain))
+    if kind == 'none':
+        # Имя исхода словами не потеряно: оно открывает текст раскрытия. На поверхности вместо
+        # него стоит крупная полоса — то же самое, но цветом и формой.
+        more.append(('Что нужно, чтобы отказ снялся',
+                     '%s. %s' % (SCAN_VERDICT_TITLE['insufficient'],
+                                 screen_text(refusal_lift_ru('insufficient', missing_ru, mode)))))
+    elif kind == 'check':
+        more.append(('Что снимает условие проверки',
+                     '%s. %s' % (SCAN_VERDICT_TITLE['all_need_check'],
+                                 screen_text(refusal_lift_ru('all_need_check', missing_ru, mode)))))
+    elif kind == 'tradeoff':
+        more.append(('Почему сервис не выбирает сам',
+                     'Спор величин сверх допуска равнозначности: выбор за аналитиком, числа обеих сторон '
+                     'стоят в перечне проверенных начал.'))
+    scope = scan.get('scope')
+    if scope:
+        # Объявленная область вывода с поверхности уехала под раскрытие по прямому решению
+        # владельца («области вывода — под раскрытия»). Она не потеряна: раскрытие стоит здесь же,
+        # заголовок называет её своими словами, и тот же текст целиком лежит в отчёте и в выгрузке.
+        more.append(('Область вывода этого ответа', _s(scope)))
+    if conds:
+        more.append(('Условия проверки целиком: откуда известно', '; '.join(conds)))
+    elif cand is not None and str(cand.get('coverage') or '') == 'none':
+        # Т6 и находка №4 десятого круга: «условий нет» и «условия не проверены» — разные
+        # утверждения, и молчание условий без покрытия ничего не значит.
+        more.append(('Почему условий нет: покрытие величин',
+                     'Величины, которые различают начала, на это окно не посчитаны: данных нет. '
+                     'Отсутствие условия здесь не означает отсутствия воздействия.'))
+    elif cand is not None:
+        more.append(('Условия проверки', 'Условий проверки %s нет.'
+                     % ('у рекомендованного окна' if kind == 'point' else 'у названных начал')))
+    why = scan.get('why')
+    if why:
+        more.append((WHY_MORE_RU, _s(why)))
+    rule, tol = scan.get('rule'), scan.get('tolerance_note')
     tail = ' '.join(_s(x)[0].upper() + _s(x)[1:] for x in (rule, tol) if x and str(x).strip())
     if tail:
-        # Двенадцатый круг. Текст правила перебора занимал на главном экране 1 500–1 900 знаков —
-        # больше, чем весь остальной ответ вместе взятый, и стоял ПОСЛЕ ответа, то есть читался
-        # первым при прокрутке вниз. Владелец: «перегружать текстом нельзя, всё должно быть
-        # интуитивно понятно». Правило целиком остаётся в этом же блоке на клик глубже и, кроме
-        # того, целиком лежит во вкладке «Методика», в отчёте и в выгрузке.
+        more.append((RULE_MORE_RU, tail))
+    # Доказательство того, что сервис искал, а не показал две точки, стоит числом в ряду выше;
+    # здесь — той же фразой целиком, со сроком поиска (техзадание одиннадцатого круга, раздел 1).
+    _searched = screen_text(scan_searched_ru(scan))
+    if pro:
+        # Профессиональному уровню важно, один кандидат оказался в лучшей группе или несколько:
+        # множество равнозначных — повод проверить допуски, а не признак хорошей обстановки.
+        _searched += ' В лучшей группе %s из %s перебранных начал.' \
+            % (fmt(len(scan.get('best') or [])), fmt(len(scan.get('candidates') or [])))
+    more.append(('Сколько начал перебрано и на каком сроке', _searched))
+    for summary, body in more:
         lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
-                     % (esc(RULE_MORE_RU), esc(tail)))
+                     % (esc(summary), esc(body)))
     lines.append('</div>')
     return ''.join(lines)

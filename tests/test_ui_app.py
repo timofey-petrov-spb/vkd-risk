@@ -1029,7 +1029,7 @@ def test_pribornaya_polosa_istorii_nazyvaet_zapis_a_ne_rezhim():
     # при разгрузке главного экрана и целиком стоит в раскрытии «Подробнее о каждой величине
     # полосы» — там же, в блоке состояния источников. Ничего не потеряно: момент назван и в
     # самой МЕТКЕ ячейки, что и есть закрытая находка №14, а полный текст — одним кликом.
-    _details = [str(m.value) for e in at.expander if 'Подробнее о каждой величине полосы' in str(e.label)
+    _details = [str(m.value) for e in at.expander if 'Полоса источников' in str(e.label)
                 for m in e.get('markdown')]
     assert any('начало периода поиска' in x for x in _details), _details
     warns = '\n'.join(w.value for w in at.warning) + '\n'.join(i.value for i in at.info)
@@ -2258,7 +2258,11 @@ BLOCK_MARKS = [('ВКД-Риск', 'заголовок'),
                ('Выход на', 'строка задачи'),
                ('class="reco', 'рекомендация'),
                ('class="verdict', 'рекомендация'),
-               ('Где и когда', 'глобус'),
+               # Тринадцатый круг: заголовок блока глобуса называет теперь НАЗНАЧЕНИЕ рисунка,
+               # а не его содержимое («Где и когда: трасса, аномалия и окно» → «Где набираются
+               # минуты в аномалии»). Порядок блоков не менялся — изменилась только метка,
+               # по которой блок узнаётся в дампе.
+               ('Где набираются минуты', 'глобус'),
                # Двенадцатый круг, пункт 3: два графика ленты заменены одним «профилем воздействия».
                ('Профиль воздействия на сроке поиска', 'профиль воздействия'),
                # Пункт 1: «и что нет» уехало во вкладку «Методика», и в названии блока его больше нет.
@@ -2400,18 +2404,26 @@ def _scan_fixture(t0, n=7, step=10, duration=240, verdict='recommended', conditi
 
 
 def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
-    """Раздел 3.2: когда перебор есть, на месте ответа стоит «Выходить …», одна фраза «почему»
-    с числами, объявленная область вывода и число перебранных начал."""
+    """Раздел 3.2: когда перебор есть, на месте ответа стоит решение, числа, объявленная область
+    вывода и число перебранных начал.
+
+    Тринадцатый круг изменил ФОРМУ, а не состав. Владелец: «мне надо, чтобы прозы вообще не было».
+    Крупная строка стала полосой решения капителью («ВЫХОДИТЬ 19.09 13:00 — 17:00 UTC» вместо
+    «Выходить 19.09 в 13:00 UTC»), а объявленная область вывода, условия и число перебранных
+    начал переехали в раскрытия ТОГО ЖЕ блока. Проверка ищет их по-прежнему: в разметке блока
+    они есть, значит достижимы одним нажатием, чего и требует критерий О4.
+    """
     from app.ui import recommendation_panel
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     html_ = recommendation_panel(_scan_fixture(t0), {'coverage_missing': []}, duration_min=240)
     txt = _strip_tags(html_)
-    # «19.09 в 13:00 UTC» — так человек и говорит; час без даты читался бы как «сегодня»,
-    # а зона названа прямо в самой заметной строке экрана (раздел 3.2 техзадания).
-    assert 'Выходить 19.09 в 13:00 UTC' in txt, txt
+    assert 'ВЫХОДИТЬ 19.09 13:00 — 17:00 UTC' in txt, txt
+    assert 'class="decision d-go"' in html_, html_[:400]     # зелёная полоса: есть куда выходить
     assert '240 мин' in txt, txt
+    # Сравнение «выбрано против худшего» — это и есть объяснение, только числами (пункт 4 ТЗ).
+    assert 'худшее' in txt, txt
     assert 'Перебрано 7 начал с шагом 10 мин' in txt, txt
-    assert 'Область вывода:' in txt, txt
+    assert 'Область вывода' in txt, txt
     assert 'Условий проверки у рекомендованного окна нет' in txt, txt
     assert txt.count('(') == txt.count(')'), txt
     # На профессиональном уровне названо, один кандидат в лучшей группе или несколько: множество
@@ -2435,11 +2447,18 @@ def test_otkaz_perebora_nazyvaet_prichinu_i_chto_nuzhno():
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     sc = _scan_fixture(t0, verdict='insufficient')
     sc['recommended_index'] = None
-    txt = _strip_tags(recommendation_panel(sc, {}, missing_ru=['наблюдение GOES устарело'], mode='live'))
+    html_ = recommendation_panel(sc, {}, missing_ru=['наблюдение GOES устарело'], mode='live')
+    txt = _strip_tags(html_)
+    # Тринадцатый круг: исход назван КРАСНОЙ ПОЛОСОЙ и короткой причиной в ней же (не больше
+    # восьми слов — красная полоса без причины читается как поломка сервиса), а имя исхода
+    # словами открывает текст раскрытия. Слова «Выходить» в блоке отказа нет ни в каком регистре.
+    assert 'class="decision d-stop"' in html_, html_[:400]
+    assert 'РЕКОМЕНДАЦИИ НЕТ' in txt, txt
+    assert 'нет данных обязательной линии на срок' in txt, txt
     assert 'Оснований для рекомендации недостаточно' in txt, txt
     assert 'Чтобы отказ снялся' in txt, txt
     assert 'не существует ни у одного источника' in txt, txt
-    assert 'Выходить' not in txt, txt
+    assert 'ыходить' not in txt, txt
     need = refusal_lift_ru('all_need_check', [], 'live')
     assert 'решение аналитика' in need and 'нештатная' in need, need
 
@@ -2539,7 +2558,9 @@ def test_kolonka_usloviy_ischezaet_kogda_usloviy_net():
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     rows = scan_best_rows(_scan_fixture(t0))
     assert list(rows[0]) == ['начало выхода', 'минут в аномалии', 'флюенс, част./см²'], rows[0]
-    assert scan_conditions_note_ru(rows) == 'Ни одно из показанных начал не требует отдельной проверки.'
+    # Тринадцатый круг: строка стала ЯРЛЫКОМ в три слова — на главном экране прозы нет.
+    # Факт тот же: условия проверялись и их нет.
+    assert scan_conditions_note_ru(rows) == 'Условий проверки нет'
     with_cond = _scan_fixture(t0, conditions=['геомагнитная буря Kp ≥ 7 в окне'])
     rows2 = scan_best_rows(with_cond)
     assert 'условия проверки' in rows2[0], rows2[0]
@@ -2589,9 +2610,11 @@ def test_ekran_s_pereborom_risuet_rekomendaciyu_lentu_i_tablicu(monkeypatch):
     assert not at.exception, at.exception
     assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
     body = texts(at)
-    assert 'Выходить ' in body, body[:500]
+    assert 'ВЫХОДИТЬ ' in body, body[:500]
     assert 'Перебрано 7 начал с шагом 10 мин' in body, body[:500]
-    assert 'Чем ниже кривая' in body, body[:500]              # подпись профиля обычными словами
+    # Тринадцатый круг: подпись профиля обычными словами стоит раскрытием под графиком —
+    # направление сказано на самой оси («ниже — лучше»), полоса и пик подписаны на рисунке.
+    assert 'Чем ниже кривая' in body, body[:500]
     assert main_charts(at) == 1, 'профиль воздействия — один рисунок, других на главном нет'
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться на экране'
     assert 'Таблица лучших начал' in body, body[:500]
@@ -2626,21 +2649,28 @@ def test_otvet_pereborom_chashche_promezhutok_chem_tochka():
     # подряд идущие начала → один промежуток
     sc = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 1, 2, 3, 4, 5])
     assert scan_answer(sc)['kind'] == 'interval', scan_answer(sc)
-    txt = _strip_tags(recommendation_panel(sc, {}, duration_min=240))
-    assert 'Выходить в промежутке 19.09 23:30 — 20.09 00:20 UTC' in txt, txt
+    html_ = recommendation_panel(sc, {}, duration_min=240)
+    txt = _strip_tags(html_)
+    # Тринадцатый круг: промежуток — ЗЕЛЁНАЯ полоса решения с обеими границами, а объяснение
+    # («неразличимы в пределах чувствительности модели») — раскрытием в том же блоке.
+    assert 'class="decision d-go"' in html_, html_[:300]
+    assert 'ВЫХОДИТЬ 19.09 23:30 — 20.09 00:20 UTC' in txt, txt
     assert 'неразличимы в пределах чувствительности модели' in txt, txt
-    assert 'начало в этих границах' in txt, txt
-    for bad in ('Оснований для рекомендации недостаточно', 'Чтобы отказ снялся', 'Рекомендации нет'):
+    for bad in ('Оснований для рекомендации недостаточно', 'Чтобы отказ снялся', 'РЕКОМЕНДАЦИИ НЕТ'):
         assert bad not in txt, (bad, txt)
     # один кандидат → ответ точкой
     one = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[4])
     assert scan_answer(one)['kind'] == 'point', scan_answer(one)
-    assert 'Выходить 20.09 в 00:10 UTC' in _strip_tags(recommendation_panel(one, {}, duration_min=240))
+    assert 'ВЫХОДИТЬ 20.09 00:10 — 04:10 UTC' in _strip_tags(recommendation_panel(one, {}, duration_min=240))
     # разрыв в лучшей группе → спор величин, а не промежуток
     gap = _scan_fixture(t0, n=13, step=10, verdict='equivalent', best=[0, 9])
     assert scan_answer(gap)['kind'] == 'tradeoff', scan_answer(gap)
-    dis = _strip_tags(recommendation_panel(gap, {}, duration_min=240))
-    assert 'Выбор между окнами сервис не делает' in dis, dis
+    html_gap = recommendation_panel(gap, {}, duration_min=240)
+    dis = _strip_tags(html_gap)
+    # Спор величин — ЯНТАРНАЯ полоса: сервис решения не принимает, но и не отказывает.
+    assert 'class="decision d-ask"' in html_gap, html_gap[:300]
+    assert 'РЕШАЕТ АНАЛИТИК' in dis, dis
+    assert 'величины указывают на разные начала' in dis, dis
     assert 'выбор за аналитиком' in dis, dis
     assert 'Чтобы отказ снялся' not in dis, dis
 
@@ -2652,16 +2682,22 @@ def test_otkaz_tolko_pri_nedostatke_osnovaniy():
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     chk = _scan_fixture(t0, verdict='all_need_check', best=[])
     assert scan_answer(chk)['kind'] == 'check', scan_answer(chk)
-    txt = _strip_tags(recommendation_panel(chk, {}, mode='live'))
+    html_chk = recommendation_panel(chk, {}, mode='live')
+    txt = _strip_tags(html_chk)
+    # «Все начала требуют проверки» — ЯНТАРНАЯ полоса, а не красная: сервис решения не принимает,
+    # но и не отказывает. Красить это отказом было бы неправдой (тринадцатый круг, пункт 1).
+    assert 'class="decision d-ask"' in html_chk, html_chk[:400]
     assert 'Все начала требуют проверки аналитиком' in txt, txt
     assert 'Чтобы отказ снялся' not in txt, txt
     assert 'решение аналитика' in txt, txt
     no = _scan_fixture(t0, verdict='insufficient', best=[])
     assert scan_answer(no)['kind'] == 'none', scan_answer(no)
-    ref = _strip_tags(recommendation_panel(no, {}, missing_ru=['наблюдение GOES устарело'], mode='live'))
+    html_ref = recommendation_panel(no, {}, missing_ru=['наблюдение GOES устарело'], mode='live')
+    ref = _strip_tags(html_ref)
+    assert 'class="decision d-stop"' in html_ref, html_ref[:400]
     assert 'Оснований для рекомендации недостаточно' in ref, ref
     assert 'Чтобы отказ снялся' in ref, ref
-    assert 'Выходить' not in ref, ref
+    assert 'ыходить' not in ref, ref
 
 
 def test_ekran_s_promezhutkom_pokazyvaet_otvet_a_ne_pustotu(monkeypatch):
@@ -2684,9 +2720,12 @@ def test_ekran_s_promezhutkom_pokazyvaet_otvet_a_ne_pustotu(monkeypatch):
     assert not at.exception, at.exception
     assert main_blocks(at) == EXPECTED_BLOCKS, main_blocks(at)
     body = texts(at)
-    assert 'Выходить в промежутке' in body, body[:600]
+    # Промежуток — НОРМАЛЬНЫЙ ответ: зелёная полоса решения с обеими границами, а не пустое
+    # место и не отказ. Заголовок блока величин сокращён до ярлыка (тринадцатый круг).
+    assert 'class="decision d-go"' in body, body[:600]
+    assert 'ВЫХОДИТЬ' in body, body[:600]
     assert 'Оснований для рекомендации недостаточно' not in body.split('Разобрать конкретные окна')[0], body[:600]
-    assert 'Величины самого раннего начала из рекомендованного промежутка' in body, body[:600]
+    assert 'Величины самого раннего начала' in body, body[:600]
 
 
 def test_dogovor_answer_kind_chetyre_znacheniya():
@@ -2710,15 +2749,18 @@ def test_dogovor_answer_kind_chetyre_znacheniya():
     assert ans['from'] == datetime.fromisoformat(span['from_utc']), ans
     assert ans['to'] == datetime.fromisoformat(span['to_utc']), ans
     txt = _strip_tags(recommendation_panel(iv, {}, duration_min=240))
-    assert 'Выходить в промежутке 04.05 01:30 — 02:20 UTC' in txt, txt
-    assert 'любое начало в этих границах' in txt, txt        # теми же словами, что строка отчёта
+    # Тринадцатый круг: обе границы промежутка стоят в полосе решения капителью, а словами
+    # («любое начало в этих границах») это сказано в раскрытии «Почему это окно». Форма другая,
+    # утверждение то же: промежуток — ответ, а не отсутствие ответа.
+    assert 'ВЫХОДИТЬ 04.05 01:30 — 02:20 UTC' in txt, txt
+    assert 'сервис называет промежуток, а не минуту' in txt, txt
     assert '08:20' not in txt, 'промежуток протянут через разрыв лучшей группы'
     # пустой answer_kind: отказ и «все требуют проверки» различаются по вердикту
     none_chk = _scan_fixture(t0, verdict='all_need_check', best=[], recommended_index=None,
                              answer_kind=None, answer_span=None)
     assert scan_answer(none_chk)['kind'] == 'check', scan_answer(none_chk)
     chk = _strip_tags(recommendation_panel(none_chk, {}, mode='live'))
-    assert 'Выходить в промежутке' not in chk and 'Выходить' not in chk, chk
+    assert 'ыходить' not in chk, chk        # ни в каком регистре: это не ответ «выходить»
     assert 'Все начала требуют проверки аналитиком' in chk, chk
     none_ref = _scan_fixture(t0, verdict='insufficient', best=[], recommended_index=None,
                              answer_kind=None, answer_span=None)
@@ -2727,7 +2769,9 @@ def test_dogovor_answer_kind_chetyre_znacheniya():
     pt = _scan_fixture(t0, n=60, step=10, verdict='recommended', best=[5], recommended_index=5,
                        answer_kind='point')
     assert scan_answer(pt)['kind'] == 'point'
-    assert 'Выходить 04.05 в 01:50 UTC' in _strip_tags(recommendation_panel(pt, {}, duration_min=240))
+    # Тринадцатый круг: ответ точкой печатается полосой решения капителью, с обеими границами
+    # окна («ВЫХОДИТЬ 04.05 01:50 — 05:50 UTC»), а не одним началом.
+    assert 'ВЫХОДИТЬ 04.05 01:50 — 05:50 UTC' in _strip_tags(recommendation_panel(pt, {}, duration_min=240))
 
 
 def test_drob_pered_pfu_tozhe_s_zapyatoy():
@@ -2782,12 +2826,16 @@ def test_glavnyy_ekran_razgruzhen_i_nichego_ne_poteryano():
     labels = [str(e.label) for e in at.expander]
     # «Чего сервис не учёл» с двенадцатого круга живёт во вкладке «Методика» (пункт 1), и на
     # главном экране этого раскрытия больше нет — проверяется отдельно, в тестах пункта 1.
-    for need in ('Откуда взята каждая величина', 'Подробнее о каждой величине полосы'):
+    for need in ('Откуда взята каждая величина', 'Полоса источников'):
         assert any(need in x for x in labels), (need, labels)
     body = texts(at)
     # прослеживаемость не потеряна: первоисточники и пропуски охвата на экране есть
     assert 'прогноза потока с разрешением по окну не существует' in body, body[:300]
-    assert 'Цвет = происхождение' in body or 'Происхождение величин' in body, body[:300]
+    # Тринадцатый круг: легенда на поверхности — РЯД ПЛАШЕК и один ярлык; полная формулировка
+    # («Цвет означает происхождение: …») стоит раскрытием здесь же и во вкладке «Методика».
+    assert 'Цвет величины — происхождение' in body, body[:300]
+    assert 'Цвет означает происхождение' in body, body[:300]
+    assert any('Что означает каждый цвет' in x for x in labels), labels
     # приглушённая подпись профиля — одна строка
     from app.ui import ribbon_caption_ru
     cap = ribbon_caption_ru({'candidates': []}, duration_min=360)
@@ -2994,9 +3042,16 @@ def test_tipografika_verdikta_sovpadaet_s_rekomendaciey():
     """Пункт 2: «ширина строки и размер шрифта те же, что в блоке рекомендации наверху: сейчас
     здесь мельче». Проверяется по самим стилям, а не на глаз."""
     from app.ui import CSS
-    size = lambda sel: re.search(r'\%s \{[^}]*font-size:([\d.]+)rem' % sel, CSS).group(1)
+    # Тринадцатый круг: кегли больше не пишутся числами по месту. На главном экране их ровно
+    # ТРИ, они объявлены токенами --fs-1…--fs-3 в :root, и правила берут только токены. Проверка
+    # сравнивает токены, а заодно требует, чтобы числом кегль не задавался нигде: «почти такой
+    # же, но на два процента мельче» — то, как в файле и завелось пятнадцать разных кеглей.
+    size = lambda sel: re.search(r'\%s \{[^}]*font-size:var\(--(fs-\d)\)' % sel, CSS).group(1)
     assert size('.verdict h2') == size('.reco h2'), (size('.verdict h2'), size('.reco h2'))
     assert size('.verdict li') == size('.reco .why'), (size('.verdict li'), size('.reco .why'))
+    body = CSS.split(':root {')[1]
+    assert not re.findall(r'font-size:\s*[\d.]+rem', body), re.findall(r'font-size:\s*[\d.]+rem', body)
+    assert len(set(re.findall(r'font-size:var\(--(fs-\d)\)', CSS))) == 3, set(re.findall(r'font-size:var\(--(fs-\d)\)', CSS))
     assert 'max-width:96ch' in re.search(r'\.verdict ul \{[^}]*\}', CSS).group(0)
     assert 'max-width:96ch' in re.search(r'\.reco \.why \{[^}]*\}', CSS).group(0)
 
@@ -3017,11 +3072,17 @@ def test_populyarnoe_obyasnenie_rovno_dva_predlozheniya_s_chislami():
     assert '29 минут из 360' in txt, txt
     assert '53 минут' in txt, txt
     assert re.search(r'приходится на \d\d:\d\d', txt), txt
-    # блок стоит под крупным ответом, а техническая фраза движка уезжает на клик глубже
+    # Тринадцатый круг. Владелец: «мне надо, чтобы прозы вообще не было… никаких текстов»;
+    # «сравнение „выбрано против худшего“ — это и есть объяснение, только числами». Поэтому
+    # на ПОВЕРХНОСТИ блока стоят числа, а объяснение словами — раскрытием в том же блоке.
+    # Оба числа первого предложения (29 минут у выбранного, 53 у худшего) видны без нажатия —
+    # крупным рядом под решением, и это то же самое сравнение, только без слов связки.
     html_ = recommendation_panel(sc, {}, duration_min=360)
-    assert 'class="plain"' in html_, html_[:400]
+    assert PLAIN_SUMMARY_RU in html_, html_[:400]
     vis = _strip_tags(re.sub(r'<details class="vmore">.*?</details>', ' ', html_, flags=re.S))
-    assert '29 минут из 360' in vis, vis
+    assert 'Минут в аномалии' in vis and '29' in vis and 'худшее 53' in vis, vis
+    assert '29 минут из 360' not in vis, vis                  # словами — на клик глубже
+    assert '29 минут из 360' in _strip_tags(html_), html_[:600]
     assert 'наименьшее воздействие из 7 проверенных начал' not in vis, vis   # она в свёртке
     assert 'наименьшее воздействие из 7 проверенных начал' in _strip_tags(html_), html_[:600]
 
@@ -3068,6 +3129,10 @@ def test_populyarnoe_obyasnenie_ne_vydumyvaet_chisel():
     assert 'class="plain"' not in recommendation_panel(ref, {}, duration_min=360)
 
 
+# Заголовок раскрытия с популярным объяснением — он же ключ поиска в разметке блока ответа.
+PLAIN_SUMMARY_RU = 'Почему это окно: обычными словами'
+
+
 def test_populyarnoe_obyasnenie_na_zhivom_ekrane():
     """Тот же блок на живом экране, на пресете «Тихая дата»: там перебор называет промежуток,
     и два предложения обязаны стоять под ответом. На буре Гэннон ответа нет по существу
@@ -3078,9 +3143,16 @@ def test_populyarnoe_obyasnenie_na_zhivom_ekrane():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     reco = [m.value for m in at.markdown if 'class="reco' in m.value]
-    assert reco and 'class="plain"' in reco[0], reco[:1]
-    plain = re.search(r'<div class="plain">(.*?)</div>', reco[0], re.S).group(1)
-    assert len(re.findall(r'[.!?](?:\s|$)', plain)) == 2, plain
+    # Тринадцатый круг: популярное объяснение стоит в блоке ответа РАСКРЫТИЕМ, а не строкой на
+    # поверхности. Владелец: «мне надо, чтобы прозы вообще не было… никаких текстов»; его числа
+    # при этом никуда не делись — они стоят крупным рядом под решением («4,9 · худшее 104»).
+    # Само объяснение обязано быть достижимо одним нажатием, и проверка ищет его там.
+    assert reco and PLAIN_SUMMARY_RU in reco[0], reco[:1]
+    plain = re.search(re.escape(PLAIN_SUMMARY_RU) + r'</summary><div class="vm">(.*?)</div>',
+                      reco[0], re.S).group(1)
+    # Промежуток добавляет к двум предложениям третье — о том, почему назван промежуток, а не
+    # минута. Оно стоит здесь же, потому что относится к тому же объяснению.
+    assert 2 <= len(re.findall(r'[.!?](?:\s|$)', plain)) <= 3, plain
     for bad in ('флюенс', 'част./см', 'геомагнит'):
         assert bad not in plain, (bad, plain)
     assert re.search(r'\d', plain), plain
@@ -3089,4 +3161,4 @@ def test_populyarnoe_obyasnenie_na_zhivom_ekrane():
     at2.sidebar.button('preset_gannon').click().run()
     assert not at2.exception, at2.exception
     reco2 = [m.value for m in at2.markdown if 'class="reco' in m.value]
-    assert reco2 and 'class="plain"' not in reco2[0], 'на буре объяснять нечего: окна сервис не называет'
+    assert reco2 and PLAIN_SUMMARY_RU not in reco2[0], 'на буре объяснять нечего: окна сервис не называет'
