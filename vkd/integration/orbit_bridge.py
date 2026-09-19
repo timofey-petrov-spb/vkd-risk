@@ -32,6 +32,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 CACHE_ROOT = os.path.join(ROOT, 'data', 'cache', 'orbit_root')
 ORBIT_SRC = ('vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; '
              'IGRF-13 для 2024 и IGRF-14 сейчас; L, B/B0 и жёсткость — центральный наклонённый диполь (приближение)')
+TLE_URL_UNKNOWN = 'неизвестен (кеш или снимок репозитория)'   # адрес не приписывается, если запроса не было (Т7)
 
 
 @dataclass(frozen=True)
@@ -94,18 +95,38 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
                                                          cutoff_utc=cutoff_utc)
         except OrbitDataError as e:
             return OrbitResult(None, [], {'errors': [str(e)]}, 'орбита недоступна: %s' % e, 'unavailable', str(e))
-        prov['staged_root'] = root
-        host = tle_url.split('/')[2] if tle_url and '://' in tle_url else 'TLE'
-        return OrbitResult(meta, pts, prov, 'SGP4 по TLE (%s), эпоха %s; предел возраста %.0f сут'
-                           % (host, meta.epoch_utc.strftime('%Y-%m-%d %H:%MZ'), max_tle_age_days), 'strict', None)
+        prov['staged_root'] = os.path.relpath(root, ROOT).replace(os.sep, '/')     # без машинных путей в выгрузке (Т8)
+        prov['requested_mode'] = mode
+        prov['selection_cutoff_utc'] = _iso(cutoff_utc)
+        host = tle_url.split('/')[2] if tle_url and '://' in tle_url else 'адрес неизвестен: кеш или снимок'
+        status = 'SGP4 по TLE (%s), эпоха %s; предел возраста %.0f сут' % (host, meta.epoch_utc.strftime('%Y-%m-%d %H:%MZ'), max_tle_age_days)
+        # инвариант: «строго» ⇒ не реконструкция. A3 ставит реконструкцию, когда подтверждённая доступность TLE
+        # позже отсечки (момента расчёта): тогда статус честно понижается, а не остаётся «строго» рядом с «реконструкция»
+        if meta.is_reconstruction:
+            prov['limitations'].append('TLE получен позже момента расчёта или без подтверждённой доступности — '
+                                       'орбита объявлена реконструкцией, статус строгости понижен.')
+            return OrbitResult(meta, pts, prov, status + '; доступность TLE к моменту расчёта не подтверждена — '
+                               'объявленная реконструкция', 'declared_reconstruction', None)
+        return OrbitResult(meta, pts, prov, status, 'strict', None)
 
     errors = []
     cutoff = cutoff_utc or t0
+
+    def _stamp(prov):
+        # режим запроса и отсечка отбора OEM — в происхождении всегда, даже когда A3 пишет cutoff только
+        # для history_forecast (по выгрузке иначе нельзя понять, по какой отсечке выбран OEM — Т2)
+        prov['requested_mode'] = mode
+        prov['selection_cutoff_utc'] = _iso(cutoff)
+        prov['selection_rule'] = ('OEM покрывает весь горизонт; CREATION_DATE и S3 LastModified не позднее отсечки; '
+                                  'в строгом режиме — ещё и доказанная публикация/доступность до отсечки; '
+                                  'взят последний по CREATION_DATE')
+        return prov
+
     if mode == 'history_forecast':
         try:
             meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT,
                                                          mode='history_forecast', cutoff_utc=cutoff)
-            return OrbitResult(meta, pts, prov, 'OEM NASA/JSC с доказанной публикацией до отсечки', 'strict', None)
+            return OrbitResult(meta, pts, _stamp(prov), 'OEM NASA/JSC с доказанной публикацией до отсечки', 'strict', None)
         except OrbitDataError as e:
             errors.append(str(e))
     try:
@@ -114,6 +135,7 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
     except OrbitDataError as e:
         errors.append(str(e))
         return OrbitResult(None, [], {'errors': errors}, 'орбита недоступна: ' + '; '.join(errors), 'unavailable', '; '.join(errors))
+    prov = _stamp(prov)
     prov['strict_attempt_error'] = errors[0] if errors else None
     if mode == 'history_forecast':
         prov['limitations'].append(
@@ -134,6 +156,8 @@ def provenance_summary(prov: dict) -> dict:
     return {
         'algorithm_version': prov.get('algorithm_version'), 'mode': prov.get('mode'),
         'cutoff_utc': prov.get('cutoff_utc'), 'step_seconds': prov.get('step_seconds'),
+        'requested_mode': prov.get('requested_mode'), 'selection_cutoff_utc': prov.get('selection_cutoff_utc'),
+        'selection_rule': prov.get('selection_rule'), 'staged_root': prov.get('staged_root'),
         'records': {rid: {k: r.get(k) for k in ('source_id', 'release_id', 'sha256', 'bytes', 'url', 'created_utc',
                                                  'published_utc', 'available_utc', 'fetched_utc', 'epoch_utc',
                                                  'strict_replay_eligibility', 'model', 'distribution')
