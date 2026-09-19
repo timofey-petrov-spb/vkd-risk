@@ -3227,6 +3227,13 @@ REPALETTE = {
 }
 
 
+# Гарнитура рисунков — та же, что у страницы. Объявлять её приходится ЗДЕСЬ: app/viz.py задаёт
+# своё семейство (прежний Public Sans) и остаётся чужой областью в этом круге, а подписи осей
+# набранные не тем шрифтом, что весь остальной экран, — ровно тот разнобой, из-за которого
+# страница читается как собранная из кусков. Ряд запасных тот же, что в :root.
+DARK_FONT = 'IBM Plex Sans, Segoe UI, Inter, Roboto, Arial, sans-serif'
+
+
 def _one_color(x):
     """Один цвет: сперва тёмная пара светлой темы, затем нынешняя палитра поверх неё."""
     if not isinstance(x, str):
@@ -3252,8 +3259,9 @@ def dark_figure(fig):
     палитры. Светлая подложка графика на тёмной странице — первое, что читается как халтура.
     """
     fig.update_layout(template='plotly_dark', paper_bgcolor=DARK_PAPER, plot_bgcolor=DARK_PLOT,
-                      font={'color': '#e4e7ea'}, legend={'bgcolor': 'rgba(0,0,0,0)'},
-                      hoverlabel={'bgcolor': DARK_PLOT, 'font': {'color': '#e4e7ea'}})
+                      font={'color': '#e4e7ea', 'family': DARK_FONT},
+                      legend={'bgcolor': 'rgba(0,0,0,0)'},
+                      hoverlabel={'bgcolor': DARK_PLOT, 'font': {'color': '#e4e7ea', 'family': DARK_FONT}})
     fig.update_xaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
                      tickfont={'color': '#9da1a8'}, title_font={'color': '#9da1a8'})
     fig.update_yaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
