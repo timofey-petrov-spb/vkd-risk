@@ -296,8 +296,14 @@ def test_nebo_ostayotsya_pri_umenshenii_dvizheniya():
     """Настройка гасит движение, а не фон: звёзды статичны и движением не являются."""
     css = b.css()
     block = re.search(r'@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}', css, re.S)
-    assert 'stApp::before' not in block.group(1)
-    assert 'background-image' not in block.group(1)
+    body = block.group(1)
+    # Внутри блока нет ничего, кроме выключения анимаций: ни фона, ни цвета, ни раскладки.
+    properties = {d.split(':', 1)[0].strip()
+                  for d in re.sub(r'[^{]*\{', '', body).replace('}', '').split(';') if ':' in d}
+    assert properties == {'animation'}, properties
+    # Правило неба объявлено ВНЕ блока и настройкой не затрагивается.
+    assert 'background-image' not in body
+    assert css.index('background-image:url(') < block.start()
 
 
 # ======================================================================== разметка целиком
@@ -308,11 +314,14 @@ def test_ves_razmetki_v_predele():
     assert weight <= b.WEIGHT_LIMIT_BYTES, weight
     # Запас нужен: если разметка внезапно распухла втрое, это ошибка сборки, а не «ещё влезает».
     assert weight < b.WEIGHT_LIMIT_BYTES // 2, weight
-    # Основная часть веса — картинка неба (около 5,6 КБ); на сами правила вместе с пояснениями
-    # приходится около 4,2 КБ. Предел 6 КБ ловит распухание правил, а не пояснения в них.
-    rules_only = len(b.css().encode('utf-8')) - len(b._data_uri(b.starfield_svg()).encode('utf-8'))
-    assert rules_only < 6144, rules_only
-    assert len(b._data_uri(b.starfield_svg()).encode('utf-8')) < 8192
+    # Основная часть веса — картинка неба (5 697 байт); на сами правила приходится 1 718.
+    # Длинные пояснения держатся в исходнике на Python, а не в комментариях CSS: комментарий в
+    # CSS уходит в браузер при каждой отрисовке. Предел 2,5 КБ сторожит, чтобы проза не
+    # переехала обратно в разметку.
+    image = len(b._data_uri(b.starfield_svg()).encode('utf-8'))
+    rules_only = len(b.css().encode('utf-8')) - image
+    assert rules_only < 2560, rules_only
+    assert image < 8192, image
 
 
 def test_net_znakov_vne_pechatnogo_diapazona():
