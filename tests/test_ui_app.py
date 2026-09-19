@@ -1549,10 +1549,16 @@ def test_tihaya_data_pravilo_s_dopuskom_na_ekrane():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     rule = re.sub(r'\s+', ' ', _strip_tags(verdict_html(at)))
-    m = re.search(r'не хуже по флюенсу[^;]*', rule)
+    # Девятый круг (М3 разбора, находка 15): формулировка «не хуже по флюенсу» рядом с числами,
+    # которые показывают обратное, читалась как подгонка вывода под ответ. Теперь проигрыш
+    # назван проигрышем, а рядом сказано, почему он не считается различием. Требования к фразе
+    # прежние: оба числа с единицей, отношение и допуск — в ней же.
+    m = re.search(r'по флюенсу выбранное окно выше[^;]*;[^;]*', rule)
     assert m, rule[:600]
     claim = m.group(0)
-    assert 'в пределах допуска ×1,50' in claim, claim          # допуск — в той же фразе
+    assert 'не хуже' not in claim, claim
+    assert 'на 5 %' in claim, claim                            # насколько выше — числом
+    assert 'внутри допуска ×1,50' in claim, claim              # допуск — в той же фразе
     assert '1,74·10⁶ против 1,65·10⁶ част./см²' in claim, claim  # оба числа, с единицей
     assert 'отношение ×1,05' in claim, claim                   # и во сколько раз — тоже число, не слово
     assert 'мин' in rule and 'флюенс' in rule, rule[:600]

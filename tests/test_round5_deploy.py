@@ -42,7 +42,10 @@ def test_svodka_proverki_pishet_chisla_kak_tablitsa_pod_ney(gannon):
     g = v['goes_obs_max']
     assert ('%s pfu' % fmt(float(g['value_pfu']))) in s and '206,919' not in s, s
     assert not re.search(r'\d\d:\d\d\s*Z', s), s
-    assert s.startswith('условие поставлено в 10.05 12:00; факт: Kp 7,67 с 10.05 15:00, максимум 9;'), s
+    # Девятый круг: сводка не перечисляет факты, а выносит вердикт по каждой линии (М4).
+    # Числа и времена при этом остаются теми же, что в таблице под ней.
+    assert s.startswith('Сбылось: буря Kp ≥ 7 — да; условие поставлено в 10.05 12:00 по уведомлениям, '
+                        'факт — Kp 7,67 с 10.05 15:00, максимум 9;'), s
     # то же число в выгрузке: сводка и строка таблицы отчёта не расходятся
     md = report_md(gannon.S, gannon.raw_records)
     assert ('максимум %s' % fmt(float(kp_max))) in md and '9,00' not in md
@@ -50,11 +53,17 @@ def test_svodka_proverki_pishet_chisla_kak_tablitsa_pod_ney(gannon):
 
 
 def test_tihaya_data_bez_porogovoy_frazy():
-    """На дате без бури сводка не приобретает чужих чисел: «бури Kp ≥ 7 не было» — без «7,00»."""
+    """На дате без бури сводка не приобретает чужих чисел и не выдумывает условий.
+
+    Девятый круг (М4): вместо «бури Kp ≥ 7 не было» стоит вердикт по линии — ложных тревог нет,
+    потому что условий и не ставилось. Порог в этой фразе не нужен: сравнивать не с чем."""
     t = datetime(2024, 6, 25, 12, tzinfo=timezone.utc)
     r = run('history_forecast', t, 360, 720, [0, 240], now=t)
     s = r.verification['summary']
-    assert 'бури Kp ≥ 7 не было' in s and '7,00' not in s and '≥ 7,0' not in s, s
+    assert r.verification['marks']['storm'] == 'true_negative', r.verification['marks']
+    assert 'Ложных тревог по буре нет: условий проверки на отсечку не ставилось' in s, s
+    assert 'максимум Kp 2,67' in s and '7,00' not in s and '≥ 7,0' not in s, s
+    assert 'условие поставлено' not in s, s
     assert not re.search(r'\d\d:\d\d\s*Z', s), s
 
 

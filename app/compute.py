@@ -31,13 +31,14 @@ from app.fetch_guard import fetch_live_sources
 # Форматирование чисел и времён — тем же средством, что экран (app/ui.py: ни одного вызова
 # Streamlit, только перевод величин в русский текст). Иначе одна и та же величина печатается
 # в снимке и на экране по-разному: «9,00» в сводке проверки против «9» в таблице под ней.
-from app.ui import dt_ru, fmt
+from app.ui import dt_ru, sup
 from vkd.assess.cutoff import apply_cutoff
 from vkd.assess.magcoords import belt_coordinates
 from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
+from vkd.explain.format import fmt_ru
 from vkd.history import history_bundle
 from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, live_forecast_lines, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
@@ -46,6 +47,14 @@ from vkd.types import Request, SCHEMA_VERSION, Window
 from vkd.windows.compare import Thresholds, action_span, assess_window, overlaps, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
+
+def fmt(v, unit: str = '') -> str:
+    """Число — ЕДИНЫМ правилом ядра (vkd.explain.format.fmt_ru, порог степенной записи SCI_MIN),
+    степень надстрочными цифрами (app.ui.sup). Расчёт, экран и выгрузка печатают одну и ту же
+    величину одинаково: два порога в двух функциях давали «88701» в одной строке и «1,65·10⁶»
+    в соседней (девятый круг, М5)."""
+    return sup(fmt_ru(v, unit))
+
 
 SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → снимок репозитория, три состояния источника
 HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
@@ -133,6 +142,98 @@ def validate_request(mode: str, t0: datetime, duration_min: int, search_min: int
             raise ValueError('начало периода %s вне архива исторических режимов %s — %s; выберите дату внутри архива'
                              % (t0.strftime('%Y-%m-%d %H:%MZ'), a0.strftime('%d.%m.%Y'),
                                 (a1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
+
+
+def _min0(t: Optional[datetime]) -> Optional[datetime]:
+    """Момент без секунд: заблаговременность считается по тем же минутам, которые напечатаны
+    рядом, иначе «10.05 13:46» и «через 1 ч 47 мин» расходятся на глазах у читателя."""
+    return t.replace(second=0, microsecond=0) if t else None
+
+
+def _lead_ru(a: datetime, b: datetime) -> str:
+    """Заблаговременность от b до a словами: «3 ч 00 мин», «1 ч 46 мин».
+    Отрицательной заблаговременности не бывает: если событие началось раньше, так и сказано."""
+    m = int((_min0(a) - _min0(b)).total_seconds() // 60)
+    if m < 0:
+        return 'заблаговременности нет: началось на %d ч %02d мин раньше отсечки' % (abs(m) // 60, abs(m) % 60)
+    return 'заблаговременность %d ч %02d мин' % (m // 60, m % 60)
+
+
+def _verification_summary(ver: dict, t0: datetime, th, kinds: set) -> tuple:
+    """Сводка проверки после отсечки — С ВЕРДИКТОМ по каждой линии, а не перечнем фактов.
+
+    Т5 требует «проверены ошибки и ложные предупреждения». Прежняя сводка ровным перечислением
+    сообщала, что буря была и что протонное событие опубликовано через 1 ч 46 мин после отсечки,
+    и ни разу не говорила, что первое — попадание, а второе — ПРОПУСК (девятый круг, М4-17).
+    Каждая линия получает одну из четырёх меток: сбылось / не предупредили / ложная тревога /
+    ложных тревог нет. Метка выводится из двух вещей: ставил ли сервис условие по линии (kinds —
+    виды условий, поставленных расчётом) и что наблюдалось после отсечки (факт из архива).
+
+    Возвращает (текст, разметка по линиям) — разметка идёт в снимок отдельным ключом, чтобы
+    экран и выгрузка не разбирали текст обратно.
+    """
+    rows = [(datetime.fromisoformat(x['from_utc']), x['kp']) for x in (ver.get('kp_obs') or [])]
+    first_storm = next(((a, v) for a, v in rows if v >= th.kp_check), None)
+    kp_max = max((v for _, v in rows), default=None)
+    g = ver.get('goes_obs_max') or None
+    g_val = float(g['value_pfu']) if g else None
+    g_t = datetime.fromisoformat(g['t_utc']) if g else None
+    seps = [e for e in (ver.get('events') or []) if e.get('kind') == 'SEP']
+    sep_pub = min((datetime.fromisoformat(e['published_utc']) for e in seps), default=None)
+
+    storm_warned, proton_warned = ('GST' in kinds), bool(kinds & {'SEP', 'GOES'})
+    storm_fact = first_storm is not None
+    proton_fact = bool(seps) or (g_val is not None and g_val >= th.goes_p10_warning_pfu)
+
+    parts, marks = [], {}
+    kp_ru = ('максимум Kp %s' % fmt(float(kp_max))) if kp_max is not None else \
+        'наблюдений Kp в архиве (окончательный ряд GFZ, резерв — уведомления DONKI о буре) на горизонте нет'
+    if storm_fact and storm_warned:
+        marks['storm'] = 'hit'
+        parts.append('Сбылось: буря Kp ≥ %s — да; условие поставлено в %s по уведомлениям, факт — Kp %s с %s, '
+                     'максимум %s; %s.'
+                     % (fmt(float(th.kp_check)), dt_ru(t0), fmt(float(first_storm[1])), dt_ru(first_storm[0]),
+                        fmt(float(kp_max)), _lead_ru(first_storm[0], t0)))
+    elif storm_fact and not storm_warned:
+        marks['storm'] = 'miss'
+        parts.append('Не предупредили: геомагнитная буря. Факт — Kp %s с %s, максимум %s. По данным, доступным '
+                     'на %s, этой линии у нас не было — это пропуск, а не ложная тревога.'
+                     % (fmt(float(first_storm[1])), dt_ru(first_storm[0]), fmt(float(kp_max)), dt_ru(t0)))
+    elif storm_warned and not storm_fact:
+        marks['storm'] = 'false_alarm'
+        parts.append('Ложная тревога по буре: условие Kp ≥ %s поставлено, факт — %s, порог не достигнут.'
+                     % (fmt(float(th.kp_check)), kp_ru))
+    else:
+        marks['storm'] = 'true_negative'
+        parts.append('Ложных тревог по буре нет: условий проверки на отсечку не ставилось, факт — %s.' % kp_ru)
+
+    g_ru = ('максимум наблюдённого потока GOES ≥10 МэВ %s pfu в %s' % (fmt(g_val), dt_ru(g_t))) if g else \
+        'численных наблюдений GOES ≥10 МэВ на горизонте в архиве нет'
+    if proton_fact and proton_warned:
+        marks['proton'] = 'hit'
+        parts.append('Сбылось: протонное событие — да; условие поставлено в %s, факт — %s%s.'
+                     % (dt_ru(t0), g_ru, ('; первое уведомление DONKI %s' % dt_ru(sep_pub)) if sep_pub else ''))
+    elif proton_fact and not proton_warned:
+        marks['proton'] = 'miss'
+        _late = int((_min0(sep_pub) - _min0(t0)).total_seconds() // 60) if sep_pub else 0
+        lead = ('Первое уведомление DONKI вышло %s — через %d ч %02d мин ПОСЛЕ отсечки. '
+                % (dt_ru(sep_pub), _late // 60, _late % 60)) if (sep_pub and _late > 0) else (
+            ('Первое уведомление DONKI вышло %s. ' % dt_ru(sep_pub)) if sep_pub else '')
+        parts.append('Не предупредили: протонное событие. %sФакт — %s. По данным, доступным на %s, этой линии '
+                     'у нас не было — это пропуск, а не ложная тревога.' % (lead, g_ru, dt_ru(t0)))
+    elif proton_warned and not proton_fact:
+        marks['proton'] = 'false_alarm'
+        parts.append('Ложная тревога по протонному событию: условие поставлено, факт — %s, порог предупреждения '
+                     '%s pfu не превышен.' % (g_ru, fmt(float(th.goes_p10_warning_pfu))))
+    else:
+        marks['proton'] = 'true_negative'
+        parts.append('Ложных тревог по протонному событию нет: условий по нему не ставилось, факт — %s (порог '
+                     'предупреждения %s pfu).' % (g_ru, fmt(float(th.goes_p10_warning_pfu))))
+    return ' '.join(parts), marks
+
+
+VERIFICATION_MARK_RU = {'hit': 'сбылось', 'miss': 'не предупредили (пропуск)',
+                        'false_alarm': 'ложная тревога', 'true_negative': 'ложных тревог нет'}
 
 
 def _donki_catalog_coverage() -> tuple:
@@ -493,24 +594,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                 if s.channel_id == GOES_CHANNEL and s.value is not None and t0 < s.t_utc <= h_end)
             ev_after = [e for e in v_events if e.published_utc and e.published_utc > cutoff_utc and e.published_utc <= h_end
                         and e.kind_of_event in ('SEP', 'GST')]
-            first_storm = next(((a, v) for a, b, v, _, _ in kp_after if v >= th.kp_check), None)
-            kp_max = max((v for _, _, v, _, _ in kp_after), default=None)
-            # Числа и времена сводки — теми же средствами, что экран (fmt, dt_ru): жёсткие форматы
-            # '%.2f' и '%.6g' печатали ту же величину иначе, чем таблица прямо под этой строкой
-            # («максимум 9,00» против «9» в ver['kp_obs'], «206,919 pfu» против «0,22 pfu» у GOES)
-            # и оставляли машинное «12:00Z» там, где весь экран пишет «10.05 12:00» (находка пятого круга).
-            summary = 'условие поставлено в %s; факт: ' % dt_ru(t0)
-            summary += ('Kp %s с %s, максимум %s' % (fmt(float(first_storm[1])), dt_ru(first_storm[0]),
-                                                     fmt(float(kp_max))) if first_storm
-                        else ('максимум Kp %s, бури Kp ≥ %s не было' % (fmt(float(kp_max)), fmt(float(th.kp_check))) if kp_max is not None
-                              else 'наблюдений Kp в архиве (окончательный ряд GFZ, резерв — уведомления DONKI о буре) на горизонте нет'))
-            if goes_after:
-                g_max = max(goes_after, key=lambda x: x[1])
-                summary += '; максимум наблюдённого потока GOES ≥10 МэВ %s pfu в %s' % (
-                    fmt(float(g_max[1])), dt_ru(g_max[0]))
-            seps = [e for e in ev_after if e.kind_of_event == 'SEP']
-            if seps:
-                summary += '; протонное событие: первая публикация %s' % dt_ru(min(e.published_utc for e in seps))
+            # Сводка собирается НИЖЕ, после расчёта условий (_verification_summary): чтобы назвать
+            # попадание попаданием, а пропуск — пропуском, нужно знать, какие условия сервис
+            # поставил; здесь условий ещё нет. Числа и времена — теми же средствами, что экран
+            # (fmt, dt_ru): жёсткие форматы '%.2f' и '%.6g' печатали ту же величину иначе, чем
+            # таблица прямо под этой строкой (находка пятого круга).
             verification = {
                 # U5: имя программного слоя — отдельным ключом, чтобы оперативный уровень экрана
                 # печатал только русский текст, а происхождение факта оставалось прослеживаемым
@@ -527,7 +615,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                 'events': [{'id': e.event_id, 'kind': e.kind_of_event, 'published_utc': e.published_utc.isoformat(),
                             'start_utc': e.start_utc.isoformat() if e.start_utc else None,
                             'note': _note_short(e.note, 160)} for e in ev_after],
-                'summary': summary,
+                'summary': None,        # заполняется ниже, когда известны поставленные условия
+                'marks': {},            # разметка по линиям: сбылось / пропуск / ложная тревога / ложных тревог нет
             }
     if mode == 'live':
         # C6: живой трёхсуточный прогноз NOAA теми же линиями и каналами, что в истории —
@@ -542,6 +631,31 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             event_facts[e.raw_record_id] = {'detector': 'сценарий «что если»', 'energy_lower_bound_MeV': 10.0,
                                             'energy_operator': '>', 'flux_lower_bound_pfu': float(scenario.sep_level_pfu),
                                             'flux_operator': '=', 'measured_flux_pfu': float(scenario.sep_level_pfu)}
+
+    # ------------------------------------------------- линия уведомлений о событиях: подключена или нет
+    # В текущем режиме источник уведомлений НЕ ОПРАШИВАЕТСЯ: живого загрузчика DONKI в сервисе нет,
+    # весь блок событий закрыт условием `mode != 'live'`. Приборная полоса при этом печатала
+    # «0 записей · наш подсчёт по реестру», то есть непроверенное выдавалось за проверенное
+    # (девятый круг, М2). Признак кладётся в снимок ЯВНО — его читают и экран, и выгрузка;
+    # «пропуск данных не равен нулевому риску» (постановка).
+    _ev_c0, _ev_c1, _, _ = _donki_catalog_coverage()
+    _ev_archive_ru = 'архив уведомлений охватывает %s — %s' % (
+        _ev_c0.strftime('%d.%m.%Y'), (_ev_c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'))
+    events_line = {
+        'connected': mode != 'live',
+        'source_ru': 'уведомления NASA DONKI (протонное событие, буря, приход выброса)',
+        'records': len(events),
+        'simulated_records': len(sim_events),
+        'reason_ru': (None if mode != 'live' else
+                      'в текущем режиме источник уведомлений (NASA DONKI) не опрашивается: живого загрузчика в сервисе '
+                      'нет. Условия ставятся по наблюдению GOES ≥10 МэВ и прогнозу Kp NOAA; %s и доступен в '
+                      'исторических режимах' % _ev_archive_ru),
+        'archive_ru': _ev_archive_ru,
+    }
+    # Строка охвата: то же самое словами аналитика, рядом с остальным «не учтено».
+    coverage_missing_extra = ((
+        'события и уведомления (NASA DONKI) в текущем режиме не опрашиваются — %s, он доступен только в '
+        'исторических режимах' % _ev_archive_ru,) if mode == 'live' else ())
 
     # ------------------------------------------------------------ траектория (A3 через мост Б)
     if tle_override_path:
@@ -637,6 +751,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                                             trajectory_ids=orbit_ids, cutoff_utc=cutoff_utc)
                        for i, a in enumerate(assessments)}
     cards = [c for a in assessments for c in cards_by_window[a.window.start_utc]]
+    if verification is not None:
+        # Т5: вердикт по собственному прогнозу. Виды поставленных условий берутся из расчёта,
+        # а не угадываются по тексту: GST — буря, SEP/GOES — протонная линия.
+        _kinds = {c.kind for a in assessments for m in a.mechanisms for c in m.conditions}
+        _txt, _marks = _verification_summary(verification, t0, th, _kinds)
+        verification = {**verification, 'summary': _txt, 'marks': _marks,
+                        'marks_ru': {k: VERIFICATION_MARK_RU[v] for k, v in _marks.items()},
+                        'conditions_set': sorted(_kinds)}
 
     # ------------------------------------------------------------ снимок
     iso = lambda v: v.isoformat() if hasattr(v, 'isoformat') else v
@@ -726,6 +848,16 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             'data_utc': iso(min((s.published_utc for s in noaa_samples if s.published_utc), default=None)),
             'cells': len(noaa_samples),
             'record_ids': sorted({line.raw_record_id for line in fc_lines if line.raw_record_id})}
+        # Линия уведомлений в реестре присутствует и в текущем режиме — со статусом «не
+        # запрашивается». Пока строки не было, отсутствие событий читалось как «опросили,
+        # событий нет» (девятый круг, М2). Ноль записей без опроса — не ноль риска.
+        sources['donki_archive'] = {'role': 'уведомления DONKI (протонное событие, буря, прогноз прихода выброса)',
+                                    'status': 'в текущем режиме не запрашивается: живого загрузчика уведомлений в сервисе нет; %s'
+                                              % _ev_archive_ru,
+                                    'state': 'none', 'live_ok': None, 'from_cache': None,
+                                    'origin': 'не запрашивается (доступен в исторических режимах)',
+                                    'fetched_utc': None, 'data_utc': None, 'age_min': None,
+                                    'events_used': len(sim_events), 'record_ids': []}
     else:
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
         goes_origin = ('архив наблюдений NASA iSWA (data/goes_2024), 5-минутные средние' if goes is not None
@@ -849,7 +981,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                       for line in fc_lines],
         # ряды наблюдений: происхождение «наблюдение», единица и запись — при каждом ряде (C3)
         'observations': observations,
-        'coverage_declared': list(assessments[0].coverage_declared), 'coverage_missing': list(assessments[0].coverage_missing),
+        'coverage_declared': list(assessments[0].coverage_declared),
+        'coverage_missing': list(coverage_missing_extra) + list(assessments[0].coverage_missing),
+        # явный признак: опрашивалась ли линия уведомлений о событиях и почему нет (М2)
+        'events_line': events_line,
         'policy_note': POLICY_NOTE,
         'is_simulated': is_sim,
         'history': {'provider': HIST_SRC if mode != 'live' else None, 'excluded_by_cutoff': excluded,
