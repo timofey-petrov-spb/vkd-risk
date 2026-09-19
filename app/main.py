@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import json
+import re
 import logging
 import traceback
 from dataclasses import replace
@@ -944,7 +945,11 @@ with tabs[TAB_CARDS]:
         # разряды тысяч. Через frac_ru даты не проходили и оставались машинными «05-10 13:35Z» (R4-3).
         # Пустые части пропускаются: у информационных карточек уровня нет, и вкладка начиналась
         # четырьмя (на профессиональном уровне — двенадцатью) строками «— · Окно 1 · …».
-        label = ' · '.join(x for x in (SEV_RU.get(c.severity, ''), screen_text(c.title), KIND_RU[c.kind]) if x)
+        # Приставку «Окно N · » из заголовка снимаем: над списком стоит переключатель окон,
+        # и повторять его в каждой из пятнадцати строк — шум. Когда окно одно и
+        # переключателя нет, приставки в заголовке и так не бывает.
+        _title = re.sub(r'^Окно\s+\d+\s*·\s*', '', screen_text(c.title))
+        label = ' · '.join(x for x in (SEV_RU.get(c.severity, ''), _title, KIND_RU[c.kind]) if x)
         with st.expander(label, expanded=(c.severity != 'info')):
             # повтор одной и той же части подписи убираем, обрывки кода — на профессиональный уровень (U2, U5)
             # обрез тела уведомления многоточием оставлял незакрытую скобку — закрываем её на месте обреза
