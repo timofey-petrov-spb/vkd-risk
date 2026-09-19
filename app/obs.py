@@ -2,8 +2,9 @@
 """Панель наблюдений: ряды GOES и Kp за последние дни с порогами шкал NOAA.
 
 Это то, что видит аналитик как «текущую обстановку» до всякого расчёта:
-наблюдения (зелёный), пороги шкал (серые линии), момент запроса.
-Ряды читаются из кеша слоя источников (experiments/stub_sources или vkd.sources).
+наблюдения (зелёный), внешний прогноз (янтарный), пороги шкал (серые линии), момент запроса.
+Цвет означает происхождение величины, как и на всём экране, а не «хорошо/плохо».
+Ряды читаются из кеша слоя источников.
 """
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ from plotly.subplots import make_subplots
 
 from app.viz import style
 
-GREEN, GREY, RED = '#1e8449', '#7f8c8d', '#c0392b'
+GREEN, GREY, RED, AMBER, BLUE = '#1e8449', '#7f8c8d', '#c0392b', '#b9770e', '#1f4e79'
 S_LEVELS = [(10.0, 'S1'), (100.0, 'S2'), (1000.0, 'S3')]
 G_LEVELS = [(5, 'G1'), (7, 'G3'), (9, 'G5')]
 PFU_TICKVALS = [0.01, 0.1, 1, 10, 100, 1000, 10000]
@@ -96,7 +97,7 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.F
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
         w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]
         fig.add_trace(go.Bar(x=x, y=[c['value'] for c in kp], width=w, name='прогноз Kp, 3-часовые интервалы',
-                             marker_color=[RED if c['value'] >= 7 else GREY for c in kp],
+                             marker_color=[RED if c['value'] >= 7 else AMBER for c in kp],
                              hovertemplate='прогноз Kp %{y:.2f}<extra></extra>'), row=1, col=1)
         for thr, name in G_LEVELS:
             fig.add_hline(y=thr, line_dash='dot', line_color=GREY, annotation_text=name, row=1, col=1)
@@ -107,7 +108,8 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.F
             for c in cells:
                 xs += [datetime.fromisoformat(c['from']), datetime.fromisoformat(c['to'])]
                 ys += [c['value'], c['value']]
-            fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name, line=dict(width=2)), row=2, col=1)
+            fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name,
+                                     line=dict(width=2, color=AMBER, dash=None if 'S1' in name else 'dot')), row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
     fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='отсечка', showarrow=False, xanchor='right', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
