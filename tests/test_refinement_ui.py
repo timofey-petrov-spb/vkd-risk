@@ -13,3 +13,6 @@ def test_professional_grid_refinement_switch_runs_real_pipeline():
     assert 'Проверка сходимости:' in captions
     assert 'не физической точности' in captions
     assert 'Шаг 5 с' in captions or 'Шаг 15 с' in captions
+    body='\n'.join(str(e.value) for e in at.markdown)
+    assert 'шаг трассы 5 с' in body or 'шаг трассы 15 с' in body
+    assert 'шаг трассы 1 мин' not in body

@@ -104,7 +104,7 @@ def ground_track(traj, windows, thr_nT: float, when: datetime) -> go.Figure:
                                     name='аномалия: |B| ниже порога %s нТл' % _nbsp_int(thr_nT),
                                     marker=dict(size=9, color=RED, opacity=0.18, symbol='square'), hoverinfo='skip'))
     lon_l, lat_l = _split_dateline([p.lon_deg for p in traj], [p.lat_deg for p in traj])
-    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='трасса, шаг 1 мин', line=dict(color=GREY, width=1), hoverinfo='skip'))
+    fig.add_trace(go.Scattergeo(lon=lon_l, lat=lat_l, mode='lines', name='траектория МКС', line=dict(color=GREY, width=1), hoverinfo='skip'))
     in_saa_pts = [p for p in traj if p.in_saa]
     if in_saa_pts:
         fig.add_trace(go.Scattergeo(lon=[p.lon_deg for p in in_saa_pts], lat=[p.lat_deg for p in in_saa_pts], mode='markers',

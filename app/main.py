@@ -314,8 +314,9 @@ horizon_to = t0 + timedelta(minutes=horizon_min)
 # а янтарный оставлен внешнему прогнозу и только ему (R4-28)
 orbit_kind = 'cond' if meta is None else 'calc'
 orbit_val = 'недоступна' if meta is None else METHOD_RU.get(meta.method, meta.method)
-orbit_sub = status_ru(tm['status'], pro) if meta is None else '%s · шаг трассы 1 мин, точек %s' % (
-    STRICT_RU.get(tm['strictness'], tm['strictness']), nbsp_thousands(tm['n_points']))
+orbit_sub = status_ru(tm['status'], pro) if meta is None else '%s · шаг трассы %s с, точек %s' % (
+    STRICT_RU.get(tm['strictness'], tm['strictness']),
+    fmt(tm.get('provenance', {}).get('step_seconds', 60)), nbsp_thousands(tm['n_points']))
 row1 = [('Время расчёта', dt_ru(now), 'все времена на экране — UTC', 'calc'),
         ('Режим', mode_ru, MODE_SUB[mode], 'calc'),
         ('Орбита', orbit_val, orbit_sub, orbit_kind),
