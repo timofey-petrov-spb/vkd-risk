@@ -263,6 +263,9 @@ SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_3day_forecast': 'трёхсут
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
              'noaa_swpc_3day_forecast': 'трёхсуточный бюллетень NOAA SWPC (живой выпуск)',
              'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
+             # двенадцатый круг: лента уведомлений опрашивается живьём, и её ключ уходит
+             # на экран и в отчёт; английский идентификатор там недопустим
+             'donki_live': 'уведомления NASA DONKI (живая лента)',
              'noaa_forecast_kp_forecast': 'прогноз Kp NOAA',
              'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
              'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки',
