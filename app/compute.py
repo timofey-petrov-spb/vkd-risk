@@ -44,6 +44,8 @@ from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
 from vkd.explain.format import fmt_ru
 from vkd.history import history_bundle
+from vkd.integration.donki_live import (FEED_WINDOW_DAYS as DONKI_FEED_WINDOW_DAYS, Notifications,
+                                        coverage_ru as donki_coverage_ru, summary_ru as donki_summary_ru)
 from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, live_forecasts, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
 from vkd.sources import Fetch, goes_latest, kp_latest, noaa_latest, tle_latest
@@ -444,6 +446,18 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if mode == 'history_forecast' and is_sim:
         raise ValueError('сценарий Что если нельзя выдавать за строгий прогноз из прошлого')
 
+    # События, чей интервал ДЕЙСТВИЯ касается [t0 − 6 ч, конец горизонта]. Шесть часов назад —
+    # запас на событие, начавшееся до периода и продолжающееся в нём; давность публикации не
+    # ограничивается вовсе: прогноз прихода выброса, выпущенный за трое суток, всё равно
+    # относится к окну. Правило пересечения — то же, что при отборе условий
+    # (vkd.windows.compare.action_span/overlaps), иначе лента и карточка окна считали бы разное.
+    # Определено ДО ветвления по режимам: одно правило и для архива, и для живой ленты DONKI.
+    def _touches(e):
+        a0, a1 = action_span(e, th)
+        if a0 is None:
+            return True
+        return overlaps(a0, a1, t0 - timedelta(hours=6), orbit_start + timedelta(minutes=horizon_min))
+
     # ------------------------------------------------------------ источники
     f_noaa, noaa_raw, noaa_samples = None, {}, ()
     if fetch_note is not None and not isinstance(fetch_note, str):
@@ -479,6 +493,13 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                       status_ru='незавершённый интервал Kp исключён: наблюдение ещё не завершилось')
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs, verification = [], {}, [], [], {}, [], [], None
     f_noaa = _empty_fetch('noaa_swpc_3day_forecast', 'прогноз NOAA не получен')
+    # Живая лента уведомлений NASA DONKI (двенадцатый круг, п. 6). До неё источник уведомлений
+    # в текущем режиме не опрашивался ВООБЩЕ, и ноль на экране был нулём опрошенных источников,
+    # а не нулём событий. Разбор тел сообщений остаётся один на весь проект
+    # (vkd/sources/donki.py); здесь только мост области Б — vkd/integration/donki_live.py.
+    donki_notes = Notifications(connected=False, reason_ru='уведомления не запрашивались')
+    donki_raw: dict = {}
+    f_donki = _empty_fetch('nasa_donki_notification', 'уведомления не получены')
     if mode == 'live':
         bundle = fetched[3] if len(fetched) > 3 else ((), {}, f_noaa)
         if disabled.get('noaa') == 'off':
@@ -486,6 +507,15 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         noaa_samples, noaa_raw, f_noaa = bundle
         fc_lines, fc_raw = live_forecasts(bundle, orbit_start, orbit_start + timedelta(minutes=horizon_min))
         forecasts = [sample for line in fc_lines for sample in line.samples]
+        if len(fetched) > 4:
+            donki_notes, donki_raw, f_donki = fetched[4]
+        if disabled.get('donki') == 'off':
+            # Т6: исключённый пользователем источник не подменяется кешем и не превращается
+            # в «событий нет» — он объявляется исключённым, как GOES и Kp выше.
+            donki_notes = Notifications(connected=False, reason_ru='источник исключён пользователем — данных нет')
+            donki_raw = {}
+            f_donki = replace(f_donki, ok=False, from_cache=False, payload=None, raw_path=None,
+                              status_ru='источник исключён пользователем — данных нет')
     observations: list = []          # ряды наблюдений для ленты времени и выгрузки (C3)
     excluded_archive: list = []
     catalog = None
@@ -496,6 +526,17 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     goes_absent_ru = None
     event_facts: dict = {}
     hist_meta: dict = {}
+    if mode == 'live' and donki_notes.connected:
+        # Живые уведомления идут в расчёт ровно тем же путём, что архивные: сначала отбор по
+        # пересечению с горизонтом, потом общее правило условий (vkd/windows/compare.py).
+        # Структурированные факты (Kp бури, канал и порог протонного события, диапазон Kp
+        # прихода выброса) читает правило, а не русский текст заметки.
+        events = [e for e in donki_notes.events if _touches(e)]
+        event_facts = {rid: dict(f) for rid, f in donki_notes.facts.items() if f}
+        # Наблюдения Kp из уведомлений о буре в канал Kp НЕ подставляются: численный канал Kp
+        # в текущем режиме ведёт окончательный ряд GFZ, и два разных значения одной величины на
+        # одном экране читались бы как ошибка. Само уведомление остаётся сигналом бури и
+        # попадает в условие через событие GST — там сигналы сводятся в одно условие (Т3).
     if mode != 'live':
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
         catalog = (c0, c1)
@@ -588,15 +629,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             kp_obs = sorted({(s.valid_from_utc, s.valid_to_utc, s.value) for s in h_samples
                              if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
                              and t0 - timedelta(hours=12) <= s.t_utc <= t0 + timedelta(minutes=horizon_min + 180)})
-        # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
-        # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
-        def _touches(e):
-            # то же правило пересечения, что при отборе условий в compare.action_span/overlaps:
-            # конец действия по настройке своего типа события, пересечение не меньше минуты
-            a0, a1 = action_span(e, th)
-            if a0 is None:
-                return True
-            return overlaps(a0, a1, t0 - timedelta(hours=6), orbit_start + timedelta(minutes=horizon_min))
+        # события, чей интервал касается [t0 − 6 ч, конец горизонта] — правило `_touches` выше,
+        # одно на архив и на живую ленту
         events = [e for e in cut.events if _touches(e)]
         # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
         if disabled.get('noaa') == 'off':
@@ -667,34 +701,64 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                             'flux_operator': '=', 'measured_flux_pfu': float(scenario.sep_level_pfu)}
 
     # ------------------------------------------------- линия уведомлений о событиях: подключена или нет
-    # В текущем режиме источник уведомлений НЕ ОПРАШИВАЕТСЯ: живого загрузчика DONKI в сервисе нет,
-    # весь блок событий закрыт условием `mode != 'live'`. Приборная полоса при этом печатала
-    # «0 записей · наш подсчёт по реестру», то есть непроверенное выдавалось за проверенное
-    # (девятый круг, М2). Признак кладётся в снимок ЯВНО — его читают и экран, и выгрузка;
-    # «пропуск данных не равен нулевому риску» (постановка).
+    # Двенадцатый круг, п. 6. Раньше в текущем режиме источник уведомлений не опрашивался вовсе,
+    # и ячейка «События на горизонте» показывала ноль — ноль ОПРОШЕННЫХ источников, а не ноль
+    # событий. Теперь лента опрашивается живьём (vkd/integration/donki_live.py), и признак
+    # `connected` означает то, что написано: опрос состоялся. Ноль записей на горизонте при
+    # `connected = True` — это уже настоящий ноль событий, и его нужно читать именно так.
     _ev_c0, _ev_c1, _, _ = _donki_catalog_coverage()
     _ev_archive_ru = 'архив уведомлений охватывает %s — %s' % (
         _ev_c0.strftime('%d.%m.%Y'), (_ev_c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'))
+    _ev_connected = donki_notes.connected if mode == 'live' else True
     events_line = {
-        'connected': mode != 'live',
+        'connected': _ev_connected,
         'source_ru': 'уведомления NASA DONKI (протонное событие, буря, приход выброса)',
         'records': len(events),
         'simulated_records': len(sim_events),
-        'reason_ru': (None if mode != 'live' else
-                      'в текущем режиме источник уведомлений (NASA DONKI) не опрашивается: живого загрузчика в сервисе '
-                      'нет. Условия ставятся по наблюдению GOES ≥10 МэВ и прогнозу Kp NOAA; %s и доступен в '
-                      'исторических режимах' % _ev_archive_ru),
+        'reason_ru': (None if _ev_connected else
+                      'уведомления NASA DONKI не получены: %s. Условия остаются на наблюдении GOES ≥10 МэВ и '
+                      'прогнозе Kp NOAA; %s' % (donki_notes.reason_ru or 'причина не названа', _ev_archive_ru)),
         'archive_ru': _ev_archive_ru,
     }
-    # Строка охвата: то же самое словами аналитика, рядом с остальным «не учтено».
-    # Глагол здесь тот же, что в `app.ui.LIVE_NO_EVENTS_RU`, и это не косметика: экран
-    # подставляет свою фразу про DONKI только тогда, когда её нет в этом списке, — то есть про
-    # один и тот же факт на экране печатается ровно одно предложение. Пока глаголы расходились
-    # («не опрашиваются» здесь против «не запрашиваются» там), читатель видел фразу этого слоя,
-    # а проверка экрана искала фразу своего (найдено слиянием круга 11).
-    coverage_missing_extra = ((
-        'события и уведомления (NASA DONKI) в текущем режиме не запрашиваются — %s, он доступен только в '
-        'исторических режимах' % _ev_archive_ru,) if mode == 'live' else ())
+    if mode == 'live':
+        # Что именно принёс живой опрос: число сообщений в ленте, момент опроса и охват ленты.
+        # Это те самые числа, которых требует п. 6 техзадания: «ячейка событий показывает число
+        # записей и время последнего опроса». `records` выше — события НА ГОРИЗОНТЕ, а
+        # `feed_messages` — всё, что отдала служба за своё окно: две разные величины, и путать
+        # их нельзя (за неделю может прийти десяток сообщений, ни одно из которых не действует
+        # в запрошенном окне).
+        events_line.update({
+            'live': True,
+            'feed_messages': donki_notes.message_count,
+            'feed_window_days': DONKI_FEED_WINDOW_DAYS,
+            'feed_from_utc': donki_notes.window_from_utc.isoformat() if donki_notes.window_from_utc else None,
+            'feed_to_utc': donki_notes.window_to_utc.isoformat() if donki_notes.window_to_utc else None,
+            'newest_message_utc': donki_notes.newest_utc.isoformat() if donki_notes.newest_utc else None,
+            'polled_utc': f_donki.fetched_utc.isoformat() if getattr(f_donki, 'fetched_utc', None) else None,
+            'poll_age_min': (round((now - f_donki.fetched_utc).total_seconds() / 60)
+                             if getattr(f_donki, 'fetched_utc', None) else None),
+            'from_cache': bool(getattr(f_donki, 'from_cache', False)),
+            'live_ok': bool(getattr(f_donki, 'ok', False)),
+            'by_type': dict(donki_notes.by_type),
+            'by_status': dict(donki_notes.by_status),
+            'not_parsed': [{'release_id': rid, 'reason': why} for rid, why in donki_notes.not_parsed],
+            'coverage_ru': donki_coverage_ru(donki_notes),
+            'summary_ru': donki_summary_ru(donki_notes),
+        })
+    # Строка охвата: то же самое словами аналитика, рядом с остальным «не учтено». Пока опрос
+    # проходит, ограничения охвата по этой линии НЕТ и выдумывать его нельзя: остаётся только
+    # честное ограничение самой ленты — служба отдаёт окно в неделю, и о событии, объявленном
+    # позже нашего опроса, сервис знать не может.
+    if mode != 'live':
+        coverage_missing_extra = ()
+    elif not _ev_connected:
+        coverage_missing_extra = ('события и уведомления (NASA DONKI) не получены: %s'
+                                  % (donki_notes.reason_ru or 'причина не названа'),)
+    else:
+        coverage_missing_extra = ('события, объявленные NASA DONKI позже момента опроса (%s), в расчёт не входят: '
+                                  'служба отдаёт уведомления за последние %d суток и опрашивается при каждом расчёте'
+                                  % (dt_ru(f_donki.fetched_utc) if getattr(f_donki, 'fetched_utc', None) else 'момент не записан',
+                                     DONKI_FEED_WINDOW_DAYS),)
 
     # ------------------------------------------------------------ траектория (A3 через мост Б)
     if tle_override_path and mode == 'live':
@@ -897,6 +961,17 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                   'acquisition_metadata': dict(getattr(f_tle, 'metadata', None) or {})}
         if noaa_raw:
             raw_records.update(noaa_raw)
+        if donki_raw:
+            # Точные байты ответа службы уведомлений с квитанцией — доказательство получения.
+            raw_records.update(donki_raw)
+        for _rid in sorted({e.raw_record_id for e in events if e.raw_record_id and not e.is_simulated}):
+            # Каждое УЧТЁННОЕ уведомление — отдельной записью выгрузки, в той же канонической
+            # форме, в какой его хранит архив A1: один и тот же текст сообщения, полученный
+            # живьём и лежащий в архиве, имеет один идентификатор и один хеш.
+            _meta, _body = donki_notes.records.get(_rid), donki_notes.bodies.get(_rid)
+            if _meta and _body:
+                raw_records[_rid] = {'metadata': _meta, 'encoding': 'base64',
+                                     'content_base64': base64.b64encode(_body).decode('ascii')}
         # точные байты ответа TLE и квитанция A4 — рядом с нормализованным текстом:
         # повтор текущего режима разбирает исходный ответ, а не наш пересказ (стык, п. 2)
         from vkd.sources.live_cache import raw_record as _raw_record
@@ -907,6 +982,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         off_sources.add('gfz_kp_archive')
     if disabled.get('noaa') == 'off':
         off_sources.update({'noaa_swpc_3day_forecast', 'noaa_ngdc_3day_forecast', 'noaa_ngdc_daypre'})
+    if disabled.get('donki') == 'off':
+        off_sources.add('nasa_donki_notification')
     raw_records = {rid: item for rid, item in raw_records.items()
                    if item.get('metadata', {}).get('source_id') not in off_sources}
     history_proof['source_versions'] = {sid: records for sid, records in history_proof.get('source_versions', {}).items()
@@ -996,16 +1073,25 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             'data_utc': iso(min((s.published_utc for s in noaa_samples if s.published_utc), default=None)),
             'cells': len(noaa_samples),
             'record_ids': sorted({line.raw_record_id for line in fc_lines if line.raw_record_id})}
-        # Линия уведомлений в реестре присутствует и в текущем режиме — со статусом «не
-        # запрашивается». Пока строки не было, отсутствие событий читалось как «опросили,
-        # событий нет» (девятый круг, М2). Ноль записей без опроса — не ноль риска.
-        sources['donki_archive'] = {'role': 'уведомления DONKI (протонное событие, буря, прогноз прихода выброса)',
-                                    'status': 'в текущем режиме не запрашивается: живого загрузчика уведомлений в сервисе нет; %s'
-                                              % _ev_archive_ru,
-                                    'state': 'none', 'live_ok': None, 'from_cache': None,
-                                    'origin': 'не запрашивается (доступен в исторических режимах)',
-                                    'fetched_utc': None, 'data_utc': None, 'age_min': None,
-                                    'events_used': len(sim_events), 'record_ids': []}
+        # Живая лента уведомлений. Ключ отличается от архивного (`donki_archive`) намеренно:
+        # это другой способ получения — опрос службы за последние сутки-недели против разбора
+        # архива 2024 года с отбором по времени публикации, — и склеивать их в одну строку
+        # состояния значило бы подписывать живой опрос словом «архив».
+        sources['donki_live'] = {
+            'role': 'уведомления NASA DONKI (протонное событие, буря, прогноз прихода выброса)',
+            'status': ('%s; %s' % (donki_summary_ru(donki_notes), donki_coverage_ru(donki_notes))
+                       if donki_notes.connected else (f_donki.status_ru or 'уведомления не получены')),
+            **{k: v for k, v in _src(f_donki, 'уведомления NASA DONKI', key='donki').items()
+               if k in ('live_ok', 'from_cache', 'origin', 'fetched_utc', 'age_min')},
+            'state': _state('donki', f_donki),
+            # время данных ленты — выпуск самого позднего уведомления в ней (см. мост);
+            # момент самого опроса стоит отдельным полем fetched_utc
+            'data_utc': iso(donki_notes.newest_utc) if donki_notes.newest_utc else None,
+            'feed_messages': donki_notes.message_count,
+            'feed_window_days': DONKI_FEED_WINDOW_DAYS,
+            'events_used': len([e for e in events if not e.is_simulated]),
+            'not_parsed': len(donki_notes.not_parsed),
+            'record_ids': sorted({e.raw_record_id for e in events if e.raw_record_id and not e.is_simulated})}
     else:
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
         goes_origin = ('архив наблюдений NASA iSWA (data/goes_2024), 5-минутные средние' if goes is not None

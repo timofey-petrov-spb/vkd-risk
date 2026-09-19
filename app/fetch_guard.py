@@ -39,14 +39,20 @@ import threading
 from dataclasses import replace
 
 from vkd.config import section as _settings_section
+from vkd.integration.donki_live import donki_latest
 from vkd.sources import Fetch, goes_latest, kp_latest, noaa_latest, tle_latest
 
 LOG = logging.getLogger('vkd.app.fetch')
 
-DEFAULT_TOTAL_DEADLINE_S = 12.0     # умолчание кода на случай отсутствия ключа или файла настроек
+DEFAULT_TOTAL_DEADLINE_S = 20.0     # умолчание кода на случай отсутствия ключа или файла настроек;
+                                    # обоснование числа — в config/settings.toml, ключ total_deadline_s
 MAX_TOTAL_DEADLINE_S = 120.0        # больше двух минут — это уже не «предел», а прежнее поведение
-KEYS = ('goes', 'kp', 'tle', 'noaa')                  # порядок кортежа = порядок распаковки в app.compute.run
-SOURCE_ID = {'goes': 'noaa_swpc_goes', 'kp': 'gfz_kp', 'tle': 'celestrak_gp', 'noaa': 'noaa_swpc_3day_forecast'}
+# Порядок кортежа = порядок распаковки в app.compute.run. Уведомления DONKI добавлены ПОСЛЕДНИМИ
+# намеренно: сохранённые расчёты и примеры, собранные до двенадцатого круга, распаковывают первые
+# четыре элемента и продолжают работать без изменений.
+KEYS = ('goes', 'kp', 'tle', 'noaa', 'donki')
+SOURCE_ID = {'goes': 'noaa_swpc_goes', 'kp': 'gfz_kp', 'tle': 'celestrak_gp',
+             'noaa': 'noaa_swpc_3day_forecast', 'donki': 'nasa_donki_notification'}
 # С чего слой источников начинает статус, когда живого запроса не было (vkd/sources/live_cache.py,
 # labels): эту подпись мы заменяем своей причиной, остальную часть статуса сохраняем как есть.
 _NO_REQUEST_LABELS = ('источник отключён', 'источник исключён пользователем')
@@ -83,7 +89,8 @@ def modes(disabled: dict | None = None) -> dict:
     """Состояние каждого живого источника по запросу экрана. TLE в текущем режиме запрашивается
     всегда: орбита без элементов не строится, и отдельного переключателя у него на экране нет."""
     d = disabled or {}
-    return {'goes': d.get('goes', False), 'kp': d.get('kp', False), 'tle': False, 'noaa': d.get('noaa', False)}
+    return {'goes': d.get('goes', False), 'kp': d.get('kp', False), 'tle': False,
+            'noaa': d.get('noaa', False), 'donki': d.get('donki', False)}
 
 
 def _live_attempt(mode) -> bool:
@@ -91,13 +98,44 @@ def _live_attempt(mode) -> bool:
     return mode is False or mode == 'on'
 
 
+def refresh_each_render() -> bool:
+    """Спрашивать ли источники в КАЖДОМ рендере, а не раз в свой межзапросный интервал.
+
+    ЗАЧЕМ ЭТО ЕСТЬ. Слой источников резервирует за каждой службой паузу между запросами
+    (`poll_seconds`: лента GOES 300 с, Kp GFZ 900 с, бюллетень NOAA 3600 с, элементы орбиты
+    7200 с). Пока пауза не истекла, обращения к сети НЕ ПРОИСХОДИТ вовсе, и источник честно
+    отвечает «проверенный кеш». На экране это читается как «живого ответа нет» — ровно то, на
+    что указал владелец. Замер 19.09.2026 на этой машине, десять рендеров подряд со штатным
+    кешем: живых ответов 1 из 40 (остальные 39 — возврат кеша без обращения к сети).
+    При этом каждый источник, спрошенный по-настоящему, отвечает: 10 успехов из 10 у каждого
+    (GOES 0,62 с, Kp 0,41 с, элементы орбиты 4,05 с, уведомления DONKI 0,84 с в среднем).
+
+    ЧТО ДЕЛАЕТ. `force_refresh` слоя источников отменяет ожидание паузы для тех источников,
+    у которых ПРЕДЫДУЩАЯ попытка прошла без ошибки. После отказа пауза действует как прежде —
+    это защита службы от шквала повторов, и отменять её нельзя. Элементы орбиты (CelesTrak)
+    объявлены строгим источником (`strict_poll`), их двухчасовой интервал не отменяется вовсе.
+
+    ЧАСТОТА. Обращение к сети ограничено не этим ключом, а кешем экрана: `app/main.py` держит
+    результат получения 300 с. То есть при включённом ключе каждая служба опрашивается не чаще
+    12 раз в час на весь сервис, а не на каждого зрителя.
+    """
+    v = _settings_section('sources').get('refresh_each_render', True)
+    if not isinstance(v, bool):
+        raise ValueError('sources.refresh_each_render должен быть истиной или ложью, получено %r' % (v,))
+    return v
+
+
 def fetch(mode_map: dict, *, offline: bool = False, transport=None) -> tuple:
-    """Кортеж четырёх источников в порядке KEYS. offline=True — ни одного обращения к сети:
+    """Кортеж источников в порядке KEYS. offline=True — ни одного обращения к сети:
     слой источников переводится в режим «только кеш» ('off' остаётся 'off' — это выбор пользователя)."""
     m = ({k: ('off' if v == 'off' else 'cache') for k, v in mode_map.items()} if offline else dict(mode_map))
     kw = {} if transport is None else {'transport': transport}
+    # В режиме «только кеш» обновлять нечего: ключ имеет смысл лишь там, где запрос идёт в сеть.
+    if not offline and refresh_each_render():
+        kw['force_refresh'] = True
     return (goes_latest(disabled=m['goes'], **kw), kp_latest(disabled=m['kp'], **kw),
-            tle_latest(disabled=m['tle'], **kw), noaa_latest(disabled=m['noaa'], **kw))
+            tle_latest(disabled=m['tle'], **kw), noaa_latest(disabled=m['noaa'], **kw),
+            donki_latest(disabled=m['donki'], **kw))
 
 
 def _restate(f: Fetch, reason: str) -> Fetch:

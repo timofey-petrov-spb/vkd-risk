@@ -155,7 +155,10 @@ def test_replay_parses_saved_records_at_their_fetch_time_not_at_calculation_time
                                      'energy': '>=10 MeV'}]).encode()).decode()},
     }
     tle = open(TLE, encoding='utf-8').read()
-    (_g, _gr, _fg), (kp, _kr, f_kp), _tle, _noaa = from_saved_records(records, computed, tle_text=tle)
+    # хвост кортежа не распаковывается поимённо: живых источников стало пять (двенадцатый круг
+    # добавил ленту уведомлений NASA DONKI), и проверка про время разбора Kp к их числу отношения
+    # не имеет — иначе она ломалась бы при каждом новом источнике
+    (_g, _gr, _fg), (kp, _kr, f_kp), *_rest = from_saved_records(records, computed, tle_text=tle)
     assert kp is not None, f_kp.status_ru
     # интервал 21:00–00:00 завершён к 02:55; интервал 00:00–03:00 на 02:55 ещё шёл
     assert kp.t_utc == datetime(2026, 9, 19, 0, 0, tzinfo=timezone.utc), kp.t_utc

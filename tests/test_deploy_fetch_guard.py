@@ -112,15 +112,19 @@ def _screen(at) -> str:
 
 # ================================================================= (а) транспорт спит дольше предела
 def test_a_zavisshiy_transport_ukladyvaetsya_v_obshchiy_predel(freeze, monkeypatch):
-    """Получение четырёх источников заканчивается по пределу, а не по сну транспорта:
-    без предела тот же рендер ждал бы шесть адресов по SLEEP_S секунд каждый."""
+    """Получение ВСЕХ живых источников заканчивается по пределу, а не по сну транспорта:
+    без предела тот же рендер ждал бы семь адресов по SLEEP_S секунд каждый.
+
+    Число источников не вписывается числом: с двенадцатого круга к ним добавлены уведомления
+    NASA DONKI, и проверка сверяется с самим перечнем `fg.KEYS` — иначе она проверяла бы не то,
+    что есть, а то, что было."""
     monkeypatch.setattr(lc.requests, 'get', _hanging_transport(freeze))
     t = time.monotonic()
     fetched, note = fg.fetch_live_sources({'goes': False, 'kp': False, 'noaa': False}, deadline_s=TEST_DEADLINE_S)
     dt = time.monotonic() - t
     assert dt < TEST_DEADLINE_S + 1.0, 'получение источников заняло %.1f с при пределе %s с' % (dt, TEST_DEADLINE_S)
     assert note and note.startswith(REASON) and '2 с' in note, note
-    assert len(fetched) == 4
+    assert len(fetched) == len(fg.KEYS)
     for key, item in zip(fg.KEYS, fetched):
         assert REASON in item[-1].status_ru, (key, item[-1].status_ru)
         assert not item[-1].ok, key                       # живого ответа нет и он таким не назван
@@ -283,7 +287,10 @@ def test_zavisshiy_potok_ne_povtoryaet_zapros(freeze, monkeypatch):
 def test_predel_chitaetsya_iz_nastroek_i_proveryaetsya(monkeypatch, tmp_path):
     """Ключ живой: значение берётся из файла, а не из кода; неправильное значение — ошибка."""
     cfg.settings.cache_clear()
-    assert fg.total_deadline_s() == float(cfg.section('sources')['total_deadline_s']) == 12.0
+    # Значение не вписывается числом: рабочий предел меняется по замерам (двенадцатый круг поднял
+    # его с 12 до 20 с, обоснование — в config/settings.toml). Проверяется именно то, что ключ
+    # живой: функция возвращает то, что стоит в файле, а не умолчание кода.
+    assert fg.total_deadline_s() == float(cfg.section('sources')['total_deadline_s'])
     _settings_with_deadline(tmp_path, monkeypatch, 3)
     assert fg.total_deadline_s() == 3.0
     for bad in ('0', '-1', '"12"', '1000'):
@@ -295,4 +302,4 @@ def test_predel_chitaetsya_iz_nastroek_i_proveryaetsya(monkeypatch, tmp_path):
             fg.total_deadline_s()
     monkeypatch.delenv('VKD_SETTINGS', raising=False)
     cfg.settings.cache_clear()
-    assert fg.total_deadline_s() == 12.0
+    assert fg.total_deadline_s() == float(cfg.section('sources')['total_deadline_s'])
