@@ -214,6 +214,11 @@ def _fold_records(ids: list, n: int = 3) -> str:
         ' … всего %d (полный список — cards.json, raw/)' % len(ids) if len(ids) > n else '')
 
 
+def _min_md(x: float) -> str:
+    """Минуты в отчёте: целые без дробной части, доли минуты — с запятой, как на экране."""
+    return ('%.0f' % x) if x >= 1 or x == 0 else ('%.1f' % x).replace('.', ',')
+
+
 def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
     """Отчёт для человека. Говорит теми же словами, что экран: идентификаторы источников и
     состояний переведены, вердикт по-русски (машинный код остаётся в recommendation.json),
@@ -232,6 +237,13 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
          '**%s.**' % VERDICT_TITLE.get(r['verdict'], r['verdict']),
          '', 'Правило: %s.' % frac_ru(rule_ru(r['rule'])),
          '', 'Предпочтительное окно: %s.' % (('окно %s, начало %s' % (r.get('preferred_index') or '?', _dt(r['preferred'], '%d.%m %H:%MZ'))) if r['preferred'] else 'нет')]
+    # Объявленная область вывода стоит ВПЛОТНУЮ к вердикту и выше «что повлияло»: она не
+    # комментарий к выводу, а часть самого вывода (решение владельца 19.09 по разбору Codex п. 1).
+    if r.get('scope'):
+        # В отчёте читают целиком — здесь подробная форма, та же, что на профессиональном уровне.
+        L += ['', '**Область вывода:** %s.' % phrase_ru(r.get('scope_detail') or r['scope'])]
+        for k, v in (r.get('scope_facts') or []):
+            L.append('- %s: %s' % (k, phrase_ru(v)))
     if r['reasons']:
         L += ['', 'Что повлияло:'] + ['- ' + phrase_ru(x) for x in r['reasons']]
     if r['missing']:
@@ -254,6 +266,10 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
         for m in w['mechanisms']:
             L.append('- **%s** — покрытие %s%s' % (MECH_RU.get(m['id'], m['id']), COV_RU.get(m['coverage'], m['coverage']),
                                                     '; обязательная линия' if m['mandatory'] else '; необязательная линия'))
+            if m.get('coverage_fraction') is not None:
+                L.append('  - модель покрывает %.1f %% времени окна' % (100 * m['coverage_fraction']))
+            for g in m.get('coverage_gaps', []) or []:
+                L.append('  - без модели %s мин: %s' % (_min_md(g['minutes']), phrase_ru(g['reason'])))
             for n in m.get('coverage_notes', []):
                 L.append('  - не хватает: ' + phrase_ru(n))
             for f in m['factors']:
@@ -419,6 +435,11 @@ def _traj_line(tm: dict) -> str:
 
 def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
     buf = io.BytesIO()
+    import hashlib
+    raw_files = {rid: 'raw/%s_%s.json' % (rid.replace('/', '_').replace('#', '_').replace(':', '-'), hashlib.sha256(rid.encode()).hexdigest()[:8]) for rid in raw_records}
+    # Retain the legacy TLE name for tools that read this one well-known payload.
+    if 'iss.tle' in raw_files:
+        raw_files['iss.tle'] = 'raw/iss.tle.json'
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('report.md', report_md(S, raw_records))
         z.writestr('request.json', _j(S['request']))
@@ -427,6 +448,8 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('recommendation.json', _j(S['recommendation']))
         z.writestr('cards.json', _j(S['cards']))
         z.writestr('sources.json', _j(S['sources']))
+        if S.get('numerical_integration'):
+            z.writestr('numerical_integration.json', _j(S['numerical_integration']))
         if S.get('verification') is not None:
             z.writestr('verification.json', _j(S['verification']))
         if S.get('observations'):        # ряды наблюдений с единицей, источником и записью (C3)
@@ -434,8 +457,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('manifest.json', _j({
             'schema_version': S.get('schema_version'), 'algorithm_version': S['algorithm_version'],
             'computed_utc': S['computed_utc'], 'mode': S.get('mode_id', S['mode']),
+            'raw_record_files': raw_files,
             'cutoff_utc': S['request'].get('cutoff_utc'), 'is_simulated': S.get('is_simulated', False),
-            'source_versions': S['sources'], 'raw_record_ids': sorted(raw_records),
+            'source_versions': S.get('source_versions', {}),
+            'coverage_map': S.get('coverage_map', {}), 'raw_record_ids': sorted(raw_records),
             'effective_config': S.get('effective_config') or {'thresholds': S['request']['thresholds']},
             'excluded_by_cutoff': S.get('history', {}).get('excluded_by_cutoff', []),
             'excluded_by_archive': S.get('history', {}).get('excluded_by_archive', []),
@@ -446,8 +471,9 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             'history_audit': {k: v for k, v in (S.get('history') or {}).items()
                               if k in ('adapter_version', 'coverage_map', 'limitations', 'archive_access',
                                        'source_versions', 'event_facts', 'provider')},
+            'numerical_integration': S.get('numerical_integration'),
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))
         for rid, rec in raw_records.items():
-            z.writestr('raw/%s.json' % rid.replace('/', '_').replace('#', '_').replace(':', '-'), _j(rec))
+            z.writestr(raw_files[rid], _j(rec))
     return buf.getvalue()

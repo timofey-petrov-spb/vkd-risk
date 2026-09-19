@@ -156,10 +156,10 @@ def live_forecast_lines(samples, raw: dict, fetch, valid_from_utc: datetime, val
         total = (valid_to_utc - valid_from_utc).total_seconds()
         covered = sum(max(0.0, (min(valid_to_utc, s.valid_to_utc) - max(valid_from_utc, s.valid_from_utc)).total_seconds())
                       for s in ss)
-        frac = min(1.0, covered / total) if total > 0 else 0.0
+        frac = covered_fraction(ss, valid_from_utc, total / 60.0)
         rid = ss[0].raw_record_id
         lines.append(ForecastLine(
-            cid, ss[0].source_id, label, 'full' if frac >= 0.999 else ('partial' if frac > 0 else 'missing'), frac,
+            cid, ss[0].source_id, label, 'full' if frac == 1 else ('partial' if frac > 0 else 'missing'), frac,
             (getattr(fetch, 'metadata', None) or {}).get('release_id') or rid, ss[0].published_utc, rid, tuple(ss), (),
             None if frac > 0 else 'ячейки выпуска не пересекают горизонт запроса',
             ('живой выпуск NOAA SWPC: доступность подтверждена самим запросом, историческая неизменность байтов не доказывается',)))
@@ -175,7 +175,20 @@ def in_window(samples, start_utc: datetime, duration_min: int):
 def covered_fraction(samples, start_utc: datetime, duration_min: int) -> float:
     end = start_utc + timedelta(minutes=duration_min)
     total = (end - start_utc).total_seconds()
-    cov = 0.0
-    for s in in_window(samples, start_utc, duration_min):
-        cov += (min(end, s.valid_to_utc) - max(start_utc, s.valid_from_utc)).total_seconds()
-    return min(1.0, cov / total) if total > 0 else 0.0
+    if total <= 0:
+        return 0.0
+    intervals = sorted((max(start_utc, s.valid_from_utc), min(end, s.valid_to_utc))
+                       for s in in_window(samples, start_utc, duration_min))
+    cov, cursor = 0.0, start_utc
+    for lo, hi in intervals:
+        lo = max(lo, cursor)
+        if hi > lo:
+            cov += (hi-lo).total_seconds()
+            cursor = hi
+    return cov / total
+
+
+
+def live_forecasts(bundle, valid_from_utc, valid_to_utc):
+    """Compatibility entry point; one live forecast adapter for both consumers."""
+    return live_forecast_lines(*bundle, valid_from_utc, valid_to_utc)
