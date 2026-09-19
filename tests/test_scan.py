@@ -23,10 +23,18 @@ DUR = 360           # длительность выхода, мин (поста�
 SEARCH = 720        # период поиска начала, мин
 STEP = 10           # шаг перебора, мин — умолчание config/settings.toml
 
-# Форма ключа `scan` — договор с экраном (ТЗ, раздел 1a). Менять его нельзя ни в чём, поэтому
-# состав ключей проверяется РАВЕНСТВОМ множеств, а не включением: лишний ключ — тоже нарушение.
+# Форма ключа `scan` — договор с экраном (ТЗ, раздел 1a). Состав проверяется РАВЕНСТВОМ множеств,
+# а не включением: лишний ключ — такое же нарушение договора, как пропавший.
+#
+# Ключей ПЯТНАДЦАТЬ, а не тринадцать, как было в первой редакции договора: дописаны `answer_kind`
+# и `answer_span` (решение координатора круга 11). Это дополнение, а не изменение — ни один
+# прежний ключ не тронут, у кандидата их по-прежнему девять. Причина: исход `equivalent` означал
+# сразу два разных ответа — «лучшие начала идут подряд, ответ есть и он промежуток» и «величины
+# спорят, победителя нет», — и экран мог различить их только разбором прозы `why`, чего делать
+# нельзя: на прозе отрисовку не строят.
 SCAN_KEYS = {'requested_duration_min', 'search_from_utc', 'search_to_utc', 'step_min', 'n_candidates',
-             'rule', 'tolerance_note', 'candidates', 'best', 'recommended_index', 'verdict', 'scope', 'why'}
+             'rule', 'tolerance_note', 'candidates', 'best', 'recommended_index', 'verdict', 'scope', 'why',
+             'answer_kind', 'answer_span'}
 CANDIDATE_KEYS = {'start_utc', 'end_utc', 'saa_min', 'fluence', 'mmod_hits', 'coverage',
                   'conditions', 'rank', 'group'}
 
@@ -222,6 +230,79 @@ def test_verdikt_perebora_nazyvaet_svoy_ishod(belts, track):
     # все окна под условием: рекомендации нет, но перечень есть
     sc2 = _scan(track, belts=belts, goes=goes(20.0))
     assert sc2.verdict == 'all_need_check' and sc2.recommended_index is None and sc2.best
+
+
+# --------------------------------------------------------------------- вид ответа
+def _cand(minute, saa, fluence, conds=()):
+    return Candidate(T0 + timedelta(minutes=minute), T0 + timedelta(minutes=minute + DUR),
+                     saa, fluence, 1e-6, 'full', tuple(conds))
+
+
+def test_vid_otveta_razlichaet_tochku_promezhutok_i_spor():
+    """Договор дополнен двумя полями ровно затем, чтобы экран НЕ гадал по прозе.
+
+    Три вида ответа проверяются на собранных вручную группах: правило здесь не «как повезёт
+    на архиве», а вычислимое свойство, и проверять его надо на всех трёх случаях сразу.
+    """
+    from vkd.windows.scan import answer_of
+    # один кандидат — точка, оба конца совпадают
+    c = [_cand(0, 10.0, 1e5)]
+    kind, span = answer_of(c, (0,), 'recommended', 5.0, 1.5)
+    assert kind == 'point' and span == (c[0].start_utc, c[0].start_utc)
+    # подряд и без спора — промежуток от первого до последнего
+    c = [_cand(i * 10, 10.0 + i, 1e5 * (1 + 0.02 * i)) for i in range(4)]
+    kind, span = answer_of(c, (0, 1, 2, 3), 'equivalent', 5.0, 1.5)
+    assert kind == 'interval' and span == (c[0].start_utc, c[3].start_utc)
+    # спор величин — вида «промежуток» быть не может, промежутка нет вовсе
+    c = [_cand(0, 10.0, 9e5), _cand(60, 90.0, 1e5)]
+    kind, span = answer_of(c, (0, 1), 'equivalent', 5.0, 1.5)
+    assert kind == 'tradeoff' and span is None
+
+
+def test_vid_otveta_pri_razryve_bez_spora_nazyvaet_sploshnoy_kusok():
+    """Случай, оставленный на решение исполнителя: группа с РАЗРЫВОМ, но без спора величин.
+
+    Измерено на архиве: 12 прогонов из 110. Промежуток, растянутый через разрыв, утверждал бы,
+    что равнозначны и начала внутри разрыва, — а их правило отбросило. Поэтому называется
+    сплошной кусок вокруг наименьшего флюенса, а про разрыв говорится вслух.
+    """
+    from vkd.windows.scan import answer_of, why_ru
+    # кандидаты 0,1 и 4,5 равнозначны между собой, 2 и 3 в группу не попали
+    c = [_cand(0, 10.0, 1.00e5), _cand(10, 10.5, 1.02e5), _cand(20, 40.0, 5e6), _cand(30, 41.0, 6e6),
+         _cand(40, 11.0, 1.05e5), _cand(50, 11.5, 1.07e5)]
+    best = (0, 1, 4, 5)
+    kind, span = answer_of(c, best, 'equivalent', 5.0, 1.5)
+    assert kind == 'interval'
+    assert span == (c[0].start_utc, c[1].start_utc), 'промежуток обязан быть сплошным куском'
+    why = why_ru(c, best, None, 'equivalent', 10, 5.0, 1.5, '', kind, span)
+    assert 'идут не подряд' in why and 'правило отбросило' in why
+
+
+def test_bez_otveta_vida_otveta_net_i_promezhutka_net(belts, track):
+    """Над отказом и над окнами под условием рисовать промежуток нельзя ни при каких условиях."""
+    from vkd.windows.scan import answer_of
+    sc = _scan(track, belts=belts, goes=goes(20.0))              # все под условием
+    assert sc.verdict == 'all_need_check'
+    assert sc.answer_kind is None and sc.answer_span is None
+    assert sc.to_snapshot()['answer_kind'] is None and sc.to_snapshot()['answer_span'] is None
+    c = [_cand(0, 10.0, 1e5)]
+    assert answer_of(c, (0,), 'insufficient', 5.0, 1.5) == (None, None)
+
+
+def test_vid_otveta_soglasovan_s_gruppoy_i_s_rekomendaciey(belts, track):
+    """Поля не живут отдельной жизнью: 'point' бывает только при одном начале в куске,
+    промежуток всегда лежит внутри времён лучшей группы, а концы идут по возрастанию."""
+    for g in (goes(0.2), goes(0.35)):
+        sc = _scan(track, belts=belts, goes=g)
+        if sc.answer_span is None:
+            assert sc.answer_kind in (None, 'tradeoff')
+            continue
+        a, b = sc.answer_span
+        times = [sc.candidates[i].start_utc for i in sc.best]
+        assert a <= b and a in times and b in times
+        assert (a == b) == (sc.answer_kind == 'point')
+        if sc.recommended_index is not None:
+            assert sc.answer_kind == 'point' and a == sc.candidates[sc.recommended_index].start_utc
 
 
 def test_kompromiss_bez_pobeditelya_nazyvaetsya_chislami(belts, track):

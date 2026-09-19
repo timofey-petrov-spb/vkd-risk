@@ -127,7 +127,14 @@ class ScanResult:
     verdict: str
     scope: str
     why: str
-    assessments: dict                  # start_utc -> WindowAssessment для показанных кандидатов
+    # ВИД ОТВЕТА — структурой, а не прозой. Один и тот же исход `equivalent` означал сразу две
+    # разные вещи: «лучшие начала идут подряд, ответ есть и он промежуток» и «величины спорят,
+    # победителя нет». Экран различал их только по тексту `why`, а строить отрисовку на прозе
+    # нельзя. Значения: 'point' | 'interval' | 'tradeoff'; None — ответа нет вовсе (вердикт
+    # отказывает или все начала под условием), и рисовать промежуток в этом случае запрещено.
+    answer_kind: Optional[str] = None
+    answer_span: Optional[tuple] = None    # (начало самого раннего, начало самого позднего) или None
+    assessments: dict = None               # start_utc -> WindowAssessment для показанных кандидатов
 
     @property
     def n_candidates(self) -> int:
@@ -141,9 +148,14 @@ class ScanResult:
         """Ключ `scan` снимка расчёта — РОВНО той формы, что записана в ТЗ круга 11, раздел 1a.
 
         Это договор с экраном: экран читает только его и во внутренности перебора не лезет.
-        Менять форму нельзя ни в чём. Отсутствие перебора — это ОТСУТСТВИЕ ключа в снимке,
-        а не пустой список кандидатов и не `None`: пустой перебор и несделанный перебор —
-        разные вещи, и путать их нельзя.
+        Отсутствие перебора — это ОТСУТСТВИЕ ключа в снимке, а не пустой список кандидатов и
+        не `None`: пустой перебор и несделанный перебор — разные вещи, и путать их нельзя.
+
+        Ключей пятнадцать, а не тринадцать: к договору ДОПИСАНЫ `answer_kind` и `answer_span`
+        (решение координатора круга 11). Ни один прежний ключ не изменился и не исчез, у
+        кандидата их по-прежнему девять. Причина дописывания: исход `equivalent` означал сразу
+        два разных ответа — «промежуток» и «спор величин», — и экран не мог различить их иначе
+        как разбором прозы `why`.
         """
         iso = lambda t: t.isoformat()          # noqa: E731
         return {
@@ -163,6 +175,9 @@ class ScanResult:
             'verdict': self.verdict,
             'scope': self.scope,
             'why': self.why,
+            'answer_kind': self.answer_kind,
+            'answer_span': ([iso(self.answer_span[0]), iso(self.answer_span[1])]
+                            if self.answer_span else None),
         }
 
 
@@ -252,6 +267,51 @@ def _rank_candidates(cands: list, tol_m: float, tol_r: float) -> tuple[list, tup
     if len(best) == 1:
         return out, best, best[0], 'recommended'
     return out, best, None, 'equivalent'
+
+
+def answer_of(cands: Sequence[Candidate], best: Sequence[int], verdict: str,
+              tol_m: float, tol_r: float):
+    """(вид ответа, промежуток) — чтобы экран РАЗЛИЧАЛ случаи структурой, а не разбором прозы.
+
+    Правило:
+
+    * ответа нет вовсе — вердикт отказывает или все начала под условием. Тогда вида ответа нет
+      (None) и промежутка нет. Рисовать «выходить в промежутке» над отказом или над окнами, каждое
+      из которых требует проверки аналитиком, нельзя ни при каких обстоятельствах;
+    * величины СПОРЯТ (внутри лучшей группы есть пара, где ни одно не «не хуже» другого) —
+      'tradeoff', промежутка нет: единого ответа не существует, обе стороны названы в `why`;
+    * лучшая группа идёт ПОДРЯД по сетке перебора — 'interval' от начала самого раннего до начала
+      самого позднего; группа из одного начала — 'point', оба конца совпадают.
+
+    Случай, оставленный на решение исполнителя: разрыв в группе БЕЗ спора величин. Измерено на
+    архиве (110 прогонов, 01.05–24.06.2024, шаг 12 ч, разбор, 360/720 мин): подряд без спора 79,
+    один кандидат 12, разрыв со спором 7, **разрыв без спора 12**; «подряд, но спорят» не
+    встретилось ни разу. Внутри этих 12 случаев обе величины указывают на одно и то же начало
+    в 6 прогонах и на разные (но в пределах допуска) — тоже в 6.
+
+    Решено так: рисуемый ответ — СПЛОШНОЙ кусок лучшей группы вокруг начала с наименьшим
+    флюенсом. Промежуток, растянутый от самого раннего до самого позднего через разрыв, утверждал
+    бы, что и начала внутри разрыва равнозначны, а это неправда: их правило отбросило. Назвать
+    разрыв спором тоже нельзя — величины здесь не спорят. Остальные начала группы не пропадают:
+    они перечислены в `best`, а `why` прямо говорит, что группа идёт не подряд.
+    """
+    if verdict not in ('recommended', 'equivalent') or not best:
+        return None, None
+    group = [cands[i] for i in best]
+    pool = [c for c in group if c.fluence is not None and c.saa_min is not None]
+    if any(not pair_not_worse(a.saa_min, a.fluence, b.saa_min, b.fluence, tol_m, tol_r)
+           for a in pool for b in pool if a is not b):
+        return 'tradeoff', None
+    inf = float('inf')
+    anchor = min(range(len(group)),
+                 key=lambda k: (group[k].fluence if group[k].fluence is not None else inf,
+                                group[k].saa_min if group[k].saa_min is not None else inf))
+    lo = hi = anchor
+    while lo > 0 and best[lo] - best[lo - 1] == 1:
+        lo -= 1
+    while hi < len(best) - 1 and best[hi + 1] - best[hi] == 1:
+        hi += 1
+    return ('point' if lo == hi else 'interval'), (group[lo].start_utc, group[hi].start_utc)
 
 
 def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Thresholds, *,
@@ -356,12 +416,14 @@ def scan_windows(traj: Sequence[TrajectoryPoint], belts: BeltTable, th: Threshol
                    # уровень экрана и в отчёт, где идентификаторов кода не бывает (О5).
                    tolerance_basis_ru or ('оба взяты из настроек сервиса как нижние границы — '
                                           'анализ чувствительности в этом расчёте их не уточнял')))
+    kind, span = answer_of(cands, best, verdict, tol_m, tol_r)
     return ScanResult(requested_duration_min=int(duration_min), search_from_utc=search_from_utc,
                       search_to_utc=search_to_utc, step_min=int(step_min), rule=RANK_RULE_RU,
                       tolerance_note=tol_note, candidates=tuple(cands), best=tuple(best),
                       recommended_index=rec_i, verdict=verdict, scope=scope,
-                      why=why_ru(cands, best, rec_i, verdict, step_min, tol_m, tol_r, refusal_ru),
-                      assessments=A)
+                      why=why_ru(cands, best, rec_i, verdict, step_min, tol_m, tol_r, refusal_ru,
+                                 kind, span),
+                      answer_kind=kind, answer_span=span, assessments=A)
 
 
 def _t_ru(t: datetime) -> str:
@@ -395,7 +457,8 @@ def conflict_ru(group: Sequence[Candidate], tol_m: float, tol_r: float) -> str:
 
 
 def why_ru(cands: Sequence[Candidate], best: Sequence[int], rec_i: Optional[int],
-           verdict: str, step_min: int, tol_m: float, tol_r: float, refusal_ru: str = '') -> str:
+           verdict: str, step_min: int, tol_m: float, tol_r: float, refusal_ru: str = '',
+           answer_kind: Optional[str] = None, answer_span=None) -> str:
     """«Почему именно это окно» — числами перебранных кандидатов, а не словами о них."""
     n = len(cands)
     head = 'перебрано %d %s с шагом %d мин' % (n, _plural_ru(n, 'начало', 'начала', 'начал'), step_min)
@@ -447,10 +510,20 @@ def why_ru(cands: Sequence[Candidate], best: Sequence[int], rec_i: Optional[int]
                               conflict, listed))
     # Равнозначная группа из соседних начал — это не «сервис не смог выбрать», а ответ на вопрос
     # человека: выходить можно в любой момент этого промежутка, внутри него разницы нет.
+    # Если группа идёт НЕ ПОДРЯД, промежуток называется только по сплошному куску вокруг
+    # наименьшего флюенса, а про разрыв говорится вслух: растянуть его через отброшенные начала
+    # значило бы объявить равнозначным то, что правило отбросило.
     times = [c.start_utc for c in group]
-    contiguous = all((b - a) == timedelta(minutes=step_min) for a, b in zip(times, times[1:]))
-    where = ('любое начало с %s до %s' % (_t_ru(times[0]), _t_ru(times[-1])) if contiguous
-             else 'начала ' + ', '.join(_t_ru(t) for t in times[:6]) + (' и другие' if len(times) > 6 else ''))
+    contiguous = all(b - a == 1 for a, b in zip(list(best), list(best)[1:]))
+    if answer_span is not None:
+        where = ('выходить в %s' % _t_ru(answer_span[0]) if answer_kind == 'point'
+                 else 'любое начало с %s до %s' % (_t_ru(answer_span[0]), _t_ru(answer_span[1])))
+        if not contiguous:
+            where += ('; равнозначные начала идут не подряд — между ними есть начала, которые '
+                      'правило отбросило, поэтому промежуток назван только по сплошному куску, '
+                      'остальные перечислены ниже')
+    else:
+        where = 'начала ' + ', '.join(_t_ru(t) for t in times[:6]) + (' и другие' if len(times) > 6 else '')
     best_one = min(group, key=lambda c: (c.fluence if c.fluence is not None else float('inf'),
                                          c.saa_min if c.saa_min is not None else float('inf')))
     return ('%s; лучших начал %d, и они равнозначны — различий сверх допуска между ними нет: %s. '

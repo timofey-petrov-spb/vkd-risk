@@ -1,16 +1,16 @@
 {
  "schema_version": "2.3",
  "algorithm_version": "0.9.0",
- "computed_utc": "2026-09-19T10:58:00+00:00",
+ "computed_utc": "2026-09-19T11:14:00+00:00",
  "mode": "Текущая обстановка",
  "mode_id": "live",
  "request": {
-  "t0_utc": "2026-09-19T10:58:00+00:00",
+  "t0_utc": "2026-09-19T11:14:00+00:00",
   "duration_min": 360,
   "search_min": 720,
   "windows": [
-   "2026-09-19T10:58:00+00:00",
-   "2026-09-19T14:58:00+00:00"
+   "2026-09-19T11:14:00+00:00",
+   "2026-09-19T15:14:00+00:00"
   ],
   "window_offsets_min": [
    0,
@@ -22,7 +22,7 @@
    "kp_check": 7.0,
    "goes_max_age_min": 60.0,
    "kp_max_age_min": 180.0,
-   "equiv_tol_min": 10.804423755339286,
+   "equiv_tol_min": 11.72756059479574,
    "fluence_equiv_ratio": 1.5,
    "e_min_MeV": 30.0,
    "saa_B_threshold_nT": 24000.0,
@@ -47,7 +47,7 @@
    "kp_check": 7.0,
    "goes_max_age_min": 60.0,
    "kp_max_age_min": 180.0,
-   "equiv_tol_min": 10.804423755339286,
+   "equiv_tol_min": 11.72756059479574,
    "fluence_equiv_ratio": 1.5,
    "e_min_MeV": 30.0,
    "saa_B_threshold_nT": 24000.0,
@@ -157,7 +157,7 @@
     ],
     "admissibility": {
      "max_age_min": 2160.0,
-     "data_age_min": 628.67885835,
+     "data_age_min": 644.8222601666668,
      "usable": true
     },
     "parser_audit": {},
@@ -167,20 +167,20 @@
    }
   },
   "noaa_swpc_goes": {
-   "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7": {
+   "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c": {
     "source_id": "noaa_swpc_goes",
-    "raw_record_id": "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7",
+    "raw_record_id": "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c",
     "url": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json",
-    "version": "2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7",
-    "sha256": "2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7",
-    "bytes": 725059,
+    "version": "d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c",
+    "sha256": "d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c",
+    "bytes": 724216,
     "published_utc": null,
-    "available_utc": "2026-09-19T10:57:04.898104Z",
-    "fetched_utc": "2026-09-19T10:57:04.898104Z",
-    "data_utc": "2026-09-19T10:45:00Z",
+    "available_utc": "2026-09-19T11:14:49.067430Z",
+    "fetched_utc": "2026-09-19T11:14:49.067430Z",
+    "data_utc": "2026-09-19T11:00:00Z",
     "quality": "preliminary",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt11\\engine\\data\\cache\\sources\\noaa_swpc_goes\\endpoints\\6b9c1f8684dc2539b3e21a00\\raw\\2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt11\\engine\\data\\cache\\sources\\noaa_swpc_goes\\endpoints\\6b9c1f8684dc2539b3e21a00\\raw\\d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 60.0,
@@ -191,9 +191,9 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "ETag": "W/\"b1043-65bd3d1b9d8e3\"",
-     "Last-Modified": "Sat, 19 Sep 2026 10:52:55 GMT",
-     "Date": "Sat, 19 Sep 2026 10:56:43 GMT"
+     "ETag": "W/\"b0cf8-65bd41259e8df\"",
+     "Last-Modified": "Sat, 19 Sep 2026 11:10:59 GMT",
+     "Date": "Sat, 19 Sep 2026 11:14:34 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -201,7 +201,7 @@
     ],
     "admissibility": {
      "max_age_min": 60.0,
-     "data_age_min": 13.678450216666667,
+     "data_age_min": 14.8177905,
      "usable": true
     },
     "parser_audit": {
@@ -209,28 +209,28 @@
      "sampling_note": "5-minute averaged flux; timestamp convention is not used to invent interval bounds"
     },
     "selected": {
-     "time_tag": "2026-09-19T10:45:00Z",
+     "time_tag": "2026-09-19T11:00:00Z",
      "satellite": 18,
-     "flux": 0.21012090146541595,
+     "flux": 0.253778874874115,
      "energy": ">=10 MeV"
     }
    }
   },
   "gfz_kp": {
-   "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e": {
+   "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553": {
     "source_id": "gfz_kp",
-    "raw_record_id": "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e",
-    "url": "https://kp.gfz.de/app/json/?start=2026-09-17T10:57:04Z&end=2026-09-19T10:57:04Z&index=Kp",
-    "version": "41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e",
-    "sha256": "41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e",
+    "raw_record_id": "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553",
+    "url": "https://kp.gfz.de/app/json/?start=2026-09-17T11:14:49Z&end=2026-09-19T11:14:49Z&index=Kp",
+    "version": "8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553",
+    "sha256": "8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553",
     "bytes": 641,
     "published_utc": null,
-    "available_utc": "2026-09-19T10:57:05.323388Z",
-    "fetched_utc": "2026-09-19T10:57:05.323388Z",
+    "available_utc": "2026-09-19T11:14:49.325064Z",
+    "fetched_utc": "2026-09-19T11:14:49.325064Z",
     "data_utc": "2026-09-19T09:00:00Z",
     "quality": "preliminary",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt11\\engine\\data\\cache\\sources\\gfz_kp\\endpoints\\238444c724520be43859c316\\raw\\41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt11\\engine\\data\\cache\\sources\\gfz_kp\\endpoints\\238444c724520be43859c316\\raw\\8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 360.0,
@@ -241,7 +241,7 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "Date": "Sat, 19 Sep 2026 10:57:04 GMT"
+     "Date": "Sat, 19 Sep 2026 11:14:48 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -249,7 +249,7 @@
     ],
     "admissibility": {
      "max_age_min": 360.0,
-     "data_age_min": 118.67873418333333,
+     "data_age_min": 134.8220844,
      "usable": true
     },
     "parser_audit": {
@@ -262,7 +262,7 @@
     },
     "selected": {
      "datetime": "2026-09-19T06:00:00Z",
-     "Kp": 1.667,
+     "Kp": 1.333,
      "status": "pre"
     }
    }
@@ -306,7 +306,7 @@
     ],
     "admissibility": {
      "max_age_min": 4320.0,
-     "data_age_min": 2264.6011294,
+     "data_age_min": 2280.74454475,
      "usable": true
     },
     "parser_audit": {},
@@ -338,7 +338,7 @@
     "url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
     "fetched_utc": "2026-09-19T10:26:07.571518Z",
     "available_utc": "2026-09-19T10:26:07.571518Z",
-    "evidence": "проверенный кеш, давность данных 2264.6 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout",
+    "evidence": "проверенный кеш, давность данных 2280.7 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout",
     "raw_path": "data/orbit/iss.tle",
     "source_id": "celestrak_gp",
     "raw_record_id": "celestrak_gp:25544:aedc1743d259",
@@ -410,50 +410,50 @@
   }
  },
  "numerical_integration": {
-  "2026-09-19T10:58:00+00:00": {
+  "2026-09-19T11:14:00+00:00": {
    "method": "piecewise_linear_actual_dt_v1",
    "max_gap_seconds": 60.0,
    "fluence": {
     "duration_seconds": 21600.0,
-    "covered_seconds": 17520.0,
-    "known_integral": 2871274.012739654,
+    "covered_seconds": 18060.0,
+    "known_integral": 2871272.0145783895,
     "below_threshold_seconds": null,
-    "grid_compared_seconds": 17280.0,
-    "grid_absolute_delta": 1256459.374948161,
-    "grid_relative_delta": 0.43759647089526577
+    "grid_compared_seconds": 17760.0,
+    "grid_absolute_delta": 1256458.415166907,
+    "grid_relative_delta": 0.4375964411548107
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
-    "known_integral": 701805047.9111146,
+    "known_integral": 716039711.9269993,
     "below_threshold_seconds": 4150.60222095308,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 610523.5075758742,
-    "grid_relative_delta": 0.0008699331949706902
+    "grid_absolute_delta": 612146.1111398502,
+    "grid_relative_delta": 0.0008549052530793975
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
   },
-  "2026-09-19T14:58:00+00:00": {
+  "2026-09-19T15:14:00+00:00": {
    "method": "piecewise_linear_actual_dt_v1",
    "max_gap_seconds": 60.0,
    "fluence": {
     "duration_seconds": 21600.0,
-    "covered_seconds": 18000.0,
-    "known_integral": 362059.3918186369,
+    "covered_seconds": 17640.0,
+    "known_integral": 355680.5966685427,
     "below_threshold_seconds": null,
-    "grid_compared_seconds": 17640.0,
-    "grid_absolute_delta": 238139.8890396003,
-    "grid_relative_delta": 0.6577370851876411
+    "grid_compared_seconds": 17280.0,
+    "grid_absolute_delta": 236214.9465126188,
+    "grid_relative_delta": 0.6641209802421315
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
-    "known_integral": 802025502.6163679,
-    "below_threshold_seconds": 2182.5490930021906,
+    "known_integral": 807112448.8207932,
+    "below_threshold_seconds": 1793.2076466732485,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 620623.6032468458,
-    "grid_relative_delta": 0.0007738202852929829
+    "grid_absolute_delta": 638892.9482152122,
+    "grid_relative_delta": 0.00079157860735347
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
@@ -465,8 +465,8 @@
   "method": "sgp4",
   "frame": "TEME",
   "epoch_utc": "2026-09-17T21:14:04.657623+00:00",
-  "coverage_from_utc": "2026-09-19T10:58:00+00:00",
-  "coverage_to_utc": "2026-09-20T04:58:00+00:00",
+  "coverage_from_utc": "2026-09-19T11:14:00+00:00",
+  "coverage_to_utc": "2026-09-20T05:14:00+00:00",
   "created_utc": null,
   "available_utc": "2026-09-19T10:26:07.571518+00:00",
   "fetched_utc": "2026-09-19T10:26:07.571518+00:00",
@@ -483,9 +483,9 @@
    "cutoff_utc": null,
    "step_seconds": 60,
    "requested_mode": "live",
-   "selection_cutoff_utc": "2026-09-19T10:58:00Z",
+   "selection_cutoff_utc": "2026-09-19T11:14:00Z",
    "selection_rule": null,
-   "staged_root": "data/cache/orbit_root/6b37effc0882245ec4dea6fe",
+   "staged_root": "data/cache/orbit_root/5c775a9ffdf2673effaeae4f",
    "records": {
     "celestrak_gp:25544:aedc1743d259": {
      "source_id": "celestrak_gp",
@@ -513,7 +513,7 @@
     "L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.",
     "Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.",
     "SAA flag is the configured |B| threshold proxy, not an official region boundary.",
-    "Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; 27 из 1081 точек с B/B0 < 1 помечены. Положение точки переводится WGS84 → ECEF (NIMA TR8350.2), сферическая формула не применяется. Вертикальная жёсткость обрезания cutoff_GV остаётся методом A3 (центральный наклонённый диполь) — это ДРУГАЯ модель, чем L и B/B0, и за одну систему координат они не выдаются."
+    "Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; 26 из 1081 точек с B/B0 < 1 помечены. Положение точки переводится WGS84 → ECEF (NIMA TR8350.2), сферическая формула не применяется. Вертикальная жёсткость обрезания cutoff_GV остаётся методом A3 (центральный наклонённый диполь) — это ДРУГАЯ модель, чем L и B/B0, и за одну систему координат они не выдаются."
    ],
    "earth_orientation": "Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy",
    "max_tle_age_days": 3.0,
@@ -530,8 +530,8 @@
     "source_hashes": {
      "celestrak_gp:25544:aedc1743d259": "aedc1743d259e7b7c4f933646548bb260cb573ec45afcb2c4e04fbba207e736a"
     },
-    "coverage_from_utc": "2026-09-19T10:58:00Z",
-    "coverage_to_utc": "2026-09-20T04:58:00Z",
+    "coverage_from_utc": "2026-09-19T11:14:00Z",
+    "coverage_to_utc": "2026-09-20T05:14:00Z",
     "endpoint_policy": "both endpoints included; last step may be shorter",
     "software": {
      "skyfield": "1.55",
@@ -543,8 +543,8 @@
     "segments": [
      {
       "raw_record_id": "celestrak_gp:25544:aedc1743d259",
-      "from_utc": "2026-09-19T10:58:00Z",
-      "to_utc": "2026-09-20T04:58:00Z",
+      "from_utc": "2026-09-19T11:14:00Z",
+      "to_utc": "2026-09-20T05:14:00Z",
       "interpolation": "none; SGP4 at each requested time",
       "input_frame": "TEME",
       "output_frame": "EME2000",
@@ -552,246 +552,6 @@
      }
     ],
     "samples": [
-     {
-      "t_utc": "2026-09-19T10:58:00Z",
-      "position_km": [
-       5290.970071337518,
-       -1880.0111712706484,
-       3817.318299593521
-      ],
-      "velocity_km_s": [
-       4.613371000374175,
-       4.471942631109699,
-       -4.182365687302578
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T10:59:00Z",
-      "position_km": [
-       5555.4476032193825,
-       -1607.5951928890518,
-       3557.8044582612115
-      ],
-      "velocity_km_s": [
-       4.1991647635495175,
-       4.605127039373508,
-       -4.464816720992846
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:00:00Z",
-      "position_km": [
-       5794.484430334323,
-       -1327.817400941232,
-       3281.9512326679746
-      ],
-      "velocity_km_s": [
-       3.7656700448579175,
-       4.717239857862396,
-       -4.726801088849089
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:01:00Z",
-      "position_km": [
-       6006.982460634257,
-       -1041.9582207198278,
-       2991.023514171263
-      ],
-      "velocity_km_s": [
-       3.3148757866997793,
-       4.8077599556017665,
-       -4.967105030316431
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:02:00Z",
-      "position_km": [
-       6191.965467346528,
-       -751.3263689649184,
-       2686.356063486664
-      ],
-      "velocity_km_s": [
-       2.848853629666017,
-       4.876265928262136,
-       -5.1846144027519925
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:03:00Z",
-      "position_km": [
-       6348.58376578237,
-       -457.2527965109089,
-       2369.3473601192404
-      ],
-      "velocity_km_s": [
-       2.369748294414478,
-       4.922438464501526,
-       -5.378320373458693
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:04:00Z",
-      "position_km": [
-       6476.118298119441,
-       -161.08450382438,
-       2041.453124479691
-      ],
-      "velocity_km_s": [
-       1.8797674800000048,
-       4.946062208072644,
-       -5.5473246251300035
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:05:00Z",
-      "position_km": [
-       6573.984098633281,
-       135.8217394539086,
-       1704.1795434109943
-      ],
-      "velocity_km_s": [
-       1.3811713310409284,
-       4.947027088586606,
-       -5.690844026165052
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:06:00Z",
-      "position_km": [
-       6641.733115262011,
-       432.10573834659544,
-       1359.076232687807
-      ],
-      "velocity_km_s": [
-       0.8762615342473508,
-       4.9253290981223286,
-       -5.808214720321653
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:07:00Z",
-      "position_km": [
-       6679.056367272013,
-       726.4102459212302,
-       1007.7289726462698
-      ],
-      "velocity_km_s": [
-       0.3673701122737136,
-       4.88107049600107,
-       -5.898895594421623
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:08:00Z",
-      "position_km": [
-       6685.785423085913,
-       1017.387331480824,
-       651.7522554266002
-      ],
-      "velocity_km_s": [
-       -0.1431520106487202,
-       4.8144594298950825,
-       -5.962471088211707
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:09:00Z",
-      "position_km": [
-       6661.893186984202,
-       1303.7047083295304,
-       292.7816842485129
-      ],
-      "velocity_km_s": [
-       -0.6529465916159277,
-       4.725808967844281,
-       -5.998653316914709
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:10:00Z",
-      "position_km": [
-       6607.493988307464,
-       1584.0519857290467,
-       -67.5337333139363
-      ],
-      "velocity_km_s": [
-       -1.159659716950969,
-       4.6155355425377715,
-       -6.007283484293716
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:11:00Z",
-      "position_km": [
-       6522.842971880057,
-       1857.1468099821784,
-       -427.53935501734355
-      ],
-      "velocity_km_s": [
-       -1.660953429336524,
-       4.484156816183558,
-       -5.988332572014638
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:12:00Z",
-      "position_km": [
-       6408.33479354879,
-       2121.7408602821583,
-       -785.5826929712886
-      ],
-      "velocity_km_s": [
-       -2.154517247849584,
-       4.332288981223682,
-       -5.941901299494515
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T11:13:00Z",
-      "position_km": [
-       6264.501629882515,
-       2376.6256660864865,
-       -1140.0211782904573
-      ],
-      "velocity_km_s": [
-       -2.6380794957153952,
-       4.160643518859819,
-       -5.868219357024501
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
      {
       "t_utc": "2026-09-19T11:14:00Z",
       "position_km": [
@@ -16766,6 +16526,246 @@
       ],
       "segment_index": 0,
       "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T04:59:00Z",
+      "position_km": [
+       -6657.329976829187,
+       -1351.8913987753547,
+       317.84587959911573
+      ],
+      "velocity_km_s": [
+       1.2299404382381287,
+       -4.6061337013764865,
+       5.9924332079103495
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:00:00Z",
+      "position_km": [
+       -6568.386370529863,
+       -1624.9611727509548,
+       676.3891334673604
+      ],
+      "velocity_km_s": [
+       1.7337279575867934,
+       -4.492740656827677,
+       5.954456473547747
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:01:00Z",
+      "position_km": [
+       -6449.4392215065545,
+       -1890.6083543187738,
+       1031.8340854827286
+      ],
+      "velocity_km_s": [
+       2.2296757151652624,
+       -4.358805727674346,
+       5.889194625479052
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:02:00Z",
+      "position_km": [
+       -6301.027552496008,
+       -2147.6182384961453,
+       1382.5517785261102
+      ],
+      "velocity_km_s": [
+       2.7155023431581964,
+       -4.20493836826087,
+       5.796940387600428
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:03:00Z",
+      "position_km": [
+       -6123.825931758912,
+       -2394.815486114037,
+       1726.9346018186536
+      ],
+      "velocity_km_s": [
+       3.1889728946765614,
+       -4.031840838111961,
+       5.6781123636653055
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:04:00Z",
+      "position_km": [
+       -5918.64136326219,
+       -2631.0695924645215,
+       2063.403785419282
+      ],
+      "velocity_km_s": [
+       3.6479096344164526,
+       -3.8403047844615177,
+       5.533252978631158
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:05:00Z",
+      "position_km": [
+       -5686.409539153078,
+       -2855.300136791617,
+       2390.416751624881
+      ],
+      "velocity_km_s": [
+       4.090202489236566,
+       -3.631207358029717,
+       5.363025763676649
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:06:00Z",
+      "position_km": [
+       -5428.190476892189,
+       -3066.4817855609413,
+       2706.474284651884
+      ],
+      "velocity_km_s": [
+       4.513819091935174,
+       -3.405506894550988,
+       5.168212011794057
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:07:00Z",
+      "position_km": [
+       -5145.163567257609,
+       -3263.649024459222,
+       3010.1274817366434
+      ],
+      "velocity_km_s": [
+       4.916814358112376,
+       -3.1642381981628636,
+       4.949706836733139
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:08:00Z",
+      "position_km": [
+       -4838.622062811529,
+       -3445.9005963712693,
+       3299.984450905409
+      ],
+      "velocity_km_s": [
+       5.297339543523094,
+       -2.9085074654197407,
+       4.708514672988417
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:09:00Z",
+      "position_km": [
+       -4509.967039380233,
+       -3612.4036249326027,
+       3574.7167230271098
+      ],
+      "velocity_km_s": [
+       5.653650737341109,
+       -2.6394868904614035,
+       4.445744258389898
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:10:00Z",
+      "position_km": [
+       -4160.700865533873,
+       -3762.3974057482296,
+       3833.0653483395567
+      ],
+      "velocity_km_s": [
+       5.984116755103297,
+       -2.3584089926341854,
+       4.162603143594077
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:11:00Z",
+      "position_km": [
+       -3792.420217005486,
+       -3895.1968498406136,
+       4073.8466503554478
+      ],
+      "velocity_km_s": [
+       6.287226403424508,
+       -2.066560707737,
+       3.860391774352509
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:12:00Z",
+      "position_km": [
+       -3406.8086744349666,
+       -4010.195566352222,
+       4295.957612835361
+      ],
+      "velocity_km_s": [
+       6.561595096622915,
+       -1.7652772830587042,
+       3.5404971928831106
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:13:00Z",
+      "position_km": [
+       -3005.628943816786,
+       -4106.868573889078,
+       4498.380878295362
+      ],
+      "velocity_km_s": [
+       6.805970812887008,
+       -1.455936014630828,
+       3.204386404052206
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T05:14:00Z",
+      "position_km": [
+       -2590.7147395522247,
+       -4184.77463215469,
+       4680.189339245447
+      ],
+      "velocity_km_s": [
+       7.019239384353056,
+       -1.1399498626923241,
+       2.8535994504824393
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
      }
     ],
     "limitations": [
@@ -16775,7 +16775,7 @@
      "Skyfield rotates the SGP4 velocity without the small TEME precession/nutation frame-rate term; no sub-mm/s claim."
     ],
     "transform": "SGP4 TEME -> Skyfield GCRS -> fixed IERS-2003 frame bias -> EME2000",
-    "content_sha256": "b01e829d773d3554eca632a8d26808b9cca932640baf44b1bfac23ac41b4b1b4"
+    "content_sha256": "79b5e353c67a9edb38546d1ebd872fa95076e047467b3af5656fe4c4c1ade605"
    },
    "strict_attempt_error": null,
    "errors": null
@@ -16783,16 +16783,16 @@
   "belt_coordinates": {
    "method": "eccentric_dipole",
    "coefficients": "data/orbit/IGRF14.shc",
-   "epoch_utc": "2026-09-19T19:58:00+00:00",
+   "epoch_utc": "2026-09-19T20:14:00+00:00",
    "position_conversion": "WGS84 geodetic to ECEF",
    "offset_km": [
-    -395.8491384830367,
-    398.6878575243203,
-    236.04221303646366
+    -395.8491269326383,
+    398.68797738354743,
+    236.04225239810566
    ],
-   "B_eq_nT": 29705.584582085467,
+   "B_eq_nT": 29705.58409005164,
    "n": 1081,
-   "n_inconsistent_BB0": 27,
+   "n_inconsistent_BB0": 26,
    "n_outside_model": 0,
    "position_frame": "WGS84 geodetic (lat, lon, h) → ECEF, NIMA TR8350.2; a = 6378.137 км, 1/f = 298.257223563",
    "L_B0_method": "эксцентричный диполь (Fraser-Smith 1987) по квадрупольным членам IGRF; B — полный IGRF точки (A3)",
@@ -16808,12 +16808,12 @@
   "tle_text": "ISS (ZARYA)\n1 25544U 98067A   26260.88477613  .00006282  00000+0  12142-3 0  9990\n2 25544  51.6307 201.3132 0004813 151.3549 208.7705 15.49157682586129\n",
   "tle_url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
   "tle_url_primary_failed": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
-  "tle_fetch_status": "проверенный кеш, давность данных 2264.6 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout"
+  "tle_fetch_status": "проверенный кеш, давность данных 2280.7 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout"
  },
  "windows": [
   {
    "index": 1,
-   "start_utc": "2026-09-19T10:58:00+00:00",
+   "start_utc": "2026-09-19T11:14:00+00:00",
    "duration_min": 360,
    "mechanisms": [
     {
@@ -16822,14 +16822,14 @@
      "coverage": "partial",
      "needs_check": [],
      "coverage_notes": [
-      "флюенс: модель ОСТ покрывает 81.1 % времени окна (68 мин из 360 без модели: 68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-      "GOES: наблюдение 10:45Z покрывает 13 % окна (313 мин из 360 без данных), прогноза потока протонов на окно нет"
+      "флюенс: модель ОСТ покрывает 83.6 % времени окна (59 мин из 360 без модели: 59 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
+      "GOES: наблюдение 11:00Z покрывает 13 % окна (314 мин из 360 без данных), прогноза потока протонов на окно нет"
      ],
-     "coverage_fraction": 0.8111111111111111,
+     "coverage_fraction": 0.8361111111111111,
      "coverage_gaps": [
       {
        "reason": "L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)",
-       "minutes": 68.0
+       "minutes": 59.0
       }
      ],
      "conditions": [],
@@ -16851,7 +16851,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 2871274.012739654,
+       "value": 2871272.0145783895,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -16862,7 +16862,7 @@
         "ost1044_A_А_2_1:59e573afafa8"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 81.1 % (17520.0 из 21600.0 с); без модели 68 мин из 360 мин окна: 68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 222, L вне сетки 1,14…9 (сильное поле вне аномалии) — 63, в сетке таблицы — 76; точки аномалии со значением потока по таблице ОСТ: 69 из 69 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 43.76 % на 80.0 % времени окна; не граница физической погрешности",
+       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.6 % (18060.0 из 21600.0 с); без модели 59 мин из 360 мин окна: 59 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 230, L вне сетки 1,14…9 (сильное поле вне аномалии) — 55, в сетке таблицы — 76; точки аномалии со значением потока по таблице ОСТ: 69 из 69 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 43.76 % на 82.2 % времени окна; не граница физической погрешности",
        "horizon_utc": null
       },
       {
@@ -16897,30 +16897,30 @@
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
-       "value": 0.21012090146541595,
+       "value": 0.253778874874115,
        "unit": "pfu",
        "kind": "observation",
        "presence": "not_detected",
        "coverage": "partial",
        "records": [
-        "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7"
+        "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c"
        ],
        "rule": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-       "limits": "наблюдение 2026-09-19 10:45Z, фон (ниже S1), давность 13 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 11:45Z покрывает 13 % окна, это 47 мин из 360; допустимый вывод: на остальные 313 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
-       "horizon_utc": "2026-09-19T11:45:00+00:00"
+       "limits": "наблюдение 2026-09-19 11:00Z, фон (ниже S1), давность 14 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 12:00Z покрывает 13 % окна, это 46 мин из 360; допустимый вывод: на остальные 314 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
+       "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
        "name": "Kp, последнее наблюдение",
-       "value": 1.667,
+       "value": 1.333,
        "unit": "",
        "kind": "observation",
        "presence": "not_detected",
        "coverage": "full",
        "records": [
-        "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e"
+        "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553"
        ],
        "rule": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 118 мин (предел 180 мин)",
+       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 134 мин (предел 180 мин)",
        "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
@@ -16984,7 +16984,7 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.635441913094007e-07,
+       "value": 5.635595389537645e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17042,7 +17042,7 @@
   },
   {
    "index": 2,
-   "start_utc": "2026-09-19T14:58:00+00:00",
+   "start_utc": "2026-09-19T15:14:00+00:00",
    "duration_min": 360,
    "mechanisms": [
     {
@@ -17051,22 +17051,22 @@
      "coverage": "partial",
      "needs_check": [],
      "coverage_notes": [
-      "флюенс: модель ОСТ покрывает 83.3 % времени окна (60 мин из 360 без модели: 60 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-      "GOES: наблюдение 10:45Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
+      "флюенс: модель ОСТ покрывает 81.7 % времени окна (66 мин из 360 без модели: 66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
+      "GOES: наблюдение 11:00Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
       "наблюдение GOES не покрывает окно (до его начала 4 ч)"
      ],
-     "coverage_fraction": 0.8333333333333334,
+     "coverage_fraction": 0.8166666666666667,
      "coverage_gaps": [
       {
        "reason": "L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)",
-       "minutes": 60.0
+       "minutes": 66.0
       }
      ],
      "conditions": [],
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 36.37581821670317,
+       "value": 29.88679411122081,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17081,7 +17081,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 362059.3918186369,
+       "value": 355680.5966685427,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17092,7 +17092,7 @@
         "ost1044_A_А_2_1:59e573afafa8"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.3 % (18000.0 из 21600.0 с); без модели 60 мин из 360 мин окна: 60 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 275, L вне сетки 1,14…9 (сильное поле вне аномалии) — 55, в сетке таблицы — 31; точки аномалии со значением потока по таблице ОСТ: 32 из 37 (диагностика узлов, не покрытие времени); у 5 точек L вне сетки — вклад неизвестен; ещё у 8 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 65.77 % на 81.7 % времени окна; не граница физической погрешности",
+       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 81.7 % (17640.0 из 21600.0 с); без модели 66 мин из 360 мин окна: 66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 275, L вне сетки 1,14…9 (сильное поле вне аномалии) — 61, в сетке таблицы — 25; точки аномалии со значением потока по таблице ОСТ: 25 из 30 (диагностика узлов, не покрытие времени); у 5 точек L вне сетки — вклад неизвестен; ещё у 5 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 66.41 % на 80.0 % времени окна; не граница физической погрешности",
        "horizon_utc": null
       },
       {
@@ -17127,30 +17127,30 @@
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
-       "value": 0.21012090146541595,
+       "value": 0.253778874874115,
        "unit": "pfu",
        "kind": "observation",
        "presence": "unknown",
        "coverage": "none",
        "records": [
-        "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7"
+        "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c"
        ],
        "rule": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-       "limits": "наблюдение 2026-09-19 10:45Z, фон (ниже S1), давность 13 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 11:45Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
-       "horizon_utc": "2026-09-19T11:45:00+00:00"
+       "limits": "наблюдение 2026-09-19 11:00Z, фон (ниже S1), давность 14 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 12:00Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
+       "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
        "name": "Kp, последнее наблюдение",
-       "value": 1.667,
+       "value": 1.333,
        "unit": "",
        "kind": "observation",
        "presence": "not_detected",
        "coverage": "full",
        "records": [
-        "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e"
+        "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553"
        ],
        "rule": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 118 мин (предел 180 мин)",
+       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 134 мин (предел 180 мин)",
        "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
@@ -17214,7 +17214,7 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.635132529172719e-07,
+       "value": 5.635419718361524e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17273,27 +17273,27 @@
  ],
  "recommendation": {
   "verdict": "preferred",
-  "rule": "п.3–4: окно 2 (14:58Z) лучше по космопогоде — меньше по минутам в аномалии (36,38 против 69,18 мин); флюенс ниже (3,62·10^5 против 2,87·10^6 част./см², отношение ×0,13); линия метеороидов не противоречит; покрытие частичное — объявлено",
+  "rule": "п.3–4: окно 2 (15:14Z) лучше по космопогоде — меньше по минутам в аномалии (29,89 против 69,18 мин); флюенс ниже (3,56·10^5 против 2,87·10^6 част./см², отношение ×0,12); линия метеороидов не противоречит; покрытие частичное — объявлено",
   "reasons": [
-   "окно 2 (14:58Z): 36,38 мин в аномалии, флюенс 3,62·10^5 част./см²; окно 1 (10:58Z): 69,18 мин в аномалии, флюенс 2,87·10^6 част./см² — лучше окно 2 (14:58Z)",
-   "окна не различаются: разница 0,005 % ниже порога различимости 5 % (правило команды, не норма; порог задан в config/settings.toml); линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна",
-   "окно 1: космопогода на траектории: флюенс: модель ОСТ покрывает 81.1 % времени окна (68 мин из 360 без модели: 68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-   "окно 1: космопогода на траектории: GOES: наблюдение 10:45Z покрывает 13 % окна (313 мин из 360 без данных), прогноза потока протонов на окно нет",
+   "окно 2 (15:14Z): 29,89 мин в аномалии, флюенс 3,56·10^5 част./см²; окно 1 (11:14Z): 69,18 мин в аномалии, флюенс 2,87·10^6 част./см² — лучше окно 2 (15:14Z)",
+   "окна не различаются: разница 0,003 % ниже порога различимости 5 % (правило команды, не норма; порог задан в config/settings.toml); линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна",
+   "окно 1: космопогода на траектории: флюенс: модель ОСТ покрывает 83.6 % времени окна (59 мин из 360 без модели: 59 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
+   "окно 1: космопогода на траектории: GOES: наблюдение 11:00Z покрывает 13 % окна (314 мин из 360 без данных), прогноза потока протонов на окно нет",
    "статистика метеороидов: метеороиды: сезонный вклад не рассчитан; средний Grün не полный охват короткой ВКД",
-   "окно 2: космопогода на траектории: флюенс: модель ОСТ покрывает 83.3 % времени окна (60 мин из 360 без модели: 60 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-   "окно 2: космопогода на траектории: GOES: наблюдение 10:45Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
+   "окно 2: космопогода на траектории: флюенс: модель ОСТ покрывает 81.7 % времени окна (66 мин из 360 без модели: 66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
+   "окно 2: космопогода на траектории: GOES: наблюдение 11:00Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
    "окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)"
   ],
   "missing": [],
-  "preferred": "2026-09-19T14:58:00+00:00",
+  "preferred": "2026-09-19T15:14:00+00:00",
   "preferred_index": 2,
   "per_mechanism": {
-   "spaceweather": "окно 2 (14:58Z): 36,38 мин в аномалии, флюенс 3,62·10^5 част./см²; окно 1 (10:58Z): 69,18 мин в аномалии, флюенс 2,87·10^6 част./см² — лучше окно 2 (14:58Z)",
-   "mmod_stat": "окна не различаются: разница 0,005 % ниже порога различимости 5 % (правило команды, не норма; порог задан в config/settings.toml); линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна"
+   "spaceweather": "окно 2 (15:14Z): 29,89 мин в аномалии, флюенс 3,56·10^5 част./см²; окно 1 (11:14Z): 69,18 мин в аномалии, флюенс 2,87·10^6 част./см² — лучше окно 2 (15:14Z)",
+   "mmod_stat": "окна не различаются: разница 0,003 % ниже порога различимости 5 % (правило команды, не норма; порог задан в config/settings.toml); линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна"
   },
-  "tolerance_basis": "допуск 11 мин — разброс разности минут в аномалии между окнами при порогах 22000/24000/26000 нТл (разность минут между окнами 2 и 1 на сетке от 28 до 39); допуск ×1.50 по флюенсу — не меньше настройки ×1.50 и разброса по каналу 12.5/30/50 МэВ (отношение флюенсов между окнами 2 и 1 по каналу от ×7.93 до ×8.08); порядок окон при нулевом допуске на сетке сохраняется; выбор устойчив: на всей сетке одно и то же предпочтительное окно и тот же вердикт",
-  "scope": "по учтённым факторам при покрытии модели 81…83 % окна; это сравнение рассчитанных факторов, а не заключение о полном риске ВКД; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 10:45Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
-  "scope_detail": "по учтённым факторам при покрытии модели 81…83 % окна (минут в аномалии, флюенс захваченных протонов ≥30 МэВ, ожидаемое число попаданий, пластина 1 м²); без модели 360 мин — сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün); 60…68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); это сравнение рассчитанных факторов, а не заключение о полном риске ВКД: вероятность разгерметизации, доза на экипаж и техногенный мусор не считаются; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 10:45Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
+  "tolerance_basis": "допуск 12 мин — разброс разности минут в аномалии между окнами при порогах 22000/24000/26000 нТл (разность минут между окнами 2 и 1 на сетке от 31 до 43); допуск ×1.50 по флюенсу — не меньше настройки ×1.50 и разброса по каналу 12.5/30/50 МэВ (отношение флюенсов между окнами 2 и 1 по каналу от ×8.07 до ×8.24); порядок окон при нулевом допуске на сетке сохраняется; выбор устойчив: на всей сетке одно и то же предпочтительное окно и тот же вердикт",
+  "scope": "по учтённым факторам при покрытии модели 82…84 % окна; это сравнение рассчитанных факторов, а не заключение о полном риске ВКД; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 11:00Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
+  "scope_detail": "по учтённым факторам при покрытии модели 82…84 % окна (минут в аномалии, флюенс захваченных протонов ≥30 МэВ, ожидаемое число попаданий, пластина 1 м²); без модели 360 мин — сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün); 59…66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); это сравнение рассчитанных факторов, а не заключение о полном риске ВКД: вероятность разгерметизации, доза на экипаж и техногенный мусор не считаются; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 11:00Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
   "scope_facts": [
    [
     "учтённые факторы",
@@ -17301,15 +17301,15 @@
    ],
    [
     "доля окна с моделью флюенса",
-    "81…83 %"
+    "82…84 %"
    ],
    [
     "пропуски модели",
-    "360 мин — сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün); 60…68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)"
+    "360 мин — сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün); 59…66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)"
    ],
    [
     "общие каналы, окна не различающие",
-    "протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 10:45Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается"
+    "протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 11:00Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается"
    ],
    [
     "вывод не означает",
@@ -17322,7 +17322,7 @@
    "title": "Окно 1 · минут в аномалии",
    "kind": "own_calculation",
    "impact_ru": "Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше экспозиция при прочих равных. Это условие на траектории, не доза человека.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "69,18 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям |B| ниже порога 24000 нТл (настройка, варьируется в чувствительности)",
@@ -17333,17 +17333,17 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · флюенс захваченных протонов ≥30 МэВ",
    "kind": "own_calculation",
    "impact_ru": "Интеграл всенаправленного потока захваченных протонов вдоль пути за окно — целевая величина сравнения окон по космопогоде (минуты в аномалии — её объяснение). В дозу не переводится без модели защиты и ткани.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "2,87·10^6 част./см²",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:59e573afafa8",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 81.1 % (17520.0 из 21600.0 с); без модели 68 мин из 360 мин окна: 68 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 222, L вне сетки 1,14…9 (сильное поле вне аномалии) — 63, в сетке таблицы — 76; точки аномалии со значением потока по таблице ОСТ: 69 из 69 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 43.76 % на 80.0 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.6 % (18060.0 из 21600.0 с); без модели 59 мин из 360 мин окна: 59 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 230, L вне сетки 1,14…9 (сильное поле вне аномалии) — 55, в сетке таблицы — 76; точки аномалии со значением потока по таблице ОСТ: 69 из 69 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 43.76 % на 82.2 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
     "igrf14:717f6dce821a",
@@ -17351,13 +17351,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · минут доступности протонов ≥10 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "0 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.14 ГВ — жёсткости протона 10 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
@@ -17368,13 +17368,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · минут доступности протонов ≥100 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "0 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.44 ГВ — жёсткости протона 100 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
@@ -17385,45 +17385,45 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · поток протонов GOES ≥10 МэВ",
    "kind": "observation",
    "impact_ru": "Наблюдаемый поток на геостационарной орбите — индикатор солнечного протонного события. У станции на 51,6° большая часть таких протонов отсекается геомагнитным обрезанием; переносится не напрямую — см. фактор «минут доступности протонов ≥10 МэВ по обрезанию».",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
-   "data_ru": "0,21 pfu",
-   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7, момент 2026-09-19 10:45Z, публикация время публикации неизвестно, получено 2026-09-19 10:57Z, предварительное",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
+   "data_ru": "0,25 pfu",
+   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c, момент 2026-09-19 11:00Z, публикация время публикации неизвестно, получено 2026-09-19 11:14Z, предварительное",
    "rule_ru": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-   "limits_ru": "покрытие частичное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 11:45Z; наблюдение 2026-09-19 10:45Z, фон (ниже S1), давность 13 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 11:45Z покрывает 13 % окна, это 47 мин из 360; допустимый вывод: на остальные 313 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
+   "limits_ru": "покрытие частичное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; наблюдение 2026-09-19 11:00Z, фон (ниже S1), давность 14 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 12:00Z покрывает 13 % окна, это 46 мин из 360; допустимый вывод: на остальные 314 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
    "record_ids": [
-    "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7"
+    "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c"
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · Kp, последнее наблюдение",
    "kind": "observation",
    "impact_ru": "Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
-   "data_ru": "Kp 1,67",
-   "source_ru": "Kp (GFZ), Kp (GFZ) 41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 10:57Z, предварительное",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
+   "data_ru": "Kp 1,33",
+   "source_ru": "Kp (GFZ), Kp (GFZ) 8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 11:14Z, предварительное",
    "rule_ru": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 118 мин (предел 180 мин)",
+   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 134 мин (предел 180 мин)",
    "record_ids": [
-    "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e"
+    "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553"
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · прогноз Kp NOAA, максимум в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам; у выпуска указано время публикации. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "Kp 1,67",
    "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 10:26Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации 09-19 00:30Z",
@@ -17433,13 +17433,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · вероятность S1 и выше за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "1 %",
    "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 10:26Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации 09-19 00:30Z",
@@ -17449,13 +17449,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · вероятность протонного события за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события по прогнозу NOAA daypre. Относится к суткам целиком; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: суточная вероятность источника, не вероятность за окно",
    "rule_ru": "NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации",
@@ -17463,13 +17463,13 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · ожидаемое число попаданий, пластина 1 м²",
    "kind": "own_calculation",
    "impact_ru": "Статистика природных метеороидов на опорную площадь за окно. Не вероятность повреждения скафандра и не попадание в космонавта. Эта линия даёт АБСОЛЮТНУЮ оценку и охват механизма; выбор между окнами она не определяет — при равной длительности окна различаются по ней меньше порога различимости, и окно выбирается по космопогоде.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "5,64·10^-7 шт",
    "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 416…438 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
@@ -17481,13 +17481,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · активных метеорных потоков на дату (календарь IMO)",
    "kind": "own_calculation",
    "impact_ru": "Признак активности главного метеорного потока на дату окна. Поток добавляет частицы к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "1 шт",
    "source_ru": "календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR",
    "rule_ru": "календарь главных метеорных потоков IMO (даты и пиковый ZHR округлены); признак активности, не поток; признак активности потока на дату — в число попаданий не входит (формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, вклад в N не рассчитан",
@@ -17497,13 +17497,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · сближений с TCA в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; вероятность попадания фрагмента в космонавта отсюда не следует.",
-   "period_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: усечённая выдача не означает отсутствия других",
    "rule_ru": "CelesTrak SOCRATES, TCA внутри окна",
@@ -17511,14 +17511,14 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 10:58 — 16:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 11:14 — 17:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут в аномалии",
    "kind": "own_calculation",
    "impact_ru": "Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше экспозиция при прочих равных. Это условие на траектории, не доза человека.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
-   "data_ru": "36,38 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
+   "data_ru": "29,89 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям |B| ниже порога 24000 нТл (настройка, варьируется в чувствительности)",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; дипольная L — исследовательское приближение; уверенность зависит от точности траектории и границ модели, не от статистики",
@@ -17528,17 +17528,17 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · флюенс захваченных протонов ≥30 МэВ",
    "kind": "own_calculation",
    "impact_ru": "Интеграл всенаправленного потока захваченных протонов вдоль пути за окно — целевая величина сравнения окон по космопогоде (минуты в аномалии — её объяснение). В дозу не переводится без модели защиты и ткани.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
-   "data_ru": "3,62·10^5 част./см²",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
+   "data_ru": "3,56·10^5 част./см²",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:59e573afafa8",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.3 % (18000.0 из 21600.0 с); без модели 60 мин из 360 мин окна: 60 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 275, L вне сетки 1,14…9 (сильное поле вне аномалии) — 55, в сетке таблицы — 31; точки аномалии со значением потока по таблице ОСТ: 32 из 37 (диагностика узлов, не покрытие времени); у 5 точек L вне сетки — вклад неизвестен; ещё у 8 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 65.77 % на 81.7 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 81.7 % (17640.0 из 21600.0 с); без модели 66 мин из 360 мин окна: 66 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 275, L вне сетки 1,14…9 (сильное поле вне аномалии) — 61, в сетке таблицы — 25; точки аномалии со значением потока по таблице ОСТ: 25 из 30 (диагностика узлов, не покрытие времени); у 5 точек L вне сетки — вклад неизвестен; ещё у 5 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 66.41 % на 80.0 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
     "igrf14:717f6dce821a",
@@ -17546,13 +17546,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут доступности протонов ≥10 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "0 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.14 ГВ — жёсткости протона 10 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
@@ -17563,13 +17563,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут доступности протонов ≥100 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "0 мин",
    "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.44 ГВ — жёсткости протона 100 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
@@ -17580,45 +17580,45 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · поток протонов GOES ≥10 МэВ",
    "kind": "observation",
    "impact_ru": "Наблюдаемый поток на геостационарной орбите — индикатор солнечного протонного события. У станции на 51,6° большая часть таких протонов отсекается геомагнитным обрезанием; переносится не напрямую — см. фактор «минут доступности протонов ≥10 МэВ по обрезанию».",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
-   "data_ru": "0,21 pfu",
-   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7, момент 2026-09-19 10:45Z, публикация время публикации неизвестно, получено 2026-09-19 10:57Z, предварительное",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
+   "data_ru": "0,25 pfu",
+   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c, момент 2026-09-19 11:00Z, публикация время публикации неизвестно, получено 2026-09-19 11:14Z, предварительное",
    "rule_ru": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-   "limits_ru": "покрытие отсутствует; наличие воздействия: неизвестно (данных нет); горизонт данных до 2026-09-19 11:45Z; наблюдение 2026-09-19 10:45Z, фон (ниже S1), давность 13 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 11:45Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
+   "limits_ru": "покрытие отсутствует; наличие воздействия: неизвестно (данных нет); горизонт данных до 2026-09-19 12:00Z; наблюдение 2026-09-19 11:00Z, фон (ниже S1), давность 14 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 12:00Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
    "record_ids": [
-    "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7"
+    "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c"
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · Kp, последнее наблюдение",
    "kind": "observation",
    "impact_ru": "Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
-   "data_ru": "Kp 1,67",
-   "source_ru": "Kp (GFZ), Kp (GFZ) 41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 10:57Z, предварительное",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
+   "data_ru": "Kp 1,33",
+   "source_ru": "Kp (GFZ), Kp (GFZ) 8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 11:14Z, предварительное",
    "rule_ru": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 118 мин (предел 180 мин)",
+   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 134 мин (предел 180 мин)",
    "record_ids": [
-    "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e"
+    "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553"
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · прогноз Kp NOAA, максимум в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам; у выпуска указано время публикации. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "Kp 1,67",
    "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 10:26Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации 09-19 00:30Z",
@@ -17628,13 +17628,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · вероятность S1 и выше за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "1 %",
    "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 10:26Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации 09-19 00:30Z",
@@ -17644,13 +17644,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · вероятность протонного события за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события по прогнозу NOAA daypre. Относится к суткам целиком; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: суточная вероятность источника, не вероятность за окно",
    "rule_ru": "NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации",
@@ -17658,13 +17658,13 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · ожидаемое число попаданий, пластина 1 м²",
    "kind": "own_calculation",
    "impact_ru": "Статистика природных метеороидов на опорную площадь за окно. Не вероятность повреждения скафандра и не попадание в космонавта. Эта линия даёт АБСОЛЮТНУЮ оценку и охват механизма; выбор между окнами она не определяет — при равной длительности окна различаются по ней меньше порога различимости, и окно выбирается по космопогоде.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "5,64·10^-7 шт",
    "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 10:26Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 416…438 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
@@ -17676,13 +17676,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · активных метеорных потоков на дату (календарь IMO)",
    "kind": "own_calculation",
    "impact_ru": "Признак активности главного метеорного потока на дату окна. Поток добавляет частицы к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "1 шт",
    "source_ru": "календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR",
    "rule_ru": "календарь главных метеорных потоков IMO (даты и пиковый ZHR округлены); признак активности, не поток; признак активности потока на дату — в число попаданий не входит (формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, вклад в N не рассчитан",
@@ -17692,13 +17692,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · сближений с TCA в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; вероятность попадания фрагмента в космонавта отсюда не следует.",
-   "period_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: усечённая выдача не означает отсутствия других",
    "rule_ru": "CelesTrak SOCRATES, TCA внутри окна",
@@ -17706,7 +17706,7 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 14:58 — 20:58 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 15:14 — 21:14 UTC, 360 мин"
   }
  ],
  "sources": {
@@ -17720,7 +17720,7 @@
    "from_cache": true,
    "fetched_utc": "2026-09-19T10:26:07.571518+00:00",
    "epoch_utc": "2026-09-17T21:14:04.657623+00:00",
-   "age_h": 37.7,
+   "age_h": 38.0,
    "source_id": "celestrak_gp",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
@@ -17731,42 +17731,42 @@
   },
   "noaa_swpc_goes": {
    "role": "протоны ≥10 МэВ",
-   "status": "проверенный кеш, давность данных 13.7 мин",
-   "live_ok": false,
-   "from_cache": true,
-   "state": "cache",
-   "origin": "кеш или снимок репозитория",
-   "fetched_utc": "2026-09-19T10:57:04.898104+00:00",
-   "data_utc": "2026-09-19T10:45:00+00:00",
-   "age_min": 13,
+   "status": "получено по сети, давность данных 14.8 мин",
+   "live_ok": true,
+   "from_cache": false,
+   "state": "live",
+   "origin": "живой запрос",
+   "fetched_utc": "2026-09-19T11:14:49.067430+00:00",
+   "data_utc": "2026-09-19T11:00:00+00:00",
+   "age_min": 14,
    "record_ids": [
-    "noaa_swpc_goes:2c2e6608206c23ed7b64492f424ff64f1c80bce78fa480414a56f1419463d6f7"
+    "noaa_swpc_goes:d7c37779c2d5f2575453c57de039d903602515b086442080e05ff1b7910c285c"
    ]
   },
   "gfz_kp": {
    "role": "Kp",
-   "status": "проверенный кеш, давность данных 118.7 мин; незавершённый Kp-nowcast исключён",
-   "live_ok": false,
-   "from_cache": true,
-   "state": "cache",
-   "origin": "кеш или снимок репозитория",
-   "fetched_utc": "2026-09-19T10:57:05.323388+00:00",
+   "status": "получено по сети, давность данных 134.8 мин; незавершённый Kp-nowcast исключён",
+   "live_ok": true,
+   "from_cache": false,
+   "state": "live",
+   "origin": "живой запрос",
+   "fetched_utc": "2026-09-19T11:14:49.325064+00:00",
    "data_utc": "2026-09-19T09:00:00+00:00",
-   "age_min": 118,
+   "age_min": 134,
    "record_ids": [
-    "gfz_kp:41e907bf2cb6394d451565de920c3d9cadf120b67c124d78427d2f68c7b58e0e"
+    "gfz_kp:8bebbe868d41868b58c5f501d29af78c41da5747bb6ddc9c93a233c6b9f1d553"
    ]
   },
   "noaa_swpc_3day_forecast": {
    "role": "прогноз Kp и вероятности NOAA (3 суток)",
-   "status": "проверенный кеш, давность данных 628.7 мин",
+   "status": "проверенный кеш, давность данных 644.8 мин",
    "live_ok": false,
    "from_cache": true,
    "state": "cache",
    "origin": "кеш или снимок репозитория",
    "fetched_utc": "2026-09-19T10:26:07.763286+00:00",
    "data_utc": "2026-09-19T00:30:00+00:00",
-   "age_min": 628.67885835,
+   "age_min": 644.8222601666668,
    "cells": 27,
    "record_ids": [
     "noaa_swpc_3day_forecast:fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa"
@@ -18034,8 +18034,8 @@
    "reason": "живой бюллетень NOAA 3-day не содержит этого канала: суточная вероятность протонного события публикуется отдельным выпуском NGDC daypre, которого в текущем режиме нет",
    "gaps": [
     [
-     "2026-09-19T10:58:00+00:00",
-     "2026-09-20T04:58:00+00:00"
+     "2026-09-19T11:14:00+00:00",
+     "2026-09-20T05:14:00+00:00"
     ]
    ],
    "last_release_before_cutoff": null,
@@ -18081,11 +18081,11 @@
  "robustness": {
   "stable": true,
   "ranking_stable": true,
-  "diff_spread_min": 10.804423755339286,
-  "fluence_ratio_spread": 1.019383001783429,
-  "tol_min": 10.804423755339286,
+  "diff_spread_min": 11.72756059479574,
+  "fluence_ratio_spread": 1.0209042774428083,
+  "tol_min": 11.72756059479574,
   "tol_ratio": 1.5,
-  "saa_spread_min": 30.467641820420184,
+  "saa_spread_min": 29.54450498096373,
   "grid": [
    [
     22000.0,
@@ -18099,29 +18099,29 @@
    ]
   ],
   "pair": [
-   "2026-09-19T14:58:00+00:00",
-   "2026-09-19T10:58:00+00:00"
+   "2026-09-19T15:14:00+00:00",
+   "2026-09-19T11:14:00+00:00"
   ],
   "diff_by_thr": {
-   "22000": 27.944249242090457,
-   "24000": 32.80088546584816,
-   "26000": 38.74867299742974
+   "22000": 31.384343592348706,
+   "24000": 39.289909571330526,
+   "26000": 43.11190418714445
   },
   "ratio_by_e": {
-   "12.5": 8.007532726282763,
-   "30": 7.930395061200167,
-   "50": 8.084109922814706
+   "12.5": 8.146934284089548,
+   "30": 8.07261357935169,
+   "50": 8.24136573330304
   },
   "preferred_by_grid": {
-   "22000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "22000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "22000 nT / 50 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 50 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 50 MeV": "2026-09-19T14:58:00+00:00"
+   "22000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "22000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "22000 nT / 50 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 50 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 50 MeV": "2026-09-19T15:14:00+00:00"
   },
   "verdict_by_grid": {
    "22000 nT / 12.5 MeV": "preferred",
@@ -18135,843 +18135,847 @@
    "26000 nT / 50 MeV": "preferred"
   },
   "ranking_by_grid": {
-   "22000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "22000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "22000 nT / 50 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "24000 nT / 50 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 12.5 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 30 MeV": "2026-09-19T14:58:00+00:00",
-   "26000 nT / 50 MeV": "2026-09-19T14:58:00+00:00"
+   "22000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "22000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "22000 nT / 50 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "24000 nT / 50 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 12.5 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 30 MeV": "2026-09-19T15:14:00+00:00",
+   "26000 nT / 50 MeV": "2026-09-19T15:14:00+00:00"
   }
  },
  "scan": {
   "requested_duration_min": 360,
-  "search_from_utc": "2026-09-19T10:58:00+00:00",
-  "search_to_utc": "2026-09-20T04:58:00+00:00",
+  "search_from_utc": "2026-09-19T11:14:00+00:00",
+  "search_to_utc": "2026-09-20T05:14:00+00:00",
   "step_min": 10,
   "n_candidates": 73,
   "rule": "Применяется правило (8) методики — то же, которым сравниваются окна: m — минуты в аномалии, Φ — флюенс за окно; «не хуже» требует обеих величин, «лучше» — строгого выигрыша хотя бы по одной сверх допуска. Начало попадает в лучшую группу, если ни одно другое его не превосходит по этому правилу. Кандидат, у которого стоит условие проверки, из автоматического выбора исключается и выше кандидата без условий не ставится. Если в лучшей группе одно начало — оно и есть рекомендация; если несколько и они равнозначны в допуске — перечисляются все; если несколько и они спорят (одно лучше по минутам, другое по флюенсу сверх допуска) — это компромисс без победителя, и обе стороны названы числами. Внутри группы порядок — по времени начала: выбирать внутри неё правило не имеет права. Складывать флюенс с минутами в аномалии нельзя: это разные величины, и никакого суммарного балла воздействия у сервиса нет.",
-  "tolerance_note": "различием не считается разница до 10,8 мин по минутам в аномалии и до ×1,50 по флюенсу — те же допуски, по которым сравниваются окна; основание — допуск ×1.50 по флюенсу — не меньше настройки ×1.50 и разброса по каналу 12.5/30/50 МэВ (отношение флюенсов между окнами 2 и 1 по каналу от ×7.93 до ×8.08)",
+  "tolerance_note": "различием не считается разница до 11,73 мин по минутам в аномалии и до ×1,50 по флюенсу — те же допуски, по которым сравниваются окна; основание — допуск ×1.50 по флюенсу — не меньше настройки ×1.50 и разброса по каналу 12.5/30/50 МэВ (отношение флюенсов между окнами 2 и 1 по каналу от ×8.07 до ×8.24)",
   "candidates": [
    {
-    "start_utc": "2026-09-19T10:58:00+00:00",
-    "end_utc": "2026-09-19T16:58:00+00:00",
+    "start_utc": "2026-09-19T11:14:00+00:00",
+    "end_utc": "2026-09-19T17:14:00+00:00",
     "saa_min": 69.17670368255133,
-    "fluence": 2871274.012739654,
-    "mmod_hits": 5.635441913094007e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 69,
-    "group": 9
-   },
-   {
-    "start_utc": "2026-09-19T11:08:00+00:00",
-    "end_utc": "2026-09-19T17:08:00+00:00",
-    "saa_min": 69.17670368255133,
-    "fluence": 2871274.012739654,
-    "mmod_hits": 5.635593794265455e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 70,
-    "group": 9
-   },
-   {
-    "start_utc": "2026-09-19T11:18:00+00:00",
-    "end_utc": "2026-09-19T17:18:00+00:00",
-    "saa_min": 69.17670368255133,
-    "fluence": 2871274.012739654,
-    "mmod_hits": 5.635530125727377e-07,
+    "fluence": 2871272.0145783895,
+    "mmod_hits": 5.635595389537645e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 71,
-    "group": 9
+    "group": 11
    },
    {
-    "start_utc": "2026-09-19T11:28:00+00:00",
-    "end_utc": "2026-09-19T17:28:00+00:00",
+    "start_utc": "2026-09-19T11:24:00+00:00",
+    "end_utc": "2026-09-19T17:24:00+00:00",
     "saa_min": 69.17670368255133,
-    "fluence": 2871274.012739654,
-    "mmod_hits": 5.635198919847624e-07,
+    "fluence": 2871272.0145783895,
+    "mmod_hits": 5.635347017258703e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 72,
-    "group": 9
+    "group": 11
    },
    {
-    "start_utc": "2026-09-19T11:38:00+00:00",
-    "end_utc": "2026-09-19T17:38:00+00:00",
-    "saa_min": 65.8160201116514,
-    "fluence": 2840437.6533083306,
-    "mmod_hits": 5.634938499152645e-07,
+    "start_utc": "2026-09-19T11:34:00+00:00",
+    "end_utc": "2026-09-19T17:34:00+00:00",
+    "saa_min": 69.17670368255133,
+    "fluence": 2864474.397460624,
+    "mmod_hits": 5.635008365887126e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 73,
-    "group": 9
+    "group": 11
    },
    {
-    "start_utc": "2026-09-19T11:48:00+00:00",
-    "end_utc": "2026-09-19T17:48:00+00:00",
-    "saa_min": 55.8160201116514,
-    "fluence": 2464104.995010416,
-    "mmod_hits": 5.63502334661198e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 60,
-    "group": 8
-   },
-   {
-    "start_utc": "2026-09-19T11:58:00+00:00",
-    "end_utc": "2026-09-19T17:58:00+00:00",
-    "saa_min": 52.34898025341447,
-    "fluence": 2413427.637288644,
-    "mmod_hits": 5.635297324031629e-07,
+    "start_utc": "2026-09-19T11:44:00+00:00",
+    "end_utc": "2026-09-19T17:44:00+00:00",
+    "saa_min": 59.81602011165139,
+    "fluence": 2675610.553123908,
+    "mmod_hits": 5.634948357755097e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 61,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:08:00+00:00",
-    "end_utc": "2026-09-19T18:08:00+00:00",
-    "saa_min": 61.509548350423316,
-    "fluence": 2440868.3396184244,
-    "mmod_hits": 5.635425310201407e-07,
+    "start_utc": "2026-09-19T11:54:00+00:00",
+    "end_utc": "2026-09-19T17:54:00+00:00",
+    "saa_min": 52.348980253414446,
+    "fluence": 2413237.300042581,
+    "mmod_hits": 5.635189106417619e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 62,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:18:00+00:00",
-    "end_utc": "2026-09-19T18:18:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2442159.138844214,
-    "mmod_hits": 5.635376500633068e-07,
+    "start_utc": "2026-09-19T12:04:00+00:00",
+    "end_utc": "2026-09-19T18:04:00+00:00",
+    "saa_min": 57.509548350423294,
+    "fluence": 2439981.5704966304,
+    "mmod_hits": 5.635403598103169e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 63,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:28:00+00:00",
-    "end_utc": "2026-09-19T18:28:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2442159.138844214,
-    "mmod_hits": 5.635399757906249e-07,
+    "start_utc": "2026-09-19T12:14:00+00:00",
+    "end_utc": "2026-09-19T18:14:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442157.355792705,
+    "mmod_hits": 5.635402427489348e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 64,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:38:00+00:00",
-    "end_utc": "2026-09-19T18:38:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2442159.138844214,
-    "mmod_hits": 5.635556440678084e-07,
+    "start_utc": "2026-09-19T12:24:00+00:00",
+    "end_utc": "2026-09-19T18:24:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442157.355792705,
+    "mmod_hits": 5.635368840916968e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 65,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:48:00+00:00",
-    "end_utc": "2026-09-19T18:48:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2442159.138844214,
-    "mmod_hits": 5.635580326342948e-07,
+    "start_utc": "2026-09-19T12:34:00+00:00",
+    "end_utc": "2026-09-19T18:34:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442157.355792705,
+    "mmod_hits": 5.635490750624478e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 66,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T12:58:00+00:00",
-    "end_utc": "2026-09-19T18:58:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2442159.138844214,
-    "mmod_hits": 5.635304247096989e-07,
+    "start_utc": "2026-09-19T12:44:00+00:00",
+    "end_utc": "2026-09-19T18:44:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442157.355792705,
+    "mmod_hits": 5.635606105131635e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 67,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T13:08:00+00:00",
-    "end_utc": "2026-09-19T19:08:00+00:00",
-    "saa_min": 62.25099162241501,
-    "fluence": 2440990.831304828,
-    "mmod_hits": 5.634981181380832e-07,
+    "start_utc": "2026-09-19T12:54:00+00:00",
+    "end_utc": "2026-09-19T18:54:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442157.355792705,
+    "mmod_hits": 5.635442954406289e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 68,
-    "group": 8
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T13:18:00+00:00",
-    "end_utc": "2026-09-19T19:18:00+00:00",
-    "saa_min": 54.444951338326845,
-    "fluence": 2039962.40502831,
-    "mmod_hits": 5.634962295019016e-07,
+    "start_utc": "2026-09-19T13:04:00+00:00",
+    "end_utc": "2026-09-19T19:04:00+00:00",
+    "saa_min": 62.25099162241499,
+    "fluence": 2442058.265985583,
+    "mmod_hits": 5.635088677067495e-07,
     "coverage": "partial",
     "conditions": [],
-    "rank": 50,
-    "group": 7
+    "rank": 69,
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T13:28:00+00:00",
-    "end_utc": "2026-09-19T19:28:00+00:00",
-    "saa_min": 44.444951338326845,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635218288159954e-07,
+    "start_utc": "2026-09-19T13:14:00+00:00",
+    "end_utc": "2026-09-19T19:14:00+00:00",
+    "saa_min": 58.444951338326824,
+    "fluence": 2380359.7750778454,
+    "mmod_hits": 5.634924193187217e-07,
     "coverage": "partial",
     "conditions": [],
-    "rank": 51,
-    "group": 7
+    "rank": 70,
+    "group": 10
    },
    {
-    "start_utc": "2026-09-19T13:38:00+00:00",
-    "end_utc": "2026-09-19T19:38:00+00:00",
-    "saa_min": 46.47830179509035,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635410713856628e-07,
+    "start_utc": "2026-09-19T13:24:00+00:00",
+    "end_utc": "2026-09-19T19:24:00+00:00",
+    "saa_min": 48.444951338326824,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635103145669683e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 52,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T13:48:00+00:00",
-    "end_utc": "2026-09-19T19:48:00+00:00",
-    "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.63539190168667e-07,
+    "start_utc": "2026-09-19T13:34:00+00:00",
+    "end_utc": "2026-09-19T19:34:00+00:00",
+    "saa_min": 44.378946631114495,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635360356999165e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 53,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T13:58:00+00:00",
-    "end_utc": "2026-09-19T19:58:00+00:00",
+    "start_utc": "2026-09-19T13:44:00+00:00",
+    "end_utc": "2026-09-19T19:44:00+00:00",
     "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635371390554841e-07,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635416205145857e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 54,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T14:08:00+00:00",
-    "end_utc": "2026-09-19T20:08:00+00:00",
+    "start_utc": "2026-09-19T13:54:00+00:00",
+    "end_utc": "2026-09-19T19:54:00+00:00",
     "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635507093781281e-07,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.63536240337483e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 55,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T14:18:00+00:00",
-    "end_utc": "2026-09-19T20:18:00+00:00",
+    "start_utc": "2026-09-19T14:04:00+00:00",
+    "end_utc": "2026-09-19T20:04:00+00:00",
     "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635601872291461e-07,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635439571991391e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 56,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T14:28:00+00:00",
-    "end_utc": "2026-09-19T20:28:00+00:00",
+    "start_utc": "2026-09-19T14:14:00+00:00",
+    "end_utc": "2026-09-19T20:14:00+00:00",
     "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635404769891099e-07,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635590469740613e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 57,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T14:38:00+00:00",
-    "end_utc": "2026-09-19T20:38:00+00:00",
+    "start_utc": "2026-09-19T14:24:00+00:00",
+    "end_utc": "2026-09-19T20:24:00+00:00",
     "saa_min": 48.55191259508034,
-    "fluence": 1551642.3867160208,
-    "mmod_hits": 5.635052334918538e-07,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635520407204067e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 58,
-    "group": 7
+    "group": 9
    },
    {
-    "start_utc": "2026-09-19T14:48:00+00:00",
-    "end_utc": "2026-09-19T20:48:00+00:00",
-    "saa_min": 46.37581821670317,
-    "fluence": 1518103.3129146178,
-    "mmod_hits": 5.634926786374842e-07,
+    "start_utc": "2026-09-19T14:34:00+00:00",
+    "end_utc": "2026-09-19T20:34:00+00:00",
+    "saa_min": 48.55191259508034,
+    "fluence": 1551641.2125864758,
+    "mmod_hits": 5.635186649741814e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 59,
+    "group": 9
+   },
+   {
+    "start_utc": "2026-09-19T14:44:00+00:00",
+    "end_utc": "2026-09-19T20:44:00+00:00",
+    "saa_min": 48.55191259508034,
+    "fluence": 1551515.903703415,
+    "mmod_hits": 5.634932134606067e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 60,
+    "group": 9
+   },
+   {
+    "start_utc": "2026-09-19T14:54:00+00:00",
+    "end_utc": "2026-09-19T20:54:00+00:00",
+    "saa_min": 40.37581821670317,
+    "fluence": 581111.3925317383,
+    "mmod_hits": 5.635023973326189e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 45,
     "group": 7
    },
    {
-    "start_utc": "2026-09-19T14:58:00+00:00",
-    "end_utc": "2026-09-19T20:58:00+00:00",
-    "saa_min": 36.37581821670317,
-    "fluence": 362059.3918186369,
-    "mmod_hits": 5.635132529172719e-07,
+    "start_utc": "2026-09-19T15:04:00+00:00",
+    "end_utc": "2026-09-19T21:04:00+00:00",
+    "saa_min": 30.375818216703173,
+    "fluence": 358093.6222754575,
+    "mmod_hits": 5.635297386603688e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 27,
+    "group": 6
+   },
+   {
+    "start_utc": "2026-09-19T15:14:00+00:00",
+    "end_utc": "2026-09-19T21:14:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.635419718361524e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 28,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:08:00+00:00",
-    "end_utc": "2026-09-19T21:08:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635375669690003e-07,
+    "start_utc": "2026-09-19T15:24:00+00:00",
+    "end_utc": "2026-09-19T21:24:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.63536936540574e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 29,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:18:00+00:00",
-    "end_utc": "2026-09-19T21:18:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635407673364379e-07,
+    "start_utc": "2026-09-19T15:34:00+00:00",
+    "end_utc": "2026-09-19T21:34:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.635396445037636e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 30,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:28:00+00:00",
-    "end_utc": "2026-09-19T21:28:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635358957974376e-07,
+    "start_utc": "2026-09-19T15:44:00+00:00",
+    "end_utc": "2026-09-19T21:44:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.635554195743864e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 31,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:38:00+00:00",
-    "end_utc": "2026-09-19T21:38:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635454701159135e-07,
+    "start_utc": "2026-09-19T15:54:00+00:00",
+    "end_utc": "2026-09-19T21:54:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.635572532391782e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 32,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:48:00+00:00",
-    "end_utc": "2026-09-19T21:48:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635595713214514e-07,
+    "start_utc": "2026-09-19T16:04:00+00:00",
+    "end_utc": "2026-09-19T22:04:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.635291804101399e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 33,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T15:58:00+00:00",
-    "end_utc": "2026-09-19T21:58:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635490202264776e-07,
+    "start_utc": "2026-09-19T16:14:00+00:00",
+    "end_utc": "2026-09-19T22:14:00+00:00",
+    "saa_min": 29.88679411122081,
+    "fluence": 355680.5966685427,
+    "mmod_hits": 5.634972502137896e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 34,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T16:08:00+00:00",
-    "end_utc": "2026-09-19T22:08:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.635144660700732e-07,
+    "start_utc": "2026-09-19T16:24:00+00:00",
+    "end_utc": "2026-09-19T22:24:00+00:00",
+    "saa_min": 27.888852703371906,
+    "fluence": 318525.42830175685,
+    "mmod_hits": 5.63496144170467e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 35,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T16:18:00+00:00",
-    "end_utc": "2026-09-19T22:18:00+00:00",
-    "saa_min": 29.886794111220812,
-    "fluence": 355680.78158486774,
-    "mmod_hits": 5.634922214883667e-07,
+    "start_utc": "2026-09-19T16:34:00+00:00",
+    "end_utc": "2026-09-19T22:34:00+00:00",
+    "saa_min": 17.888852703371906,
+    "fluence": 43651.747231471505,
+    "mmod_hits": 5.635219392001305e-07,
     "coverage": "partial",
     "conditions": [],
-    "rank": 36,
-    "group": 5
-   },
-   {
-    "start_utc": "2026-09-19T16:28:00+00:00",
-    "end_utc": "2026-09-19T22:28:00+00:00",
-    "saa_min": 23.888852703371903,
-    "fluence": 118172.95657049464,
-    "mmod_hits": 5.635049663328194e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 26,
+    "rank": 17,
     "group": 4
    },
    {
-    "start_utc": "2026-09-19T16:38:00+00:00",
-    "end_utc": "2026-09-19T22:38:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 31818.206560004448,
-    "mmod_hits": 5.63532001484734e-07,
+    "start_utc": "2026-09-19T16:44:00+00:00",
+    "end_utc": "2026-09-19T22:44:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.635406702642181e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 8,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T16:48:00+00:00",
-    "end_utc": "2026-09-19T22:48:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 28920.045699435548,
-    "mmod_hits": 5.635416036977769e-07,
+    "start_utc": "2026-09-19T16:54:00+00:00",
+    "end_utc": "2026-09-19T22:54:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.635384464243684e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 9,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T16:58:00+00:00",
-    "end_utc": "2026-09-19T22:58:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 28920.045699435548,
-    "mmod_hits": 5.63536125560755e-07,
+    "start_utc": "2026-09-19T17:04:00+00:00",
+    "end_utc": "2026-09-19T23:04:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.6353668400002e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 10,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:08:00+00:00",
-    "end_utc": "2026-09-19T23:08:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 28920.045699435548,
-    "mmod_hits": 5.635407612207541e-07,
+    "start_utc": "2026-09-19T17:14:00+00:00",
+    "end_utc": "2026-09-19T23:14:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.635505281962908e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 11,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:18:00+00:00",
-    "end_utc": "2026-09-19T23:18:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 28920.045699435548,
-    "mmod_hits": 5.63556639116769e-07,
+    "start_utc": "2026-09-19T17:24:00+00:00",
+    "end_utc": "2026-09-19T23:24:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.635596080050353e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 12,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:28:00+00:00",
-    "end_utc": "2026-09-19T23:28:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 28920.045699435548,
-    "mmod_hits": 5.635552531409051e-07,
+    "start_utc": "2026-09-19T17:34:00+00:00",
+    "end_utc": "2026-09-19T23:34:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 28920.055750123953,
+    "mmod_hits": 5.635392954851365e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 13,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:38:00+00:00",
-    "end_utc": "2026-09-19T23:38:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 29690.112905873597,
-    "mmod_hits": 5.635248328412085e-07,
+    "start_utc": "2026-09-19T17:44:00+00:00",
+    "end_utc": "2026-09-19T23:44:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 31423.32571836691,
+    "mmod_hits": 5.635041723145648e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 14,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:48:00+00:00",
-    "end_utc": "2026-09-19T23:48:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 31519.821742991833,
-    "mmod_hits": 5.634950388143154e-07,
+    "start_utc": "2026-09-19T17:54:00+00:00",
+    "end_utc": "2026-09-19T23:54:00+00:00",
+    "saa_min": 14.07497733296638,
+    "fluence": 31519.830338328356,
+    "mmod_hits": 5.6349238923743e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 15,
-    "group": 2
+    "group": 3
    },
    {
-    "start_utc": "2026-09-19T17:58:00+00:00",
-    "end_utc": "2026-09-19T23:58:00+00:00",
-    "saa_min": 14.074977332966379,
-    "fluence": 31331.27759912625,
-    "mmod_hits": 5.634979750082764e-07,
+    "start_utc": "2026-09-19T18:04:00+00:00",
+    "end_utc": "2026-09-20T00:04:00+00:00",
+    "saa_min": 8.91440923595753,
+    "fluence": 4775.559884278873,
+    "mmod_hits": 5.635134002237641e-07,
     "coverage": "partial",
     "conditions": [],
-    "rank": 16,
+    "rank": 7,
     "group": 2
    },
    {
-    "start_utc": "2026-09-19T18:08:00+00:00",
-    "end_utc": "2026-09-20T00:08:00+00:00",
-    "saa_min": 4.914409235957533,
-    "fluence": 3890.5752693458007,
-    "mmod_hits": 5.635247147331486e-07,
+    "start_utc": "2026-09-19T18:14:00+00:00",
+    "end_utc": "2026-09-20T00:14:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 2599.7745882044014,
+    "mmod_hits": 5.635373415935852e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 1,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T18:18:00+00:00",
-    "end_utc": "2026-09-20T00:18:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 2599.7760435562845,
-    "mmod_hits": 5.635410053629862e-07,
+    "start_utc": "2026-09-19T18:24:00+00:00",
+    "end_utc": "2026-09-20T00:24:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 2599.7745882044014,
+    "mmod_hits": 5.635400550912812e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 2,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T18:28:00+00:00",
-    "end_utc": "2026-09-20T00:28:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 2599.7760435562845,
-    "mmod_hits": 5.635374015079337e-07,
+    "start_utc": "2026-09-19T18:34:00+00:00",
+    "end_utc": "2026-09-20T00:34:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 2599.7745882044014,
+    "mmod_hits": 5.635353156465635e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 3,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T18:38:00+00:00",
-    "end_utc": "2026-09-20T00:38:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 2599.7760435562845,
-    "mmod_hits": 5.635372295482346e-07,
+    "start_utc": "2026-09-19T18:44:00+00:00",
+    "end_utc": "2026-09-20T00:44:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 2599.7745882044014,
+    "mmod_hits": 5.635452668744018e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 4,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T18:48:00+00:00",
-    "end_utc": "2026-09-20T00:48:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 2599.7760435562845,
-    "mmod_hits": 5.635521178521644e-07,
+    "start_utc": "2026-09-19T18:54:00+00:00",
+    "end_utc": "2026-09-20T00:54:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 2599.7745882044014,
+    "mmod_hits": 5.635591715207252e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 5,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T18:58:00+00:00",
-    "end_utc": "2026-09-20T00:58:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 2599.7760435562845,
-    "mmod_hits": 5.63558706322447e-07,
+    "start_utc": "2026-09-19T19:04:00+00:00",
+    "end_utc": "2026-09-20T01:04:00+00:00",
+    "saa_min": 4.172965963965834,
+    "fluence": 3257.7792181810382,
+    "mmod_hits": 5.635479702899981e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 6,
     "group": 1
    },
    {
-    "start_utc": "2026-09-19T19:08:00+00:00",
-    "end_utc": "2026-09-20T01:08:00+00:00",
-    "saa_min": 4.172965963965833,
-    "fluence": 3257.781771517906,
-    "mmod_hits": 5.635352251448978e-07,
+    "start_utc": "2026-09-19T19:14:00+00:00",
+    "end_utc": "2026-09-20T01:14:00+00:00",
+    "saa_min": 7.072585996919807,
+    "fluence": 28220.676342081115,
+    "mmod_hits": 5.635132732709563e-07,
     "coverage": "partial",
     "conditions": [],
-    "rank": 7,
-    "group": 1
-   },
-   {
-    "start_utc": "2026-09-19T19:18:00+00:00",
-    "end_utc": "2026-09-20T01:18:00+00:00",
-    "saa_min": 11.072585996919805,
-    "fluence": 52766.78230384081,
-    "mmod_hits": 5.635009206825081e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 17,
+    "rank": 16,
     "group": 3
    },
    {
-    "start_utc": "2026-09-19T19:28:00+00:00",
-    "end_utc": "2026-09-20T01:28:00+00:00",
+    "start_utc": "2026-09-19T19:24:00+00:00",
+    "end_utc": "2026-09-20T01:24:00+00:00",
     "saa_min": 11.594288889293592,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.634931862990505e-07,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.634916958461917e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 18,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T19:38:00+00:00",
-    "end_utc": "2026-09-20T01:38:00+00:00",
-    "saa_min": 9.494933725317749,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635163668682649e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 19,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T19:48:00+00:00",
-    "end_utc": "2026-09-20T01:48:00+00:00",
-    "saa_min": 7.421322925327761,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635384892782638e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 20,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T19:58:00+00:00",
-    "end_utc": "2026-09-20T01:58:00+00:00",
-    "saa_min": 7.421322925327761,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635390677234785e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 21,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T20:08:00+00:00",
-    "end_utc": "2026-09-20T02:08:00+00:00",
-    "saa_min": 7.421322925327761,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635352392713012e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 22,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T20:18:00+00:00",
-    "end_utc": "2026-09-20T02:18:00+00:00",
-    "saa_min": 7.421322925327761,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635468827903998e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 23,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T20:28:00+00:00",
-    "end_utc": "2026-09-20T02:28:00+00:00",
-    "saa_min": 7.421322925327761,
-    "fluence": 60744.84300314698,
-    "mmod_hits": 5.635592965585137e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 24,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T20:38:00+00:00",
-    "end_utc": "2026-09-20T02:38:00+00:00",
-    "saa_min": 9.439371737271234,
-    "fluence": 68716.88551078882,
-    "mmod_hits": 5.635445557347211e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 25,
-    "group": 3
-   },
-   {
-    "start_utc": "2026-09-19T20:48:00+00:00",
-    "end_utc": "2026-09-20T02:48:00+00:00",
-    "saa_min": 19.439371737271234,
-    "fluence": 172949.6346766181,
-    "mmod_hits": 5.635092866467162e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 27,
     "group": 4
    },
    {
-    "start_utc": "2026-09-19T20:58:00+00:00",
-    "end_utc": "2026-09-20T02:58:00+00:00",
+    "start_utc": "2026-09-19T19:34:00+00:00",
+    "end_utc": "2026-09-20T01:34:00+00:00",
+    "saa_min": 11.594288889293592,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635050734465157e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 19,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T19:44:00+00:00",
+    "end_utc": "2026-09-20T01:44:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635319421386435e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 20,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T19:54:00+00:00",
+    "end_utc": "2026-09-20T01:54:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.6354098376899e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 21,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T20:04:00+00:00",
+    "end_utc": "2026-09-20T02:04:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635354441606485e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 22,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T20:14:00+00:00",
+    "end_utc": "2026-09-20T02:14:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635404803081561e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 23,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T20:24:00+00:00",
+    "end_utc": "2026-09-20T02:24:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635563739454301e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 24,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T20:34:00+00:00",
+    "end_utc": "2026-09-20T02:34:00+00:00",
+    "saa_min": 7.421322925327759,
+    "fluence": 60744.83749709361,
+    "mmod_hits": 5.635543828225688e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 25,
+    "group": 4
+   },
+   {
+    "start_utc": "2026-09-19T20:44:00+00:00",
+    "end_utc": "2026-09-20T02:44:00+00:00",
+    "saa_min": 15.43937173727124,
+    "fluence": 68761.28245508848,
+    "mmod_hits": 5.6352358530444e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 26,
+    "group": 5
+   },
+   {
+    "start_utc": "2026-09-19T20:54:00+00:00",
+    "end_utc": "2026-09-20T02:54:00+00:00",
+    "saa_min": 25.43937173727124,
+    "fluence": 330701.41775945964,
+    "mmod_hits": 5.634942732749156e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 36,
+    "group": 6
+   },
+   {
+    "start_utc": "2026-09-19T21:04:00+00:00",
+    "end_utc": "2026-09-20T03:04:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.634912792089952e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.634979657114688e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 37,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:08:00+00:00",
-    "end_utc": "2026-09-20T03:08:00+00:00",
+    "start_utc": "2026-09-19T21:14:00+00:00",
+    "end_utc": "2026-09-20T03:14:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635078511910022e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.635247845630313e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 38,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:18:00+00:00",
-    "end_utc": "2026-09-20T03:18:00+00:00",
+    "start_utc": "2026-09-19T21:24:00+00:00",
+    "end_utc": "2026-09-20T03:24:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635338783963866e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.63540527216425e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 39,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:28:00+00:00",
-    "end_utc": "2026-09-20T03:28:00+00:00",
+    "start_utc": "2026-09-19T21:34:00+00:00",
+    "end_utc": "2026-09-20T03:34:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635403538565052e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.635366638381885e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 40,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:38:00+00:00",
-    "end_utc": "2026-09-20T03:38:00+00:00",
+    "start_utc": "2026-09-19T21:44:00+00:00",
+    "end_utc": "2026-09-20T03:44:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635348238465002e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.635368337634625e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 41,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:48:00+00:00",
-    "end_utc": "2026-09-20T03:48:00+00:00",
+    "start_utc": "2026-09-19T21:54:00+00:00",
+    "end_utc": "2026-09-20T03:54:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635418144613485e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.635519265089468e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 42,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T21:58:00+00:00",
-    "end_utc": "2026-09-20T03:58:00+00:00",
+    "start_utc": "2026-09-19T22:04:00+00:00",
+    "end_utc": "2026-09-20T04:04:00+00:00",
     "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635573219425999e-07,
+    "fluence": 338921.96513780154,
+    "mmod_hits": 5.63558036680254e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 43,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T22:08:00+00:00",
-    "end_utc": "2026-09-20T04:08:00+00:00",
-    "saa_min": 27.34545708729372,
-    "fluence": 338922.1734282968,
-    "mmod_hits": 5.635519044892711e-07,
+    "start_utc": "2026-09-19T22:14:00+00:00",
+    "end_utc": "2026-09-20T04:14:00+00:00",
+    "saa_min": 31.92073778839885,
+    "fluence": 346078.3122632516,
+    "mmod_hits": 5.635340046051275e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 44,
-    "group": 5
+    "group": 6
    },
    {
-    "start_utc": "2026-09-19T22:18:00+00:00",
-    "end_utc": "2026-09-20T04:18:00+00:00",
-    "saa_min": 35.920737788398846,
-    "fluence": 366385.2841110027,
-    "mmod_hits": 5.635192562204247e-07,
-    "coverage": "partial",
-    "conditions": [],
-    "rank": 45,
-    "group": 5
-   },
-   {
-    "start_utc": "2026-09-19T22:28:00+00:00",
-    "end_utc": "2026-09-20T04:28:00+00:00",
-    "saa_min": 45.920737788398846,
-    "fluence": 953516.4564179175,
-    "mmod_hits": 5.634926055995361e-07,
+    "start_utc": "2026-09-19T22:24:00+00:00",
+    "end_utc": "2026-09-20T04:24:00+00:00",
+    "saa_min": 41.920737788398846,
+    "fluence": 832656.6817935925,
+    "mmod_hits": 5.634999408998607e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 46,
-    "group": 6
+    "group": 7
    },
    {
-    "start_utc": "2026-09-19T22:38:00+00:00",
-    "end_utc": "2026-09-20T04:38:00+00:00",
-    "saa_min": 50.04075341441883,
-    "fluence": 973178.9173468628,
-    "mmod_hits": 5.635001697323099e-07,
+    "start_utc": "2026-09-19T22:34:00+00:00",
+    "end_utc": "2026-09-20T04:34:00+00:00",
+    "saa_min": 50.04075341441882,
+    "fluence": 973178.1717304825,
+    "mmod_hits": 5.634929959629731e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 47,
-    "group": 6
+    "group": 8
    },
    {
-    "start_utc": "2026-09-19T22:48:00+00:00",
-    "end_utc": "2026-09-20T04:48:00+00:00",
-    "saa_min": 50.04075341441883,
-    "fluence": 973178.9173468628,
-    "mmod_hits": 5.635273487455197e-07,
+    "start_utc": "2026-09-19T22:44:00+00:00",
+    "end_utc": "2026-09-20T04:44:00+00:00",
+    "saa_min": 50.04075341441882,
+    "fluence": 973178.1717304825,
+    "mmod_hits": 5.635165064390436e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 48,
-    "group": 6
+    "group": 8
    },
    {
-    "start_utc": "2026-09-19T22:58:00+00:00",
-    "end_utc": "2026-09-20T04:58:00+00:00",
-    "saa_min": 50.04075341441883,
-    "fluence": 973178.9173468628,
-    "mmod_hits": 5.63540510116319e-07,
+    "start_utc": "2026-09-19T22:54:00+00:00",
+    "end_utc": "2026-09-20T04:54:00+00:00",
+    "saa_min": 50.04075341441882,
+    "fluence": 973178.1717304825,
+    "mmod_hits": 5.635381821383891e-07,
     "coverage": "partial",
     "conditions": [],
     "rank": 49,
-    "group": 6
+    "group": 8
+   },
+   {
+    "start_utc": "2026-09-19T23:04:00+00:00",
+    "end_utc": "2026-09-20T05:04:00+00:00",
+    "saa_min": 50.04075341441882,
+    "fluence": 973178.1717304825,
+    "mmod_hits": 5.635383324766622e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 50,
+    "group": 8
+   },
+   {
+    "start_utc": "2026-09-19T23:14:00+00:00",
+    "end_utc": "2026-09-20T05:14:00+00:00",
+    "saa_min": 50.04075341441882,
+    "fluence": 973178.1717304825,
+    "mmod_hits": 5.635347154081103e-07,
+    "coverage": "partial",
+    "conditions": [],
+    "rank": 51,
+    "group": 8
    }
   ],
   "best": [
+   42,
    43,
    44,
    45,
    46,
-   47,
-   48,
-   49
+   47
   ],
   "recommended_index": null,
   "verdict": "equivalent",
-  "scope": "по учтённым факторам при покрытии модели 78…81 % окна; это сравнение рассчитанных факторов, а не заключение о полном риске ВКД; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 10:45Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
-  "why": "перебрано 73 начала с шагом 10 мин; лучших начал 7, и они равнозначны — различий сверх допуска между ними нет: любое начало с 19.09 18:08Z до 19.09 19:08Z. Сервис не выбирает одно за аналитика, потому что выбирать не по чему: начала (минут в аномалии; флюенс, част./см²): 19.09 18:08Z (4,91; 3891), 19.09 18:18Z (4,17; 2600), 19.09 18:28Z (4,17; 2600), 19.09 18:38Z (4,17; 2600) и другие. Для сравнения, наименьшие величины в группе — 4,17 мин в аномалии против 69,18 у худшего из перебранных, флюенс 2600 против 2,87·10^6 част./см²."
+  "scope": "по учтённым факторам при покрытии модели 78…81 % окна; это сравнение рассчитанных факторов, а не заключение о полном риске ВКД; протонные события в сравнение не входят — прогноза потока с разрешением по окну не существует ни у одного источника; на момент расчёта фон по наблюдению 11:00Z; наличие события внутри окна неизвестно; суточная вероятность S1 по NOAA 1 % — она СУТОЧНАЯ и в вероятность за окно не пересчитывается",
+  "why": "перебрано 73 начала с шагом 10 мин; лучших начал 6, и они равнозначны — различий сверх допуска между ними нет: любое начало с 19.09 18:14Z до 19.09 19:04Z. Сервис не выбирает одно за аналитика, потому что выбирать не по чему: начала (минут в аномалии; флюенс, част./см²): 19.09 18:14Z (4,17; 2600), 19.09 18:24Z (4,17; 2600), 19.09 18:34Z (4,17; 2600), 19.09 18:44Z (4,17; 2600) и другие. Для сравнения, наименьшие величины в группе — 4,17 мин в аномалии против 69,18 у худшего из перебранных, флюенс 2600 против 2,87·10^6 част./см².",
+  "answer_kind": "interval",
+  "answer_span": [
+   "2026-09-19T18:14:00+00:00",
+   "2026-09-19T19:04:00+00:00"
+  ]
  },
- "git_commit": "c52b1e072bc2a7adb2c86725ffbf27cddf2e1a60"
+ "git_commit": "6b7ea0ef7c2c585f67a1673acefc4b06e31600dc"
 }

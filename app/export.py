@@ -240,6 +240,20 @@ SCAN_VERDICT_RU = {
 SCAN_TABLE_ROWS = 5
 
 
+def _scan_answer_md(sc: dict) -> str:
+    """Вид ответа словами. Отчёт читают отдельно от экрана, и «когда выходить» должно стоять
+    в нём прямой строкой, а не выводиться читателем из таблицы лучших."""
+    kind, span = sc.get('answer_kind'), sc.get('answer_span')
+    if kind == 'point' and span:
+        return '**Когда выходить:** начало %s UTC.' % _dt(span[0])
+    if kind == 'interval' and span:
+        return '**Когда выходить:** любое начало в промежутке %s — %s UTC.' % (_dt(span[0]), _span_end(span[0], span[1]))
+    if kind == 'tradeoff':
+        return ('**Когда выходить:** единого ответа нет — минуты в аномалии и флюенс указывают на '
+                'разные начала сверх допуска, выбор за аналитиком.')
+    return '**Когда выходить:** сервис не называет начало — см. вердикт и условия выше.'
+
+
 def _scan_md(S: dict) -> list:
     """Перебор начал выхода в отчёте (ТЗ круга 11, раздел 1a: ключ `scan` попадает в выгрузку).
 
@@ -256,6 +270,7 @@ def _scan_md(S: dict) -> list:
          % (fmt(sc['n_candidates']), fmt(sc['step_min']), _dt(sc['search_from_utc']),
             _dt(sc['search_to_utc']), fmt(sc['requested_duration_min'])),
          # точка не удваивается: текст «почему» — законченные предложения и свою уже несёт
+         '', _scan_answer_md(sc),
          '', 'Почему: %s' % phrase_ru(sc['why']).rstrip('.') + '.',
          '', 'Правило ранжирования: %s' % phrase_ru(sc['rule']),
          # Заголовок строки отличается от строки допуска у сравнения окон намеренно: величины в
