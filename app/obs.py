@@ -90,17 +90,22 @@ def observations_figure(tg, vg, tk, vk, t0: datetime, goes_title: str, kp_title:
     return fig
 
 
-def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.Figure]:
-    """Прогнозы NOAA из выпусков до отсечки: Kp по 3-часовым интервалам (столбцы), суточные
-    вероятности S1+ и протонного события (ступени). Исходное разрешение сохраняется."""
+def forecast_panel(lines: list, t0: datetime, horizon_min: int,
+                   kp_title: str = 'Прогноз Kp NOAA по 3-часовым интервалам',
+                   mark_ru: str = 'отсечка') -> Optional[go.Figure]:
+    """Прогнозы NOAA: Kp по 3-часовым интервалам (столбцы), суточные вероятности S1+ и протонного
+    события (ступени). Исходное разрешение сохраняется.
+
+    Заголовок и подпись вертикальной черты задаёт вызывающий код: отсечка есть только в режиме
+    «Прогноз из прошлого», и постоянная подпись «(выпуск до отсечки)» в разборе и в текущем режиме
+    называла отсечкой то, чего в них нет (О2)."""
     by = {l['channel']: l for l in lines}
     kp = by.get('kp_forecast', {}).get('cells', [])
     probs = [(by.get(c, {}), name) for c, name in (('s1_prob_daily', 'S1+ за сутки, %'), ('proton_prob_daily', 'протонное событие за сутки, %'))]
     if not kp and not any(p[0].get('cells') for p in probs):
         return None
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                        subplot_titles=('Прогноз Kp NOAA по 3-часовым интервалам (выпуск до отсечки)',
-                                        'Суточные вероятности NOAA, %'))
+                        subplot_titles=(kp_title, 'Суточные вероятности NOAA, %'))
     if kp:
         x = [datetime.fromisoformat(c['from']) + (datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])) / 2 for c in kp]
         w = [(datetime.fromisoformat(c['to']) - datetime.fromisoformat(c['from'])).total_seconds() * 1000 * 0.9 for c in kp]
@@ -119,7 +124,7 @@ def forecast_panel(lines: list, t0: datetime, horizon_min: int) -> Optional[go.F
             fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name,
                                      line=dict(width=2, color=AMBER, dash=None if 'S1' in name else 'dot')), row=2, col=1)
     fig.add_vline(x=int(t0.timestamp() * 1000), line_dash='dash', line_color='#1f4e79')
-    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text='отсечка', showarrow=False, xanchor='right', yanchor='bottom',
+    fig.add_annotation(x=t0, y=1.0, xref='x', yref='paper', text=mark_ru, showarrow=False, xanchor='right', yanchor='bottom',
                        font=dict(size=10, color='#1f4e79'))
     fig.add_vrect(x0=t0, x1=t0 + timedelta(minutes=horizon_min), fillcolor='steelblue', opacity=0.06, line_width=0)
     fig.add_annotation(x=t0 + timedelta(minutes=horizon_min / 2), y=1.0, xref='x', yref='paper', text='горизонт окон', showarrow=False,

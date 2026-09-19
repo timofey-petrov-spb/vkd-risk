@@ -536,16 +536,37 @@ def test_reestr_istochnikov_s_edinitsami_i_licenziey():
     assert any('не указана' in str(r['лицензия']) for r in reg), 'незаписанная лицензия объявляется, а не додумывается'
 
 
+def table_text(at: AppTest, skip_ids: set | None = None) -> str:
+    """Содержимое всех таблиц экрана одной строкой.
+
+    Без этого проверки были слепы к st.dataframe — а именно там, в таблице 3 «Состояние
+    источников», на оперативном уровне лежал 64-значный хеш выпуска и подпись «архив выпусков»
+    для живого запроса. Две находки третьего круга дожили до жюри ровно поэтому."""
+    skip_ids = skip_ids or set()
+    out = []
+    for d in at.dataframe:
+        if id(d) in skip_ids:
+            continue
+        v = d.value
+        try:
+            out.append(v.to_csv(index=False))
+        except AttributeError:
+            out.append(str(v))
+    return '\n'.join(out)
+
+
 def _body_bez_metodiki(at: AppTest) -> str:
     """Весь текст экрана, кроме вкладки «Методика»: в ней символы формул и библиографические
-    ссылки стоят законно, а во всём остальном голых идентификаторов быть не должно."""
+    ссылки стоят законно, а во всём остальном голых идентификаторов быть не должно.
+    Содержимое таблиц входит в тело наравне с подписями — зритель читает его так же."""
     skip = set()
     for tab in at.tabs:
         if tab.label == 'Методика':
-            skip = {id(e) for e in list(tab.get('markdown')) + list(tab.get('caption'))}
+            skip = {id(e) for e in list(tab.get('markdown')) + list(tab.get('caption')) + list(tab.get('dataframe'))}
     parts = [e.value for e in at.markdown if id(e) not in skip] \
         + [e.value for e in at.caption if id(e) not in skip] \
-        + [e.value for e in at.warning] + [e.value for e in at.info] + [str(e.label) for e in at.expander]
+        + [e.value for e in at.warning] + [e.value for e in at.info] + [str(e.label) for e in at.expander] \
+        + [table_text(at, skip)]
     body = '\n'.join(str(p) for p in parts)
     body = re.sub(r'<style>.*?</style>', '', body, flags=re.S)         # CSS — не текст экрана
     body = re.sub(r'\sclass="[^"]*"', '', body)                        # имена классов зритель не видит
@@ -737,3 +758,217 @@ def test_pribornaya_polosa_razbora_pokazyvaet_nablyudenie_goes():
     assert not at.exception, at.exception
     bar = next(m.value for m in at.markdown if 'class="panel"' in m.value)
     assert 'GOES ≥10 МэВ, pfu' in bar and 'Kp (архив GFZ)' in bar, bar
+
+
+# ================================================================= О4: путь к первоисточнику
+def test_record_url_ishchet_adres_vo_vseh_polyah():
+    """О4: адрес записи ищется в одном месте и во всех полях, где его кладут слои источников.
+    Слой A2/A4 кладёт адрес в metadata.url — раньше экран туда не смотрел и печатал «ссылки нет»."""
+    from app.ui import record_url
+    assert record_url({'url': 'https://a'}) == 'https://a'
+    assert record_url({'link': 'https://b'}) == 'https://b'
+    assert record_url({'messageURL': 'https://c'}) == 'https://c'
+    assert record_url({'metadata': {'url': 'https://d'}}) == 'https://d'
+    assert record_url({'url': 'https://a', 'metadata': {'url': 'https://d'}}) == 'https://a'   # порядок полей
+    assert record_url({'metadata': {}}) is None
+    assert record_url({'url': '   '}) is None
+    assert record_url(None) is None and record_url('строка') is None
+
+
+def test_raw_record_nahodit_zapis_s_tipom_sobytiya():
+    """Идентификатор карточки несёт тип события («…:CME_ARRIVAL»), а сырая запись лежит без него."""
+    from app.ui import raw_record
+    store = {'nasa_donki_notification:20240508-AL-012:00f5': {'metadata': {'url': 'https://kauai/1'}}}
+    assert raw_record(store, 'nasa_donki_notification:20240508-AL-012:00f5:CME_ARRIVAL') is not None
+    assert raw_record(store, 'nasa_donki_notification:20240508-AL-012:00f5')['metadata']['url'] == 'https://kauai/1'
+    assert raw_record(store, 'nasa_donki_notification:20240509-AL-001:beef') is None
+    assert raw_record({}, 'x') is None and raw_record(None, 'x') is None
+
+
+def test_gannon_kartochka_usloviya_vedyot_na_pervoistochnik():
+    """О4, шаг жюри «от предупреждения к первоисточнику»: в карточке условия окна 2 на пресете
+    «Буря Гэннон» стоит ссылка вида https:// на сообщение DONKI, а не «записей без ссылки»."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert not at.exception, at.exception
+    at.radio('cards_win').set_value(at.radio('cards_win').options[1]).run()      # окно 2
+    assert not at.exception, at.exception
+    links = [m.value for m in at.markdown if m.value.startswith('**Первоисточник:**')]
+    assert links, 'карточки объяснений должны называть первоисточник'
+    storm = [x for x in links if 'https://' in x]
+    assert storm, links
+    assert any('kauai.ccmc.gsfc.nasa.gov' in x for x in storm), storm
+    # формулировки «записей без ссылки» на экране больше нет: у записи без адреса сказано, где она
+    assert not any('записей без ссылки' in x for x in links), links
+
+
+def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik():
+    """О4 в режиме «Сейчас»: хотя бы одна ссылка на первоисточник NOAA на экране есть."""
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    body = texts(at)
+    assert 'https://' in body, 'в текущем режиме на экране не было ни одной ссылки'
+    assert 'services.swpc.noaa.gov' in body, body[:400]
+
+
+# ================================================================= R4: очередь четвёртого круга
+def test_sdvigi_okon_perezhivayut_smenu_perioda_poiska():
+    """R4-1: смена периода поиска меняет max_value ползунков, и Streamlit теряет их значения.
+    Сдвиги держатся в невиджетном ключе состояния и переживают и сжатие, и расширение периода."""
+    at = run_app(MODES[1])
+    at.sidebar.slider('search').set_value(1440).run()
+    at.sidebar.slider('w0').set_value(120).run()
+    at.sidebar.slider('w1').set_value(360).run()
+    for period in (720, 360, 1440):
+        at.sidebar.slider('search').set_value(period).run()
+        assert not at.exception, at.exception
+        assert at.sidebar.slider('w0').value == 120, (period, at.sidebar.slider('w0').value)
+        assert at.sidebar.slider('w1').value == 360, (period, at.sidebar.slider('w1').value)
+    assert any('class="verdict' in m.value for m in at.markdown)
+
+
+def test_granica_arhiva_i_verdikt_ne_protivorechat():
+    """R4-2: предупреждение о границе архива включается по фактическим окнам, а не по всему
+    периоду поиска — иначе сверху «рекомендации не будет», а ниже предпочтительное окно."""
+    at = run_app(MODES[2])
+    at.sidebar.date_input('hist_date').set_value(datetime(2024, 6, 30).date()).run()
+    at.sidebar.slider('hist_hour').set_value(12).run()
+    at.sidebar.slider('search').set_value(1440).run()
+    at.sidebar.slider('w0').set_value(0).run()
+    at.sidebar.slider('w1').set_value(120).run()
+    assert not at.exception, at.exception
+    warn = '\n'.join(w.value for w in at.warning)
+    assert 'за границей архива' not in warn, warn
+    assert any('class="verdict' in m.value for m in at.markdown)
+    at.sidebar.slider('w1').set_value(780).run()          # последнее окно уходит за 01.07.2024
+    assert not at.exception, at.exception
+    warn = '\n'.join(w.value for w in at.warning)
+    assert 'за границей архива' in warn, warn
+    verdict = next(m.value for m in at.markdown if 'class="verdict' in m.value)
+    assert 'Оснований для рекомендации недостаточно' in verdict, verdict
+
+
+def test_vremya_publikacii_ne_vyrezaetsya_iz_istochnika():
+    """R4-4: чистка источника режет перечень идентификаторов записей, но не время публикации."""
+    keep = status_ru('NASA DONKI, записи: публикация 05-09 13:54Z — 05-10 14:19Z')
+    assert 'публикация 09.05 13:54 — 10.05 14:19' in keep, keep
+    cut = status_ru('NASA DONKI, записи: nasa_donki_notification:20240509-AL-002:9f24c0f733af; покрытие полное')
+    assert 'nasa_donki_notification' not in cut, cut
+    assert 'покрытие полное' in cut, cut
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_panel_verdikta_bez_desyatichnoy_tochki(mode):
+    """R4-6: текст правила и причин в панели вердикта проходит через frac_ru — в самой заметной
+    строке экрана не должно быть десятичной точки."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    panel_html = [m.value for m in at.markdown if 'class="verdict' in m.value]
+    assert panel_html, 'панель вердикта должна быть на экране'
+    body = re.sub(r'<[^>]+>', ' ', panel_html[0])
+    # дата «10.05 13:35» — не дробь: за ней идёт время, а не единица или скобка
+    bad = [m.group(0) for m in re.finditer(r'(?<![\d.A-Za-z])\d+\.\d+(?=\s*(?:[А-Яа-я%·)(\],;]|$))', body)]
+    assert not bad, bad
+    assert 'разброс минут в аномалии на сетке' not in body, body
+
+
+def test_vkladka_ustoychivosti_pokazyvaet_polzu_sravneniem():
+    """R4-9 (О7): на вкладке устойчивости одна строка сравнивает ответ без сетки и допуска с
+    итоговым — польза дополнительной функции показана, а не заявлена."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    at.sidebar.radio('level').set_value('Профессиональный').run()
+    assert not at.exception, at.exception
+    body = texts(at)
+    line = [l for l in re.findall(r'<div class="small">([^<]*)</div>', body) if l.startswith('Что даёт проверка на сетке')]
+    assert line, 'строки сравнения с простым подходом нет'
+    assert 'нулевой допуск' in line[0] and 'вердикт —' in line[0], line[0]
+
+
+def test_dopusk_ne_nazyvaetsya_razbrosom_absolyutnyh_minut():
+    """О3/§2 передачи дел: допуском не может быть разброс абсолютных минут одного окна."""
+    from app.ui import rule_ru
+    out = rule_ru('п.5: окно 1 (03:38Z), окно 2 (07:38Z) равнозначны — разница минут и флюенса внутри допуска (36 мин, ×1.50)')
+    assert 'разброс разности минут между двумя лучшими окнами' in out, out
+    assert 'разброс минут в аномалии' not in out, out
+
+
+def test_pravilo_shagov_3_4_nazyvaet_obe_velichiny():
+    """Правило шагов 3–4 печатает вычисленный текст: и минуты в аномалии, и флюенс.
+    Заготовка называла только минуты, и выбор окна с бо́льшим флюенсом оставался без объяснения."""
+    from app.ui import rule_ru
+    out = rule_ru('п.3–4: окно 2 (20:00Z) лучше по космопогоде (на 21 мин меньше в аномалии), '
+                  'не хуже по флюенсу и минутам, линия метеороидов не противоречит')
+    assert 'минут' in out and 'флюенс' in out, out
+    assert out.startswith('шаги 3–4 из 5')
+
+
+def test_plashka_ustoychivosti_razlichaet_prichinu_otsutstviya_vybora():
+    """Без предпочтительного окна причина называется вердиктом: условия у всех окон — одно,
+    равнозначность — другое. «Без автовыбора» читалось как «окна заблокированы условиями»."""
+    from app.ui import robustness_pill
+    rob = {'preferred_by_grid': {(1, 1): None, (2, 2): None}, 'stable': True}
+    need = robustness_pill(SimpleNamespace(preferred=None, verdict='all_need_check'), rob)
+    equiv = robustness_pill(SimpleNamespace(preferred=None, verdict='equivalent'), rob)
+    assert 'у каждого окна условие' in need, need
+    assert 'остаются равнозначными' in equiv, equiv
+    assert 'без автовыбора' not in need and 'без автовыбора' not in equiv
+
+
+def test_nablyudenie_ne_pokryvayushchee_okno_daet_procherk():
+    """О2: измерение, горизонт которого не покрывает окно ни на одну минуту, характеристикой
+    этого окна не является — в карточке и в таблице стоит прочерк, а не число прошлого замера."""
+    from app.ui import factor_value_ru, obs_share_pct
+    covered = SimpleNamespace(value=0.22, limits_note='наблюдение 03:15Z; горизонт наблюдения до 04:15Z покрывает 13 % окна')
+    empty = SimpleNamespace(value=0.22, limits_note='наблюдение 03:15Z; горизонт наблюдения до 04:15Z покрывает 0 % окна')
+    plain = SimpleNamespace(value=51.0, limits_note='шаг трассы 1 мин')
+    assert obs_share_pct(covered) == 13 and obs_share_pct(empty) == 0 and obs_share_pct(plain) is None
+    assert factor_value_ru(covered) == '0,22'
+    assert factor_value_ru(empty) == '—'
+    assert factor_value_ru(plain, 'мин') == '51 мин'
+    assert factor_value_ru(None) == '—'
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_tekushchiy_rezhim_ne_nazyvaet_zhivoy_vypusk_arhivom(mode):
+    """О2: происхождение выпуска берётся из режима. В «Сейчас» отсечки нет вовсе, и подписи
+    «выпуск до отсечки» / «архив выпусков» у живого бюллетеня были неправдой."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    if mode == MODES[0]:
+        assert 'до отсечк' not in body, body[:600]
+        assert 'архив выпусков' not in body
+        assert 'живой выпуск' in body or 'живой бюллетень' in body
+    elif mode == MODES[1]:
+        assert 'выпуск из архива' in body, 'в разборе отсечки нет — выпуск из архива'
+
+
+# ================================================================= выгрузка говорит словами экрана
+@pytest.mark.parametrize('mode_id, args', [
+    ('live', ()),
+    ('history_review', (datetime(2024, 5, 10, 12, tzinfo=timezone.utc),)),
+    ('history_forecast', (datetime(2024, 5, 10, 12, tzinfo=timezone.utc),)),
+])
+def test_otchyot_govorit_slovami_ekrana(mode_id, args):
+    """Отчёт и экран строятся из одного снимка и должны говорить одним языком: русские имена
+    источников, русский вердикт, надстрочные степени, числа как на экране."""
+    from app.compute import run
+    from app.export import report_md
+    t0 = args[0] if args else datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    r = run(mode_id, t0, 360, 720, [0, 240])
+    md = report_md(r.S, r.raw_records)
+    assert '10^' not in md and 'e+' not in md
+    table = [l for l in md.split('\n') if l.startswith('| ')]
+    assert table, 'таблица источников должна быть в отчёте'
+    for line in table:
+        bad = re.findall(r'(?<![\w/.:-])[a-z][a-z0-9]*_[a-z0-9_]+', line)
+        assert not bad, (line, bad)
+    for code in ('all_need_check', 'preferred', 'equivalent', 'declared_reconstruction', 'own_calculation'):
+        assert '(%s)' % code not in md, code
+    assert 'строгость: %s' % ('строгая' if r.S['trajectory_meta'].get('strictness') == 'strict'
+                              else 'объявленная реконструкция') in md or 'строгость: недоступна' in md
+    if mode_id == 'live':
+        assert 'до отсечк' not in md, [l for l in md.split('\n') if 'отсечк' in l]

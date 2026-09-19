@@ -128,6 +128,13 @@ VERDICT_TITLE = {
     'all_need_check': 'Все окна требуют проверки аналитиком',
     'insufficient': 'Оснований для рекомендации недостаточно',
 }
+# Почему на всей сетке порогов нет предпочтительного окна — по вердикту, а не одной фразой на все случаи
+NO_PICK_ON_GRID_RU = {
+    'all_need_check': 'на всей сетке порогов автоматический выбор не делается: у каждого окна условие',
+    'equivalent': 'на всей сетке порогов окна остаются равнозначными',
+    'trade_off': 'на всей сетке порогов механизмы указывают на разные окна',
+    'insufficient': 'на всей сетке порогов оснований для рекомендации недостаточно',
+}
 COV_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'нет'}
 # покрытие — свойство нашего расчёта, а не «хорошо/плохо»: полное синим, частичное янтарём, нет — серым
 COV_KIND = {'full': 'calc', 'partial': 'warn', 'none': 'none'}
@@ -151,9 +158,13 @@ SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
              'noaa_swpc_3day_forecast': 'трёхсуточный бюллетень NOAA SWPC (живой выпуск)',
              'donki_archive': 'архив DONKI: события, уведомления, прогоны ENLIL',
-             'noaa_forecast_kp_forecast': 'прогноз Kp NOAA (выпуск до отсечки)',
+             'noaa_forecast_kp_forecast': 'прогноз Kp NOAA',
              'noaa_forecast_s1_prob_daily': 'прогноз NOAA: вероятность S1+ за сутки',
              'noaa_forecast_proton_prob_daily': 'прогноз NOAA: вероятность протонного события за сутки'}
+# Откуда взят выпуск внешнего прогноза — свойство режима, а не источника: в текущем режиме отсечки
+# нет вовсе, и подпись «выпуск до отсечки» у живого бюллетеня была неправдой (О2).
+RELEASE_BY_MODE_RU = {'live': 'живой выпуск', 'history_forecast': 'выпуск до отсечки',
+                      'history_review': 'выпуск из архива'}
 # Ограничения модуля орбиты (A3) — перевод по точному совпадению; неизвестная строка выводится
 # как есть с пометкой «текст модуля орбиты».
 LIMIT_RU = {
@@ -200,6 +211,51 @@ def esc(s) -> str:
     return html.escape(str(s), quote=False)
 
 
+def raw_record(raw_records: dict | None, rid: str):
+    """Сырая запись по идентификатору карточки.
+
+    Идентификатор записи — «источник:выпуск:хеш[:тип события]». Слой истории (A2) добавляет тип
+    к идентификатору в карточке («…:CME_ARRIVAL»), а в раздел сырых записей та же запись попадает
+    без него: поиск в лоб её не находил, и карточка условия печатала «записей без ссылки» там, где
+    у записи есть и адрес, и тело. Ищем точное совпадение, затем отбрасываем последние поля.
+    """
+    if not raw_records or not rid:
+        return None
+    rec = raw_records.get(rid)
+    if rec is not None:
+        return rec
+    parts = str(rid).split(':')
+    while len(parts) > 2:
+        parts = parts[:-1]
+        rec = raw_records.get(':'.join(parts))
+        if rec is not None:
+            return rec
+    return None
+
+
+def record_url(rec) -> str | None:
+    """Адрес первоисточника одной сырой записи — единственное место, где он ищется (О4).
+
+    Слои источников кладут адрес по-разному: живые записи A4 и уведомления DONKI — в
+    `metadata.url`, архивные выпуски NOAA — в `url` верхнего уровня, сообщения DONKI старого
+    разбора — в `messageURL`. Экран и выгрузка спрашивают адрес только здесь, иначе «ссылки нет»
+    печатается там, где ссылка есть (найдено третьим кругом: карточка условия окна 2 на Гэннон).
+    Порядок проверки: url → link → messageURL → metadata.url.
+    """
+    if not isinstance(rec, dict):
+        return None
+    for key in ('url', 'link', 'messageURL'):
+        v = rec.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    md = rec.get('metadata')
+    if isinstance(md, dict):
+        v = md.get('url')
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return None
+
+
 def pill(text, kind='none') -> str:
     return '<span class="pill pill-%s">%s</span>' % (kind, esc(text))
 
@@ -208,8 +264,12 @@ _SUP = {'0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6'
         '-': '⁻', '+': ''}
 _POW_RE = re.compile(r'10\^([+-]?\d+)')
 _EXP_RE = re.compile(r'(?<![\w.])(\d+(?:[.,]\d+)?)[eE]([+-]?\d+)(?![\w])')
-# дробь с точкой, но не дата (01.05.2024), не «10.05 12:00» и не номер версии (v3.1)
-_FRAC_RE = re.compile(r'(?<![\d.A-Za-zА-Яа-я])(\d+)\.(\d+)(?=\s*(?:[А-Яа-я%·)\],;]|$))')
+# дробь с точкой, но не дата (01.05.2024), не «10.05 12:00» и не номер версии (v3.1).
+# Перечисление через дробную черту («канал 12.5/30/50 МэВ» в основании допуска) тоже число,
+# а не дата: следом за ним стоит другое число, а не буква месяца.
+# Скобка после числа тоже конец числа («Kp до 8.67 (наблюдённый Kp уведомления)»): даты в готовых
+# строках модулей на этот момент ещё в виде «05-10 15:00Z» — точек в них нет, их ставит dates_ru позже.
+_FRAC_RE = re.compile(r'(?<![\d.A-Za-zА-Яа-я])(\d+)\.(\d+)(?=\s*(?:[А-Яа-я%·)(\],;]|/\d|$))')
 
 
 def sup(text) -> str:
@@ -331,13 +391,22 @@ def panel(rows) -> str:
 
 
 def rule_ru(rule_applied: str) -> str:
-    """«п.5: разница 48 мин меньше допуска 49 мин» → «шаг 5 из 5, допуск равнозначности: разница …»."""
+    """«п.5: разница 48 мин меньше допуска 49 мин» → «шаг 5 из 5, допуск равнозначности: разница …».
+
+    Для шагов 3–4 и 5 печатается ВЫЧИСЛЕННОЕ правило, а не заготовленная фраза: заготовка на шаге
+    3–4 называла только минуты в аномалии и умалчивала о флюенсе — целевой величине сравнения окон,
+    которая у выбранного окна может быть выше (найдено третьим кругом на пресете «Тихая дата»).
+    Основание допуска на шаге 5 — разброс РАЗНОСТИ минут между двумя лучшими окнами (формула (9)),
+    а не разброс абсолютных минут одного окна: порог сдвигает оба окна синфазно.
+    """
     for prefix, text in RULE_RU:
         if rule_applied.startswith(prefix):
+            tail = rule_applied.partition(': ')[2].strip()
             if prefix == 'п.5':
-                return text + ' — ' + rule_applied.partition(': ')[2] + ' (разброс минут в аномалии на сетке порогов); окна неразличимы'
-            if prefix == 'п.3–4' and 'частичное' in rule_applied:
-                return text + '; покрытие частичное — объявлено'
+                return text + (': ' + tail if tail else '') + \
+                    '; допуск — разброс разности минут между двумя лучшими окнами по сетке порогов'
+            if prefix == 'п.3–4':
+                return 'шаги 3–4 из 5, сравнение и сведение: ' + tail if tail else text
             return text
     return rule_applied
 
@@ -373,10 +442,15 @@ _MODULE_BARE_RE = re.compile(r'(?:vkd|experiments|app|scripts|tests)\.[\w.]+')
 _HASH_RE = re.compile(r'[;,]?\s*(?:sha256|SHA-256)\s+[0-9a-fA-F]+…?', re.I)
 _FILE_RE = re.compile(r'[;,]?\s*файл\s+[^\s;,]+')
 _RECORD_RE = re.compile(r'[;,]?\s*запис[ьи]\s+(?=[A-Za-z0-9])[\w:#.\-]*')   # «запись donki_msg#…», не «записи не указан»
-_RECORDS_TAIL_RE = re.compile(r'[;,]?\s*запис[ьи]:\s.*$', re.S)     # перечень записей — ниже, ссылками
+# Перечень идентификаторов записей режется, содержательный текст после «записи:» — нет (R4-4):
+# у условия по протонному событию источник звучит «записи: публикация 05-09 13:54Z — 05-10 14:19Z»,
+# и прежнее выражение выносило с экрана ровно то время публикации, за которое даются баллы по О4.
+_RECORDS_TAIL_RE = re.compile(r'[;,]?\s*запис[ьи]:\s+(?=[A-Za-z][\w.\-]*[:#])[^;]*', re.S)
 _SRCID_RE = re.compile(r'\s*\([a-z][a-z0-9]*_[a-z0-9_]+\)')          # (celestrak_gp), (nasa_jsc_oem)
 _CONTRACT_RE = re.compile(r'CONTRACT\.md(\s+v[\d.]+)?')
-_RELEASE_RE = re.compile(r'выпуск\s+[\w\-]*[A-Za-z][\w\-]*\s+от\b')
+# идентификатор выпуска может содержать двоеточие («noaa_swpc_3day_forecast:fa0f21a1…» у живого
+# слоя A4) — без него на оперативном уровне печатался 64-значный хеш
+_RELEASE_RE = re.compile(r'выпуск\s+[\w:\-]*[A-Za-z][\w:\-]*\s+от\b')
 _CHECK_RE = re.compile(r'[;,]?\s*контроль\s+[^;]+воспроизведён')
 # обороты слоёв программы, которым на оперативном уровне нужен русский (U2)
 PHRASE_RU = [('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
@@ -393,6 +467,16 @@ PHRASE_RU = [('интеграл по dt', 'интеграл по времени'
              ('работа A3', 'работа модуля орбиты')]
 _INNER_ID_RE = re.compile(r',\s*[a-z][a-z0-9]*(?:[-_][a-z0-9]+)+(?=\))')
 _CLEAN_RE = re.compile(r'\s{2,}')
+
+
+def phrase_ru(text) -> str:
+    """Обороты слоёв программы по-русски без удаления происхождения: имена настроек и модулей
+    переводятся, хеши, файлы и идентификаторы записей остаются. Нужно выгрузке: отчёт должен
+    говорить словами экрана, но не терять прослеживаемость (в отличие от status_ru)."""
+    s = frac_ru(str(text or ''))
+    for a, b in PHRASE_RU:
+        s = s.replace(a, b)
+    return s
 
 
 def net_error_ru(name: str) -> str:
@@ -565,12 +649,33 @@ def verdict_reasons(rec, assessments, mech_ru: dict | None = None, max_items: in
     return out, 0
 
 
+_MMOD_ROLE_RU = 'роль линии: абсолютная оценка и охват, не выбор окна'
+
+
+def bullet_short_ru(text: str) -> str:
+    """Короткая форма причины для оперативного уровня (бриф экрана §9.1: две-три величины).
+
+    Сокращается только пояснение про линию метеороидов: полностью оно повторяется во вкладке
+    «Методика», формула (6), и в карточке окна. Сравнение по космопогоде не трогается — в нём
+    стоят обе величины обоих окон, ради которых блок «Почему?» и существует."""
+    s = str(text or '')
+    if 'линия метеороидов' not in s and 'линии метеороидов' not in s:
+        return s
+    head_ = s.split(';')[0].strip().rstrip('.')
+    head_ = re.sub(r'\s*\(([^()]*?)\s+меньше\s+[\d.,]+\s*%\)', r' (\1)', head_)
+    return head_ + ' — ' + _MMOD_ROLE_RU
+
+
 def robustness_pill(rec, rob: dict) -> str:
-    """О7: «устойчив» печатается только когда выбор есть (DEMO-17)."""
+    """О7: «устойчив» печатается только когда выбор есть (DEMO-17).
+
+    Когда автоматического выбора нет ни в одной ячейке сетки, причина называется словами вердикта:
+    «без автовыбора» читалось как «окна заблокированы условиями» и там, где условий нет вовсе,
+    а окна просто равнозначны (найдено третьим кругом в режиме «Сейчас»)."""
     grid = rob.get('preferred_by_grid') or {}
     vals = set(grid.values())
     if rec.preferred is None and grid and vals == {None}:
-        return pill('сетка порогов исход не меняет: везде без автовыбора', 'none')
+        return pill(NO_PICK_ON_GRID_RU.get(rec.verdict, 'на всей сетке порогов предпочтительного окна нет'), 'none')
     if rob.get('stable'):
         return pill('выбор устойчив на сетке порогов' if rec.preferred is not None else 'ранжирование устойчиво на сетке порогов', 'ok')
     return pill('выбор меняется на сетке порогов' if rec.preferred is not None else 'ранжирование меняется на сетке порогов', 'warn')
@@ -588,6 +693,8 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
     bullets, more = verdict_reasons(rec, assessments)
+    if not pro:
+        bullets = [bullet_short_ru(b) for b in bullets]
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
     bullets += ['Чего не хватает: ' + x for x in missing]
     if bullets:
@@ -654,6 +761,30 @@ def drop_age(text) -> str:
     return _CLEAN_RE.sub(' ', _AGE_CLAUSE_RE.sub('', str(text or ''))).strip().rstrip(' ;,')
 
 
+_OBS_SHARE_RE = re.compile(r'горизонт наблюдения[^;]*покрывает (\d+) % окна')
+
+
+def obs_share_pct(f) -> int | None:
+    """Какую долю окна покрывает горизонт наблюдения этого фактора — из записи слоя расчёта.
+    None — фактор не наблюдение или доля в записи не указана."""
+    m = _OBS_SHARE_RE.search(str(getattr(f, 'limits_note', '') or ''))
+    return int(m.group(1)) if m else None
+
+
+def factor_value_ru(f, unit: str = '') -> str:
+    """Значение фактора для карточки окна и таблицы сравнения.
+
+    Наблюдение, горизонт которого не покрывает окно ни на одну минуту, характеристикой этого
+    окна не является: печатается прочерк, а само измерение со своим временем остаётся в полосе
+    состояния и в карточке объяснения (О2). Иначе прошлое измерение выдавалось за величину
+    будущего окна, и карточка противоречила вердикту на одном экране (найдено третьим кругом)."""
+    if f is None:
+        return '—'
+    if obs_share_pct(f) == 0:
+        return '—'
+    return fmt(getattr(f, 'value', None), unit)
+
+
 def _cov_reason(f) -> str | None:
     """Причина неполного покрытия одного фактора — одной фразой для карточки окна (DEMO-11).
     Давность из неё убрана (она только в приборной полосе), даты приведены к виду экрана."""
@@ -663,6 +794,11 @@ def _cov_reason(f) -> str | None:
     if name.startswith('флюенс') and m:
         return 'флюенс: модель ОСТ есть для %s %% точек трассы' % m.group(1)
     if name.startswith('поток протонов GOES'):
+        share = obs_share_pct(f)
+        if share == 0:
+            m0 = re.search(r'наблюдение\s+([\d.:\s]+)', note)
+            return 'GOES: наблюдение%s не покрывает окно — значение окна не определено' \
+                % ((' ' + m0.group(1).strip()) if m0 else '')
         if 'наблюдений GOES нет' in note and 'DONKI о протонных' in note:
             return 'GOES: наблюдений за 2024 нет, канал по датированным уведомлениям DONKI'
         if 'наблюдений GOES нет' in note and 'каталог' in note:
@@ -721,13 +857,13 @@ def window_card(i: int, a, best: bool, mode: str, saa_thr_nT: float | None = Non
     goes = f.get('поток протонов GOES ≥10 МэВ')
     kpf = f.get('прогноз Kp NOAA, максимум в окне')
     # единица — в подписи строки, в ячейке только число (PROPOSAL_A п. 2.2, правило 4)
-    rows = [('минут в аномалии, мин', fmt(saa.value if saa else None), True),
-            (fluence_label(flu), fmt(flu.value if flu else None), False),
-            ('метеороиды, попаданий на 1 м²', fmt(mm.value if mm else None), False)]
+    rows = [('минут в аномалии, мин', factor_value_ru(saa), True),
+            (fluence_label(flu), factor_value_ru(flu), False),
+            ('метеороиды, попаданий на 1 м²', factor_value_ru(mm), False)]
     if mode == 'live':
-        rows.append(('GOES ≥10 МэВ, pfu', fmt(goes.value if goes else None), False))
+        rows.append(('GOES ≥10 МэВ, pfu', factor_value_ru(goes), False))
     else:
-        rows.append(('прогноз Kp NOAA, макс. в окне', fmt(kpf.value if kpf else None), False))
+        rows.append(('прогноз Kp NOAA, макс. в окне', factor_value_ru(kpf), False))
     kv = ''.join('<div class="k">%s</div><div class="v%s">%s</div>' % (esc(k), ' big' if big else '', esc(v)) for k, v, big in rows)
     conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(screen_text(_short_reason(r))))
                     for r in reasons[:4])
@@ -776,8 +912,13 @@ def event_kind_ru(k: str) -> str:
     return EVENT_KIND_RU.get((k or '').upper(), k)
 
 
-def source_name_ru(sid: str) -> str:
-    return SOURCE_RU.get(sid, sid)
+def source_name_ru(sid: str, mode: str | None = None) -> str:
+    """Имя источника для экрана и выгрузки. Для выпусков внешнего прогноза NOAA к имени
+    добавляется происхождение выпуска по режиму: живой выпуск / до отсечки / из архива."""
+    name = SOURCE_RU.get(sid, sid)
+    if sid == 'noaa_forecast_kp_forecast' and mode in RELEASE_BY_MODE_RU:
+        return '%s (%s)' % (name, RELEASE_BY_MODE_RU[mode])
+    return name
 
 
 def tle_origin(tle_fetch_status: str | None) -> str:
@@ -839,7 +980,7 @@ METHOD_BLOCKS = [
      'latex': r"L = \frac{r'}{\cos^{2}\lambda'}, \qquad r' = \frac{\left|\mathbf{r} - \mathbf{d}\right|}{R_E}, "
               r"\qquad \frac{B}{B_0} = \frac{\left|\mathbf{B}\right|_{IGRF}}{B_{eq}\,L^{-3}}",
      'symbols': "r′ — расстояние точки от смещённого центра диполя в радиусах Земли; λ′ — геомагнитная широта от "
-                "смещённой оси; d — смещение центра диполя (603 км, 0,095 R_E на май 2024; вектор печатается в снимке полем belt_coordinates.offset_km); |B| — полное поле IGRF в точке трассы; "
+                "смещённой оси; d — смещение центра диполя (603 км, 0,095 R_E на май 2024; вектор смещения печатается в выгрузке расчёта, файл факторов); |B| — полное поле IGRF в точке трассы; "
                 "минуты в аномалии считаются по порогу |B| из настроек, шаг трассы 1 мин.",
      'source': 'Fraser-Smith A. C. Centered and eccentric geomagnetic dipoles and their poles. Rev. Geophys. 25(1), 1987; '
                'коэффициенты IGRF — те же файлы, что у модуля орбиты.',
@@ -943,7 +1084,7 @@ def formula_ref(*texts) -> str | None:
 SOURCE_REGISTRY = {
     'noaa_swpc_goes': {'величина': 'интегральный поток протонов ≥10 МэВ', 'единица': 'pfu = част./(см²·с·ср)',
                        'частота': 'лента 1 мин, выпуск примерно раз в 5 мин',
-                       'публикация': 'время измерения из поля записи (time_tag)',
+                       'публикация': 'время измерения, взятое из самой записи наблюдения',
                        'лицензия': 'в ответе службы не указана; условия — на сайте NOAA SWPC',
                        'ограничение': 'измерение на геостационарной орбите; на станцию не переносится без геомагнитного обрезания'},
     'gfz_kp': {'величина': 'планетарный индекс Kp', 'единица': 'безразмерный',
@@ -959,7 +1100,7 @@ SOURCE_REGISTRY = {
     'donki_archive': {'величина': 'уведомления и карточки событий (протонные события, бури, выбросы)',
                       'единица': 'текст уведомления, Kp — безразмерный, энергии — МэВ',
                       'частота': 'по мере событий',
-                      'публикация': 'время подачи уведомления (messageIssueTime / submissionTime записи)',
+                      'публикация': 'время выпуска уведомления, объявленное в самом сообщении',
                       'лицензия': 'в ответе службы не указана; условия — на сайте NASA DONKI',
                       'ограничение': 'вложенные значения карточек без собственного времени публикации в строгий режим не идут'},
     'ost1044_belts': {'величина': 'спектры всенаправленного потока захваченных протонов',
@@ -1091,6 +1232,29 @@ def record_release_ru(rid: str) -> str:
     На экране печатается он, а не внутренний ключ с хешем (О5)."""
     parts = (rid or '').split(':')
     return parts[1] if len(parts) > 1 and parts[1] else (rid or '—')
+
+
+def robustness_gain_ru(rec, rob, windows_ru_iso: dict, base_thr: float, base_e: float) -> str:
+    """О7: польза сетки порогов и допуска — одной строкой через сравнение (R4-9).
+
+    Сравниваются два ответа на одних и тех же данных: (а) как если бы сервиса устойчивости не
+    было — один порог, нулевой допуск, лучшее окно по ранжированию; (б) итоговый вердикт на всей
+    сетке с допуском равнозначности. Оба числа берутся из `Robustness`, ничего не досчитывается."""
+    ranking = dict(getattr(rob, 'ranking_by_grid', None) or {})
+    if not ranking or (base_thr, base_e) not in ranking:
+        return ''
+    base = ranking[(base_thr, base_e)]          # только базовая ячейка: подменять её соседней нельзя
+    # причину отсутствия выбора при нулевом допуске здесь не называем — слой устойчивости её
+    # не сообщает, а придумывать её нельзя
+    naive = ('предпочтительным было бы названо %s' % grid_cell_ru(base, windows_ru_iso)) if base \
+        else 'предпочтительное окно не было бы названо'
+    final = ('предпочтительное окно %s' % windows_ru_iso.get(rec.preferred.start_utc, '')) if rec.preferred is not None \
+        else '«%s»' % VERDICT_TITLE.get(rec.verdict, rec.verdict).lower()
+    same = base == (rec.preferred.start_utc.isoformat() if rec.preferred is not None else None)
+    return ('Что даёт проверка на сетке: без неё (один порог %s нТл, канал от %s МэВ, нулевой допуск) %s; '
+            'на сетке порогов и с допуском равнозначности вердикт — %s. Ответ без них и с ними %s.') % (
+        nbsp_thousands(base_thr), fmt(float(base_e)), naive, final,
+        'совпадает — сетка и допуск подтверждают ответ, а не создают его' if same else 'различается')
 
 
 def grid_cell_ru(v, windows_ru_iso: dict) -> str:

@@ -28,12 +28,14 @@ from app.compute import (ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_late
 from app.export import _git_sha, build_zip
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_figure, observations_panel
-from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESETS, RULE_POLICY, VERDICT_TITLE, plural_ru,
+from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESETS, RELEASE_BY_MODE_RU,
+                    RULE_POLICY, VERDICT_TITLE, plural_ru,
                     RULE_THRESHOLDS, SEV_RU, STRICT_RU, age_ru, coverage_reasons, dedup_clauses, dt_ru, event_kind_ru,
-                    coverage_rows_ru, excl_group_ru, excl_reason_ru, fmt, formula_ref, frac_ru, grid_cell_ru, head, kind_pill, limit_ru,
-                    nbsp_thousands, panel, pill, record_release_ru,
-                    registry_row, short_reason, source_issues, source_name_ru, source_short, spread_offsets, status_ru,
-                    tle_origin, verdict_panel, verification_ru, window_card)
+                    coverage_rows_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
+                    grid_cell_ru, head, kind_pill, limit_ru,
+                    nbsp_thousands, panel, pill, raw_record, record_release_ru, record_url,
+                    registry_row, robustness_gain_ru, short_reason, source_issues, source_name_ru, source_short,
+                    spread_offsets, status_ru, tle_origin, verdict_panel, verification_ru, window_card)
 from app.viz import PLOTLY_CONFIG, ground_track, timeline
 from vkd.config import section as _settings_section
 from vkd.explain.cards import KIND_RU
@@ -66,6 +68,7 @@ def _apply_preset(p: dict) -> None:
     st.session_state['n_windows'] = len(p['offsets_min'])
     for i, off in enumerate(p['offsets_min']):
         st.session_state['w%d' % i] = int(off)
+        st.session_state['_off%d' % i] = int(off)                 # R4-1: сдвиги хранятся вне виджета
     st.session_state['_preset'] = p['key']
 
 
@@ -110,31 +113,35 @@ with st.sidebar:
     n_windows = st.radio('Окон для сравнения', [2, 3], horizontal=True, key='n_windows')
     OFF_STEP = 30
     _def_off = list(UI.get('window_offsets_min', [0, 240]))
-    # период сжали: прежние сдвиги в него не помещаются. Пересчитываем их ДО создания ползунков,
-    # иначе два сдвига сходятся в один, запрос становится недопустимым и экран останавливается (U1).
+    # R4-1: сдвиги живут в невиджетных ключах `_off<i>`, а не только в состоянии ползунка.
+    # У ползунка меняется max_value вместе с периодом поиска — Streamlit считает его НОВЫМ виджетом
+    # и теряет сохранённое значение, поэтому при любом движении «Периода поиска» оба сдвига уходили
+    # в 0 и настройка окон пропадала. Порядок каждого прогона: взять сдвиги из `_off<i>` (или из
+    # ползунка, если период не менялся и пользователь только что его двинул), ограничить периодом,
+    # развести совпавшие, записать обратно и отдать ползункам ДО их создания.
     _search_prev = st.session_state.get('_search_prev')
-    recalc = []
-    if _search_prev is not None and search_min < _search_prev:
-        cur = []
-        for i in range(n_windows):
-            v = st.session_state.get('w%d' % i)
-            want = int(_def_off[i]) if i < len(_def_off) else i * 240
-            cur.append(int(v) if v is not None else min(want, search_min))
-        new = [min(v, search_min) for v in cur]
-        if len(set(new)) != len(new):
-            new = spread_offsets(new, search_min, OFF_STEP)
-            recalc = list(new)
-        if new != cur:
-            for i, v in enumerate(new):
-                st.session_state['w%d' % i] = int(v)
+    _period_changed = _search_prev is not None and int(_search_prev) != int(search_min)
+    want_off = []
+    for i in range(n_windows):
+        v = st.session_state.get('_off%d' % i)
+        if not _period_changed and st.session_state.get('w%d' % i) is not None:
+            v = st.session_state['w%d' % i]            # пользователь двинул ползунок в этом прогоне
+        if v is None:
+            v = int(_def_off[i]) if i < len(_def_off) else i * 240
+        want_off.append(int(v))
+    offsets_state = [max(0, min(v, search_min)) for v in want_off]
+    if _period_changed and len(set(offsets_state)) != len(offsets_state):
+        offsets_state = spread_offsets(offsets_state, search_min, OFF_STEP)
+    recalc = list(offsets_state) if offsets_state != want_off else []
+    for i, v in enumerate(offsets_state):
+        st.session_state['_off%d' % i] = int(v)
+        st.session_state['w%d' % i] = int(v)
     offsets_in = []
     for i in range(n_windows):
-        want = int(_def_off[i]) if i < len(_def_off) else i * 240
-        # значение по умолчанию — только для первого показа: у ползунка с уже сохранённым положением
-        # его задавать нельзя (Streamlit пишет предупреждение и берёт сохранённое)
-        _kw = {} if ('w%d' % i) in st.session_state else {'value': min(want, search_min)}
         offsets_in.append(st.slider('Сдвиг начала окна %d, мин после начала периода' % (i + 1), 0, search_min,
-                                    step=30, key='w%d' % i, **_kw))
+                                    step=30, key='w%d' % i))
+    for i, v in enumerate(offsets_in):
+        st.session_state['_off%d' % i] = int(v)
     if recalc:
         st.caption('сдвиги пересчитаны под период: %s' % ', '.join('окно %d — %d мин' % (i + 1, v) for i, v in enumerate(recalc)))
     st.session_state['_search_prev'] = search_min
@@ -229,10 +236,15 @@ def _fetch_all(dis_goes, dis_kp, dis_noaa, nonce: int):
 
 
 horizon_min = search_min + duration_min
-if mode != 'live' and t0 + timedelta(minutes=horizon_min) > ARCHIVE_TO:
-    st.warning('Горизонт до %s UTC выходит за границу архива 30.06.2024 — покрытие обязательной линии за пределами архива '
-               'отсутствует, рекомендации не будет. Сократите период поиска или длительность либо выберите более раннюю дату.'
-               % (t0 + timedelta(minutes=horizon_min)).strftime('%d.%m.%Y %H:%M UTC'))
+# R4-2: предупреждение о границе архива включается по ФАКТИЧЕСКИМ окнам, а не по всему периоду
+# поиска. Покрытие считается по окнам, и при сдвигах меньше периода сверху стояло «рекомендации
+# не будет», а вердикт тут же называл предпочтительное окно — два ответа об одном на одном экране.
+windows_end = t0 + timedelta(minutes=(max(offsets) if offsets else 0) + duration_min)
+windows_beyond_archive = mode != 'live' and windows_end > ARCHIVE_TO
+if windows_beyond_archive:
+    st.warning('Последнее окно кончается %s UTC — за границей архива 30.06.2024. Покрытие обязательной линии за пределами '
+               'архива отсутствует, рекомендации не будет. Сократите сдвиг окна или длительность либо выберите более '
+               'раннюю дату.' % windows_end.strftime('%d.%m.%Y %H:%M'))
 try:                              # границы постановки проверяются до любого запроса (Т7): сообщение зрителю, расчёта нет
     validate_request(mode, t0, duration_min, search_min, offsets)
 except ValueError as e:
@@ -286,7 +298,7 @@ row1 = [('Время расчёта', dt_ru(now), 'все времена на э
         ('Режим', mode_ru, MODE_SUB[mode], 'calc'),
         ('Орбита', orbit_val, orbit_sub, orbit_kind),
         ('Горизонт', '%s ч от начала периода' % fmt(horizon_min / 60.0),
-         'последнее окно кончается %s' % dt_ru(horizon_to), 'calc')]
+         'данные берутся до %s, последнее окно кончается %s' % (dt_ru(horizon_to), dt_ru(windows_end)), 'calc')]
 # --- строка 2: источники. Зелёный — наблюдение получено, янтарный — кеш или прогноз, красный — отказ.
 row2 = []
 if mode == 'live':
@@ -383,8 +395,8 @@ for m_ in rec.missing:
     if 'космопогода' in m_ and mode == 'live' and 'исключён' in (src['noaa_swpc_goes'].get('status') or ''):
         extra = ' — GOES исключён пользователем'
     elif 'космопогода' in m_ and mode != 'live':
-        extra = ' — наблюдений GOES в архиве нет, а горизонт выходит за каталог DONKI (01.05–30.06.2024)' \
-            if t0 + timedelta(minutes=horizon_min) > ARCHIVE_TO else ' — линия без данных на горизонте'
+        extra = ' — наблюдений GOES в архиве нет, а окна выходят за каталог DONKI (01.05–30.06.2024)' \
+            if windows_beyond_archive else ' — линия без данных на горизонте'
     missing_ru.append(m_ + extra)
 any_cond = any(m.needs_check for a in R.assessments for m in a.mechanisms)
 # политика прототипа целиком — один раз, во вкладке «Объяснения»; здесь только указатель (U5)
@@ -487,8 +499,7 @@ with tabs[0]:
             st.markdown('**7. Происхождение.** ' + KIND_RU[c.kind])
             links, no_link = [], 0
             for rid in c.record_ids:
-                rec_ = R.raw_records.get(rid) or {}
-                u = (rec_.get('url') or rec_.get('link') or rec_.get('messageURL')) if isinstance(rec_, dict) else None
+                u = record_url(raw_record(R.raw_records, rid))
                 if pro:                    # идентификатор записи виден только на профессиональном уровне (U5)
                     links.append('[%s](%s)' % (rid, u) if u else '`%s`' % rid)
                 elif u:
@@ -497,16 +508,22 @@ with tabs[0]:
                     no_link += 1
             if links or no_link:
                 _n = 12 if pro else 6          # оперативному уровню хватает нескольких ссылок (U5)
+                # запись без сетевого адреса — это таблица стандарта, эфемериды или файл в составе
+                # сервиса: говорим, ГДЕ она лежит, а не только что ссылки нет (О4)
                 st.markdown('**Первоисточник:** ' + ', '.join(links[:_n])
                             + (' … ещё %d' % (len(links) - _n) if len(links) > _n else '')
-                            + (('%sзаписей без ссылки: %d' % ('; ' if links else '', no_link)) if no_link else ''))
+                            + (('%sбез сетевого адреса: %d %s — %s' % (
+                                '; ' if links else '', no_link,
+                                plural_ru(no_link, ('запись', 'записи', 'записей')),
+                                'таблицы стандартов и эфемериды в составе сервиса, сами записи — в выгрузке, папка raw/'))
+                               if no_link else ''))
             if pro:
-                _raw = [rid for rid in c.record_ids[:12] if rid in R.raw_records]
+                _raw = [rid for rid in c.record_ids[:12] if raw_record(R.raw_records, rid) is not None]
                 if _raw:
                     st.caption('Ниже — сырая запись источника, на языке источника: как её опубликовал NOAA, NASA или GFZ, '
                                'без нашего перевода и без изменений.')
                 for rid in _raw:
-                    st.json(R.raw_records[rid], expanded=False)
+                    st.json(raw_record(R.raw_records, rid), expanded=False)
     with st.expander('Политика прототипа и чего не заявляем', expanded=False):
         st.markdown(S['policy_note'])
         st.markdown('Чего сервис не заявляет:\n'
@@ -532,7 +549,9 @@ with tabs[1]:
                 k_ = ('величина', f.name)
                 if k_ not in cells:
                     row_keys.append(k_); cells[k_] = ['—'] * len(R.assessments); units[k_] = f.unit or ''
-                cells[k_][j] = fmt(f.value)                # единица — в подписи строки, не в ячейке
+                # единица — в подписи строки, не в ячейке; наблюдение, не покрывающее окно ни на
+                # одну минуту, даёт прочерк, а не число прошлого измерения (О2)
+                cells[k_][j] = factor_value_ru(f)
             k_ = ('покрытие', MECH_RU.get(m.mechanism_id, m.mechanism_id))
             if k_ not in cells:
                 row_keys.append(k_); cells[k_] = ['—'] * len(R.assessments)
@@ -628,11 +647,15 @@ with tabs[4]:
             st.markdown('**Внешний прогноз NOAA на горизонте окон** (выпуск с указанием времени публикации)')
             for line in _live_fc:
                 _pub = (line.get('published_utc') or '')[:16].replace('T', ' ')
+                _u = record_url(raw_record(R.raw_records, line.get('record'))) if line.get('record') else None
+                if _pub:
+                    _rel = ('[выпуск от %s UTC](%s)' % (_pub, _u)) if _u else 'выпуск от %s UTC' % _pub
+                else:
+                    _rel = 'времени выпуска в записи нет'
                 st.markdown('%s **%s** — %s' % (pill(line.get('status_ru') or '—',
                                                      'ok' if line.get('status') == 'full' else
                                                      'warn' if line.get('status') == 'partial' else 'none'),
-                                                line.get('label') or '—',
-                                                ('выпуск от %s UTC' % _pub) if _pub else 'времени выпуска в записи нет'),
+                                                line.get('label') or '—', _rel),
                             unsafe_allow_html=True)
             st.caption('Внешний прогноз, не наблюдение. Суточные вероятности относятся к суткам, а не к окну ВКД, '
                        'и в вероятность за окно не пересчитываются.')
@@ -657,12 +680,14 @@ with tabs[4]:
             st.markdown('%s Численных наблюдений на этом горизонте нет: %s'
                         % (pill('нет наблюдений', 'none'),
                            status_ru(src.get('noaa_swpc_goes', {}).get('status') or '—', pro)), unsafe_allow_html=True)
-        fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min)
+        fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min,
+                                kp_title='Прогноз Kp NOAA по 3-часовым интервалам (%s)' % RELEASE_BY_MODE_RU[mode],
+                                mark_ru='отсечка' if mode == 'history_forecast' else 'начало периода')
         if fc_fig is not None:
             st.plotly_chart(fc_fig, width='stretch', config=PLOTLY_CONFIG)
         for line in S.get('forecasts', []):
             if line['release_id']:
-                u = (R.raw_records.get(line['record']) or {}).get('url') if line.get('record') else None
+                u = record_url(raw_record(R.raw_records, line['record'])) if line.get('record') else None
                 pub = (line['published_utc'] or '')[:16].replace('T', ' ')
                 rel = ('[выпуск от %s UTC](%s)' % (pub, u)) if u else 'выпуск от %s UTC' % pub
             else:
@@ -699,8 +724,7 @@ with tabs[4]:
         st.markdown('**События и прогнозы, учтённые на горизонте** (время публикации — из записи источника)')
         ev_rows = []
         for e in sorted(R.events, key=lambda e: (e.published_utc or e.start_utc or datetime.max.replace(tzinfo=timezone.utc))):
-            rec_ = R.raw_records.get(e.raw_record_id) or {}
-            u = (rec_.get('url') or rec_.get('link') or rec_.get('messageURL')) if isinstance(rec_, dict) else None
+            u = record_url(raw_record(R.raw_records, e.raw_record_id))
             row = {'тип': event_kind_ru(e.kind_of_event) + (' (сценарий)' if e.is_simulated else ''),
                    'происхождение': KIND_RU[e.kind],
                    'начало / приход': dt_ru(e.start_utc),
@@ -748,13 +772,15 @@ with tabs[5]:
                      else 'архив' if R.kp is not None else 'нет до отсечки' if mode == 'history_forecast' else 'нет в архиве')
             hist_obs = R.kp is None or R.kp.source_id == 'scenario'      # есть запись архива — показываем её время и давность от t0
         elif k.startswith('noaa_forecast_'):
-            state = 'архив выпусков'
+            # происхождение выпуска берётся из снимка, а не от имени ключа: в текущем режиме это
+            # живой бюллетень NOAA, и подписывать его «архивом выпусков» — неправда (О2)
+            state = 'живой бюллетень' if mode == 'live' else 'архив выпусков'
         elif k == 'donki_archive':
             state = 'архив, отбор по публикации' if mode == 'history_forecast' else 'архив, весь'
         age = v.get('age_min')
         if k == 'orbit' and v.get('age_h') is not None:
             age = v['age_h'] * 60
-        src_rows.append({'источник': source_name_ru(k), 'роль': v.get('role'), 'состояние': state,
+        src_rows.append({'источник': source_name_ru(k, mode), 'роль': v.get('role'), 'состояние': state,
                          'живой запрос': BOOL_RU.get(v.get('live_ok'), '—') if not static and mode == 'live' else '—',
                          'из кеша': BOOL_RU.get(v.get('from_cache'), '—') if not static and mode == 'live' else '—',
                          'получено': 'встроено' if static else '—' if hist_obs else (v.get('fetched_utc') or '—')[:16].replace('T', ' '),
@@ -776,7 +802,7 @@ with tabs[5]:
         r = registry_row(k, origin=src[k].get('origin'))
         if r['величина'] == '—' and not k.startswith('noaa_forecast_'):
             continue
-        reg_rows.append({'источник': source_name_ru(k), **r})
+        reg_rows.append({'источник': source_name_ru(k, mode), **r})
     st.dataframe(reg_rows, width='stretch', hide_index=True,
                  column_config={'источник': st.column_config.TextColumn(width='medium'),
                                 'величина': st.column_config.TextColumn(width='medium'),
@@ -876,6 +902,11 @@ if pro:
                       for k, v in rob.preferred_starts.items()], width='stretch', hide_index=True)
         st.markdown('<div class="tcap">Таблица 5. Устойчивость выбора на сетке порогов: два исхода в каждой ячейке.</div>',
                     unsafe_allow_html=True)
+        # О7: польза дополнительной функции показана сравнением — что ответил бы сервис без сетки
+        # и нулевого допуска и что он отвечает с ними. Оба ответа взяты из того же расчёта (R4-9).
+        _gain = robustness_gain_ru(rec, rob, windows_ru, th.saa_B_threshold_nT, th.e_min_MeV)
+        if _gain:
+            st.markdown('<div class="small">%s</div>' % _gain, unsafe_allow_html=True)
         st.caption('Исход с допуском на сетке: %s. Основной расчёт: %s. Допуск: %s.' % (
             '; '.join('%s — %s из %s ячеек' % (lbl, fmt(n), fmt(len(grid_vals))) for lbl, n in counts.most_common()),
             ('предпочтительное окно %s' % windows_ru.get(rec.preferred.start_utc, '')) if rec.preferred else
