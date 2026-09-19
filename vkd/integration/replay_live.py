@@ -15,6 +15,7 @@ import base64
 from datetime import datetime
 from typing import Any, Optional
 
+from vkd.integration.donki_live import Notifications, decode as decode_notifications, parse_notifications
 from vkd.sources.live_cache import Fetch
 from vkd.sources.live_parsers import LiveDataError, parse_goes, parse_kp, parse_noaa_live, parse_tle
 from vkd.sources.registry import utc
@@ -24,7 +25,9 @@ GOES = 'noaa_swpc_goes'
 KP = 'gfz_kp'
 TLE = 'celestrak_gp'
 NOAA = 'noaa_swpc_3day_forecast'
-PARSERS = {GOES: parse_goes, KP: parse_kp, TLE: parse_tle, NOAA: parse_noaa_live}
+DONKI = 'nasa_donki_notification'
+PARSERS = {GOES: parse_goes, KP: parse_kp, TLE: parse_tle, NOAA: parse_noaa_live,
+           DONKI: parse_notifications}
 WHY_REPLAY = 'из сохранённого расчёта (воспроизведение)'
 WHY_NONE = 'источники не запрашивались: исторический режим, входы — архив'
 
@@ -36,10 +39,12 @@ def _off(source_id: str, why: str) -> Fetch:
 def fetch_none(why: str = WHY_NONE) -> tuple:
     """Кортеж «живые источники не запрашивались» для исторических режимов (Т6: без сети ждать нечего).
 
-    Форма совпадает с тем, что передаёт экран: GOES, Kp, TLE и живой прогноз NOAA.
+    Форма совпадает с тем, что передаёт экран: GOES, Kp, TLE, живой прогноз NOAA и живая лента
+    уведомлений NASA DONKI (добавлена двенадцатым кругом; порядок — app/fetch_guard.py, KEYS).
     """
     return ((None, {}, _off(GOES, why)), (None, {}, _off(KP, why)),
-            (None, _off(TLE, why)), ((), {}, _off(NOAA, why)))
+            (None, _off(TLE, why)), ((), {}, _off(NOAA, why)),
+            (Notifications(connected=False, reason_ru=why), {}, _off(DONKI, why)))
 
 
 def _find(raw_records: dict, source_id: str) -> Optional[tuple[str, dict]]:
@@ -145,7 +150,25 @@ def from_saved_records(raw_records: dict, now: datetime, tle_text: Optional[str]
             noaa_raw = {noaa_rec[0]: noaa_rec[1]}
         except (LiveDataError, KeyError, ValueError) as exc:
             f_noaa = _off(NOAA, WHY_REPLAY + ': сохранённые байты прогноза не разобраны (%s)' % exc)
-    return (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle), (noaa_samples, noaa_raw, f_noaa)
+    # Лента уведомлений повторяется из ТЕХ ЖЕ сохранённых байтов ответа службы, что и живой
+    # запрос (Т8). Выбирается запись ОТВЕТА, а не отдельного сообщения: у ответа идентификатор
+    # состоит из двух частей (источник и хеш), у сообщения — из трёх (ещё и номер выпуска).
+    donki_notes, donki_raw = Notifications(connected=False, reason_ru=WHY_REPLAY + ': запись не сохранена'), {}
+    f_donki = _off(DONKI, WHY_REPLAY + ': запись не сохранена')
+    donki_rec = next(((rid, rec) for rid, rec in (raw_records or {}).items()
+                      if isinstance(rec, dict) and (rec.get('metadata') or {}).get('source_id') == DONKI
+                      and rec.get('content_base64') and len(str(rid).split(':')) == 2), None)
+    if donki_rec:
+        try:
+            meta, parsed, raw = _parse(donki_rec[1], DONKI, now)
+            f_donki = _fetch(DONKI, meta, parsed, raw, now)
+            donki_notes = decode_notifications(f_donki)
+            donki_raw = {donki_rec[0]: donki_rec[1]}
+        except (LiveDataError, KeyError, ValueError) as exc:
+            f_donki = _off(DONKI, WHY_REPLAY + ': сохранённые байты уведомлений не разобраны (%s)' % exc)
+            donki_notes = Notifications(connected=False, reason_ru=f_donki.status_ru)
+    return ((goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle),
+            (noaa_samples, noaa_raw, f_noaa), (donki_notes, donki_raw, f_donki))
 
 
 __all__: list[Any] = ['fetch_none', 'from_saved_records', 'WHY_NONE', 'WHY_REPLAY']
