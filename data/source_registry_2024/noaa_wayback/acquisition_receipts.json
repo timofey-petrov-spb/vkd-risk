@@ -1,0 +1,626 @@
+[
+  {
+    "capture": "20240515175721",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240515175721id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240515175721.txt",
+    "sha256": "6ff177361349cae8b807e555a71b1d49e7e628c945fc163915c4579245b2e5c8",
+    "fetched_utc": "2026-09-19T15:52:23.962912+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:23 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Wed, 15 May 2024 17:57:01 GMT",
+      "memento-datetime": "Wed, 15 May 2024 17:57:21 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240515175721",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "MTOXNTJN4ZUZFKBFIOHNZKGY4SNJ6QOO",
+      "1517"
+    ]
+  },
+  {
+    "capture": "20240516065157",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240516065157id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240516065157.txt",
+    "sha256": "7411bf515f35d6b0cf728571697c7c0e2e433ac00199a66aa9fde673878d4161",
+    "fetched_utc": "2026-09-19T15:52:24.957356+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:24 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Thu, 16 May 2024 06:51:57 GMT",
+      "memento-datetime": "Thu, 16 May 2024 06:51:57 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240516065157",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "LI2ISFNZGWTHVJD6YB5PAMNFGOHIS76I",
+      "1490"
+    ]
+  },
+  {
+    "capture": "20240516201654",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240516201654id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240516201654.txt",
+    "sha256": "066f7712815a80f2c714147397af117893bf0c532615e67f8a6d20e0c4cc525d",
+    "fetched_utc": "2026-09-19T15:52:23.995862+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:23 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Thu, 16 May 2024 20:15:57 GMT",
+      "memento-datetime": "Thu, 16 May 2024 20:16:54 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240516201654",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "NX67WLSI3MUK6YNGBD47CAAT6GQQPTMP",
+      "1507"
+    ]
+  },
+  {
+    "capture": "20240517091344",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240517091344id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240517091344.txt",
+    "sha256": "2562f6432f8b4948e891266b2c95325ce9f9fc3fb0b56329ed120916c6c2aa39",
+    "fetched_utc": "2026-09-19T15:52:25.410647+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:25 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Fri, 17 May 2024 09:13:44 GMT",
+      "memento-datetime": "Fri, 17 May 2024 09:13:44 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240517091344",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "SU72KJYUVFECUWKYNH7L2DVBAUM5GKDE",
+      "1522"
+    ]
+  },
+  {
+    "capture": "20240517210624",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240517210624id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240517210624.txt",
+    "sha256": "a20a1eaf0f4923999232930764e6f923dfe665cb86fb947516f62b6bb3661749",
+    "fetched_utc": "2026-09-19T15:52:25.224170+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:25 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Fri, 17 May 2024 21:06:24 GMT",
+      "memento-datetime": "Fri, 17 May 2024 21:06:24 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240517210624",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "4SML52W67THPZWD7GCRGZ3A2X3WHBTTK",
+      "1482"
+    ]
+  },
+  {
+    "capture": "20240518100621",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240518100621id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240518100621.txt",
+    "sha256": "753e8607c3d9f77787a1a5676c6dcddc13088def80f1bc0f97a98f2d42ca815f",
+    "fetched_utc": "2026-09-19T15:52:26.210703+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:26 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sat, 18 May 2024 10:06:21 GMT",
+      "memento-datetime": "Sat, 18 May 2024 10:06:21 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240518100621",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "XZR2ZETY2DLF3N2NN7PM5UCSV6Y5EEI7",
+      "1576"
+    ]
+  },
+  {
+    "capture": "20240518232807",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240518232807id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240518232807.txt",
+    "sha256": "ddbe9d5df1ea116fe0490cf82d73898e8d84ec503870763c051f8c30ef2e35ed",
+    "fetched_utc": "2026-09-19T15:52:26.447111+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:26 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sat, 18 May 2024 23:28:07 GMT",
+      "memento-datetime": "Sat, 18 May 2024 23:28:07 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240518232807",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "PRXUBM7K2WWAFP5A2OFU24XQPYEDEY7L",
+      "1517"
+    ]
+  },
+  {
+    "capture": "20240519133041",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240519133041id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240519133041.txt",
+    "sha256": "5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae",
+    "fetched_utc": "2026-09-19T15:52:26.359687+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:26 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sun, 19 May 2024 13:30:41 GMT",
+      "memento-datetime": "Sun, 19 May 2024 13:30:41 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240519133041",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "PRBFLXJSPMMLTYP56N27OIUICW7IIP33",
+      "1414"
+    ]
+  },
+  {
+    "capture": "20240520002856",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240520002856id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240520002856.txt",
+    "sha256": "5496c0957a620e646f633985d3af3e5c9fea490573b84a6a890ebbba449460ae",
+    "fetched_utc": "2026-09-19T15:52:27.379613+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:27 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Mon, 20 May 2024 00:28:12 GMT",
+      "memento-datetime": "Mon, 20 May 2024 00:28:56 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240520002856",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "Z3WG4ESP2NJNIEA63E3OFT4UYUMS5SCB",
+      "1733"
+    ]
+  },
+  {
+    "capture": "20240520004448",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240520004448id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240520004448.txt",
+    "sha256": "d2f3f2717fa2dd1c54aaed3534968592dcc9ebe9a8f51e58fd4a7dfa38d4329d",
+    "fetched_utc": "2026-09-19T15:52:27.488085+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:27 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Mon, 20 May 2024 00:44:48 GMT",
+      "memento-datetime": "Mon, 20 May 2024 00:44:48 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240520004448",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "O4RUPCGLQ5S7BQCXOG7LI3PYSXJW7CCN",
+      "1460"
+    ]
+  },
+  {
+    "capture": "20240520152328",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240520152328id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240520152328.txt",
+    "sha256": "255e9191cb190cd6bfdf7a9c0809ed9954be50d6a80b0dc8acf316ad0ab0a075",
+    "fetched_utc": "2026-09-19T15:52:28.377684+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:28 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Mon, 20 May 2024 15:23:28 GMT",
+      "memento-datetime": "Mon, 20 May 2024 15:23:28 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240520152328",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "WLPMSXSVX225CFVC7ELMUOOWJ2TXDHVN",
+      "1539"
+    ]
+  },
+  {
+    "capture": "20240521160651",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240521160651id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240521160651.txt",
+    "sha256": "f6dc8849b8d25e450d41d3dd595f5b8bb0b4cc48e0fa605411c972f4bd72f33b",
+    "fetched_utc": "2026-09-19T15:52:30.705205+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:30 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Tue, 21 May 2024 16:06:51 GMT",
+      "memento-datetime": "Tue, 21 May 2024 16:06:51 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240521160651",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "4P2SI66CQFSIMMY4ECYZX7XTV46LJJTI",
+      "1428"
+    ]
+  },
+  {
+    "capture": "20240522202956",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240522202956id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240522202956.txt",
+    "sha256": "61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868",
+    "fetched_utc": "2026-09-19T15:52:28.510216+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:28 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Wed, 22 May 2024 20:29:00 GMT",
+      "memento-datetime": "Wed, 22 May 2024 20:29:56 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240522202956",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "BKPGSH5I5FEA6VJ6VI34VO6IOUAWZPS4",
+      "1687"
+    ]
+  },
+  {
+    "capture": "20240522205236",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240522205236id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240522205236.txt",
+    "sha256": "61ca44f63e29033e5657c02f97de28ead5ab4238dca493c70847e325ff181868",
+    "fetched_utc": "2026-09-19T15:52:29.683703+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:29 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Wed, 22 May 2024 20:52:36 GMT",
+      "memento-datetime": "Wed, 22 May 2024 20:52:36 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240522205236",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "N3N52S6OWNSV67WB7TQF72FIWLMRV6CT",
+      "1854"
+    ]
+  },
+  {
+    "capture": "20240523060536",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240523060536id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240523060536.txt",
+    "sha256": "c3513f3c5f8611190143bde2404844a84a317d071c7c374d8d82f0498420cff7",
+    "fetched_utc": "2026-09-19T15:52:29.451236+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:29 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Thu, 23 May 2024 06:05:41 GMT",
+      "memento-datetime": "Thu, 23 May 2024 06:05:36 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240523060536",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "NXIEKRX4TSBQSZWC67SDFJFUNM42G5JS",
+      "1554"
+    ]
+  },
+  {
+    "capture": "20240523231400",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240523231400id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240523231400.txt",
+    "sha256": "2250337e2cd94f488f85db8f40378f3b388d8de4f56f67eb75c9260be41b1262",
+    "fetched_utc": "2026-09-19T15:52:30.535294+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:30 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Thu, 23 May 2024 23:14:00 GMT",
+      "memento-datetime": "Thu, 23 May 2024 23:14:00 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240523231400",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "475QAQ5SUCDG7GD5NSMJ3XDANS7DECHZ",
+      "1524"
+    ]
+  },
+  {
+    "capture": "20240524214701",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240524214701id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240524214701.txt",
+    "sha256": "74c12d67bf6c5e71c7d0074c8ac2510619a01e694b8e5efef028a8cc37291d3b",
+    "fetched_utc": "2026-09-19T15:52:31.850052+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:31 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Fri, 24 May 2024 21:47:01 GMT",
+      "memento-datetime": "Fri, 24 May 2024 21:47:01 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240524214701",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "66AQK2WXYHBEIXSSWEMS7RVXTE4RIISG",
+      "1797"
+    ]
+  },
+  {
+    "capture": "20240526140723",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240526140723id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240526140723.txt",
+    "sha256": "c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b",
+    "fetched_utc": "2026-09-19T15:52:32.101744+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:32 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sun, 26 May 2024 14:07:23 GMT",
+      "memento-datetime": "Sun, 26 May 2024 14:07:23 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240526140723",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "OFRW2P2YVQCBYHKAYKU65VKZDO23774W",
+      "1352"
+    ]
+  },
+  {
+    "capture": "20240527000959",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240527000959id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240527000959.txt",
+    "sha256": "c510b3ffa6b67d0ba83bf5474164e94ae177674733a6650ce57c658994f3429b",
+    "fetched_utc": "2026-09-19T15:52:31.610439+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:31 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Mon, 27 May 2024 00:09:59 GMT",
+      "memento-datetime": "Mon, 27 May 2024 00:09:59 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240527000959",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "YW7LYZS6QYM6LFI43QLG7ZUD6TOS5C3U",
+      "1672"
+    ]
+  },
+  {
+    "capture": "20240527171638",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240527171638id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240527171638.txt",
+    "sha256": "c7c927abcc27ab61d4a597d09a6a1dd86f73ff8f2514d3f369e5f6c1580c362c",
+    "fetched_utc": "2026-09-19T15:52:32.611361+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:32 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Mon, 27 May 2024 17:16:38 GMT",
+      "memento-datetime": "Mon, 27 May 2024 17:16:38 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240527171638",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "H4PZGJBOVHHFEVDVY4B46P6BVBQH2X66",
+      "1432"
+    ]
+  },
+  {
+    "capture": "20240530171119",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240530171119id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240530171119.txt",
+    "sha256": "9a2ac2224ec4070cdde19fb2e99bd52ff034136cb32387648181b05ccb127b9d",
+    "fetched_utc": "2026-09-19T15:52:33.159732+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:33 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Thu, 30 May 2024 17:11:19 GMT",
+      "memento-datetime": "Thu, 30 May 2024 17:11:19 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240530171119",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "QQZUPH2JCWCEDZVNTXU6AUMJNKPJYAX5",
+      "1511"
+    ]
+  },
+  {
+    "capture": "20240531164638",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240531164638id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240531164638.txt",
+    "sha256": "bbaccbc477e0b5eb966e14c9d6432e66e31c71c8ff3429ca0ff216434a0f2c64",
+    "fetched_utc": "2026-09-19T15:52:34.276482+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:34 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Fri, 31 May 2024 16:45:41 GMT",
+      "memento-datetime": "Fri, 31 May 2024 16:46:38 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240531164638",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "65KF2BALOOJWJRVRXPJEZES3EKRRFNMU",
+      "1859"
+    ]
+  },
+  {
+    "capture": "20240601175347",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240601175347id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240601175347.txt",
+    "sha256": "793d06073e10b1ae4c406744fbdc5773f904f541ce5826bb53aa023d1e97bc8d",
+    "fetched_utc": "2026-09-19T15:52:33.990141+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:33 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sat, 01 Jun 2024 17:53:10 GMT",
+      "memento-datetime": "Sat, 01 Jun 2024 17:53:47 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240601175347",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "SDRH7CPVCWKPFVAYKKVZDLLW6P6UG52H",
+      "1408"
+    ]
+  },
+  {
+    "capture": "20240607151936",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240607151936id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240607151936.txt",
+    "sha256": "7df3db5f1c1c57c14c2879138588a1dbb50f51c1dcb16bb8ba38a826eb9c9645",
+    "fetched_utc": "2026-09-19T15:52:34.135981+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:34 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Fri, 07 Jun 2024 15:19:31 GMT",
+      "memento-datetime": "Fri, 07 Jun 2024 15:19:36 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240607151936",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "MI5VVR4NWA7XHDOBDCF63YSAGETRTQVB",
+      "1736"
+    ]
+  },
+  {
+    "capture": "20240612225440",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240612225440id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240612225440.txt",
+    "sha256": "7f9a93a467f6b5b9de81fabe6d82fc97453757b79424523c67dceb76f7e68e87",
+    "fetched_utc": "2026-09-19T15:52:34.997491+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:34 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Wed, 12 Jun 2024 22:54:30 GMT",
+      "memento-datetime": "Wed, 12 Jun 2024 22:54:40 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240612225440",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "EZKN6B2EA57NRBFXXOUABTYQ2ADJC7K6",
+      "1639"
+    ]
+  },
+  {
+    "capture": "20240616092116",
+    "status": 200,
+    "url": "https://web.archive.org/web/20240616092116id_/https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "original_url": "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+    "file": "20240616092116.txt",
+    "sha256": "fb1e630aef8236ac8d5c1e9f33c7462b7447fd4c62ab207225bc7f575cb76ec1",
+    "fetched_utc": "2026-09-19T15:52:35.422343+00:00",
+    "headers": {
+      "Date": "Sat, 19 Sep 2026 15:52:35 GMT",
+      "Content-Type": "text/plain; charset=UTF-8",
+      "x-archive-orig-date": "Sun, 16 Jun 2024 09:21:16 GMT",
+      "memento-datetime": "Sun, 16 Jun 2024 09:21:16 GMT"
+    },
+    "cdx": [
+      "gov,noaa,swpc,services)/text/3-day-forecast.txt",
+      "20240616092116",
+      "https://services.swpc.noaa.gov/text/3-day-forecast.txt",
+      "text/plain",
+      "200",
+      "543JAHSRXBTV2RDPAPJB3FVSCRFIJDSM",
+      "1592"
+    ]
+  }
+]

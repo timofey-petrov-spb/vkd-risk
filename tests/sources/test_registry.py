@@ -61,7 +61,8 @@ class RegistryTests(unittest.TestCase):
 
     def test_real_archive_all_releases_verify(self):
         registry = SourceRegistry(REPO)
-        self.assertEqual(sum(len(registry.records(s)) for s in registry.source_ids), 390)
+        # Original 390 records plus 20 CDX-verified historical NOAA captures.
+        self.assertEqual(sum(len(registry.records(s)) for s in registry.source_ids), 410)
         for source in registry.source_ids:
             for record in registry.records(source):
                 with self.subTest(raw_record_id=record['raw_record_id']):

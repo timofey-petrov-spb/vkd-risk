@@ -10,6 +10,8 @@ from .registry import iso_utc, utc
 MONTHS = {name: i for i, name in enumerate(
     "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
 SOURCE_3DAY = "noaa_ngdc_3day_forecast"
+SOURCE_3DAY_WAYBACK = "noaa_wayback_3day_forecast"
+SOURCES_3DAY = (SOURCE_3DAY, SOURCE_3DAY_WAYBACK)
 SOURCE_DAYPRE = "noaa_ngdc_daypre"
 DAILY_3DAY = {"S1 or greater": "s1_or_greater_probability",
               "R1-R2": "r1_r2_probability", "R3 or greater": "r3_or_greater_probability"}
@@ -38,6 +40,9 @@ def parse_forecast(raw: bytes, record: dict) -> list[dict]:
     agreed B1 boundary. Daily probabilities remain daily probabilities.
     """
     try:
+        if record["source_id"] == SOURCE_3DAY_WAYBACK:
+            from .wayback_forecast import verify_capture
+            verify_capture(raw, record)
         return _parse(raw.decode("utf-8"), record)
     except (UnicodeDecodeError, KeyError, ValueError, OverflowError, IndexError) as exc:
         if isinstance(exc, ForecastParseError):
@@ -61,7 +66,7 @@ def _parse(text: str, record: dict) -> list[dict]:
         if len(header) != 1:
             raise ForecastParseError("Missing or repeated Prediction_dates header")
         dates = [_date(*parts) for parts in re.findall(r"(\d{4}) (\w{3}) (\d{2})", header[0])]
-    elif source == SOURCE_3DAY:
+    elif source in SOURCES_3DAY:
         headers = [re.findall(r"(\w{3}) (\d{2})", line) for line in text.splitlines()
                    if re.fullmatch(r"\s*(?:[A-Z][a-z]{2} \d{2}\s*){3}", line)]
         if len(headers) != 3 or not all(h == headers[0] for h in headers):
@@ -108,12 +113,20 @@ def _parse(text: str, record: dict) -> list[dict]:
                           "temporal_resolution": channel["temporal_resolution"]})
 
     lines = text.splitlines()
+    in_forecast_table = False
     for i, line in enumerate(lines):
         line = line.strip()
-        prefix = r"(\d{2})-(\d{2})UT" if source == SOURCE_3DAY else r"(Mid|High)/(\d{2})-(\d{2})UT"
+        if source in SOURCES_3DAY:
+            if re.fullmatch(r"(?:[A-Z][a-z]{2} \d{2}\s*){3}", line):
+                in_forecast_table = True
+            elif line.startswith('Rationale:'):
+                in_forecast_table = False
+            if not in_forecast_table:
+                continue  # prose can also start with "R1-R2 conditions ..."
+        prefix = r"(\d{2})-(\d{2})UT" if source in SOURCES_3DAY else r"(Mid|High)/(\d{2})-(\d{2})UT"
         match = re.fullmatch(prefix + r"\s+(.+)", line)
         if match:
-            if source == SOURCE_3DAY:
+            if source in SOURCES_3DAY:
                 begin, end, values = match.groups(); channel_id = "noaa_kp"
             else:
                 region, begin, end, values = match.groups()
@@ -122,7 +135,7 @@ def _parse(text: str, record: dict) -> list[dict]:
             if start_hour not in range(0, 24, 3) or int(end) != (start_hour + 3) % 24:
                 raise ForecastParseError("Invalid three-hour bin")
             add(channel_id, values, start_hour, 3)
-        for label, channel_id in (DAILY_3DAY if source == SOURCE_3DAY else DAILY_DAYPRE).items():
+        for label, channel_id in (DAILY_3DAY if source in SOURCES_3DAY else DAILY_DAYPRE).items():
             match = re.fullmatch(re.escape(label) + r"\s+(.+)", line)
             if match:
                 add(channel_id, match[1])
