@@ -1,7 +1,7 @@
 {
  "schema_version": "2.2",
  "algorithm_version": "0.8.0",
- "computed_utc": "2026-09-19T09:18:00+00:00",
+ "computed_utc": "2026-09-19T09:19:00+00:00",
  "mode": "Исторический разбор",
  "mode_id": "history_review",
  "request": {
@@ -38220,5 +38220,5 @@
    "26000 nT / 50 MeV": null
   }
  },
- "git_commit": "592e13554cf7abd4f729a57fecdcbb39b78c0338"
+ "git_commit": "f0149dad1cfca39d9aada46a1424503add8f73b1"
 }
