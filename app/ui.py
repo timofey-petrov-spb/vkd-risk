@@ -112,6 +112,16 @@ CSS = r"""
         --fc:#bba889;   --fc-bg:#2d2516;   --fc-line:#483d28;
         --cond:#c17d68; --cond-bg:#382018; --cond-line:#58352b;
         --none:#91969c; --none-bg:#232629; --none-line:#3b3e44;
+        /* Цвета РЕШЕНИЯ живут отдельно от цветов происхождения: это два разных языка,
+           и общий набор делал вывод таким же тихим, как подпись под числом. Здесь
+           насыщенность высокая намеренно — на экране это единственное место, где цвет
+           обязан бить в глаза. Контраст к своей заливке: 7,65 / 5,03 / 7,70. */
+        --go:#3ecf7a;   --go-bg:#0c2a1a;
+        --stop:#f0563f; --stop-bg:#2f120d;
+        --ask:#f5a524;  --ask-bg:#2e2108;
+        /* Главные числа под решением — почти белые: они вторые по важности после
+           вывода, и стальной тон происхождения делал их незаметными. Контраст 18,20. */
+        --stat:#f2f5f8;
         /* прежние имена состояний — те же четыре тона, чтобы правила ниже читались одинаково */
         --ok:var(--obs); --ok-bg:var(--obs-bg); --warn:var(--fc); --warn-bg:var(--fc-bg);
         --crit:var(--cond); --crit-bg:var(--cond-bg);
@@ -320,9 +330,9 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
    читается как поломка сервиса. Не больше восьми слов, полный текст — раскрытием ниже. */
 .decision .dwhy { display:block; font-size:var(--fs-2); line-height:var(--lh-2); color:var(--ink);
                   margin-top:16px; }
-.d-go   { --dec:var(--obs);  --dec-bg:var(--obs-bg); }
-.d-stop { --dec:var(--cond); --dec-bg:var(--cond-bg); }
-.d-ask  { --dec:var(--fc);   --dec-bg:var(--fc-bg); }
+.d-go   { --dec:var(--go);   --dec-bg:var(--go-bg); }
+.d-stop { --dec:var(--stop); --dec-bg:var(--stop-bg); }
+.d-ask  { --dec:var(--ask);  --dec-bg:var(--ask-bg); }
 /* Крупные числа под решением: тот же каркас приборной полосы, но значение кеглем ответа.
    Ярлык — капителью, справа от числа — то же у худшего начала на сроке. Сравнение
    «выбрано против худшего» и есть объяснение, только числами, без единого слова связки. */
@@ -334,7 +344,7 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .panel.stat .cl { font-weight:600; margin-bottom:10px; }
 /* Главное число — крупное, ярким тоном происхождения. «Худшее» под ним — мелкое, обычного
    веса и приглушённое: разница обязана считываться мгновенно, до чтения. */
-.panel.stat .cv { font-size:var(--fs-1); font-weight:700; line-height:var(--lh-1); color:var(--calc); }
+.panel.stat .cv { font-size:var(--fs-1); font-weight:700; line-height:var(--lh-1); color:var(--stat); }
 .panel.stat .cs { margin-top:8px; font-size:var(--fs-3); font-weight:400; color:var(--muted); }
 .legend { font-size:var(--fs-3); color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:var(--fs-3); color:var(--muted); }
