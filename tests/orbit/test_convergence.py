@@ -59,3 +59,14 @@ def test_quadratic_second_order_change():
 def test_invalid_grid_rejected():
     with pytest.raises(ValueError,match='strictly'):
         compare_grids(ts([0,0]),[0,0],ts([0,60]),[0,0],T,T+timedelta(seconds=60))
+
+
+def test_local_diagnostics_sum_to_global_and_locate_signed_changes():
+    import math
+    intervals=[]
+    r=compare_grids(ts([0,60]),[0,0],ts([0,30,60]),[-1,0,1],T,T+timedelta(seconds=60),interval_report=intervals)
+    assert len(intervals)==2
+    assert [x['fine_interval_index'] for x in intervals]==[0,1]
+    assert [x['coarse_interval_index'] for x in intervals]==[0,0]
+    assert math.fsum(x['absolute_difference_integral'] for x in intervals)==r.absolute_difference_integral
+    assert math.fsum(x['fine_integral'] for x in intervals)==r.fine_common_integral

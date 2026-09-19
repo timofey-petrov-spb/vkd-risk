@@ -30,7 +30,8 @@ class GridComparison:
 def compare_grids(coarse_times: Sequence[datetime], coarse_values: Sequence[float | None],
                   fine_times: Sequence[datetime], fine_values: Sequence[float | None],
                   start_utc: datetime, end_utc: datetime, *, max_gap_seconds: float = 60,
-                  threshold: float | None = None) -> GridComparison:
+                  threshold: float | None = None,
+                  interval_report: list | None = None) -> GridComparison:
     """Integrate |linear_fine - linear_coarse| on their common valid support.
 
 The absolute difference is integrated BEFORE summation, including zero
@@ -46,11 +47,11 @@ Threshold durations are compared on that same common support only.
 
     def segments(times, values):
         times = [t.astimezone(timezone.utc) for t in times]
-        for a, b, va, vb in zip(times, times[1:], values, values[1:]):
+        for i, (a, b, va, vb) in enumerate(zip(times, times[1:], values, values[1:])):
             if va is not None and vb is not None and (b-a).total_seconds() <= max_gap_seconds:
                 lo, hi = max(a, start), min(b, end)
                 if lo < hi:
-                    yield lo, hi, a, b, va, vb
+                    yield lo, hi, a, b, va, vb, i
 
     def at(s, t):
         return s[4] + (s[5]-s[4]) * (t-s[2]).total_seconds()/(s[3]-s[2]).total_seconds()
@@ -81,7 +82,13 @@ Threshold durations are compared on that same common support only.
             c0, c1, f0, f1 = at(a, lo), at(a, hi), at(b, lo), at(b, hi)
             durations.append(dt)
             ci.append(dt*(c0+c1)/2); fi.append(dt*(f0+f1)/2)
-            differences.append(abs_area(f0-c0, f1-c1, dt))
+            local_delta = abs_area(f0-c0, f1-c1, dt)
+            differences.append(local_delta)
+            if interval_report is not None:
+                interval_report.append({'from_utc':lo.isoformat(), 'to_utc':hi.isoformat(),
+                    'duration_seconds':dt, 'coarse_interval_index':a[6], 'fine_interval_index':b[6],
+                    'absolute_difference_integral':local_delta,
+                    'coarse_integral':dt*(c0+c1)/2, 'fine_integral':dt*(f0+f1)/2})
             scales.append(abs_area(f0, f1, dt))
             tc.append(under(c0,c1,dt)); tf.append(under(f0,f1,dt))
         ae, be = a[1], b[1]

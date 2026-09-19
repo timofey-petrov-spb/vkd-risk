@@ -16,7 +16,10 @@
   * S4: на экране нет эмодзи и градиентных заливок;
   * S5: приборная полоса в две строки, давность печатается только в ней;
   * S6: на главном экране не больше двух графиков, панель инструментов Plotly скрыта, легенда ленты ≤ 4 строк;
-  * S8: новые ключи снимка читаются через .get и их отсутствие экран не роняет.
+  * S8: новые ключи снимка читаются через .get и их отсутствие экран не роняет;
+  * седьмой круг: верхний ряд ленты — накопленные минуты в аномалии по окнам, ряд событий
+    появляется только при событиях, подпись отметки времени печатается один раз, ось потока
+    строится по данным, область аномалии на карте — сглаженный контур с указанной высотой.
 """
 from __future__ import annotations
 
@@ -133,32 +136,172 @@ def test_status_ru_professionalnyy_ostavlyaet_proishozhdenie():
 
 
 # ----------------------------------------------------------------- графики (U4, U5)
+def _traj(t0, n=360, saa=range(60, 120)):
+    """Трасса шагом 1 мин: точки с номерами из saa — в аномалии."""
+    return [SimpleNamespace(t_utc=t0 + timedelta(minutes=i), lat_deg=0.0, lon_deg=float(i % 180) - 90.0,
+                            alt_km=420.0, B_nT=30000.0 - (5000.0 if i in saa else 0.0), in_saa=(i in saa))
+            for i in range(n + 1)]
+
+
+def _win(t0, offset_min, duration_min=180):
+    return SimpleNamespace(start_utc=t0 + timedelta(minutes=offset_min), duration_min=duration_min)
+
+
+def _axes(fig) -> dict:
+    """Оси рисунка: только те, что видны. Скрытая ось подписи не требует и места не занимает."""
+    lay = fig.layout.to_plotly_json()
+    return {k: v for k, v in lay.items() if k.startswith(('xaxis', 'yaxis')) and v.get('visible') is not False}
+
+
+def _ann(fig) -> list:
+    return [a.get('text') for a in (fig.layout.to_plotly_json().get('annotations') or [])]
+
+
 def test_timeline_metki_pravoy_osi_goes():
+    """U4: правая ось потока размечена своими метками, а её диапазон берётся по данным,
+    а не фиксируется до 1000 pfu: при потоке в доли pfu линия ложилась на дно."""
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    obs = [(t0 - timedelta(hours=h), 10.0 ** (h % 3)) for h in range(6, 0, -1)]      # максимум 100 pfu
+    fig = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', kp_obs=[], goes_obs=obs, search_min=360)
+    goes_axis = [a for a in _axes(fig).values() if a.get('type') == 'log']
+    assert goes_axis, 'правая ось GOES должна быть логарифмической'
+    assert set(goes_axis[0]['tickvals']) <= set(GOES_TICKVALS)
+    assert '10 (S1)' in list(goes_axis[0]['ticktext']), goes_axis[0]['ticktext']
+    lo, hi = goes_axis[0]['range']
+    assert hi < 3.0, ('диапазон оси задаётся данными, а не потолком 1000 pfu', hi)
+    assert 10.0 ** lo <= 1.0 and 10.0 ** hi >= 100.0, (lo, hi)
+
+
+def test_timeline_potok_nizhe_S1_bez_pustoy_osi():
+    """Поток ниже первого порога шкалы S не получает целой оси: он печатается строкой
+    под графиком с числом и единицей (иначе линия лежит на дне оси до 1000 pfu)."""
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    obs = [(t0 - timedelta(hours=h), 0.26) for h in range(6, 0, -1)]
+    fig = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', kp_obs=[], goes_obs=obs, search_min=360)
+    assert not [a for a in _axes(fig).values() if a.get('type') == 'log'], 'пустой логарифмической оси быть не должно'
+    line = [t for t in _ann(fig) if 'поток GOES' in (t or '')]
+    assert len(line) == 1, _ann(fig)
+    assert '0,26 pfu' in line[0] and 'S1' in line[0], line[0]
+
+
+def test_timeline_ryad_sobytiy_tolko_kogda_sobytiya_est():
+    """Пустой ряд событий занимал пятую часть высоты. Событий нет — ряда нет, есть строка подписи."""
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    ev = [SimpleNamespace(kind_of_event='SEP', event_id='x1', note='протонное событие', is_simulated=False,
+                          start_utc=t0 + timedelta(hours=1), valid_from_utc=None)]
+    with_ev = timeline([], [], 24000.0, t0, 360, None, None, ev, [], 'live', search_min=360)
+    без = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', search_min=360)
+    assert 'событие, тип' in [(v.get('title') or {}).get('text') for v in _axes(with_ev).values()]
+    assert 'событие, тип' not in [(v.get('title') or {}).get('text') for v in _axes(без).values()]
+    assert len(без.layout.to_plotly_json()['yaxis']['domain']) == 2
+    assert без.layout.height < with_ev.layout.height
+    assert [t for t in _ann(без) if 'событий и прогнозов на горизонте нет' in (t or '')], _ann(без)
+
+
+def test_timeline_podpis_kontsa_poiska_odin_raz():
+    """Подпись «конец периода поиска начала» печаталась дважды — по разу на ряд со своей осью —
+    и налезала на метки правой оси. Теперь линия и подпись ставятся вручную, ровно один раз."""
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     obs = [(t0 - timedelta(hours=h), 10.0 ** (h % 3)) for h in range(6, 0, -1)]
-    fig = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', kp_obs=[], goes_obs=obs, search_min=360)
-    axes = [v for k, v in fig.layout.to_plotly_json().items() if k.startswith('yaxis')]
-    goes_axis = [a for a in axes if a.get('type') == 'log']
-    assert goes_axis, 'правая ось GOES должна быть логарифмической'
-    assert list(goes_axis[0]['tickvals']) == GOES_TICKVALS
-    assert list(goes_axis[0]['ticktext']) == ['0,1', '1', '10', '100', '1000']
+    kp = [(t0 - timedelta(hours=h + 3), t0 - timedelta(hours=h), 3.0) for h in range(6, 0, -3)]
+    fig = timeline([], [], 24000.0, t0, 360, None, None, [], [], 'live', kp_obs=kp, goes_obs=obs, search_min=360)
+    assert len([t for t in _ann(fig) if 'конец периода поиска начала' in (t or '')]) == 1, _ann(fig)
+    assert len([t for t in _ann(fig) if t == 'сейчас']) == 1, _ann(fig)
 
 
-def test_timeline_zagolovok_i_legenda_ne_dlinnee_chetyryoh():
-    """S6: у ленты есть заголовок «что и откуда», подписи осей с единицами, легенда не длиннее четырёх строк."""
+def test_timeline_odna_os_vremeni_i_edinitsy_u_kazhdoy_osi():
+    """S6: у ленты заголовок «что и откуда», легенда не длиннее четырёх строк, ось времени
+    одна и та же у всех рядов, и у каждой видимой оси есть подпись с единицей."""
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
     obs = [(t0 - timedelta(hours=h), 10.0 ** (h % 3)) for h in range(6, 0, -1)]
     kp = [(t0 - timedelta(hours=h + 3), t0 - timedelta(hours=h), 3.0) for h in range(6, 0, -3)]
     ev = [SimpleNamespace(kind_of_event='SEP', event_id='x1', note='протонное событие', is_simulated=False,
                           start_utc=t0 + timedelta(hours=1), valid_from_utc=None)]
-    fig = timeline([], [], 24000.0, t0, 360, None, None, ev, [], 'live', kp_obs=kp, goes_obs=obs, search_min=360)
+    fig = timeline(_traj(t0), [_win(t0, 60)], 24000.0, t0, 360, None, None, ev, [], 'live',
+                   kp_obs=kp, goes_obs=obs, search_min=360)
     assert fig.layout.title.text and 'наш расчёт' in fig.layout.title.text
     legend = [tr.name for tr in fig.data if tr.showlegend is not False]
     assert len(legend) <= 4, legend
-    axes = fig.layout.to_plotly_json()
-    titles = [(v.get('title') or {}).get('text') for k, v in axes.items() if k.startswith(('xaxis', 'yaxis'))]
+    axes = _axes(fig)
+    titles = [(v.get('title') or {}).get('text') for v in axes.values()]
     assert 'время, UTC' in titles, titles
-    assert '|B|, нТл' in titles, titles
+    assert 'накоплено в аномалии, мин' in titles, titles
+    assert 'Kp (безразмерный)' in titles, titles
+    assert 'поток ≥10 МэВ, pfu' in titles, titles
+    ranges = [tuple(v['range']) for k, v in axes.items() if k.startswith('xaxis')]
+    assert len(set(ranges)) == 1, ranges
+    # единица есть у каждой видимой оси: либо в подписи, либо это подписанная категория
+    for k, v in axes.items():
+        if not k.startswith('yaxis'):
+            continue
+        t = (v.get('title') or {}).get('text') or ''
+        assert t, ('видимая ось без подписи', k)
+        assert any(u in t for u in ('мин', 'pfu', 'безразмерный', 'тип', 'нТл')), (k, t)
+
+
+def test_timeline_ekspozitsiya_schitaet_minuty_v_anomalii():
+    """Верхний ряд отвечает на вопрос «почему это окно лучше»: ступень накопленных минут
+    в аномалии от начала окна. Окно без пролётов даёт ровный ноль, а не пустое место."""
+    from app.viz import window_exposure
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    traj = _traj(t0, n=361, saa=range(60, 120))  # both window boundaries are sampled
+    for p in traj:
+        p.B_nT = 23000 if p.in_saa else 25000  # flags must agree with the tested field
+    w_hit, w_miss = _win(t0, 0, 180), _win(t0, 180, 180)
+    xs, ys, total = window_exposure(traj, w_hit)
+    assert total == 60.0, total
+    assert ys[0] == 0.0 and ys == sorted(ys), ys[:5]
+    assert xs[-1] == w_hit.start_utc + timedelta(minutes=180)
+    assert window_exposure(traj, w_miss)[2] == 0.0
+    fig = timeline(traj, [w_hit, w_miss], 24000.0, t0, 360, None, None, [], [], 'live', search_min=360)
+    assert [t for t in _ann(fig) if 'экспозиция считается' in (t or '')] == [], 'прошлого на ленте нет — нет и подписи'
+    texts = [tuple(tr.text) for tr in fig.data if tr.text and tr.mode and 'text' in tr.mode]
+    assert ('окно 1: 60 мин',) in texts, texts
+    assert ('окно 2: 0 мин',) in texts, texts
+
+
+def test_timeline_proshloe_podpisano_a_ne_prosto_pusto():
+    """Левый край ленты — начало показа наблюдений, и верхний ряд там пуст по определению:
+    экспозиция считается только внутри окон. Это подписано, иначе читается как потеря данных."""
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    kp = [(t0 - timedelta(hours=h + 3), t0 - timedelta(hours=h), 3.0) for h in range(12, 0, -3)]
+    fig = timeline(_traj(t0), [_win(t0, 60)], 24000.0, t0, 360, None, None, [], [], 'live',
+                   kp_obs=kp, search_min=360)
+    assert [t for t in _ann(fig) if 'экспозиция считается' in (t or '')], _ann(fig)
+    x_from = _axes(fig)['xaxis']['range'][0]
+    assert x_from <= t0 - timedelta(hours=11), x_from
+
+
+def test_karta_anomalii_sglazhennym_konturom_s_vysotoy():
+    """Плоская карта: область аномалии — замкнутый контур, а не квадраты сетки 4°,
+    и высота, на которой он построен, стоит и в подписи слоя, и в заголовке."""
+    from app.viz import ground_track, saa_contour
+    t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
+    polys = saa_contour(420.0, 24000.0, t0)
+    assert polys, 'область аномалии на 420 км при пороге 24 000 нТл существует'
+    lon, lat = polys[0]
+    assert len(lon) > 40 and lon[0] == lon[-1] and lat[0] == lat[-1], (len(lon), lon[0], lon[-1])
+    assert -130.0 < min(lon) and max(lon) < 60.0 and min(lat) > -70.0, (min(lon), max(lon), min(lat))
+    fig = ground_track(_traj(t0, n=60, saa=()), [_win(t0, 0, 60)], 24000.0, t0)
+    saa = [tr for tr in fig.data if tr.name and tr.name.startswith('аномалия')]
+    assert len(saa) == 1 and saa[0].fill == 'toself' and saa[0].mode == 'lines', saa[0].mode
+    assert '420 км' in saa[0].name, saa[0].name
+    assert '420 км' in fig.layout.title.text, fig.layout.title.text
+
+
+def test_podpisi_pod_grafikami_opisyvayut_tekushchie_ryady():
+    """Подпись под лентой не обещает ряда, которого может не быть, и не называет верхний
+    ряд полем |B|: текст живёт в app/ui.py рядом с описанием рисунка."""
+    from app.ui import map_caption, timeline_caption
+    for mode in ('live', 'history_review', 'history_forecast'):
+        for pro in (False, True):
+            t = timeline_caption(mode, pro)
+            assert 'Ряд 3' not in t and 'Ряд 1' not in t, t
+            assert '|B| на трассе, наш расчёт по IGRF:' not in t
+            assert 'в аномалии' in t and 'окн' in t, t
+    assert 'когда они есть на горизонте' in timeline_caption('live')
+    assert '2° по долготе' in map_caption(True)
+    assert 'сетке 4°' not in map_caption(True)
 
 
 def test_plotly_panel_instrumentov_skryta():
