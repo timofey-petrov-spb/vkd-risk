@@ -141,10 +141,9 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .cond.none { border-left-color:var(--none-line); background:var(--none-bg); color:var(--none); }
 .cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
 .covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
-/* строка задачи: то, ради чего человек пришёл, — первым элементом главной области */
-.task { border:1px solid var(--calc-line); border-radius:12px; background:var(--calc-bg);
-        padding:8px 14px 2px 14px; margin:2px 0 10px 0; }
-.task .tl { font-size:0.95rem; font-weight:600; color:var(--calc); margin:0 0 2px 0; }
+/* подкладка под кнопку строки задачи: она встаёт вровень с полями ввода, у которых своя подпись.
+   Высота вынесена сюда, а не в разметку: числа с десятичной точкой на экране быть не должно. */
+.btnpad { height:1.75rem; }
 /* блок рекомендации: ответ на вопрос человека. Рамка слева синяя — это наш расчёт; при отказе
    серая или красная, чтобы заголовок не был увереннее расчёта. */
 .reco { border:1px solid var(--line); border-radius:12px; padding:16px 20px; background:var(--bg);
@@ -1406,6 +1405,21 @@ def comparison_without_pick_ru(text: str, verdict: str) -> str:
     return cut + ' — ' + note + '.'
 
 
+def structural_gap(S: dict, mode: str, missing) -> bool:
+    """Пробел покрытия структурный: его не закроет ни один следующий выпуск источника.
+
+    Так устроен канал протонных событий в текущем режиме: наблюдение GOES не может покрыть окно,
+    начинающееся через несколько часов, потому что прогноза потока с разрешением по окну не
+    существует ни у одного источника (`docs/design/RESHENIE_TEKUSCHIY_REZHIM.md`). Если же
+    источник выключен человеком или отказал, пробел обычный: его закрывает возврат источника.
+    """
+    if mode != 'live':
+        return False
+    if any((S.get('request') or {}).get('disabled', {}).values()):
+        return False
+    return any(('GOES' in str(m) or 'прогноз' in str(m)) for m in (missing or ()))
+
+
 def next_step_ru(rec, S: dict, assessments=None, mode: str = 'live') -> str:
     """Одна строка «что делать дальше» под вердиктом — сквозное замечание аналитика.
 
@@ -1434,6 +1448,18 @@ def next_step_ru(rec, S: dict, assessments=None, mode: str = 'live') -> str:
         when = 'пересчитать после следующего выпуска источников' if mode == 'live' \
             else 'пересчёт на другой отсечке покажет, что знал прогноз раньше'
     if v == 'insufficient':
+        # Смежная находка решения владельца 19.09: обещать новый выпуск источника там, где пробел
+        # СТРУКТУРНЫЙ, нельзя. В текущем режиме канал наблюдения GOES физически не может покрыть
+        # окно, начинающееся через несколько часов: прогноза потока протонов с разрешением по окну
+        # не существует ни у одного источника, и сколько ни ждать следующего выпуска NOAA, покрытие
+        # не появится. Строка называет причину и предлагает посильное. Когда источник выключен
+        # человеком или отказал, пробел не структурный — там прежний текст верен.
+        if structural_gap(S, mode, rec.missing):
+            return ('Что дальше: %sбез обязательной линии рекомендации не будет, сравнение окон её не заменяет. '
+                    'Следующий выпуск источника этот пробел не закроет: прогноза потока протонов с разрешением '
+                    'по окну не существует ни у одного источника. Посильное — начать ближе к моменту последнего '
+                    'наблюдения либо перейти в исторический разбор, где линия покрыта и виден полный разбор.'
+                    % span)
         return ('Что дальше: %sбез обязательной линии рекомендации не будет, сравнение окон её не заменяет; '
                 'пробел закрывает возврат источника в работу (боковая панель, «Источники») или новый выпуск — %s.'
                 % (span, when))
@@ -2626,15 +2652,30 @@ def _factor_source_ru(f, raw_records: dict | None) -> str:
     Ссылка идёт в разметке Markdown, а не тегом: голого адреса на оперативном уровне быть
     не должно, а подпись ссылки — имя выпуска источника.
     """
+    from vkd.explain.format import source_ru as _source_ru
     ids = list(getattr(f, 'record_ids', None) or ())
-    links, no_link = [], []
-    for rid in ids[:2]:
+    links, no_link, seen = [], [], set()
+    for rid in ids:
+        sid = str(rid or '').split(':')[0]
+        if sid in seen:
+            continue                      # два выпуска одного источника — одна ссылка, не две
         u = record_url(raw_record(raw_records, rid))
-        (links.append('[%s](%s)' % (record_label_ru(rid), u)) if u else no_link.append(rid))
+        if u:
+            # Подпись ссылки — ИМЯ ИСТОЧНИКА, а не имя записи: имя записи несёт номер выпуска
+            # («202405100030three_day_forecast»), то есть английский идентификатор на оперативном
+            # уровне (бриф §9.8). Номер выпуска с временем публикации остаётся в карточке
+            # объяснения, где он и нужен, чтобы различать два уведомления с разными числами.
+            name = SOURCE_RU.get(sid) or _source_ru(sid)
+            links.append('[%s](%s)' % (name, u))
+            seen.add(sid)
+        else:
+            no_link.append(rid)
+        if len(links) >= 2:
+            break
     if links:
         return ', '.join(links)
     if no_link:
-        return record_no_url_ru(no_link, raw_records) or 'источник назван в таблице источников'
+        return record_no_url_ru(no_link[:3], raw_records) or 'источник назван в таблице источников'
     return 'источник назван в таблице источников'
 
 
@@ -2775,6 +2816,12 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
         lines.append('<div class="cond">Условия проверки: %s</div>' % esc('; '.join(conds[:3])))
     elif cand is not None:
         lines.append('<div class="cond none">Условий проверки у рекомендованного окна нет</div>')
+    if pro:
+        # Профессиональному уровню важно, один кандидат оказался в лучшей группе или несколько:
+        # по разбору реальных данных ожидается один, и множество равнозначных — повод проверить
+        # допуски, а не признак хорошей обстановки. Числа берутся из договора, ничего не считаем.
+        lines.append('<div class="policy">В лучшей группе %s из %s перебранных начал.</div>'
+                     % (fmt(len(scan.get('best') or [])), fmt(len(scan.get('candidates') or []))))
     rule = scan.get('rule')
     tol = scan.get('tolerance_note')
     # Правило и допуск приходят из движка строчными — здесь они становятся двумя предложениями,

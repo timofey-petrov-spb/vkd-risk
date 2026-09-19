@@ -2290,6 +2290,10 @@ def test_rekomendaciya_iz_perebora_krupno_i_s_chislami():
     assert 'Область вывода:' in txt, txt
     assert 'Условий проверки у рекомендованного окна нет' in txt, txt
     assert txt.count('(') == txt.count(')'), txt
+    # На профессиональном уровне названо, один кандидат в лучшей группе или несколько: множество
+    # равнозначных — повод проверить допуски, а не признак хорошей обстановки.
+    pro_txt = _strip_tags(recommendation_panel(_scan_fixture(t0), {}, pro=True, duration_min=240))
+    assert 'В лучшей группе 1 из 7 перебранных начал' in pro_txt, pro_txt
 
 
 def test_otkaz_perebora_nazyvaet_prichinu_i_chto_nuzhno():
@@ -2375,3 +2379,22 @@ def test_ekran_s_pereborom_risuet_rekomendaciyu_lentu_i_tablicu(monkeypatch):
     assert main_charts(at) == 1, 'лента окон — один рисунок из двух графиков, других на главном нет'
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться на экране'
     assert 'Таблица лучших начал' in body, body[:500]
+
+
+def test_chto_dalshe_ne_obeshchaet_vypuska_pri_strukturnom_probele():
+    """Смежная находка решения владельца 19.09: при структурном пробеле строка «Что дальше»
+    обещала новый выпуск источника. Прогноза потока протонов с разрешением по окну не существует
+    ни у одного источника, и сколько ни ждать выпуска NOAA, покрытие не появится: строка обязана
+    называть причину и предлагать посильное."""
+    from app.ui import structural_gap
+    assert structural_gap({'request': {'disabled': {}}}, 'live', ['нет прогноза потока протонов на окно'])
+    assert not structural_gap({'request': {'disabled': {'goes': 'off'}}}, 'live', ['GOES исключён'])
+    assert not structural_gap({'request': {'disabled': {}}}, 'history_review', ['GOES'])
+    at = run_app(MODES[0])
+    assert not at.exception, at.exception
+    vis = verdict_visible(at)
+    if 'Оснований для рекомендации недостаточно' not in vis:
+        pytest.skip('на живых данных этого прогона вердикт не отказ — проверять структурный пробел не на чем')
+    assert 'Следующий выпуск источника этот пробел не закроет' in vis, vis
+    assert 'или новый выпуск' not in vis, vis
+    assert 'перейти в исторический разбор' in vis, vis
