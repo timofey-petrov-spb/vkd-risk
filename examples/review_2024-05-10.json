@@ -1,7 +1,7 @@
 {
  "schema_version": "2.3",
  "algorithm_version": "0.9.0",
- "computed_utc": "2026-09-19T11:14:00+00:00",
+ "computed_utc": "2026-09-19T11:24:00+00:00",
  "mode": "Исторический разбор",
  "mode_id": "history_review",
  "request": {
@@ -39375,5 +39375,5 @@
   "answer_kind": null,
   "answer_span": null
  },
- "git_commit": "6b7ea0ef7c2c585f67a1673acefc4b06e31600dc"
+ "git_commit": "a3bda1619f9b0cfe6329b4942b14cefd8f03baa9"
 }
