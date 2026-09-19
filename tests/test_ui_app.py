@@ -1409,7 +1409,10 @@ def test_blok_verdikta_ne_splosnoy_abzac(mode):
     html_ = verdict_html(at)
     vis = verdict_visible(at)
     assert len(vis) <= 650, (len(vis), vis)
-    assert html_.count('<li') <= 5, html_
+    # The limit is for the surface. The evidence drawer now also uses a list;
+    # counting it would require hiding valid missing-coverage explanations.
+    visible_html = re.sub(r'<details class="vmore">.*?</details>', '', html_, flags=re.S)
+    assert visible_html.count('<li') <= 5, html_
     assert 'Охват:' not in vis and 'Не учтено:' not in vis, vis      # они во вкладке «Окна и факторы»
     assert len(re.findall(r'не покрывает окно', vis)) <= 1, vis
     # на поверхности нет ни происхождения допуска, ни разбора сетки порогов — они на клик глубже
