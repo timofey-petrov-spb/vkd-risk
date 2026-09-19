@@ -3,9 +3,10 @@
 человека «нам надо выйти» (техзадание одиннадцатого круга, раздел 3.0):
 
   1 заголовок и назначение → 2 строка задачи (длительность, срок, «Найти окна») →
-  3 рекомендация (когда выходить, почему, область вывода, условия, отчёт) →
-  4 глобус (где и когда) → 5 лента окон (два графика по сроку и таблица лучших) →
-  6 что учтено и что нет → 7 состояние источников (в нём же приборная полоса) →
+  3 рекомендация (когда выходить, два предложения «почему» обычными словами, область вывода,
+    условия, отчёт) →
+  4 глобус (где и когда) → 5 профиль воздействия на сроке (один график и таблица лучших начал) →
+  6 что учтено → 7 состояние источников (в нём же приборная полоса) →
   8 разобрать конкретные окна, свёрнуто (прежние карточки, ползунки сдвига и вердикт по ним) →
   9 вкладки: Объяснения, Окна и факторы, Наблюдения и прогнозы, Методика, Данные
   (и Устойчивость и нормы на профессиональном уровне).
@@ -32,16 +33,17 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 
-from app import globe
+from app import backdrop, globe
 from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, run, validate_request
 from app.export import _git_sha, build_zip
 from app.fetch_guard import LIMIT_MARK, fetch_live_sources, total_deadline_s
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_figure, observations_panel
-from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI_REGISTRY_ROW, LIVE_NO_EVENTS_RU,
+from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIMITS_SECTION_RU, LIVE_DONKI_REGISTRY_ROW,
+                    LIVE_NO_EVENTS_RU,
                     MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESET_CHANGED_RU, PRESETS,
-                    RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE, SEV_RU, STRICT_RU,
-                    TASK_HINT_RU, VERDICT_TITLE,
+                    RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, RULE_THRESHOLDS_NOTE, SCOPE_TAB_HINT_RU,
+                    SEV_RU, STRICT_RU, TASK_HINT_RU, VERDICT_TITLE,
                     SCAN_SOURCES_RU, accounted_lines, accounted_lines_from_scan, accounted_sources,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
                     coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
@@ -51,7 +53,8 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI
                     pill, plan_change_ru, plan_state, plural_ru, preset_matches,
                     ratio_ru, raw_record, recommendation_panel, record_label_ru, record_no_url_ru, record_release_ru,
                     record_url, registry_row, ribbon_caption_ru, robustness_gain_ru,
-                    saa_note_ru, scan_absent_ru, scan_answer, scan_best_rows, scan_of, screen_text, short_reason,
+                    saa_note_ru, scan_absent_ru, scan_answer, scan_best_rows, scan_conditions_note_ru,
+                    scan_of, screen_text, short_reason,
                     source_issues, source_issues_short_ru, source_name_ru,
                     source_short, spread_offsets,
                     status_ru, timeline_caption, tle_origin, verdict_panel, verification_ru, window_card,
@@ -76,6 +79,10 @@ LOG = logging.getLogger('vkd.app')
 
 st.set_page_config(page_title='ВКД-Риск', layout='wide', initial_sidebar_state='expanded')
 st.markdown(CSS, unsafe_allow_html=True)
+# Тёмный фон со звёздами и короткие осмысленные анимации (app/backdrop.py). Отдельный
+# модуль, а не часть CSS экрана: у него своя проверка контраста на 21 пару и свой
+# предел веса разметки. Возвращает вес в байтах и падает сам, если предел превышен.
+backdrop.apply(st)
 st.session_state.setdefault('fetch_nonce', 0)     # Т6: обновление данных — сессионное, не st.cache_data.clear()
 
 
@@ -361,9 +368,17 @@ try:
                                              int(st.session_state['fetch_nonce']))
     else:
         fetched, fetch_note = None, None   # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
-    with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
+    # Этапы перечисляются заранее и закрываются по факту: человек видит, ЧТО считается,
+    # а не одну фразу «идёт расчёт». Порядок соответствует действительному ходу расчёта
+    # внутри app.compute.run; если он там изменится, этот перечень станет враньём.
+    with st.status('Считаю окна выхода…', expanded=True) as _st_progress:
+        st.write('Траектория станции: распространение элементов орбиты и магнитное поле по трассе')
+        st.write('Оценка окон: минуты в аномалии, флюенс захваченных протонов, доза за защитой')
+        st.write('Метеороиды и техногенный мусор: ожидаемое число попаданий за окно')
+        st.write('Перебор начал выхода на всём сроке и проверка устойчивости выбора')
         R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
                 scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note)
+        _st_progress.update(label='Расчёт закончен', state='complete', expanded=False)
 except Exception as e:            # noqa: BLE001 — экран не падает; подробности в лог, не зрителю (Т6, Т7)
     LOG.error('расчёт не выполнен: %s\n%s', e, traceback.format_exc())
     st.error('Расчёт не выполнен: %s. Измените запрос или повторите позже; подробности записаны в журнал сервера.' % type(e).__name__)
@@ -467,15 +482,31 @@ if mode == 'live':
     # (их приносит сценарий «что если»).
     row2.append(('События на горизонте',
                  '%s %s' % (fmt(len(R.events)), plural_ru(len(R.events), ('запись', 'записи', 'записей'))),
-                 'наш подсчёт по реестру: сценарий «что если» и датированные прогнозы, учтённые в окнах'
-                 if R.events else
-                 # Самое важное — ПЕРВОЙ частью: короткая подпись ячейки берёт её целиком, и
-                 # объявление о неопрошенном источнике остаётся на первом экране, а не только
-                 # в раскрытии (находка №9: пропуск данных не равен нулевому риску).
-                 'наш подсчёт по реестру; NASA DONKI не опрашивается — это не отсутствие событий · '
-                 'ноль опрошенных источников событий · условия ставятся по наблюдению GOES и '
-                 'прогнозу Kp NOAA — ограничение охвата, объявлено',
-                 'fc' if R.events else 'none'))
+                 # Двенадцатый круг: лента уведомлений NASA DONKI ТЕПЕРЬ ОПРАШИВАЕТСЯ живьём
+                 # (vkd/integration/donki_live.py). Прежняя подпись «источник не опрашивается»
+                 # стала неправдой, и её нельзя оставлять: ноль записей теперь означает
+                 # «опросили, событий на горизонте нет», а это другое утверждение. Признак и
+                 # числа берутся из снимка расчёта (`events_line`), а не из головы экрана.
+                 ('наш подсчёт по реестру: сценарий «что если» и датированные прогнозы, учтённые в окнах'
+                  if R.events else
+                  # Подпись строится теми же смысловыми частями через « · », что у остальных
+                  # ячеек: первая часть остаётся в полосе, полная уходит в раскрытие под ней
+                  # (app.ui.split_panel_rows). Без разделителей ячейка не даёт записи в
+                  # раскрытие, и оно пропадает целиком — это ловило падение проверки.
+                  # Происхождение величины стоит ПЕРВЫМ и не выбрасывается: число в ячейке —
+                  # наш подсчёт по реестру окон, а не счётчик сообщений службы. Это разные
+                  # величины, и проверка требует, чтобы ячейка называла своё происхождение.
+                  ('наш подсчёт по реестру · лента опрошена живьём: %s %s за %s суток · '
+                   'событий с действием в окнах нет — ноль здесь означает «опросили, событий '
+                   'нет», а не «источник не спрашивали»'
+                   % (fmt((S.get('events_line') or {}).get('feed_messages', 0)),
+                      plural_ru(int((S.get('events_line') or {}).get('feed_messages', 0)),
+                                ('сообщение', 'сообщения', 'сообщений')),
+                      fmt((S.get('events_line') or {}).get('feed_window_days', 7)))
+                   if (S.get('events_line') or {}).get('connected')
+                   else 'источник уведомлений не ответил: %s — это не отсутствие событий'
+                        % ((S.get('events_line') or {}).get('reason_ru') or 'причина не названа'))),
+                 'fc' if R.events else ('obs' if (S.get('events_line') or {}).get('connected') else 'none')))
 else:
     # Сколько записей не пошло в расчёт ИМЕННО из-за отсечки: остальные не подошли по содержанию,
     # и называть их исключёнными отсечкой нельзя (в разборе отсечки нет вовсе).
@@ -604,15 +635,22 @@ else:
     c_main.caption(scan_absent_ru())
 c_btn.download_button('Скачать отчёт (ZIP)', _zip, file_name=_fname + '.zip', mime='application/zip', width='stretch', key='dl_top')
 c_btn.caption('отчёт, запрос, факторы, сырые записи')
-if mode == 'history_forecast' and R.verification:
-    st.info('**Проверка после отсечки** (в расчёт не входит — только сопоставление прогноза с фактом): %s. '
-            'Подробности — вкладка «Наблюдения и прогнозы».' % verification_ru(R.verification['summary'], any_cond))
+# Пункт 1 двенадцатого круга. Здесь стояла плашка «Проверка после отсечки»: владелец о ней —
+# «проверка после отсечки мне тоже не ясна, либо убираем, либо обыгрываем нормально». Между
+# вопросом человека и ответом ей не место: она не о том, когда выходить, а о том, сошёлся ли
+# прогноз с фактом задним числом. Сама проверка никуда не делась — она стоит целиком во вкладке
+# «Наблюдения и прогнозы», где рядом лежат и наблюдения, и прогнозы, из которых она собрана,
+# и названа там своими словами: что это сопоставление, а не часть расчёта.
 
 # ================================================================= блок 4: глобус — где и когда
 # Глобус переехал из вкладки на главный экран: он обыгрывает рекомендацию, а не иллюстрирует
 # методику (раздел 3.5 техзадания). Плоская карта остаётся запасным видом — она работает без
 # WebGL и без сети.
 _globe_recommended = None
+# Ограничения глобуса собираются здесь, а печатаются во вкладке «Методика» (пункт 1). Умолчание
+# пустое: вид не построен или выбрана плоская карта — говорить о нём во вкладке нечего, и
+# выдумывать текст вместо отсутствующего нельзя.
+_globe_limits, _globe_tech = '', ''
 if scan_cand is not None and (scan_ans or {}).get('kind') in ('point', 'interval'):
     try:
         _globe_recommended = (datetime.fromisoformat(scan_cand['start_utc']),
@@ -638,16 +676,15 @@ if traj:
                                           recommended=_globe_recommended)
             globe.render_globe(_gp)
             # Подпись глобуса длинная и своя: на первом экране остаётся первая фраза — что
-            # нарисовано, — остальное вместе с технической строкой уходит раскрытием.
+            # нарисовано. Остальное (чем посчитано и чего глобус НЕ даёт) с двенадцатого круга
+            # уезжает не в раскрытие рядом, а во вкладку «Методика», в раздел «Границы
+            # применимости»: владелец просил не перечислять ограничения на главном экране
+            # россыпью — «что не даёт глобус, тоже не надо писать». Текст не потерян: он стоит
+            # в одном месте со всеми остальными ограничениями и попадает в отчёт.
             _gcap = globe.caption(_gp)
-            _gc_head, _gc_dot, _gc_rest = _gcap.partition('. ')
+            _gc_head, _gc_dot, _globe_limits = _gcap.partition('. ')
             st.caption(_gc_head + ('.' if _gc_dot else ''))
-            if _gc_rest or pro:
-                with st.expander('Подробнее о глобусе: чем посчитано и чего не даёт', expanded=False):
-                    if _gc_rest:
-                        st.caption(_gc_rest)
-                    if pro:
-                        st.caption(globe.tech_line(_gp))
+            _globe_tech = globe.tech_line(_gp) if pro else ''
         except Exception as e:                    # noqa: BLE001 — Т6: вид отказал, экран остаётся
             LOG.error('глобус не построен: %s\n%s', e, traceback.format_exc())
             st.warning('Глобус не построен (%s). Переключите вид на «Плоская карта» — данные те же.'
@@ -659,25 +696,34 @@ if traj:
 else:
     st.write('Трассы нет: орбита недоступна.')
 
-# ================================================================= блок 5: лента окон
-st.markdown('<div class="sect">Лента окон: что даёт каждое начало выхода</div>', unsafe_allow_html=True)
+# ================================================================= блок 5: профиль воздействия
+st.markdown('<div class="sect">Профиль воздействия на сроке поиска</div>', unsafe_allow_html=True)
 if scan is not None:
-    st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV)), width='stretch', config=PLOTLY_CONFIG)
-    st.caption(ribbon_caption_ru(scan, th.e_min_MeV))
+    # Пункт 3: один график вместо двух панелей с ломаными. Ось Y — круглые степени десяти,
+    # рекомендованный промежуток залит, пик подписан временем (app.ui.windows_ribbon).
+    st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV, duration_min=duration_min)),
+                    width='stretch', config=PLOTLY_CONFIG)
+    st.caption(ribbon_caption_ru(scan, duration_min=duration_min))
     _best_rows = scan_best_rows(scan)
     if _best_rows:
         st.dataframe(_best_rows, width='stretch', hide_index=True,
                      column_config={'условия проверки': st.column_config.TextColumn(width='large')})
+        # Пункт 4: колонка условий печатается только тогда, когда условие есть хоть у одного
+        # показанного начала. Когда его нет ни у кого, вместо колонки из одних «нет» стоит
+        # одна строка — она сообщает ровно тот же факт и не занимает треть ширины таблицы.
+        _cond_note = scan_conditions_note_ru(_best_rows)
         # Номера 1…6 заняты таблицами вкладок; эта стоит на главном экране и называется по имени,
         # чтобы не оказалось двух «Таблиц 1» на одном экране.
-        st.markdown('<div class="tcap">Таблица лучших начал: по тому же правилу, что и рекомендация — '
-                    'обе величины и условия проверки поимённо. Безразмерных баллов и нормировки здесь нет: '
-                    'минуты в аномалии и флюенс складывать нельзя.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="tcap">Таблица лучших начал: по тому же правилу, что и рекомендация. '
+                    'Безразмерных баллов и нормировки здесь нет: минуты в аномалии и флюенс складывать '
+                    'нельзя.%s</div>' % ((' ' + _cond_note) if _cond_note else ''), unsafe_allow_html=True)
 else:
-    st.caption('Ленты нет: перебор начал не выполнялся, рисовать по нему нечего.')
+    st.caption('Профиля нет: перебор начал не выполнялся, рисовать по нему нечего.')
 
-# ================================================================= блок 6: что учтено и что нет
-st.markdown('<div class="sect">Что учтено и что нет</div>', unsafe_allow_html=True)
+# ================================================================= блок 6: что учтено
+# Заголовок был «Что учтено и что нет». Вторая половина переехала во вкладку «Методика» (пункт 1),
+# и держать её в названии блока значило бы обещать на экране то, чего на нём больше нет.
+st.markdown('<div class="sect">Что учтено</div>', unsafe_allow_html=True)
 _acc_target = None
 if scan_cand is not None:
     _acc_target = next((a for a in R.assessments
@@ -720,15 +766,13 @@ else:
     st.markdown('<div class="legend">Цвет = происхождение: синий — наш расчёт, зелёный — наблюдение, '
                 'янтарный — внешний прогноз, красный — условие проверки или аномалия, серый — данных нет.</div>',
                 unsafe_allow_html=True)
-# «Чего не учли» — раскрытием, и число пунктов названо прямо в заголовке: пропуски никуда не
-# делись и видны одним кликом, но шесть длинных строк на первом экране забивали сам ответ.
+# Пункт 1 двенадцатого круга. Здесь стояло раскрытие «Чего сервис не учёл: N пунктов — поимённо
+# и с причиной». Владелец: «вообще недочёты не надо указывать в программе, подчисти это». Список
+# не удалён — он целиком переехал во вкладку «Методика», в раздел «Границы применимости», где
+# стоит вместе с остальными ограничениями, а не россыпью по главному экрану. Здесь остаётся одна
+# нейтральная строка со ссылкой: ни перечисления, ни числа пунктов, ни покаянного тона.
 _not_acc = not_accounted_ru(S, mode)
-if _not_acc:
-    with st.expander('Чего сервис не учёл: %s %s — поимённо и с причиной'
-                     % (fmt(len(_not_acc)), plural_ru(len(_not_acc), ('пункт', 'пункта', 'пунктов'))),
-                     expanded=False):
-        for _line in _not_acc:
-            st.markdown('- ' + _line)
+st.caption(SCOPE_TAB_HINT_RU)
 
 # ================================================================= блок 7: состояние источников
 st.markdown('<div class="sect">Состояние источников: чем считали</div>', unsafe_allow_html=True)
@@ -810,10 +854,10 @@ with st.expander('Разобрать конкретные окна: сравни
 # Прежде «Методика» стояла третьей, и пользователь дважды проходил мимо формул, прежде чем
 # добирался до данных. Вкладка «Карта» упразднена: её содержимое — глобус и запасная плоская
 # карта — стоит блоком 4 главного экрана, и держать второе такое же место незачем.
-tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика', 'Данные'] \
-    + (['Устойчивость и нормы'] if pro else [])
+tab_names = ['Объяснения', 'Окна и факторы', 'Наблюдения и прогнозы', 'Методика', 'Данные',
+             'Перспектива'] + (['Устойчивость и нормы'] if pro else [])
 tabs = st.tabs(tab_names)
-TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_METHOD, TAB_DATA, TAB_ROBUST = 0, 1, 2, 3, 4, 5
+TAB_CARDS, TAB_FACTORS, TAB_OBS, TAB_METHOD, TAB_DATA, TAB_OUTLOOK, TAB_ROBUST = 0, 1, 2, 3, 4, 5, 6
 
 with tabs[TAB_CARDS]:
     _win_labels = ['Окно %d (%s)%s' % (i + 1, dt_ru(a.window.start_utc),
@@ -1020,6 +1064,43 @@ with tabs[TAB_METHOD]:
         # на неё из формулы (9) на оперативном уровне вела в никуда.
         st.markdown('<div class="small">Источник: %s</div>' % method_source_ru(b, pro), unsafe_allow_html=True)
         st.markdown('<div class="small">Не учтено и ограничения: %s</div>' % b['limits'], unsafe_allow_html=True)
+    # ------------------------------------------------ границы применимости (пункт 1 двенадцатого круга)
+    # Всё, что раньше стояло россыпью на главном экране и читалось как перечень наших оправданий,
+    # собрано ЗДЕСЬ, в одном разделе и в одном порядке: чего сервис не учёл, что не даёт глобус,
+    # что означает проверка после отсечки. Ничего не удалено — критерии оценки прямо требуют, чтобы
+    # ограничения охвата были видны в сервисе (О1 «учтены ограничения охвата», О2 «без
+    # необоснованных заявлений о безопасности», О4 «ограничения и обоснование уверенности»,
+    # Т1 «сказано ли, чего в данных нет»). На главном экране на это ведёт одна строка.
+    st.markdown('<div class="sect">%s</div>' % LIMITS_SECTION_RU, unsafe_allow_html=True)
+    # Сказано ровно то, что есть на самом деле: пропуски охвата ЭТОГО расчёта лежат в снимке
+    # (ключи `coverage_declared` и `coverage_missing`) и печатаются отчётом выгрузки, а строки
+    # о том, чего сервис не считает в принципе, — это правило сервиса, и живут они здесь.
+    # Обещать «всё то же самое есть в отчёте» было бы заявлением, которого мы не проверяли.
+    st.markdown('Раздел собран в одном месте намеренно: границы расчёта читаются подряд, а не '
+                'выискиваются по экрану. Пропуски охвата этого расчёта входят и в снимок, и в '
+                'выгрузку; строки о том, чего сервис не считает в принципе, — правило сервиса.')
+    if _not_acc:
+        st.markdown('**Чего сервис не учёл** — %s %s, поимённо и с причиной.'
+                    % (fmt(len(_not_acc)), plural_ru(len(_not_acc), ('пункт', 'пункта', 'пунктов'))))
+        for _line in _not_acc:
+            st.markdown('- ' + _line)
+    if _globe_limits or _globe_tech:
+        # Приглушённой подписью, а не пунктом списка: это служебное пояснение к рисунку, и
+        # набрано оно тем же кеглем, каким подписаны все рисунки сервиса. Заодно строка
+        # остаётся там, где её ищут проверки глобуса, — среди подписей экрана (tests/test_globe.py).
+        st.markdown('**Чем посчитан глобус и чего он не даёт.**')
+        if _globe_limits:
+            st.caption(_globe_limits)
+        if _globe_tech:
+            st.caption(_globe_tech)
+    if mode == 'history_forecast' and R.verification:
+        # «Обыграть нормально» из замечания владельца — это назвать своими словами, что это такое
+        # и почему оно не часть расчёта, а не убрать плашку и промолчать.
+        st.markdown('**Проверка после отсечки.** Сопоставление того, что знал прогноз до отсечки, '
+                    'с тем, что наблюдалось потом. В расчёт она не входит и на рекомендацию не влияет: '
+                    'это способ проверить сам сервис, а не обстановку. Итог: %s. Таблицы наблюдений '
+                    'и событий — вкладка «Наблюдения и прогнозы».'
+                    % verification_ru(R.verification['summary'], any_cond))
     st.markdown('<div class="sect">Пороги условий проверки</div>', unsafe_allow_html=True)
     st.dataframe(RULE_THRESHOLDS, width='stretch', hide_index=True,
                  column_config={'условие': st.column_config.TextColumn(width='medium'),
@@ -1202,6 +1283,37 @@ with tabs[TAB_OBS]:
                      column_config={'ссылка': st.column_config.LinkColumn('первоисточник', display_text='открыть'),
                                     'примечание': st.column_config.TextColumn(width='large'),
                                     **({'запись': st.column_config.TextColumn('запись', width='medium')} if pro else {})})
+
+with tabs[TAB_OUTLOOK]:
+    # Слово «ранжирование» на оперативном уровне запрещено (оно ничего не объясняет человеку)
+    # и проверяется тестом; здесь говорим тем же языком, что и остальной экран.
+    st.markdown('**Когда планировать выход дальше ближайших суток.** Это НЕ вердикт: '
+                'рекомендованного окна, отбора начал по правилу и условий проверки здесь нет. '
+                'Разные механизмы видят вперёд на разное расстояние, и каждый срок объявлен.')
+    _ndays = st.slider('На сколько суток вперёд', min_value=3, max_value=27, value=14, step=1,
+                       key='outlook_days', help='Обзор NOAA выпускается раз в неделю, поэтому '
+                       'космическая погода кончается раньше выбранного срока — это видно в таблице.')
+    if st.button('Посчитать перспективу', key='outlook_go'):
+        try:
+            from vkd.integration.noaa_27day import fetch_27day
+            from vkd.windows.outlook import build_outlook, outlook_table
+            with st.status('Считаю перспективу…', expanded=True) as _op:
+                st.write('Обзор NOAA на 27 суток: выпуск и его время публикации')
+                _o27, _ = fetch_27day()
+                st.write('Геометрия трассы и метеороидные потоки по суткам')
+                _res = build_outlook(now, days=int(_ndays), three_day_samples=S.get('forecasts'),
+                                     outlook27=_o27, include_meteoroids=True)
+                _op.update(label='Перспектива посчитана', state='complete', expanded=False)
+            st.session_state['outlook_rows'] = outlook_table(_res)
+            st.session_state['outlook_scope'] = getattr(_res, 'scope_ru', '')
+        except Exception as _e:            # noqa: BLE001 — вкладка не роняет экран (Т6)
+            LOG.error('перспектива не посчитана: %s\n%s', _e, traceback.format_exc())
+            st.warning('Перспектива не посчитана: %s. Основной расчёт это не затрагивает.'
+                       % type(_e).__name__)
+    if st.session_state.get('outlook_rows'):
+        st.dataframe(st.session_state['outlook_rows'], hide_index=True, width='stretch')
+        if st.session_state.get('outlook_scope'):
+            st.caption(st.session_state['outlook_scope'])
 
 with tabs[TAB_DATA]:
     st.markdown('**Источники этого расчёта** — состояние, получение, давность; каждый фактор прослеживается до записи в выгрузке.')

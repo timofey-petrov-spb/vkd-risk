@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime, timezone
 
@@ -21,7 +22,9 @@ import pytest
 from app.compute import _verification_summary, fmt, run
 from app.export import fmt as export_fmt, report_md
 from vkd.explain.format import SCI_MIN, fmt_ru
+from vkd.integration.donki_live import decode as decode_notifications, parse_notifications
 from vkd.integration.replay_live import fetch_none
+from vkd.sources.live_cache import Fetch
 from vkd.windows.compare import Thresholds
 
 UTC = timezone.utc
@@ -29,6 +32,31 @@ NOW = datetime(2026, 9, 19, 8, 5, tzinfo=UTC)
 T_GANNON = datetime(2024, 5, 10, 12, tzinfo=UTC)
 T_GANNON_06 = datetime(2024, 5, 10, 6, tzinfo=UTC)
 T_QUIET = datetime(2024, 6, 25, 12, tzinfo=UTC)
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Ответ службы уведомлений, сохранённый реестром A1 (май 2024). Берётся как готовые БАЙТЫ ответа:
+# проверка линии уведомлений не должна зависеть ни от сети, ни от того, что происходит на Солнце
+# в день прогона.
+DONKI_RESPONSE = os.path.join(ROOT, 'data', 'source_registry_2024', 'donki',
+                              'raw', 'notifications_2024-05_response.json')
+
+
+def _donki_live(now=NOW):
+    """Живая лента уведомлений, собранная из сохранённого ответа службы: (лента, записи, квитанция)."""
+    with open(DONKI_RESPONSE, 'rb') as fh:
+        raw = fh.read()
+    parsed = parse_notifications(raw, now)
+    f = Fetch('nasa_donki_notification', True, False, now, 0.0, 'получено по сети, давность данных 0,0 мин',
+              raw.decode('utf-8'), None, 'live', None,
+              {'raw_record_id': 'nasa_donki_notification:proverka', 'version': 'proverka'}, parsed, raw)
+    return decode_notifications(f), {}, f
+
+
+def _live_fetched(donki=None):
+    """Кортеж источников текущего режима без сети; живой объявляется только лента уведомлений."""
+    base = list(fetch_none('источник не запрашивался в этой проверке'))
+    if donki is not None:
+        base[4] = donki
+    return tuple(base)
 
 
 def _hist(t0, dur=360, search=720, offs=(0, 240)):
@@ -82,36 +110,50 @@ def test_pri_otkaze_sravnenie_ne_nazyvaet_luchshee_okno():
 
 
 # ------------------------------------------------------------------ М2: линия событий в live
-def test_v_tekushchem_rezhime_liniya_sobytiy_obyavlena_neoproshennoy():
-    """0 записей без опроса — не «событий нет». Признак стоит в снимке явно, причина названа,
-    в охвате есть строка, а в реестре источников — строка с состоянием «не запрашивается»."""
-    r = run('live', NOW, 360, 720, [0, 240], now=NOW)
+# Двенадцатый круг, п. 6 отменил прежнее поведение. Раньше линия уведомлений в текущем режиме
+# не опрашивалась вовсе, и проверка требовала, чтобы это было ОБЪЯВЛЕНО (ноль записей без
+# опроса — не «событий нет»). Теперь линия опрашивается живьём, и проверяется то же требование
+# с другой стороны: признак `connected` обязан означать ровно то, что написано, — состоялся
+# опрос или нет, — и при отказе ноль по-прежнему не выдаётся за отсутствие событий.
+def test_v_tekushchem_rezhime_liniya_sobytiy_oproshena():
+    """Опрос состоялся: рядом с числом записей стоят число сообщений ленты и момент опроса."""
+    r = run('live', NOW, 360, 720, [0, 240], now=NOW, fetched=_live_fetched(_donki_live()))
     S = r.S
     line = S['events_line']
-    assert line['connected'] is False
-    assert 'не опрашивается' in line['reason_ru'], line
-    assert 'DONKI' in line['reason_ru']
-    assert line['records'] == 0 and line['simulated_records'] == 0
+    assert line['connected'] is True and line['reason_ru'] is None, line
+    assert line['live'] is True and line['live_ok'] is True
+    assert line['feed_messages'] > 0 and line['polled_utc'], line
+    # число записей НА ГОРИЗОНТЕ и число сообщений ленты — разные величины и не подменяют друг друга
+    assert line['records'] <= line['feed_messages']
+    # ограничение охвата теперь другое: не «источник не опрашивается», а граница самой ленты
     cov = ' | '.join(S['coverage_missing'])
-    # Глагол приведён к тому, которым говорит об этом же экран (`app.ui.LIVE_NO_EVENTS_RU`,
-    # «не запрашиваются»): экран подставляет свою фразу про DONKI только когда её нет в этом
-    # списке, поэтому про один факт печатается ровно одно предложение — и оно должно называть
-    # вещь теми же словами на обоих уровнях (найдено слиянием круга 11). Смысл проверки прежний:
-    # канал уведомлений в текущем режиме объявлен неопрошенным, и ноль записей не значит «событий нет».
-    assert 'не запрашиваются' in cov and 'DONKI' in cov, S['coverage_missing']
-    assert re.search(r'\d{2}\.\d{2}\.2024', cov), cov          # границы архива названы датами
-    src = S['sources']['donki_archive']
-    assert src['state'] == 'none' and 'не запрашивается' in src['status'], src
-    # исторический режим наоборот: линия подключена
+    assert 'DONKI' in cov and 'не опрашива' not in cov, S['coverage_missing']
+    src = S['sources']['donki_live']
+    assert src['state'] == 'live' and src['feed_messages'] == line['feed_messages'], src
+    assert 'donki_archive' not in S['sources'], 'живой опрос не подписывается словом «архив»'
+    # исторический режим по-прежнему подключён — через архив
     assert _hist(T_GANNON).S['events_line']['connected'] is True
 
 
-def test_stsenariy_chto_esli_schitaetsya_otdelno():
-    """Сценарий «что если» даёт события, но линия источника от этого не становится опрошенной."""
-    from vkd.windows.scenario import Scenario
-    r = run('live', NOW, 360, 720, [0, 240], now=NOW, scenario=Scenario('t', sep_onset_offset_min=120, sep_level_pfu=100.0))
+def test_otkaz_lenty_uvedomleniy_nazyvaetsya_prichinoy_a_ne_nulyom():
+    """Ленты нет — сказано прямо: ноль записей не выдаётся за отсутствие событий."""
+    r = run('live', NOW, 360, 720, [0, 240], now=NOW, fetched=_live_fetched())
     line = r.S['events_line']
     assert line['connected'] is False
+    assert line['records'] == 0 and 'не получены' in line['reason_ru'], line
+    assert 'DONKI' in line['reason_ru']
+    cov = ' | '.join(r.S['coverage_missing'])
+    assert 'DONKI' in cov and 'не получены' in cov, r.S['coverage_missing']
+    assert r.S['sources']['donki_live']['state'] == 'none'
+
+
+def test_stsenariy_chto_esli_schitaetsya_otdelno():
+    """Сценарий «что если» даёт события, и они считаются отдельно от записей источника."""
+    from vkd.windows.scenario import Scenario
+    r = run('live', NOW, 360, 720, [0, 240], now=NOW, fetched=_live_fetched(),
+            scenario=Scenario('t', sep_onset_offset_min=120, sep_level_pfu=100.0))
+    line = r.S['events_line']
+    assert line['connected'] is False          # сценарий не заменяет опроса источника
     assert line['simulated_records'] >= 1 and line['records'] == line['simulated_records']
 
 

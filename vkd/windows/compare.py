@@ -38,6 +38,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
+from vkd.assess import dose as suit_dose
+from vkd.assess import debris as debris_model
 from vkd.assess.coverage import gaps_ru, uncovered_minutes_by_reason
 from vkd.assess.meteoroids import SHOWERS_SOURCE_RU, active_showers
 from vkd.assess.trapped import BeltTable
@@ -883,6 +885,17 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                                    else '; выпуска с ячейками на это окно нет')),
                 horizon_utc=hz))
 
+    # --- поглощённая доза за защитой скафандра (прил. К ОСТ 134-1044-2007) ------------
+    # Считается ИЗ ТОГО ЖЕ флюенса, линейно по нему, поэтому покрытие у неё то же, что у
+    # флюенса, и порядок окон она менять не может. В правило сравнения окон доза НЕ входит
+    # именно поэтому: она добавила бы четвёртый признак, повторяющий второй.
+    # Фаза СА берётся у самой таблицы потоков — средний уровень нормировки обязан быть её же.
+    dose_res = suit_dose.window_dose(fluence, e_min_MeV=th.e_min_MeV,
+                                     solar_activity=getattr(belts, 'solar_activity', 'min'))
+    dose_note = '; '.join(x for x in (suit_dose.explain_ru(dose_res),
+                                      suit_dose.band_ru(dose_res) if dose_res.band_mGy else '',
+                                      suit_dose.LIMITS_RU) if x)
+
     factors_m1 = (
         FactorValue('минут в аномалии', minutes_saa, 'мин', Kind.OWN_CALCULATION,
                     _presence(minutes_saa), cov_saa, traj_ids, 'время по линейным пересечениям |B| ниже порога %.0f нТл (настройка, варьируется в чувствительности)' % th.saa_B_threshold_nT,
@@ -896,6 +909,11 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                     belts.source + '; единицы потока: %s; интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
                     % (belts.flux_unit_short_ru, belts.interpolation_ru),
                     '; '.join(fl_note)),
+        FactorValue('поглощённая доза за защитой скафандра %g г/см²' % dose_res.thickness_g_cm2,
+                    dose_res.value_mGy, suit_dose.DOSE_UNIT_RU, Kind.OWN_CALCULATION,
+                    _presence(dose_res.value_mGy), cov_fl,
+                    traj_ids + (belts.raw_record_id,) + tuple(dose_res.record_ids),
+                    suit_dose.RULE_RU, dose_note),
     ) + tuple(cut_factors) + (
         FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
                     (Presence.UNKNOWN if goes_val is None or (goes_frac is not None and goes_frac <= 0.0) else
@@ -906,6 +924,25 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
     ) + tuple(fc_factors)
 
     # --- механизм 2: статистика метеороидов ECSS по высоте трассы (B2 по A5) --------
+    # Техногенный мусор по ГОСТ Р 25645.167-2005. Считается ЗДЕСЬ, а не передаётся извне:
+    # модели нужны только времена и высоты точек, они уже есть в срезе трассы окна, и лишний
+    # параметр в сигнатуре сломал бы позиционные вызовы из перебора начал.
+    # Наклонение берётся как максимум модуля широты по трассе окна: за шесть часов станция
+    # проходит около четырёх витков и доходит до крайних широт, то есть до наклонения. Жёсткой
+    # константы 51,6 градуса здесь нет намеренно — сервис не должен предполагать конкретный аппарат.
+    debris_res = None
+    try:
+        _lat_max = max(abs(p.lat_deg) for p in traj)
+        debris_res = debris_model.debris_hits_track(
+            [p.t_utc for p in traj], [p.alt_km for p in traj],
+            inclination_deg=_lat_max, area_m2=1.0)
+    except (ValueError, KeyError, TypeError, OSError, ZeroDivisionError) as exc:
+        # Отказ модели объявляется причиной, а не подменяется нулём: ноль попаданий и
+        # невозможность посчитать попадания — разные утверждения (CONTRACT, правило 9).
+        debris_res = None
+        debris_error_ru = 'расчёт техногенного мусора не выполнен: %s' % type(exc).__name__
+    else:
+        debris_error_ru = None
     mm_cov = Coverage.NONE if mmod_hits is None else (
         Coverage.PARTIAL if mmod_cov_fraction > 0 else Coverage.NONE)
     showers = active_showers(win.start_utc)
@@ -919,6 +956,14 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                              else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
                                   '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены; ' + MMOD_ROLE_RU
                                   + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),
+                 FactorValue('техногенный мусор, попаданий в пластину 1 м² за окно',
+                             None if debris_res is None else debris_res.N, 'шт', Kind.OWN_CALCULATION,
+                             Presence.UNKNOWN if debris_res is None else Presence.DETECTED,
+                             Coverage.NONE if debris_res is None else Coverage.PARTIAL,
+                             () if debris_res is None else ('gost167:tehnogennoe-veschestvo-2005',) + traj_ids,
+                             debris_error_ru or debris_res.rule,
+                             debris_error_ru or (debris_res.limits_ru
+                                 + '; поток усреднён по витку, поэтому окна этой величиной не различаются')),
                  FactorValue('активных метеорных потоков на дату (календарь IMO)', float(len(showers)), 'шт', Kind.OWN_CALCULATION,
                              Presence.DETECTED if showers else Presence.NOT_DETECTED, Coverage.FULL, ('imo_calendar',),
                              SHOWERS_SOURCE_RU + '; признак активности потока на дату — в число попаданий не входит '
@@ -965,6 +1010,19 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                           'Сумма 49 профилей с тенью Земли и относительной скоростью; входит в итоговое число.'),
                 mm_factor('средняя модель Grün без сезонного перераспределения (для сравнения)',
                           mmod_seasonal['N_mean_background'], 'Контрольная величина; к итогу повторно не прибавляется.')]
+        # Техногенный мусор стоит в ТОМ ЖЕ механизме, потому что это второе слагаемое одного и
+        # того же воздействия — удар частицы в пластину. Складывать два числа нельзя: порог
+        # частицы у стандартов разный (мусор ≥0,1 см, метеороиды ≥0,001 г), поэтому они
+        # печатаются раздельно, каждое со своим порогом в правиле.
+        mm_factors.append(FactorValue(
+            'техногенный мусор, попаданий в пластину 1 м² за окно',
+            None if debris_res is None else debris_res.N, 'шт', Kind.OWN_CALCULATION,
+            Presence.UNKNOWN if debris_res is None else Presence.DETECTED,
+            Coverage.NONE if debris_res is None else Coverage.PARTIAL,
+            () if debris_res is None else ('gost167:tehnogennoe-veschestvo-2005',) + traj_ids,
+            debris_error_ru or debris_res.rule,
+            debris_error_ru or (debris_res.limits_ru
+                + '; поток усреднён по витку, поэтому окна этой величиной не различаются')))
         m2 = MechanismAssessment(
             mechanism_id='mmod_stat', mandatory=True, factors=tuple(mm_factors),
             coverage=Coverage.PARTIAL if available else Coverage.NONE, needs_check=False,
