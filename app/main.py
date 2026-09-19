@@ -45,7 +45,7 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, LIVE_DONKI
                     TASK_HINT_RU, VERDICT_TITLE,
                     accounted_lines, accounted_lines_from_scan,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
-                    coverage_scope_ru, dedup_clauses, forecast_label_ru,
+                    coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
                     grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands,
                     not_accounted_ru, panel,
@@ -114,7 +114,18 @@ def _apply_preset(p: dict) -> None:
         st.session_state.pop(_k, None)
 
 
-# ================================================================= боковая панель: запрос
+# ================================================================= боковая панель: ввод по классам
+# Владелец о прежней панели: «однородная каша слева». Ввод разложен по СМЫСЛОВЫМ разделам, у
+# каждого — материальная иконка (не эмодзи: эмодзи делают экран детским, а нужен вид рабочего
+# решателя). Иконка означает смысл раздела, а не украшает.
+#
+# Разделов пять, и они отвечают на разные вопросы: КОГДА считаем, ЧЕМ считаем, ЧТО проверяем,
+# ПО КАКИМ порогам, КАК показываем. Шестого раздела «задача выхода» в панели нет намеренно:
+# длительность и срок — это вопрос человека, и он задаётся строкой наверху главной области
+# (раздел 3.1 техзадания). Второй такой же пары полей в панели быть не должно: один параметр —
+# один элемент управления.
+#
+# Пресеты стоят НАД разделами: это быстрый путь целиком, а не класс параметров.
 with st.sidebar:
     st.markdown('### ВКД-Риск')
     st.markdown('<div class="sect">Пресеты запроса</div>', unsafe_allow_html=True)
@@ -126,34 +137,34 @@ with st.sidebar:
     # пресета до конца сессии, даже когда пользователь всё перекрутил руками (К4). Само место
     # под подпись занимается сейчас, а текст ставится ниже, когда известны все поля запроса.
     _preset_caption = st.empty()
-    level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
-                     help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
-    pro = level == 'Профессиональный'
+    st.caption('Длительность выхода и срок задаются строкой задачи наверху экрана.')
     # умолчание задаётся только при первом показе: у элемента с сохранённым значением Streamlit
     # предупреждает и всё равно берёт сохранённое (пресет пишет состояние до создания элементов)
     _def = lambda key, kw: ({} if key in st.session_state else kw)
-    mode_ru = st.radio('Режим', list(MODE_IDS), key='mode', **_def('mode', {'index': 0}),
-                       help='Текущая обстановка — живые источники. Исторический разбор — весь архив мая–июня 2024. '
-                            'Прогноз из прошлого — только записи, опубликованные до отсечки.')
-    mode = MODE_IDS[mode_ru]
-    if mode == 'live':
-        t0 = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-        st.caption('Начало периода поиска: **%s UTC** (сейчас)' % t0.strftime('%d.%m.%Y %H:%M'))
-    else:
-        d = st.date_input('Дата (1 мая — 30 июня 2024)', key='hist_date',
-                          **_def('hist_date', {'value': datetime(2024, 5, 10).date()}),
-                          min_value=ARCHIVE_FROM.date(), max_value=datetime(2024, 6, 30).date())
-        hh = st.slider('Час начала периода, UTC', 0, 23, key='hist_hour', **_def('hist_hour', {'value': 12}))
-        t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
-        if mode == 'history_forecast':
-            st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%d.%m.%Y %H:%M'))
-    # Длительность выхода, срок поиска и сдвиги окон с боковой панели УБРАНЫ (одиннадцатый круг,
-    # разделы 3.0–3.1 техзадания): длительность и срок — это вопрос человека, и они стоят строкой
-    # задачи наверху главной области; сдвиги окон — ручной разбор, и они стоят в свёрнутом разделе
-    # «Разобрать конкретные окна» под ответом. В боковой панели остаётся то, что относится к данным,
-    # а не к вопросу: пресеты, уровень, режим, момент, источники, сценарий и пороги.
-    if mode == 'live':
-        with st.expander('Источники и обновление', expanded=False):
+    # Уровень интерфейса стоит в разделе «Вид» — последнем, — но нужен раньше: от него зависит,
+    # какие разделы показываются и насколько подробны их подписи. Значение читается из состояния
+    # до создания элемента, как и сдвиги окон; сам элемент создаётся ниже.
+    pro = st.session_state.get('level') == 'Профессиональный'
+
+    with st.expander('Когда считаем', expanded=True, icon=':material/schedule:'):
+        mode_ru = st.radio('Режим', list(MODE_IDS), key='mode', **_def('mode', {'index': 0}),
+                           help='Текущая обстановка — живые источники. Исторический разбор — весь архив мая–июня 2024. '
+                                'Прогноз из прошлого — только записи, опубликованные до отсечки.')
+        mode = MODE_IDS[mode_ru]
+        if mode == 'live':
+            t0 = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+            st.caption('Начало срока поиска: **%s UTC** (сейчас)' % t0.strftime('%d.%m.%Y %H:%M'))
+        else:
+            d = st.date_input('Дата (1 мая — 30 июня 2024)', key='hist_date',
+                              **_def('hist_date', {'value': datetime(2024, 5, 10).date()}),
+                              min_value=ARCHIVE_FROM.date(), max_value=datetime(2024, 6, 30).date())
+            hh = st.slider('Час начала срока, UTC', 0, 23, key='hist_hour', **_def('hist_hour', {'value': 12}))
+            t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
+            if mode == 'history_forecast':
+                st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%d.%m.%Y %H:%M'))
+
+    with st.expander('Источники данных', expanded=False, icon=':material/database:'):
+        if mode == 'live':
             _SRC_STATE = {'включён': False, 'отказ: только кеш': 'cache', 'исключён: нет данных': 'off'}
             _SRC_LABEL = {'goes': 'GOES, протоны ≥10 МэВ', 'kp': 'Kp (GFZ)',
                           'noaa': 'Прогноз NOAA на трое суток'}     # живой бюллетень: те же три состояния (C6)
@@ -166,23 +177,26 @@ with st.sidebar:
             _auto_def = int(UI.get('auto_refresh_min', 5))
             auto_min = st.select_slider('Автообновление, мин', [0, 5, 10, 15], value=_auto_def if _auto_def in (0, 5, 10, 15) else 5,
                                         key='auto_min', help='0 — выключено. Частота публикации: GOES 5 мин, Kp 3 ч, TLE по мере выпуска.')
-        kp_off_hist = False
-    else:
-        if pro:
-            # «выпуски NOAA до отсечки» верно только в строгом режиме: в разборе отсечки нет вовсе (R4-4)
-            st.caption('Источники режима: архив уведомлений DONKI за 01.05–30.06.2024, орбита OEM NASA/JSC, выпуски NOAA %s; '
-                       'Kp — окончательный ряд GFZ по 3-часовым интервалам%s. Живые наблюдения GOES и Kp в этом режиме не запрашиваются.'
-                       % ('до отсечки' if mode == 'history_forecast' else 'из архива',
-                          ' (в разборе; в строгом режиме исключён: времени публикации по интервалам нет)' if mode == 'history_forecast'
-                          else ' (разбор после факта)'))
         else:
-            st.caption('Источники режима — архив: уведомления DONKI, орбита OEM NASA/JSC, выпуски NOAA%s.'
-                       % (' до отсечки' if mode == 'history_forecast' else ' и ряд Kp GFZ'))
-        kp_off_hist = st.checkbox('Исключить Kp из архива (проверка отказа)', key='kp_off_hist',
-                                  help='Проверка поведения при отказе источника: наблюдение Kp не используется, покрытие объявляется.')
-        disabled = {'goes': False, 'kp': 'off' if kp_off_hist else False}
-        auto_min = 0
-    with st.expander('Что если — стресс-сценарий', expanded=False):
+            if pro:
+                # «выпуски NOAA до отсечки» верно только в строгом режиме: в разборе отсечки нет вовсе (R4-4)
+                st.caption('Источники режима: архив уведомлений DONKI за 01.05–30.06.2024, орбита OEM NASA/JSC, выпуски NOAA %s; '
+                           'Kp — окончательный ряд GFZ по 3-часовым интервалам%s. Живые наблюдения GOES и Kp в этом режиме не запрашиваются.'
+                           % ('до отсечки' if mode == 'history_forecast' else 'из архива',
+                              ' (в разборе; в строгом режиме исключён: времени публикации по интервалам нет)' if mode == 'history_forecast'
+                              else ' (разбор после факта)'))
+            else:
+                st.caption('Источники режима — архив: уведомления DONKI, орбита OEM NASA/JSC, выпуски NOAA%s.'
+                           % (' до отсечки' if mode == 'history_forecast' else ' и ряд Kp GFZ'))
+            auto_min = 0
+
+    with st.expander('Проверки и сценарии', expanded=False, icon=':material/science:'):
+        if mode == 'live':
+            kp_off_hist = False
+        else:
+            kp_off_hist = st.checkbox('Исключить Kp из архива (проверка отказа)', key='kp_off_hist',
+                                      help='Проверка поведения при отказе источника: наблюдение Kp не используется, покрытие объявляется.')
+            disabled = {'goes': False, 'kp': 'off' if kp_off_hist else False}
         # О7 оценивает не саму функцию, а объяснённую потребность, связь с основным сценарием и
         # пользу, подтверждённую примером. Без этой подписи свёртка содержала только ползунки.
         # Числа примера проверены прогоном: history_forecast 25.06.2024 12:00, период 1440,
@@ -196,10 +210,12 @@ with st.sidebar:
         sc_delay = st.slider('Задержка начала работ, мин', 0, 180, 0, step=15, key='sc_delay',
                              help='Все окна сдвигаются на задержку; показывается как изменение плана.')
         sc_sep_on = st.checkbox('Смоделировать протонное событие', key='sc_sep_on')
-        sc_sep_off = st.slider('Начало протонного события, мин после начала периода', 0, 1440, 120, step=30, disabled=not sc_sep_on, key='sc_sep_off')
+        sc_sep_off = st.slider('Начало протонного события, мин после начала срока', 0, 1440, 120, step=30, disabled=not sc_sep_on, key='sc_sep_off')
         sc_sep_pfu = st.select_slider('Уровень события, pfu (≥10 МэВ)', [10.0, 100.0, 1000.0, 10000.0], value=100.0, disabled=not sc_sep_on, key='sc_sep_pfu')
         sc_kp_on = st.checkbox('Смоделировать скачок Kp', key='sc_kp_on')
-        sc_kp = st.slider('Kp при скачке', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
+        sc_kp = st.slider('Kp при скачке, безразмерный', 0.0, 9.0, 7.0, step=0.33, disabled=not sc_kp_on, key='sc_kp')
+        st.caption('Сравнить два-три конкретных окна вручную можно в разделе «Разобрать конкретные окна» '
+                   'под ответом: там же стоят ползунки сдвига.')
     scenario = Scenario('ui', work_delay_min=sc_delay, sep_onset_offset_min=(sc_sep_off if sc_sep_on else None),
                         sep_level_pfu=(sc_sep_pfu if sc_sep_on else None), kp_override=(sc_kp if sc_kp_on else None))
     if mode == 'history_forecast':
@@ -208,7 +224,7 @@ with st.sidebar:
         scenario = Scenario('none')
     TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
     if pro:
-        with st.expander('Пороги и настройки', expanded=False):
+        with st.expander('Пороги и правила', expanded=False, icon=':material/tune:'):
             st.caption('Умолчания — из config/settings.toml; всё применённое попадает в снимок и выгрузку.')
             th = replace(TH0,
                          saa_B_threshold_nT=st.number_input('Порог аномалии |B|, нТл', 18000.0, 30000.0, TH0.saa_B_threshold_nT, 500.0, key='th_B'),
@@ -216,12 +232,19 @@ with st.sidebar:
                                                 index=[12.5, 30.0, 50.0].index(TH0.e_min_MeV) if TH0.e_min_MeV in (12.5, 30.0, 50.0) else 1),
                          goes_max_age_min=st.number_input('Допустимая давность наблюдения GOES, мин', 10.0, 360.0, TH0.goes_max_age_min, 10.0, key='th_age',
                                                           help='Старше — для будущих участков окна покрытие частичное.'),
-                         kp_check=st.number_input('Порог Kp для условия проверки', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
+                         kp_check=st.number_input('Порог Kp для условия проверки, безразмерный', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
                                                   help='Применяется к наблюдению, уведомлениям о буре и прогнозам NOAA/ENLIL.'),
                          tle_max_age_days=st.number_input('Допустимый возраст TLE, сут', 1.0, 14.0, TH0.tle_max_age_days, 1.0, key='th_tle'))
             T_months = st.slider('Длительность экспедиции для норм, мес', 1, 12, 6, key='T_months')
     else:
         th, T_months = TH0, 6
+
+    with st.expander('Вид', expanded=False, icon=':material/visibility:'):
+        level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
+                         help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
+        st.caption('Тема тёмная: экран смотрят в затемнённом зале, и светлая заливка на проекторе слепит. '
+                   'Светлой темы у сервиса нет — переключателя не ставим, чтобы половина элементов не '
+                   'осталась светлой на тёмном фоне.')
 
 # автообновление: фрагмент перезапускает расчёт по таймеру (Т1), обновляя только эту сессию (Т6).
 if mode == 'live' and auto_min:
@@ -610,7 +633,7 @@ if traj:
                        % type(e).__name__)
     else:
         with st.spinner('Область аномалии по IGRF: контур на сетке 2° × 1°…'):
-            st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(ground_track(traj, windows, th.saa_B_threshold_nT, t0)), width='stretch', config=PLOTLY_CONFIG)
         st.caption(map_caption(pro))
 else:
     st.write('Трассы нет: орбита недоступна.')
@@ -618,7 +641,7 @@ else:
 # ================================================================= блок 5: лента окон
 st.markdown('<div class="sect">Лента окон: что даёт каждое начало выхода</div>', unsafe_allow_html=True)
 if scan is not None:
-    st.plotly_chart(windows_ribbon(scan, th.e_min_MeV), width='stretch', config=PLOTLY_CONFIG)
+    st.plotly_chart(dark_figure(windows_ribbon(scan, th.e_min_MeV)), width='stretch', config=PLOTLY_CONFIG)
     st.caption(ribbon_caption_ru(scan, th.e_min_MeV))
     _best_rows = scan_best_rows(scan)
     if _best_rows:
@@ -974,8 +997,9 @@ with tabs[TAB_OBS]:
         if _row.get('channel') in ('goes_p_ge10MeV', 'goes') and not goes_obs:
             goes_obs = [(datetime.fromisoformat(c['t']), float(c['value'])) for c in (_row.get('points') or [])
                         if c.get('t') and c.get('value') is not None]
-    st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events,
-                             S.get('forecasts', []), mode, kp_obs=kp_obs, goes_obs=goes_obs, search_min=search_min),
+    st.plotly_chart(dark_figure(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp,
+                                         R.events, S.get('forecasts', []), mode, kp_obs=kp_obs, goes_obs=goes_obs,
+                                         search_min=search_min)),
                     width='stretch', config=PLOTLY_CONFIG)
     # подпись описывает ряды ленты и живёт рядом с самим рисунком (app/ui.py): ряды менялись,
     # и подпись, написанная здесь, каждый раз оставалась описывать прежний вид
@@ -984,7 +1008,7 @@ with tabs[TAB_OBS]:
     if mode == 'live':
         obs_fig = observations_panel(R.fetch_status['goes'].raw_path, R.fetch_status['kp'].raw_path, t0)
         if obs_fig is not None:
-            st.plotly_chart(obs_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(obs_fig), width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения источников за последние дни, не расчёт. Пороги — шкалы NOAA S и G.' + (
                 ' GOES меряет на геостационарной орбите. Обрезание — отдельный показатель; локальный поток МКС не рассчитан.'
                 if pro else ''))
@@ -1027,7 +1051,7 @@ with tabs[TAB_OBS]:
                                            'Kp — наблюдение из окончательного ряда GFZ',
                                            'отсечка' if mode == 'history_forecast' else 'начало периода')
         if hist_obs_fig is not None:
-            st.plotly_chart(hist_obs_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(hist_obs_fig), width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения архива, не расчёт и не прогноз. Пороги — шкалы NOAA S и G.%s'
                        % (' Ряд GOES — 5-минутные средние; Kp — 3-часовые интервалы.' if pro else ''))
         else:
@@ -1038,7 +1062,7 @@ with tabs[TAB_OBS]:
                                 kp_title='Прогноз Kp NOAA по 3-часовым интервалам (%s)' % RELEASE_BY_MODE_RU[mode],
                                 mark_ru='отсечка' if mode == 'history_forecast' else 'начало периода')
         if fc_fig is not None:
-            st.plotly_chart(fc_fig, width='stretch', config=PLOTLY_CONFIG)
+            st.plotly_chart(dark_figure(fc_fig), width='stretch', config=PLOTLY_CONFIG)
         for line in S.get('forecasts', []):
             if line['release_id']:
                 u = record_url(raw_record(R.raw_records, line['record'])) if line.get('record') else None

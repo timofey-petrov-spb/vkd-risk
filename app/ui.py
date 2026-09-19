@@ -38,17 +38,31 @@ from datetime import datetime, timedelta
 # в CSS нет знаков вне печатного диапазона.
 CSS = r"""
 <style>
-:root { --ink:#1a1f2b; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f7f9;
-        --calc:#1f4e79; --calc-bg:#eaf2fb; --calc-line:#c4d8ee;
-        --obs:#1e8449;  --obs-bg:#eafaf1;  --obs-line:#bfe8cf;
-        --fc:#b9770e;   --fc-bg:#fef5e7;   --fc-line:#f3dcb0;
-        --cond:#c0392b; --cond-bg:#fdedec; --cond-line:#f2c0bb;
-        --none:#566573; --none-bg:#f2f3f4; --none-line:#d7dbdf;
+/* ТЁМНАЯ тема. Палитра ОДНА и означает то же, что и прежде, — происхождение величины; под тёмный
+   фон пересчитаны только светлоты. Контраст проверен расчётом по формуле относительной яркости,
+   а не на глаз (фон страницы #0e1117, фон панели #161b26; минимум по стандарту — 4,5:1):
+     основной текст  #e8ebf2 — 15,84 на фоне, 14,44 на панели;
+     приглушённый    #a7b0c0 —  8,65 / 7,89;
+     наш расчёт      #7ab8f5 —  9,00 / 8,21, на своей заливке #16283c — 7,13;
+     наблюдение      #5ed39a — 10,13 / 9,24, на своей заливке #12301f — 7,67;
+     внешний прогноз #e7b45c —  9,97 / 9,09, на своей заливке #332711 — 7,70;
+     условие/отказ   #f58b7f —  7,99 / 7,29, на своей заливке #3a1d1a — 6,48;
+     данных нет      #9aa5b5 —  7,58 / 6,91, на своей заливке #1c212b — 6,47.
+   Ниже 4,5 не опускается ни одна пара. Базовая тема Streamlit задана в .streamlit/config.toml:
+   одной правкой стилей не обойтись — собственные виджеты красятся своей темой, и светлые
+   виджеты на тёмном фоне читались бы как поломка. */
+:root { --ink:#e8ebf2; --muted:#a7b0c0; --line:#242b38; --bg:#0e1117; --soft:#161b26;
+        --calc:#7ab8f5; --calc-bg:#16283c; --calc-line:#24405e;
+        --obs:#5ed39a;  --obs-bg:#12301f;  --obs-line:#1d4d34;
+        --fc:#e7b45c;   --fc-bg:#332711;   --fc-line:#56411c;
+        --cond:#f58b7f; --cond-bg:#3a1d1a; --cond-line:#5c2f2a;
+        --none:#9aa5b5; --none-bg:#1c212b; --none-line:#2b323f;
         /* прежние имена состояний — те же четыре тона, чтобы правила ниже читались одинаково */
         --ok:var(--obs); --ok-bg:var(--obs-bg); --warn:var(--fc); --warn-bg:var(--fc-bg);
         --crit:var(--cond); --crit-bg:var(--cond-bg); }
 html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink);
         font-variant-numeric: tabular-nums; }
+.stApp, .main, section[data-testid="stSidebar"] { background: var(--bg); }
 .block-container { padding-top: 3.2rem; padding-bottom: 2rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeric: tabular-nums; }
@@ -85,7 +99,7 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
            background:var(--bg); margin:4px 0 14px 0; }
 .verdict h2 { margin:0 0 4px 0; font-size:1.35rem; }
 .verdict .rule { color:var(--muted); font-size:0.92rem; margin-bottom:8px; }
-.verdict .rule .orig { color:#9aa0a6; font-size:0.84rem; }
+.verdict .rule .orig { color:var(--muted); font-size:0.84rem; }
 .verdict .win { font-size:1.05rem; font-weight:600; }
 .verdict ul { margin:6px 0 0 18px; padding:0; }
 .verdict li { margin:2px 0; font-size:0.93rem; }
@@ -121,7 +135,7 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .v-trade_off { border-left-color:var(--calc); }
 .v-all_need_check { border-left-color:var(--cond); }
 .v-insufficient { border-left-color:var(--none); }
-.wcard { border:1px solid var(--line); border-radius:12px; padding:14px 16px 12px 16px; background:#fff; height:100%;
+.wcard { border:1px solid var(--line); border-radius:12px; padding:14px 16px 12px 16px; background:var(--soft); height:100%;
          border-left:3px solid var(--line); }
 .wcard.best { border-left-color:var(--calc); }
 .wcard.flag { border-left-color:var(--fc); }
@@ -136,8 +150,8 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .kv .u { color:var(--muted); font-weight:400; }
 .wnote { font-size:0.78rem; color:var(--muted); margin:-2px 0 6px 0; }
 .cond { font-size:0.85rem; margin:4px 0 0 0; padding:6px 8px; border-radius:8px; border-left:3px solid var(--fc);
-        background:var(--fc-bg); color:#7d5a12; }
-.cond.crit { border-left-color:var(--cond); background:var(--cond-bg); color:#922b21; }
+        background:var(--fc-bg); color:var(--fc); }
+.cond.crit { border-left-color:var(--cond); background:var(--cond-bg); color:var(--cond); }
 .cond.none { border-left-color:var(--none-line); background:var(--none-bg); color:var(--none); }
 .cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
 .covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
@@ -153,7 +167,7 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .reco .why { font-size:0.95rem; margin:4px 0 2px 0; }
 .reco .searched { font-size:0.84rem; color:var(--muted); margin:4px 0 0 0; }
 .reco .stop { margin:8px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--cond);
-              background:var(--cond-bg); color:#922b21; font-size:0.9rem; }
+              background:var(--cond-bg); color:var(--cond); font-size:0.9rem; }
 .reco .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
                background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
 .reco .scope b { color:var(--calc); font-weight:600; }
@@ -2750,6 +2764,59 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 320):
     fig.update_layout(template='plotly_white', height=int(height), separators=',' + NBSP_THIN,
                       margin={'l': 70, 'r': 20, 't': 34, 'b': 40}, hovermode='x unified',
                       legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'x': 0})
+    return fig
+
+
+# Тёмные цвета светлой темы → их тёмнотемные пары. Ключи — ровно те константы, которыми рисуют
+# app/viz.py и app/obs.py: подстановка точная, а не «похожий оттенок на глаз». Смысл цвета не
+# меняется: синий остаётся нашим расчётом, зелёный — наблюдением, янтарный — внешним прогнозом.
+DARK_TRACE_COLORS = {
+    '#1f4e79': CALC_BLUE, '#5dade2': '#4f8fc0', '#85c1e9': '#3f6f97',     # наш расчёт и окна
+    '#1e8449': '#5ed39a', '#b9770e': '#e7b45c', '#c0392b': '#f58b7f',     # наблюдение, прогноз, условие
+    '#7f8c8d': '#9aa5b5', '#9aa0a6': '#9aa5b5',                           # вспомогательные линии
+}
+DARK_PAPER, DARK_PLOT, DARK_GRID = '#0e1117', '#161b26', '#242b38'
+
+
+def _dark_color(v):
+    """Цвет ряда в тёмной паре; незнакомый оставляем как есть, чтобы ничего не испортить."""
+    if isinstance(v, str):
+        return DARK_TRACE_COLORS.get(v.lower(), v)
+    if isinstance(v, (list, tuple)):
+        return [DARK_TRACE_COLORS.get(x.lower(), x) if isinstance(x, str) else x for x in v]
+    return v
+
+
+def dark_figure(fig):
+    """Привести готовый рисунок Plotly к тёмной теме экрана.
+
+    Рисунки строят `app/viz.py` и `app/obs.py` — чужая в этом круге область, и правка идёт ЗДЕСЬ,
+    над готовым объектом: подложка, сетка, шрифт и цвета рядов заменяются на тёмные пары той же
+    палитры. Светлая подложка графика на тёмной странице — первое, что читается как халтура.
+    """
+    fig.update_layout(template='plotly_dark', paper_bgcolor=DARK_PAPER, plot_bgcolor=DARK_PLOT,
+                      font={'color': '#e8ebf2'}, legend={'bgcolor': 'rgba(0,0,0,0)'},
+                      hoverlabel={'bgcolor': DARK_PLOT, 'font': {'color': '#e8ebf2'}})
+    fig.update_xaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
+                     tickfont={'color': '#a7b0c0'}, title_font={'color': '#a7b0c0'})
+    fig.update_yaxes(gridcolor=DARK_GRID, zerolinecolor=DARK_GRID, linecolor=DARK_GRID,
+                     tickfont={'color': '#a7b0c0'}, title_font={'color': '#a7b0c0'})
+    for tr in fig.data:
+        for holder in ('line', 'marker'):
+            obj = getattr(tr, holder, None)
+            if obj is not None and getattr(obj, 'color', None) is not None:
+                obj.color = _dark_color(obj.color)
+            inner = getattr(obj, 'line', None) if obj is not None else None
+            if inner is not None and getattr(inner, 'color', None) is not None:
+                inner.color = _dark_color(inner.color)
+        if getattr(tr, 'fillcolor', None) is not None:
+            tr.fillcolor = _dark_color(tr.fillcolor)
+    for sh in (fig.layout.shapes or ()):
+        if getattr(sh, 'line', None) is not None and getattr(sh.line, 'color', None) is not None:
+            sh.line.color = _dark_color(sh.line.color)
+    for an in (fig.layout.annotations or ()):
+        if getattr(an, 'font', None) is not None and getattr(an.font, 'color', None) is not None:
+            an.font.color = _dark_color(an.font.color)
     return fig
 
 
