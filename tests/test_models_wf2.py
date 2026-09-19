@@ -5,6 +5,7 @@
 
 Каждый тест закрепляет один найденный дефект, а не «работает вообще».
 """
+import re
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -296,13 +297,23 @@ def test_publication_range_shows_year_when_it_differs_from_window_year():
     assert _pub_time(datetime(2025, 3, 12, 16, 52, tzinfo=UTC), 2024) == '2025-03-12 16:52Z'
     assert _pub_time(datetime(2024, 5, 7, 14, 21, tzinfo=UTC), 2024) == '05-07 14:21Z'
     r = run('history_review', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
-    texts = [c.text for a in r.assessments for m in a.mechanisms for c in m.conditions if 'публикация' in c.text]
+    # Условие бури печатает публикацию ПОКАЗАПИСНО — одним временем рядом с номером выпуска,
+    # из тела которого взято число (четвёртый круг: связка «приход — Kp» только внутри записи).
+    # Диапазон публикации остаётся у кластера протонного события, в перечне источников условия.
+    texts = [t for a in r.assessments for m in a.mechanisms for c in m.conditions
+             for t in (c.text,) + tuple(c.sources_ru) if 'публикация ' in t]
     assert texts
-    ranges = [t.split('публикация ')[1].split(')')[0] for t in texts if 'публикация ' in t]
+    parts = [t.split('публикация ')[i + 1].split(')')[0] for t in texts
+             for i in range(t.count('публикация '))]
+    ranges = [x for x in parts if ' — ' in x]
+    assert ranges, parts
     for x in ranges:                     # диапазон читается вперёд: конец не раньше начала
         lo, hi = [p.strip() for p in x.split(' — ')]
         norm = lambda s: s if s.startswith('20') else '2024-' + s
         assert norm(lo) <= norm(hi), x
+    # одиночные времена публикации тоже читаются в едином виде: «05-08 18:43Z» или с годом
+    for x in (p for p in parts if ' — ' not in p):
+        assert re.fullmatch(r'(?:\d{4}-)?\d{2}-\d{2} \d{2}:\d{2}Z', x.strip()), x
 
 
 # ------------------------------------------------------- M10: карточка сценария
