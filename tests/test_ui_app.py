@@ -2891,8 +2891,13 @@ def test_vvod_razlozhen_po_klassam_s_ikonkami():
     # элементы управления остались на месте и доступны
     assert at.sidebar.radio('mode') is not None and at.sidebar.radio('level') is not None
     assert at.sidebar.checkbox('sc_sep_on') is not None
-    assert any('Длительность выхода и срок задаются строкой задачи' in str(c.value) for c in at.sidebar.caption), \
-        [str(c.value) for c in at.sidebar.caption]
+    # Строка «Длительность выхода и срок задаются строкой задачи наверху экрана» с тринадцатого
+    # круга с панели убрана: владелец просит убрать прозу, а сама строка задачи и так стоит
+    # первым элементом главной области — на неё показывает не подпись, а её место на экране.
+    # Проверяется то, ради чего подпись и стояла: в панели нет второй пары полей «длительность
+    # и срок», один параметр — один элемент управления (раздел 3.1 техзадания).
+    assert not [n for n in at.sidebar.number_input if str(n.label).startswith(('Выход на', 'Начать в'))], \
+        [str(n.label) for n in at.sidebar.number_input]
 
 
 # ================================================================= двенадцатый круг: замечания 19.09

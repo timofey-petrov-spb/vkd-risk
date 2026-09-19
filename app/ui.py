@@ -38,6 +38,14 @@ from datetime import datetime, timedelta
 # «Как это посчитано…» в блоке вердикта рисовался мусор «B8◆A0». Проверка — tests/test_ui_app.py:
 # в CSS нет знаков вне печатного диапазона.
 CSS = r"""
+<!-- Public Sans — шрифт государственного стандарта США (USWDS), тот же, которым набран
+     nasa.gov. Подключается ОДНОЙ ссылкой и только тремя начертаниями: 400 — обычный текст,
+     600 — ярлыки капителью, 800 — крупные строки. Сеть может не ответить, и на этот случай
+     в font-family стоит прежний системный ряд: экран остаётся набранным, просто другим
+     шрифтом. Ничего, кроме начертания, от него не зависит — ни размеры, ни сетка. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 /* ТЁМНАЯ тема. Палитра ОДНА и означает то же, что и прежде, — происхождение величины; под тёмный
    фон пересчитаны только светлоты. Контраст проверен расчётом по формуле относительной яркости,
@@ -71,19 +79,28 @@ CSS = r"""
              --fs-3 — ярлыки капителью, приглушённые подписи, заголовки раскрытий.
            Приглушённость: --ink и --muted. Третьего тона текста на экране нет; --none остаётся
            цветом ПРОИСХОЖДЕНИЯ «данных нет», а не степенью серости. */
-        --fs-1:1.9rem; --fs-2:1rem; --fs-3:0.8rem;
+        --fs-1:40px; --fs-2:16px; --fs-3:13px;
+        /* Крупная строка решения — отдельный кегль: это самый крупный элемент страницы, и он
+           обязан быть заметно крупнее даже крупных чисел. 52 px к 16 px — отношение 3,25. */
+        --fs-0:52px;
+        /* Межстрочное: у КРУПНОГО текста тесное (строка читается как единый знак), у мелкого
+           свободное (его читают построчно). Одинаковое межстрочное везде — главный признак
+           любительской вёрстки, и на снимках сайта NASA его нет нигде. */
+        --lh-0:1.0; --lh-1:1.05; --lh-2:1.65;
         /* воздух между блоками: один шаг сетки и его удвоение, руками числа больше не ставим */
-        --gap:14px; --gap-2:30px; }
-html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink);
+        --gap:20px; --gap-2:48px; }
+html, body, [class*="css"] { font-family: "Public Sans", "Segoe UI", Inter, Roboto, Arial, sans-serif;
+        color: var(--ink); font-size: var(--fs-2); line-height: var(--lh-2);
         font-variant-numeric: tabular-nums; }
 .stApp, .main, section[data-testid="stSidebar"] { background: var(--bg); }
 .block-container { padding-top: 3.2rem; padding-bottom: 3rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeric: tabular-nums; }
 .vk-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:2px; }
-.vk-title { font-size:var(--fs-1); font-weight:700; margin:0; }
-.vk-sub { color:var(--muted); font-size:var(--fs-2); }
-.sect { font-size:var(--fs-3); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+.vk-title { font-size:var(--fs-1); font-weight:800; line-height:var(--lh-1); margin:0; letter-spacing:-0.02em; }
+.vk-sub { color:var(--muted); font-size:var(--fs-3); font-weight:600; letter-spacing:0.08em;
+          text-transform:uppercase; }
+.sect { font-size:var(--fs-3); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
         margin:var(--gap-2) 0 var(--gap) 0; }
 .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:var(--fs-3); font-weight:600;
         line-height:1.5; border:1px solid transparent; margin:1px 4px 1px 0; white-space:nowrap; }
@@ -179,15 +196,14 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .btnpad { height:1.75rem; }
 /* блок рекомендации: ответ на вопрос человека. Рамка слева синяя — это наш расчёт; при отказе
    серая или красная, чтобы заголовок не был увереннее расчёта. */
-.reco { border:1px solid var(--line); border-radius:12px; padding:16px 20px; background:var(--bg);
-        border-left:3px solid var(--calc); margin:4px 0 14px 0; }
+.reco { border:none; border-radius:0; padding:0; background:transparent; margin:var(--gap) 0 var(--gap-2) 0; }
 .reco h2 { margin:0 0 2px 0; font-size:var(--fs-1); color:var(--calc); }
 .reco .when { font-size:var(--fs-2); font-weight:600; margin-bottom:6px; }
 .reco .why { font-size:var(--fs-2); margin:4px 0 2px 0; max-width:96ch; }
 /* Популярное объяснение: ровно два предложения обычными словами под крупным ответом.
    Чуть крупнее служебных строк и без приглушения — это то, что читают первым после заголовка. */
 .reco .plain { font-size:var(--fs-2); line-height:1.45; margin:6px 0 2px 0; max-width:96ch; color:var(--ink); }
-.reco .searched { font-size:var(--fs-3); color:var(--muted); margin:4px 0 0 0; }
+.reco .searched { font-size:var(--fs-3); color:var(--muted); margin:0 0 var(--gap) 0; }
 .reco .stop { margin:8px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--cond);
               background:var(--cond-bg); color:var(--cond); font-size:var(--fs-2); }
 .reco .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
@@ -195,13 +211,14 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .reco .scope b { color:var(--calc); font-weight:600; }
 .reco .policy { margin:8px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
 /* «на один клик глубже» внутри блока рекомендации — тот же приём, что в блоке вердикта */
-.reco details.vmore { margin:6px 0 0 0; }
-.reco details.vmore > summary { cursor:pointer; color:var(--muted); font-size:var(--fs-3); list-style:none;
-                                user-select:none; }
+.reco details.vmore { margin:10px 0 0 0; }
+.reco details.vmore > summary { cursor:pointer; color:var(--calc); font-size:var(--fs-3); font-weight:600;
+                                letter-spacing:0.04em; list-style:none; user-select:none; padding:2px 0; }
 .reco details.vmore > summary::-webkit-details-marker { display:none; }
 .reco details.vmore > summary::before { content:"\25B8\00A0"; }
 .reco details.vmore[open] > summary::before { content:"\25BE\00A0"; }
-.reco details.vmore .vm { margin:6px 0 0 0; font-size:var(--fs-3); color:var(--muted); }
+.reco details.vmore .vm { margin:8px 0 0 0; font-size:var(--fs-2); line-height:var(--lh-2);
+                           color:var(--muted); max-width:96ch; }
 /* Вид рамки и заголовка — по ВИДУ ОТВЕТА, а не по имени исхода: промежуток равнозначных начал
    такой же ответ, как и точка, и красить его как отказ нельзя. Отказ — только «нет оснований». */
 .r-none { border-left-color:var(--none); } .r-none h2 { color:var(--ink); }
@@ -232,24 +249,33 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
      ярлык в полосе (приглушённый) — #a7b0c0 на #12301f — 6,55; на #3a1d1a — 7,01;
                                       на #332711 — 6,68.
    Ниже 4,5 не опускается ни одна пара; наименьшая — 6,48. */
-.decision { display:block; margin:6px 0 var(--gap) 0; padding:18px 22px 20px 22px;
-            border-left:10px solid var(--dec); background:var(--dec-bg); }
-.decision .dk { display:block; font-size:var(--fs-3); font-weight:700; letter-spacing:0.18em;
-                text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-.decision .dv { display:block; font-size:var(--fs-1); font-weight:700; line-height:1.12;
-                color:var(--dec); letter-spacing:-0.01em; }
+.decision { display:block; margin:6px 0 var(--gap-2) 0; padding:32px 36px 36px 36px;
+            border-left:14px solid var(--dec); background:var(--dec-bg); }
+.decision .dk { display:block; font-size:var(--fs-3); font-weight:600; letter-spacing:0.18em;
+                text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+/* Разрядка на крупном тексте НЕ ставится: она разрушает плотность строки. Наоборот, лёгкое
+   сжатие — так набраны крупные заголовки на nasa.gov. Межстрочное 1,0: строка читается как
+   единый знак, а не как две строки текста. */
+.decision .dv { display:block; font-size:var(--fs-0); font-weight:800; line-height:var(--lh-0);
+                color:var(--dec); letter-spacing:-0.02em; }
 /* Короткая причина — ТОЛЬКО при отказе и при решении аналитика: красная полоса без причины
    читается как поломка сервиса. Не больше восьми слов, полный текст — раскрытием ниже. */
-.decision .dwhy { display:block; font-size:var(--fs-2); color:var(--ink); margin-top:8px; }
+.decision .dwhy { display:block; font-size:var(--fs-2); line-height:var(--lh-2); color:var(--ink);
+                  margin-top:16px; }
 .d-go   { --dec:var(--obs);  --dec-bg:var(--obs-bg); }
 .d-stop { --dec:var(--cond); --dec-bg:var(--cond-bg); }
 .d-ask  { --dec:var(--fc);   --dec-bg:var(--fc-bg); }
 /* Крупные числа под решением: тот же каркас приборной полосы, но значение кеглем ответа.
    Ярлык — капителью, справа от числа — то же у худшего начала на сроке. Сравнение
    «выбрано против худшего» и есть объяснение, только числами, без единого слова связки. */
-.panel.stat .cv { font-size:var(--fs-1); font-weight:700; line-height:1.15; }
-.panel.stat .cell { padding:12px 16px 14px 16px; }
-.panel.stat .cs { margin-top:2px; }
+.panel.stat { background:transparent; border:none; border-radius:0; margin:0 0 var(--gap-2) 0; }
+.panel.stat .prow { border-top:none; }
+.panel.stat .cell { padding:0 24px 0 0; border-left:none; box-shadow:none; }
+.panel.stat .cl { font-weight:600; margin-bottom:10px; }
+/* Главное число — крупное, ярким тоном происхождения. «Худшее» под ним — мелкое, обычного
+   веса и приглушённое: разница обязана считываться мгновенно, до чтения. */
+.panel.stat .cv { font-size:var(--fs-1); font-weight:700; line-height:var(--lh-1); color:var(--calc); }
+.panel.stat .cs { margin-top:8px; font-size:var(--fs-3); font-weight:400; color:var(--muted); }
 .legend { font-size:var(--fs-3); color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:var(--fs-3); color:var(--muted); }
 .tcap { font-size:var(--fs-3); color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
@@ -3503,7 +3529,22 @@ def _worst(cands, key: str):
     return max(vals) if vals else None
 
 
-def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None) -> list:
+def dose_factor(assessment):
+    """Фактор поглощённой дозы за защитой скафандра у оценки окна — или None.
+
+    Доза понятнее человеку, чем флюенс, и владелец просит её третьим числом в ряду. Она
+    считается ПОЛНОЙ оценкой окна, а не перебором: у кандидатов перебора её нет вовсе
+    (договор раздела 1a — три различающие величины). Значит и показывается она только там,
+    где действительно посчитана; выдумывать её из флюенса нельзя.
+    """
+    for m in (getattr(assessment, 'mechanisms', None) or ()):
+        for f in (getattr(m, 'factors', None) or ()):
+            if str(getattr(f, 'name', '')).startswith('поглощённая доза'):
+                return f
+    return None
+
+
+def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None, dose=None) -> list:
     """Ряд крупных чисел под решением: величина, значение, рядом — худшее на сроке.
 
     Тринадцатый круг, требование владельца: «сравнение „выбрано против худшего“ — это и есть
@@ -3531,6 +3572,13 @@ def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None) -> list:
         rows.append(('Флюенс', fmt_fluence(flu),
                      'част./см²' + e_ru + (' · худшее %s' % fmt_fluence(w) if isinstance(w, (int, float)) else ''),
                      'calc'))
+    # Доза — третьим числом: из всех наших величин она понятнее человеку. Худшего значения
+    # рядом с ней нет и быть не может: дозу считает полная оценка окна, а перебор её не
+    # считает ни для одного другого начала. Пустое место честнее правдоподобного числа.
+    dv = getattr(dose, 'value', None)
+    if isinstance(dv, (int, float)):
+        _u = str(getattr(dose, 'unit', '') or '')
+        rows.append(('Доза за защитой', fmt(dv), (_u + ' · скафандр 1 г/см²') if _u else 'скафандр 1 г/см²', 'calc'))
     n = int(scan.get('n_candidates') or len(cands))
     step = scan.get('step_min')
     rows.append(('Перебрано начал', nbsp_thousands(n),
@@ -3539,7 +3587,7 @@ def scan_stat_rows(scan: dict, cand: dict | None, e_min_MeV=None) -> list:
 
 
 def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'live',
-                         missing_ru=None, duration_min: int | None = None) -> str:
+                         missing_ru=None, duration_min: int | None = None, dose=None) -> str:
     """Блок ответа: полоса решения, ряд крупных чисел и раскрытия со всем остальным.
 
     Тринадцатый круг, решение владельца: «мне надо, чтобы прозы вообще не было, просто очень
@@ -3575,16 +3623,16 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
     # --- ряд крупных чисел: сравнение «выбрано против худшего» и есть объяснение, только числами
     if kind in ('point', 'interval') and cand is not None:
         _e = (S.get('thresholds') or {}).get('e_min_MeV') if isinstance(S, dict) else None
-        lines.append(panel(scan_stat_rows(scan, cand, _e), cls='stat'))
+        lines.append(panel(scan_stat_rows(scan, cand, _e, dose), cls='stat'))
         if dur_txt:
             # Длительность и границы крайних окон промежутка — ярлыком, а не фразой.
+            # Даты крайних окон уже стоят в полосе решения, повторять их незачем: здесь остаётся
+            # длительность и время окончания самого позднего окна — то, чего в полосе нет.
             if kind == 'interval':
                 _d = timedelta(minutes=dur)
-                a1, a2 = ans.get('from'), ans.get('to')
-                b1 = _iso_dt((ans.get('first') or {}).get('end_utc')) or ((a1 + _d) if a1 else None)
-                b2 = _iso_dt((ans.get('last') or {}).get('end_utc')) or ((a2 + _d) if a2 else None)
-                lines.append('<div class="searched">окно %s · самое раннее %s · самое позднее %s</div>'
-                             % (esc(dur_txt), esc(_span_ru(a1, b1)), esc(_span_ru(a2, b2))))
+                b2 = _iso_dt((ans.get('last') or {}).get('end_utc'))                     or ((ans.get('to') + _d) if ans.get('to') else None)
+                lines.append('<div class="searched">окно %s · работы до %s</div>'
+                             % (esc(dur_txt), esc(dt_ru(b2))))
             else:
                 lines.append('<div class="searched">окно %s</div>' % esc(dur_txt))
     # --- условия проверки: короткими плашками, полный текст — раскрытием ниже

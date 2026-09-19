@@ -47,7 +47,7 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DECISION_LEGEND, DISABLE
                     SEV_RU, STRICT_RU, TASK_HINT_RU, VERDICT_TITLE,
                     SCAN_SOURCES_RU, accounted_lines, accounted_lines_from_scan, accounted_sources,
                     age_ru, close_cut_parens, coverage_consequence_ru, coverage_reasons, coverage_rows_ru,
-                    coverage_scope_ru, dark_figure, dedup_clauses, forecast_label_ru,
+                    coverage_scope_ru, dark_figure, dedup_clauses, dose_factor, forecast_label_ru,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
                     grid_cell_ru, head, kind_pill, limit_ru, map_caption, method_source_ru, nbsp_thousands,
                     not_accounted_ru, panel, split_panel_rows,
@@ -139,7 +139,6 @@ with st.sidebar:
     # пресета до конца сессии, даже когда пользователь всё перекрутил руками (К4). Само место
     # под подпись занимается сейчас, а текст ставится ниже, когда известны все поля запроса.
     _preset_caption = st.empty()
-    st.caption('Длительность выхода и срок задаются строкой задачи наверху экрана.')
     # умолчание задаётся только при первом показе: у элемента с сохранённым значением Streamlit
     # предупреждает и всё равно берёт сохранённое (пресет пишет состояние до создания элементов)
     _def = lambda key, kw: ({} if key in st.session_state else kw)
@@ -350,7 +349,7 @@ if dup:
 # печатается это, а не параметры пресета: иначе член жюри, нажавший пресет и двинувший ползунок,
 # читает в первом же элементе интерфейса три утверждения, два из которых ложные.
 if _cur is None:
-    _preset_caption.caption('Одна кнопка выставляет режим, дату, час и окна; расчёт запускается обычным путём.')
+    _preset_caption.caption('пресет не выбран')
 elif preset_matches(_cur, mode_ru, st.session_state.get('hist_date'), st.session_state.get('hist_hour'),
                     duration_min, search_min, offsets):
     _preset_caption.caption('%s — %s' % (_cur['label'], _cur['shows']))
@@ -626,10 +625,23 @@ scan_ans = scan_answer(scan) if scan is not None else None
 scan_cand = (scan_ans or {}).get('first')
 
 # ================================================================= блок 3: рекомендация
+# Оценка окна, отвечающая ответу перебора, ищется ЗДЕСЬ, а не только в блоке «Что учтено»:
+# из неё берётся доза за защитой скафандра — третье число ряда под решением. Перебор дозу не
+# считает (договор раздела 1a — три различающие величины), поэтому, когда полной оценки на
+# это начало нет, числа дозы нет тоже, и подставлять его неоткуда.
+_acc_target = None
+if scan_cand is not None:
+    _acc_target = next((a for a in R.assessments
+                        if a.window.start_utc.isoformat() == str(scan_cand.get('start_utc'))), None)
+if _acc_target is None and scan_cand is None:
+    _acc_target = next((a for a in R.assessments
+                        if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
+                       (R.assessments[0] if R.assessments else None))
+_dose = dose_factor(_acc_target) if _acc_target is not None else None
 c_main, c_btn = st.columns([6, 1.5])
 if scan is not None:
     c_main.markdown(recommendation_panel(scan, S, pro=pro, mode=mode, missing_ru=missing_ru,
-                                         duration_min=duration_min), unsafe_allow_html=True)
+                                         duration_min=duration_min, dose=_dose), unsafe_allow_html=True)
     if plan_change:
         c_main.info(plan_change)
 else:
@@ -748,14 +760,7 @@ else:
 # Заголовок был «Что учтено и что нет». Вторая половина переехала во вкладку «Методика» (пункт 1),
 # и держать её в названии блока значило бы обещать на экране то, чего на нём больше нет.
 st.markdown('<div class="sect">Что учтено</div>', unsafe_allow_html=True)
-_acc_target = None
-if scan_cand is not None:
-    _acc_target = next((a for a in R.assessments
-                        if a.window.start_utc.isoformat() == str(scan_cand.get('start_utc'))), None)
-if _acc_target is None and scan_cand is None:
-    _acc_target = next((a for a in R.assessments
-                        if rec.preferred is not None and a.window.start_utc == rec.preferred.start_utc),
-                       (R.assessments[0] if R.assessments else None))
+# `_acc_target` найден выше, в блоке 3: там из него берётся доза для ряда чисел под решением.
 # Ярлыки в три-четыре слова. Какое именно начало взято, сказано словом «раннего»: полная
 # формулировка стоит раскрытием «Откуда взята каждая величина» и в отчёте.
 _ACC_HEAD_RU = {'point': 'Величины рекомендованного окна',
