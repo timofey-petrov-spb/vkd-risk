@@ -478,6 +478,36 @@ def test_slomannaya_struktura_polosy_padaet_gromko():
     assert b.mark_changed_cells('<div>обычный текст</div>', None) == '<div>обычный текст</div>'
 
 
+def test_rabotaet_na_nastoyashchey_polose_iz_ui():
+    """Главная проверка связки: разбор идёт по НАСТОЯЩЕЙ разметке ui.panel(), а не по образцу.
+
+    Синтетическая полоса выше повторяет структуру по памяти и потому не поймала бы её смену.
+    Здесь полоса строится тем же кодом, что и на экране. Если ui.panel() перестроят, тест
+    падает — и это правильно: подсветка парсит его разметку и обязана об этом узнать.
+    """
+    from app.ui import panel
+    rows_was = [[('Время расчёта', '19.09 16:41 UTC', 'наш расчёт', 'calc'),
+                 ('Поток GOES', '0,21 ед.', 'давность 12 мин', 'obs'),
+                 ('Прогноз Kp', '3,0', 'живой выпуск', 'fc'),
+                 ('Сближения', '—', 'данных нет', 'none')]]
+    rows_now = [[('Время расчёта', '19.09 16:52 UTC', 'наш расчёт', 'calc'),
+                 ('Поток GOES', '0,48 ед.', 'давность 3 мин', 'obs'),
+                 ('Прогноз Kp', '3,0', 'живой выпуск', 'fc'),
+                 ('Сближения', '—', 'данных нет', 'none')]]
+    was, now = panel(rows_was), panel(rows_now)
+    assert [label for label, _v in b.cells(now)] == ['Время расчёта', 'Поток GOES',
+                                                     'Прогноз Kp', 'Сближения']
+    assert b.changed_labels(now, was) == ['Время расчёта', 'Поток GOES']
+    marked = b.mark_changed_cells(now, was)
+    assert marked.count('vk-changed') == 2
+    # Плашка происхождения у помеченной ячейки на месте: подсветка ничего не переписывает.
+    assert 'class="cell k-obs vk-changed"' in marked
+    assert 'class="cell k-fc"' in marked
+    # Экранирование ui.panel сохранено: знак «меньше» не превращается в разметку.
+    escaped = b.cells(panel([[('Поток GOES', '<0,01 ед.', 'наблюдение', 'obs')]]))
+    assert escaped == [('Поток GOES', '&lt;0,01 ед.')], escaped
+
+
 def test_razbor_yacheek_sohranyaet_poryadok():
     """Ячейки читаются в том порядке, в котором напечатаны."""
     html = _panel(('ВРЕМЯ РАСЧЁТА', '16:41'), ('ПОТОК GOES', '0,21 ед.'), ('ПРОГНОЗ KP', '3,0'))
