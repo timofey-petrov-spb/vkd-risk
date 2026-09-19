@@ -82,7 +82,11 @@ daypre уже находится в общей версии: 60 выпусков
 Проверки: `python -m pytest tests/history tests/sources/test_noaa.py
 tests/sources/test_registry.py tests/sources/test_live.py tests/conjunctions -q`
 — **140 passed, 649 subtests**, 5,07 с на macOS/Python 3.14.3.
-Дополнительно запущен общий набор; его результат фиксируется отдельно.
+Полный набор на `209d7b6`: **904 passed, 5 skipped, 711 subtests**, 716,98 с.
+Четыре пропуска Node закрыты отдельным прогоном двух файлов с корректным PATH
+(**56 passed**); один условный UI-тест неприменим к живому сценарию этого запуска.
+На временном объединении с `main=6f4cc1b`: **193 passed, 649 subtests**, 20,19 с,
+включая стык, новые источники и дальний горизонт Б. Main не изменён.
 
 Повтор без сети: `python scripts/register_wayback_forecasts.py` проверяет исходники
 и обновляет только их записи в A1; `python scripts/audit_forecast_tiers.py` повторяет
