@@ -1,7 +1,7 @@
 {
  "schema_version": "2.2",
  "algorithm_version": "0.6.1",
- "computed_utc": "2026-09-19T05:44:00+00:00",
+ "computed_utc": "2026-09-19T06:02:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -3904,5 +3904,5 @@
    "26000 nT / 50 MeV": null
   }
  },
- "git_commit": "ee263f75e0dd6e74bba2a2b6c158353d1203fe97"
+ "git_commit": "d84f6803ee2c70a08fe95c7f3e70afca5de89b18"
 }
