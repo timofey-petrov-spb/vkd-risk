@@ -93,6 +93,12 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
                  background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
 .verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+/* Объявленная область вывода. НЕ в свёртке ни на одном уровне: вердикт без своей области —
+   это утверждение шире, чем посчитано. Рамка слева тем же цветом, что у нашего расчёта:
+   область говорит о нашем расчёте, а не о тревоге. */
+.verdict .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
+                  background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
+.verdict .scope b { color:var(--calc); font-weight:600; }
 /* «Что дальше» — последняя видимая строка блока: что проверить, до какого момента действует
    условие, когда пересчитать. Наш расчёт по снимку, поэтому тон синий, как у всего расчётного. */
 .verdict .next { margin:10px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--calc);
@@ -188,7 +194,7 @@ STRICT_RU = {'strict': 'строгая', 'declared_reconstruction': 'объяв�
 EVENT_KIND_RU = {'SEP': 'протонное событие', 'GST': 'геомагнитная буря', 'FLR': 'вспышка', 'CME': 'выброс массы',
                  'CME_ARRIVAL': 'прогноз прихода выброса', 'IPS': 'межпланетный удар', 'HSS': 'высокоскоростной поток',
                  'RBE': 'усиление радиационного пояса', 'MPC': 'пересечение магнитопаузы', 'GST_KP': 'буря (Kp)'}
-SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
+SOURCE_RU = {'orbit': 'орбита', 'noaa_swpc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC', 'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)', 'gfz_kp': 'Kp (GFZ)',
              'ost1044_belts': 'таблицы ОСТ 134-1044-2007 (захваченные протоны)',
              'ecss_grun': 'модель метеороидов ECSS/Grün', '_layers': 'слои программы',
              'noaa_swpc_3day_forecast': 'трёхсуточный бюллетень NOAA SWPC (живой выпуск)',
@@ -294,12 +300,12 @@ def record_url(rec) -> str | None:
         return None
     for key in ('url', 'link', 'messageURL'):
         v = rec.get(key)
-        if isinstance(v, str) and v.strip():
+        if isinstance(v, str) and v.strip().startswith(('https://', 'http://')):
             return v.strip()
     md = rec.get('metadata')
     if isinstance(md, dict):
         v = md.get('url')
-        if isinstance(v, str) and v.strip():
+        if isinstance(v, str) and v.strip().startswith(('https://', 'http://')):
             return v.strip()
     return None
 
@@ -1462,6 +1468,23 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         more.append(_FORMAL_RU[0].upper() + _FORMAL_RU[1:] + '.')
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
+    # Объявленная область вывода — сразу под вердиктом и НА ОБОИХ уровнях, не в свёртке.
+    # Решение владельца 19.09 по разбору Codex п. 1: сервис называет предпочтительное окно и при
+    # частичном покрытии, но ровно настолько, насколько посчитал. Без этой строки заголовок
+    # «Есть предпочтительное окно» читается как заключение о риске ВКД, которым он не является.
+    R = S.get('recommendation') or {}
+    scope = R.get('scope') or getattr(rec, 'scope_ru', '')
+    scope_detail = R.get('scope_detail') or getattr(rec, 'scope_detail_ru', '')
+    if scope:
+        lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
+    # Подробная форма — та же область, с именами факторов и пропусками по причинам. На
+    # профессиональном уровне она стоит сразу, на оперативном уезжает в свёртку: короткая форма
+    # уже на экране, а два развёрнутых текста об одном и том же — два сообщения об одном (бриф §9.7).
+    if scope_detail and scope_detail != scope:
+        if pro:
+            lines.append('<div class="policy">%s</div>' % esc(sentence_ru(screen_text(scope_detail))))
+        else:
+            more.append('Область вывода подробно: ' + screen_text(scope_detail) + '.')
 
     items = verdict_items(rec, assessments)
     # О3: при отказе рекомендовать строка сравнения не имеет права называть лучшее окно, а причина
@@ -1472,7 +1495,14 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         items = [dict(it, text=comparison_without_pick_ru(it['text'], v)) if it['kind'] == 'cmp' else it
                  for it in items]
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
-    need_items = [{'text': 'Чего не хватает: ' + x, 'kind': 'need', 'mech': None, 'head': ''} for x in missing]
+    # `reasons` уже содержат тексты `missing` (слой сравнения кладёт их в оба поля), и без этой
+    # проверки каждая недостающая линия печаталась ДВАЖДЫ: один раз как причина, второй — с
+    # приставкой «Чего не хватает». На живом примере это давало 15 пунктов вместо 8.
+    shown_texts = {it['text'] for it in items}
+    need_items = [{'text': 'Чего не хватает: ' + x, 'kind': 'need', 'mech': None, 'head': ''}
+                  for x in missing if x not in shown_texts]
+    # При отказе «оснований недостаточно» причина отказа обязана стоять ПЕРВОЙ строкой: иначе
+    # первым видимым пунктом идёт сравнение окон, которое читается как рекомендация.
     items = (need_items + items) if v == 'insufficient' else (items + need_items)
     cut_cond = False
     if pro:
@@ -1492,7 +1522,11 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
                                            or (MECH_RU.get(it['mech'], '???')[:-1].lower() in rule_txt))
             if it['kind'] == 'other':
                 others += 1
-                keep = others <= 1         # одна строка о покрытии, остальные — в свёртку
+                # Доля окна с моделью и пропуски по причинам уже стоят в строке «Область вывода»
+                # прямо над этим списком. Оставлять здесь ещё и строку о покрытии — это два
+                # сообщения об одном и том же (бриф §9.7), и на «Тихой дате» она занимала 210
+                # символов из видимой части. Без объявленной области одна такая строка остаётся.
+                keep = others <= (0 if scope else 1)
             else:
                 keep = not dup
             if keep and len(shown) >= 4:   # больше четырёх строк за три минуты не читаются
@@ -1501,6 +1535,15 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
                 shown.append(dict(it, text=it['head']))   # перечень записей — в карточке окна ниже
                 continue
             (shown if keep else hidden).append(it)
+    if not pro and v == 'insufficient':
+        hidden = items  # retain all evidence; do not headline a winner from partial integrals
+        mechanisms = sorted({MECH_RU.get(m.mechanism_id, m.mechanism_id)
+                             for a in (assessments or []) for m in a.mechanisms
+                             if m.mandatory and m.coverage.value != 'full'})
+        shown = [{'text': 'Неполный охват: ' + ', '.join(mechanisms or ['обязательные линии']) + '.', 'kind': 'need'},
+                 {'text': 'Показаны только известные вклады; их недостаточно для выбора времени ВКД.', 'kind': 'need'}]
+        if any(it['kind'] == 'cond' for it in items):
+            shown.append({'text': 'Есть условия дополнительной проверки специалистом. Подробности — в объяснениях окон.', 'kind': 'cond'})
     if shown:
         lines.append('<ul>' + ''.join('<li%s>%s</li>' % (' class="evid"' if it['kind'] == 'cond' else '',
                                                          esc(screen_text(it['text']))) for it in shown) + '</ul>')
@@ -1533,9 +1576,12 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
         lines.append('<div class="cov">%s</div>' % esc(coverage_scope_ru(S)))  # охват — только здесь
     else:
         body = ['<summary>%s</summary>' % esc(_VMORE_SUMMARY)]
+        # Строки свёртки — отдельными <div class="vm">, а не пунктами списка: список внутри свёртки
+        # смешивался с видимыми пунктами блока, и бюджет «не более пяти пунктов» переставал мерить
+        # то, ради чего он стоит, — длину ВИДИМОЙ части. Точка в конце каждой строки остаётся
+        # (находка шестого круга: строки свёртки идут подряд и склеивались в одно предложение).
         if hidden:
-            body.append('<ul>' + ''.join('<li>%s</li>' % esc(sentence_ru(screen_text(it['text'])))
-                                         for it in hidden) + '</ul>')
+            body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(it['text']))) for it in hidden]
         body += ['<div class="vm">%s</div>' % esc(sentence_ru(screen_text(x))) for x in more]
         if policy_short:
             body.append('<div class="vm">%s</div>' % esc(policy_short))
@@ -1769,7 +1815,7 @@ def window_card(i: int, a, best: bool, mode: str, saa_thr_nT: float | None = Non
     why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(screen_text('; '.join(why)))) if why else ''
     # Служебная подпись о том, КАК считаны минуты в аномалии, одинакова у всех окон и печатается
     # один раз под парой карточек (saa_note_ru), а не в каждой карточке: место под карточкой нужно
-    # ответу, а не двум одинаковым техническим строкам.
+    # ответу, а не двум одинаковым техническим строкам. Формулировка — из слияния восьмого круга.
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
             '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div>%s</div>'
             % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv,
@@ -1780,8 +1826,8 @@ def saa_note_ru(saa_thr_nT) -> str:
     """Одна строка под парой карточек: как считаны минуты в аномалии у ОБОИХ окон (О4)."""
     if saa_thr_nT is None:
         return ''
-    return ('Минуты в аномалии у всех окон считаны одинаково: точки трассы с |B| < %s нТл, шаг 1 мин — '
-            'формула (3), вкладка «Методика».' % nbsp_thousands(saa_thr_nT))
+    return ('Минуты в аномалии у всех окон считаны одинаково: |B| < %s нТл, линейные пересечения порога '
+            'между точками трассы — формула (3), вкладка «Методика».' % nbsp_thousands(saa_thr_nT))
 
 
 def mmod_scale_ru(mm, duration_min: int | None) -> str:
@@ -1974,14 +2020,14 @@ def verification_ru(summary: str, had_conditions: bool) -> str:
 METHOD_BLOCKS = [
     {'no': 1, 'group': 'Захваченные протоны',
      'title': 'Флюенс за окно',
-     'latex': r'\Phi(\ge E_{min}) \;=\; \sum_{i} J_i\,\Delta t, \qquad '
+     'latex': r'\Phi(\ge E_{min}) \;=\; \sum_{i\in K} \frac{J_i+J_{i+1}}{2}\,\Delta t_i, \qquad '
               r'J_i \;=\; \int_{E_{min}}^{E_{max}} f\!\left(L_i,\; B_i/B_{0,i},\; E\right)\,dE',
      'symbols': 'Φ — флюенс за окно, част./см²; J — интегральный всенаправленный поток выше E_min, см⁻²·с⁻¹; '
-                'Δt = 1 мин — шаг трассы; L и B/B_0 — магнитные координаты точки трассы; сумма берётся по точкам окна.',
+                'Δt_i — фактический интервал между точками в секундах; K — интервалы с известным потоком на обоих концах. Границы окна учитываются интерполяцией. L и B/B_0 — магнитные координаты.',
      'source': 'ОСТ 134-1044-2007, прил. А, табл. А.2.1 (минимум солнечной активности). Единицы — из вводного текста '
                'приложения: спектры всенаправленного потока, см⁻²·с⁻¹·МэВ⁻¹, без домножения на 4π.',
      'limits': 'Хвост выше E_max = 300 МэВ отброшен и объявлен. Вне сетки L = 1,14…9 модели нет — это «нет модели», '
-               'а не нуль; выше точки отражения поток физически нулевой.'},
+               'а не нуль; выше точки отражения поток физически нулевой. Разрывы свыше 60 с не заполняются, за край траектории расчёт не продолжается. При неполном охвате показан только известный вклад, не полный флюенс.'},
     {'no': 2, 'group': 'Захваченные протоны',
      'title': 'Интегрирование по энергии между узлами таблицы',
      'latex': r'f(E) = a\,E^{\,b}, \qquad b = \frac{\ln\left(f_{k+1}/f_k\right)}{\ln\left(E_{k+1}/E_k\right)}',
@@ -1996,7 +2042,7 @@ METHOD_BLOCKS = [
               r"\qquad \frac{B}{B_0} = \frac{\left|\mathbf{B}\right|_{IGRF}}{B_{eq}\,L^{-3}}",
      'symbols': "r′ — расстояние точки от смещённого центра диполя в радиусах Земли; λ′ — геомагнитная широта от "
                 "смещённой оси; d — смещение центра диполя (603 км, 0,095 R_E на май 2024; вектор смещения печатается в выгрузке расчёта, файл факторов); |B| — полное поле IGRF в точке трассы; "
-                "минуты в аномалии считаются по порогу |B| из настроек, шаг трассы 1 мин.",
+                "минуты в аномалии считаются по линейным пересечениям порога |B| между точками, исходный шаг трассы 1 мин.",
      'source': 'Fraser-Smith A. C. Centered and eccentric geomagnetic dipoles and their poles. Rev. Geophys. 25(1), 1987; '
                'коэффициенты IGRF — те же файлы, что у модуля орбиты.',
      'limits': 'Объявленное приближение до трассировки силовых линий: L и B_0 — от смещённого диполя, |B| — полное IGRF; '

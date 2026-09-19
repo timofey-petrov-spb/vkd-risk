@@ -92,6 +92,8 @@ def test_gannon_caption_does_not_promise_a_tolerance_it_did_not_compute():
     """Тот же дефект на настоящем расчёте: «Гэннон», вердикт «все окна требуют проверки»."""
     r = run('history_forecast', T_GANNON, 360, 720, [0, 240], fetched=_fetched(), now=T_GANNON)
     t = r.rec.tolerance_basis
+    # Вердикт — «все окна требуют проверки», как и сказано в описании теста: у обоих окон условие.
+    # До 19.09 сюда же приходил отказ по частичному покрытию и закрывал собой настоящую причину.
     assert r.rec.verdict == 'all_need_check' and r.rec.preferred is None
     assert 'выбор устойчив' not in t
     assert 'допуск 1 мин' not in t
@@ -148,7 +150,8 @@ def test_source_age_is_never_negative_for_a_running_interval():
     r = run('live', t0, 360, 1440, [0, 480], fetched=fetched, now=t0)
     ages = [v.get('age_min') for v in r.S['sources'].values() if v.get('age_min') is not None]
     assert ages and all(a >= 0 for a in ages), r.S['sources']['gfz_kp']
-    assert r.S['sources']['gfz_kp']['age_min'] == 0
+    assert r.kp is None and r.S['sources']['gfz_kp']['age_min'] is None
+    assert 'незавершённый' in r.S['sources']['gfz_kp']['status']
 
 
 # --------------------------------------------------- ограничения карточки условия «буря»

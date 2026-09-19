@@ -153,7 +153,7 @@ _COND_LIMITS = {
     # где никакого наблюдения нет (находка третьего круга).
     'GST': '',
     'GOES': ('Уверенность: последнее наблюдение GOES с давностью; на будущие участки окна не распространяется; '
-             'перенос на станцию — через обрезание, см. фактор доступности.'),
+             'геомагнитное обрезание — отдельный показатель; локальный поток на МКС не рассчитан.'),
     'CONJ': 'Уверенность: качественное сообщение SOCRATES; усечённая выдача не означает отсутствия других сближений.',
 }
 _COND_TAIL = 'Пороги S1/S3 и G3 — шкалы NOAA SWPC; отнесение к условиям проверки — правило команды, меняется в config/settings.toml.'
@@ -297,6 +297,11 @@ def _condition_from_text(reason: str) -> Condition:
                      tuple(x.strip() for x in reason.split('DONKI — ')[-1].split(', ')) if 'DONKI — ' in reason else ())
 
 
+def event_label(e: EventInterval) -> str:
+    parts = e.event_id.split(':')
+    return parts[1] if len(parts) > 2 and parts[0] == e.source_id else e.event_id
+
+
 def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str, ev_by_id: dict,
                     samples: dict, window_index: Optional[int], cutoff_utc: Optional[datetime]) -> Card:
     end = a.window.start_utc + timedelta(minutes=a.window.duration_min)
@@ -317,7 +322,7 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
         s = samples.get(rid)
         if e is not None and (e.is_simulated or e.source_id == 'scenario'):
             pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение%s'
-                        % (e.event_id, ('; ' + short_note(e.note)) if e.note else ''))
+                        % (event_label(e), ('; ' + short_note(e.note)) if e.note else ''))
         elif e is not None:
             pubs.append('%s, %s%s' % (
                 record_ru(e.event_id), 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
@@ -361,7 +366,7 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
         limits = ((base_limits if c.kind != 'SEP' else
                    'Уверенность: конец действия не объявлен — принятая длительность действия задана настройкой sep_valid_hours.')
                   + ' Сценарий «что если»: значение задано пользователем в сценарии, не наблюдение; '
-                    'в живой кеш и воспроизведение расчёта такие значения не попадают.')
+                    'в живой кеш не попадают; в выгрузке и повторе сохраняются как синтетические входы.')
     return Card(
         title=prefix + ('Сценарий: ' if c.is_simulated else 'Условие: ') + c.text.split(': ')[0],
         kind=kind,
@@ -371,6 +376,6 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
         source_ru=source_line,
         rule_ru='CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки; %s' % _COND_TAIL,
         limits_ru=limits,
-        record_ids=c.event_ids,
+        record_ids=tuple(dict.fromkeys(ev_by_id[eid].raw_record_id if eid in ev_by_id else eid for eid in c.event_ids)),
         severity=c.severity, window_index=window_index, window_ru=period,
     )
