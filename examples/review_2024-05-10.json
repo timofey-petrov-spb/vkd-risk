@@ -1,7 +1,7 @@
 {
  "schema_version": "2.1",
  "algorithm_version": "0.4.1-i1",
- "computed_utc": "2026-09-18T22:49:00+00:00",
+ "computed_utc": "2026-09-19T00:02:00+00:00",
  "mode": "Исторический разбор",
  "mode_id": "history_review",
  "request": {
@@ -102,7 +102,7 @@
   },
   "belt_coordinates": {
    "method": "eccentric_dipole",
-   "coefficients": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\orbit\\IGRF13.shc",
+   "coefficients": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt\\data\\data\\orbit\\IGRF13.shc",
    "epoch_utc": "2024-05-10T21:00:00+00:00",
    "offset_km": [
     -396.6993661316256,
@@ -493,31 +493,44 @@
    "severity": "info"
   },
   {
-   "title": "Условие: протонное событие с 05-09 13",
-   "kind": "external_forecast",
+   "title": "Условие: протонное событие с 05-09 13:59Z пересекает окно",
+   "kind": "observation",
    "impact_ru": "Предупреждение: окно исключено из автоматического выбора и требует ручной проверки аналитиком. Это консервативная политика прототипа, не эксплуатационная норма.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
    "data_ru": "протонное событие с 05-09 13:59Z пересекает окно: исключено из автовыбора; 3 записи DONKI — donki_msg#20240509-AL-004, donki_sep#2024-05-09T13:59:00-SEP-001, donki_sep#2024-05-09T14:25:00-SEP-001",
    "source_ru": "пороги: NOAA Space Weather Scales (S1 10, S2 100, S3 1000 pfu по ≥10 МэВ; G3 = Kp 7); граница класса — решение команды, обоснование в docs/KRITERII_PLAN.md разделы 5 и 7",
    "rule_ru": "CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки",
    "limits_ru": "порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; при иной шкале организации порог меняется в конфигурации",
-   "record_ids": [],
+   "record_ids": [
+    "donki_msg#20240509-AL-004",
+    "donki_sep#2024-05-09T13:59:00-SEP-001",
+    "donki_sep#2024-05-09T14:25:00-SEP-001"
+   ],
    "severity": "limiting"
   },
   {
-   "title": "Условие: протонное событие с 05-10 12",
-   "kind": "external_forecast",
+   "title": "Условие: протонное событие с 05-10 12:59Z пересекает окно",
+   "kind": "observation",
    "impact_ru": "Предупреждение: окно исключено из автоматического выбора и требует ручной проверки аналитиком. Это консервативная политика прототипа, не эксплуатационная норма.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
    "data_ru": "протонное событие с 05-10 12:59Z пересекает окно: исключено из автовыбора; 8 записей DONKI — donki_msg#20240510-AL-004, donki_msg#20240510-AL-005, donki_msg#20240510-AL-008, donki_msg#20240510-AL-009, donki_sep#2024-05-10T12:59:00-SEP-001, donki_sep#2024-05-10T13:02:00-SEP-001, donki_sep#2024-05-10T13:35:00-SEP-001, donki_sep#2024-05-10T14:50:00-SEP-001",
    "source_ru": "пороги: NOAA Space Weather Scales (S1 10, S2 100, S3 1000 pfu по ≥10 МэВ; G3 = Kp 7); граница класса — решение команды, обоснование в docs/KRITERII_PLAN.md разделы 5 и 7",
    "rule_ru": "CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки",
    "limits_ru": "порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; при иной шкале организации порог меняется в конфигурации",
-   "record_ids": [],
+   "record_ids": [
+    "donki_msg#20240510-AL-004",
+    "donki_msg#20240510-AL-005",
+    "donki_msg#20240510-AL-008",
+    "donki_msg#20240510-AL-009",
+    "donki_sep#2024-05-10T12:59:00-SEP-001",
+    "donki_sep#2024-05-10T13:02:00-SEP-001",
+    "donki_sep#2024-05-10T13:35:00-SEP-001",
+    "donki_sep#2024-05-10T14:50:00-SEP-001"
+   ],
    "severity": "limiting"
   },
   {
-   "title": "Условие: прогноз прихода выброса 05-10 12",
+   "title": "Условие: прогноз прихода выброса 05-10 12:12Z (WSA-ENLIL, DONKI), ожидаемый Kp до 8",
    "kind": "external_forecast",
    "impact_ru": "Предупреждение: окно исключено из автоматического выбора и требует ручной проверки аналитиком. Это консервативная политика прототипа, не эксплуатационная норма.",
    "period_ru": "окно 2024-05-10 12:00 — 18:00 UTC, 360 мин",
@@ -525,7 +538,26 @@
    "source_ru": "пороги: NOAA Space Weather Scales (S1 10, S2 100, S3 1000 pfu по ≥10 МэВ; G3 = Kp 7); граница класса — решение команды, обоснование в docs/KRITERII_PLAN.md разделы 5 и 7",
    "rule_ru": "CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки",
    "limits_ru": "порог — настройка с источником; наблюдение сейчас не распространяется молча на всё окно; при иной шкале организации порог меняется в конфигурации",
-   "record_ids": [],
+   "record_ids": [
+    "donki_enlil#2024-05-07T03:12:00-CME-001#2024-05-07T1321Z",
+    "donki_enlil#2024-05-07T03:12:00-CME-001#2024-05-07T1601Z",
+    "donki_enlil#2024-05-07T05:24:00-CME-001#2024-05-07T1537Z",
+    "donki_enlil#2024-05-07T05:24:00-CME-001#2024-05-07T1601Z",
+    "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-08T1823Z",
+    "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-08T1842Z",
+    "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-09T2028Z",
+    "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-09T2046Z",
+    "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-08T1645Z",
+    "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-08T1842Z",
+    "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-09T2028Z",
+    "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-09T2046Z",
+    "donki_enlil#2024-05-08T19:12:00-CME-001#2024-05-09T2028Z",
+    "donki_enlil#2024-05-08T19:12:00-CME-001#2024-05-09T2046Z",
+    "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T2028Z",
+    "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T2046Z",
+    "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T2028Z",
+    "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T2046Z"
+   ],
    "severity": "limiting"
   },
   {
@@ -570,21 +602,21 @@
   },
   "noaa_swpc_goes": {
    "role": "протоны ≥10 МэВ",
-   "status": "получено живьём, HTTP 200",
-   "live_ok": true,
+   "status": "источники не запрашивались: исторический режим, входы — архив",
+   "live_ok": false,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T22:50:38.526788+00:00",
+   "fetched_utc": null,
    "data_utc": null,
-   "age_min": 0.0
+   "age_min": null
   },
   "gfz_kp": {
    "role": "Kp",
-   "status": "получено живьём, HTTP 200",
-   "live_ok": true,
+   "status": "источники не запрашивались: исторический режим, входы — архив",
+   "live_ok": false,
    "from_cache": false,
-   "fetched_utc": "2026-09-18T22:50:38.801063+00:00",
+   "fetched_utc": null,
    "data_utc": null,
-   "age_min": 0.0
+   "age_min": null
   },
   "ost1044_belts": {
    "role": "захваченные протоны",
@@ -919,23 +951,9 @@
     "simulated": false
    },
    {
-    "id": "donki_msg#20240509-AL-010",
-    "kind": "CME",
-    "published_utc": "2024-05-09T21:24:51+00:00",
-    "start_utc": "2024-05-08T12:24:00+00:00",
-    "simulated": false
-   },
-   {
     "id": "donki_msg#20240509-AL-005",
     "kind": "CME",
     "published_utc": "2024-05-09T16:39:40+00:00",
-    "start_utc": "2024-05-08T19:12:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240509-AL-010",
-    "kind": "CME",
-    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-08T19:12:00+00:00",
     "simulated": false
    },
@@ -947,23 +965,9 @@
     "simulated": false
    },
    {
-    "id": "donki_msg#20240509-AL-010",
-    "kind": "CME",
-    "published_utc": "2024-05-09T21:24:51+00:00",
-    "start_utc": "2024-05-08T22:24:00+00:00",
-    "simulated": false
-   },
-   {
     "id": "donki_msg#20240509-AL-006",
     "kind": "CME",
     "published_utc": "2024-05-09T17:04:16+00:00",
-    "start_utc": "2024-05-09T09:24:00+00:00",
-    "simulated": false
-   },
-   {
-    "id": "donki_msg#20240509-AL-010",
-    "kind": "CME",
-    "published_utc": "2024-05-09T21:24:51+00:00",
     "start_utc": "2024-05-09T09:24:00+00:00",
     "simulated": false
    },
@@ -991,259 +995,259 @@
    {
     "id": "donki_sep#2024-05-09T13:59:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-09T13:54:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-09T13:59:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-09T14:25:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-09T14:44:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-09T14:25:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-10T12:59:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-10T13:39:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-10T12:59:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-10T13:02:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-10T13:41:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-10T13:02:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-10T13:35:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-10T13:46:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-10T13:35:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-10T14:50:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-10T15:03:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-10T14:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-11T02:10:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-11T02:30:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-11T02:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_sep#2024-05-11T04:07:00-SEP-001",
     "kind": "SEP",
-    "published_utc": "2024-05-11T04:13:00+00:00",
+    "published_utc": null,
     "start_utc": "2024-05-11T04:07:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-07T03:12:00-CME-001#2024-05-07T1321Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-07T13:21:00+00:00",
+    "published_utc": "2024-05-07T14:21:00+00:00",
     "start_utc": "2024-05-10T14:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-07T03:12:00-CME-001#2024-05-07T1601Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-07T16:01:00+00:00",
+    "published_utc": "2024-05-07T17:01:00+00:00",
     "start_utc": "2024-05-10T14:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-07T05:24:00-CME-001#2024-05-07T1537Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-07T15:37:00+00:00",
+    "published_utc": "2024-05-07T16:37:00+00:00",
     "start_utc": "2024-05-10T14:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-07T05:24:00-CME-001#2024-05-07T1601Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-07T16:01:00+00:00",
+    "published_utc": "2024-05-07T17:01:00+00:00",
     "start_utc": "2024-05-10T14:00:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-08T1823Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T18:23:00+00:00",
+    "published_utc": "2025-03-12T16:52:00+00:00",
     "start_utc": "2024-05-10T12:14:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-08T1842Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T18:42:00+00:00",
+    "published_utc": "2025-03-12T16:52:00+00:00",
     "start_utc": "2024-05-10T12:19:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-09T2028Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:28:00+00:00",
+    "published_utc": "2025-03-12T16:52:00+00:00",
     "start_utc": "2024-05-10T13:03:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-09T2046Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:46:00+00:00",
+    "published_utc": "2025-03-12T16:52:00+00:00",
     "start_utc": "2024-05-10T12:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T05:36:00-CME-001#2024-05-08T1956Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T19:56:00+00:00",
+    "published_utc": "2024-05-08T20:56:00+00:00",
     "start_utc": "2024-05-10T18:29:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-08T1618Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T16:18:00+00:00",
+    "published_utc": "2024-05-08T17:18:00+00:00",
     "start_utc": "2024-05-11T01:39:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-08T1842Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T18:42:00+00:00",
+    "published_utc": "2024-05-08T19:42:00+00:00",
     "start_utc": "2024-05-10T12:19:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-09T2028Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:28:00+00:00",
+    "published_utc": "2024-05-09T21:28:00+00:00",
     "start_utc": "2024-05-10T13:03:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-09T2046Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:46:00+00:00",
+    "published_utc": "2024-05-09T21:46:00+00:00",
     "start_utc": "2024-05-10T12:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T12:24:00-CME-001#2024-05-08T1645Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-08T16:45:00+00:00",
+    "published_utc": "2024-05-08T17:45:00+00:00",
     "start_utc": "2024-05-10T12:12:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T19:12:00-CME-001#2024-05-09T2028Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:28:00+00:00",
+    "published_utc": "2024-05-09T21:28:00+00:00",
     "start_utc": "2024-05-10T13:03:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T19:12:00-CME-001#2024-05-09T2046Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:46:00+00:00",
+    "published_utc": "2024-05-09T21:46:00+00:00",
     "start_utc": "2024-05-10T12:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T1947Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T19:47:00+00:00",
+    "published_utc": "2024-05-09T20:47:00+00:00",
     "start_utc": "2024-05-10T18:10:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T2017Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:17:00+00:00",
+    "published_utc": "2024-05-09T21:17:00+00:00",
     "start_utc": "2024-05-10T18:09:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T1932Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T19:32:00+00:00",
+    "published_utc": "2024-05-09T20:32:00+00:00",
     "start_utc": "2024-05-10T23:46:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T1950Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T19:50:00+00:00",
+    "published_utc": "2024-05-09T20:50:00+00:00",
     "start_utc": "2024-05-10T23:45:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T2028Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:28:00+00:00",
+    "published_utc": "2024-05-09T21:28:00+00:00",
     "start_utc": "2024-05-10T13:03:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-08T22:24:00-CME-001#2024-05-09T2046Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:46:00+00:00",
+    "published_utc": "2024-05-09T21:46:00+00:00",
     "start_utc": "2024-05-10T12:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T1643Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T16:43:00+00:00",
+    "published_utc": "2024-05-09T17:43:00+00:00",
     "start_utc": "2024-05-11T05:02:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T1700Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T17:00:00+00:00",
+    "published_utc": "2024-05-09T18:00:00+00:00",
     "start_utc": "2024-05-11T05:04:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T2028Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:28:00+00:00",
+    "published_utc": "2024-05-09T21:28:00+00:00",
     "start_utc": "2024-05-10T13:03:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T2046Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T20:46:00+00:00",
+    "published_utc": "2024-05-09T21:46:00+00:00",
     "start_utc": "2024-05-10T12:50:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T1900Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T19:00:00+00:00",
+    "published_utc": "2024-05-09T20:00:00+00:00",
     "start_utc": "2024-05-10T23:45:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T09:24:00-CME-001#2024-05-09T1918Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-09T19:18:00+00:00",
+    "published_utc": "2024-05-09T20:18:00+00:00",
     "start_utc": "2024-05-10T23:51:00+00:00",
     "simulated": false
    },
    {
     "id": "donki_enlil#2024-05-09T18:23:00-CME-001#2024-05-10T0159Z",
     "kind": "CME_ARRIVAL",
-    "published_utc": "2024-05-10T01:59:00+00:00",
+    "published_utc": "2024-05-10T02:59:00+00:00",
     "start_utc": "2024-05-10T19:02:00+00:00",
     "simulated": false
    }

@@ -43,8 +43,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+import experiments.stub_history as SH                                    # noqa: E402
 from experiments.stub_history import ARCH, _load, _t, history_bundle   # noqa: E402
 from vkd.assess.cutoff import apply_cutoff                              # noqa: E402
+from vkd.config import settings_path                                     # noqa: E402
+from vkd.integration.noaa_forecast import noaa_forecasts                 # noqa: E402
 from vkd.types import Window                                             # noqa: E402
 from vkd.windows.compare import Thresholds                               # noqa: E402
 
@@ -62,7 +65,8 @@ KP_INTERVAL_H = 3            # интервал индекса Kp, ч
 LOOKBACK_H = 48              # как в app/main.py: к отсечке показываются события не старше 48 ч
 AFTER_H = 24                 # «случилось потом»: горизонт после отсечки, ч
 CONTROL_AFTER_H = 48         # контроль: события, которые могли бы оправдать сигнал недели, ч
-KP_CHECK = Thresholds().kp_check          # Kp ≥ 7 — триггер проверки (политика прототипа)
+TH = Thresholds.from_settings()           # те же пороги, что у приложения (config/settings.toml, Т7)
+KP_CHECK = TH.kp_check                    # Kp ≥ 7 — триггер проверки (политика прототипа)
 CONTRACT_KINDS = ('GST', 'SEP')           # условия по договору образуют только буря и протонное событие
 OUT_MD = os.path.join(ROOT, 'docs', 'EKSPERIMENTY.md')
 
@@ -265,15 +269,17 @@ def exp1_storm(cards):
 
 def exp1_sep(cards):
     lines = ['', '### 1.3. Протонные события 10–11 мая: заблаговременность по каждой записи', '',
-             'Публикация: `messageIssueTime` уведомления — датированный выпуск; `submissionTime` карточки — время подачи '
-             'карточки версии `versionId`, принимается как публикация условно (карточка могла редактироваться).', '']
+             'Публикация: `messageIssueTime` уведомления — датированный выпуск (основа строгого режима). `submissionTime` карточки — '
+             'время подачи версии `versionId`, не публикация содержания (карточка редактируется: у %d из %d карточек SEP архива `versionId` > 1); '
+             'в строгий режим карточки не входят (CONTRACT §10), строка подачи показана только для сравнения.'
+             % (sum(1 for s in cards['sep'] if (s.get('versionId') or 1) > 1), len(cards['sep'])), '']
     rows = []
     seps = [s for s in cards['sep'] if s['eventTime'][:10] in SEP_DAYS]
     for s in sorted(seps, key=lambda x: x['eventTime']):
         ev = _t(s['eventTime'])
         instr = (s.get('instruments') or [{}])[0].get('displayName', '')
         sub = _t(s['submissionTime'])
-        rows.append(('`%s`' % s['sepID'], instr, fmt(ev), 'подача карточки v%s' % s['versionId'], fmt(sub), lead(ev, sub)))
+        rows.append(('`%s`' % s['sepID'], instr, fmt(ev), 'подача карточки v%s (не выпуск)' % s['versionId'], fmt(sub), lead(ev, sub)))
         for n in s.get('sentNotifications') or []:
             t = _t(n['messageIssueTime'])
             rows.append(('`%s`' % s['sepID'], instr, fmt(ev), 'уведомление `%s`' % n['messageID'], fmt(t), lead(ev, t)))
@@ -305,24 +311,30 @@ def exp1_precursors(cards, storm_start):
     lines += table(['activityID (CME)', 'messageID', 'выпуск', 'до начала бури'], rows)
     ips = linked_ips(cards)
     ref, ref_txt = (_t(ips['eventTime']), 'прихода ударной волны %s (`%s`)' % (fmt_s(_t(ips['eventTime'])), ips['activityID'])) if ips else (storm_start, 'начала бури')
-    lines += ['', 'Оценки прихода из `cmeAnalyses.enlilList` карточек — **только после факта**: `modelCompletionTime` — время '
-              'завершения модели, а не доказанная публикация (R4); сами анализы подавались и позже (см. столбец подачи). '
-              'Ошибка = оценка − фактический момент %s; «+» — оценка позже факта.' % ref_txt, '']
+    lines += ['', 'Оценки прихода из `cmeAnalyses.enlilList` карточек — внешний прогноз WSA-ENLIL. Времени размещения прогона на сайте '
+              'в данных нет; `modelCompletionTime` — время завершения модели, а не доказанная публикация (R4). Политика прототипа R10 '
+              '(`experiments/stub_history.py`, `enlil_arrivals`): принятая публикация = завершение прогона + %d мин запаса '
+              '(`[history].enlil_publication_lag_min`), но не раньше подачи анализа `submissionTime` — анализ, переподанный позже прогона, '
+              'не мог быть виден раньше подачи. Доступность к отсечке этим не доказана, и запись так и помечена. '
+              'Ошибка = оценка − фактический момент %s; «+» — оценка позже факта.' % (SH.ENLIL_PUBLICATION_LAG_MIN, ref_txt), '']
     rows = []
+    lag = timedelta(minutes=SH.ENLIL_PUBLICATION_LAG_MIN)
     for c in sorted(cmes, key=lambda x: x['startTime']):
         for a in c.get('cmeAnalyses') or []:
             for e in a.get('enlilList') or []:
                 arr = _t(e.get('estimatedShockArrivalTime'))
                 if arr is None:
                     continue
-                rows.append(('`%s`' % c['activityID'], fmt(arr), signed_h(hours(arr, ref)),
-                             fmt(_t(e.get('modelCompletionTime'))), fmt(_t(a.get('submissionTime')))))
+                mc, sub = _t(e.get('modelCompletionTime')), _t(a.get('submissionTime'))
+                pub = max(t for t in ((mc + lag) if mc else None, sub) if t is not None)
+                rows.append(('`%s`' % c['activityID'], fmt(arr), signed_h(hours(arr, ref)), fmt(mc), fmt(sub),
+                             fmt(pub) + (' (подача)' if sub is not None and pub == sub and (mc is None or sub > mc + lag) else ' (прогон + запас)')))
     rows.sort(key=lambda r: r[3])
-    lines += table(['activityID (CME)', 'оценка прихода ENLIL', 'ошибка оценки', 'modelCompletionTime', 'подача анализа'], rows)
+    lines += table(['activityID (CME)', 'оценка прихода ENLIL', 'ошибка оценки', 'modelCompletionTime', 'подача анализа', 'принятая публикация (R10)'], rows)
     late = [r for r in rows if r[4] > '2024-06']
     if late:
         lines += ['', 'Замечание: %d из %d анализов поданы после июня 2024 (самая поздняя подача %s) — карточка DONKI редактируется '
-                  'спустя месяцы, поэтому её содержимое не годится как «известное к отсечке» без датированного выпуска.' % (
+                  'спустя месяцы; по политике R10 публикация таких прогонов = подача анализа, и отсечка 2024 года их исключает.' % (
                       len(late), len(rows), max(r[4] for r in rows))]
     return lines
 
@@ -344,7 +356,8 @@ def exp1_cutoffs(bundle, cards, msgs, kp7_all, seps):
         for e in sorted(recent, key=lambda e: e.published_utc):
             last[e.kind_of_event] = e
         known = '; '.join('%s: %d (последнее `%s` %s)' % (k, by_kind[k], rid(last[k].event_id), fmt_s(last[k].published_utc)) for k in sorted(by_kind))
-        n_kp_excl = sum(1 for x in cut.excluded if 'непригодно' in x)
+        n_kp_excl = sum(1 for x in cut.excluded if 'непригодно' in x and not x.startswith('donki_sep#'))
+        n_cards = sum(1 for x in cut.excluded if x.startswith('donki_sep#'))
         n_after = sum(1 for x in cut.excluded if 'после отсечки' in x or 'позже отсечки' in x)
         after = []
         end = c + timedelta(hours=AFTER_H)
@@ -359,15 +372,18 @@ def exp1_cutoffs(bundle, cards, msgs, kp7_all, seps):
         n_msg_after = sum(1 for m in msgs.values() if c < m['issued'] <= end)
         after.append('уведомлений в следующие %d ч: %d' % (AFTER_H, n_msg_after))
         rows.append((fmt(c), known or 'ничего за %d ч' % LOOKBACK_H,
-                     '%d Kp без публикации; %d записей (с дублями прикреплений) позже отсечки' % (n_kp_excl, n_after), '; '.join(after)))
+                     '%d интервалов Kp без публикации; %d карточек SEP (не датированный выпуск); %d записей позже отсечки' % (n_kp_excl, n_cards, n_after),
+                     '; '.join(after)))
         detail.append((c, recent, cut))
     lines += table(['отсечка', 'известно строго (не старше %d ч)' % LOOKBACK_H, 'исключено отсечкой', 'случилось потом (%d ч)' % AFTER_H], rows)
-    lines += ['', 'Записи GST и SEP, известные строго к каждой отсечке (только они образуют условия по договору); '
-              'для SEP-карточек публикация — `submissionTime`, для уведомлений — `messageIssueTime`:', '']
+    lines += ['', 'Записи GST и SEP, известные строго к каждой отсечке (только они образуют условия по договору): '
+              'датированные уведомления, публикация — `messageIssueTime`; карточки SEP в строгий отбор не входят (CONTRACT §10). '
+              'Происхождение — по телу сообщения из реестра A1:', '']
     rows = []
     for c, recent, cut in detail:
         gs = [e for e in recent if e.kind_of_event in CONTRACT_KINDS]
-        rows.append((fmt(c), ', '.join('`%s` (%s, %s)' % (rid(e.event_id), e.kind_of_event, fmt_s(e.published_utc))
+        rows.append((fmt(c), ', '.join('`%s` (%s, %s, %s)' % (rid(e.event_id), e.kind_of_event, fmt_s(e.published_utc),
+                                                              'наблюдение' if e.kind.value == 'observation' else 'прогноз')
                                        for e in sorted(gs, key=lambda e: e.published_utc)) or 'нет'))
     lines += table(['отсечка', 'записи GST/SEP с публикацией ≤ отсечки'], rows)
     return lines
@@ -428,8 +444,8 @@ def exp1_control(bundle, cards, msgs):
             ('окон с событием по карточкам (истина после факта)', str(len(truth)), '—'),
             ('условия по договору (GST/SEP): помечено окон', str(len(flagged['contract'])), ', '.join('`%s`' % rid(m) for m in by_msg['contract']) or 'нет'),
             ('ложных предупреждений по договору', str(len([s for s in flagged['contract'] if s not in truth])), '—'),
-            ('«любое уведомление — проверка» (ветка compare.py сейчас): помечено окон', str(len(flagged['implemented'])),
-             ', '.join('`%s`' % rid(m) for m in sorted(by_msg['implemented'])) or 'нет'),
+            ('«любое уведомление — проверка» (вариант отвергнут; в compare.py не реализован, см. ветку условий): помечено окон',
+             str(len(flagged['implemented'])), ', '.join('`%s`' % rid(m) for m in sorted(by_msg['implemented'])) or 'нет'),
             ('ложных предупреждений при «любом уведомлении»', str(len([s for s in flagged['implemented'] if s not in truth])), '—')]
     lines += table(['показатель', 'значение', 'записи'], rows)
     return lines, (a, b, n_msg, len(flagged['contract']), len(flagged['implemented']), n, len(truth))
@@ -440,17 +456,18 @@ def exp2_baseline_vs_rule(bundle, cards, kp7_all, storm_start, peak):
     samples, events, raw = bundle
     kp_iv = kp_intervals(cards)
     lines = ['', '### 2.1. На отсечках: «последнее наблюдение» против правила условий', '',
-             'Базовый метод: последнее наблюдение Kp из карточек GST. В строгом режиме образцы `allKpIndex` не имеют времени '
-             'публикации и исключаются `apply_cutoff` — метод слеп. Нестрогий вариант (по `observedTime`, публикация игнорируется) '
-             'показан для сравнения и **не является прогнозом из прошлого**: значение из карточки, поданной %s, нельзя считать '
-             'доступным раньше подачи. Наше правило: условия из записей GST/SEP с публикацией ≤ отсечки, действие %d ч '
-             'при неизвестном конце.' % (next(g['submissionTime'] for g in cards['gst'] if g['gstID'] == GST_ID), VALID_H), '']
+             'Базовый метод: последнее наблюдение Kp (окончательный ряд GFZ; в карточках GST DONKI — те же значения NOAA). В строгом режиме '
+             'образцы Kp не имеют времени публикации по интервалам и исключаются `apply_cutoff` — метод слеп. Нестрогий вариант (по концу '
+             'интервала `observedTime` карточки GST, публикация игнорируется) показан для сравнения и **не является прогнозом из прошлого**: '
+             'значение из карточки, поданной %s, нельзя считать доступным раньше подачи. Наше правило: условия из датированных '
+             'уведомлений GST/SEP с публикацией ≤ отсечки, действие %d ч при неизвестном конце.'
+             % (next(g['submissionTime'] for g in cards['gst'] if g['gstID'] == GST_ID), VALID_H), '']
     rows = []
     for c in CUTOFFS:
         cut, ev = strict_events(bundle, c)
         kp_strict = [s for s in cut.samples if s.channel_id == 'kp']
         strict_txt = 'нет данных: %d из %d образцов Kp исключены (нет публикации)' % (
-            sum(1 for x in cut.excluded if 'непригодно' in x), len(samples)) if not kp_strict else '%d образцов' % len(kp_strict)
+            sum(1 for x in cut.excluded if 'непригодно' in x and not x.startswith('donki_sep#')), len(samples)) if not kp_strict else '%d образцов' % len(kp_strict)
         past = [x for x in kp_iv if x[1] <= c]
         if past:
             lst = max(past, key=lambda x: x[1])
@@ -469,7 +486,8 @@ def exp2_baseline_vs_rule(bundle, cards, kp7_all, storm_start, peak):
             g0 = min(gst_c, key=lambda x: x[0])
             ours.append('буря: проверка с %s (`%s`), %s до начала интервала пика' % (fmt_s(g0[0]), rid(g0[2].event_id), lead(peak[0], g0[0])))
         else:
-            ours.append('буря: условия нет (сообщений без условия: %s)' % (', '.join('%s %d' % (k, v) for k, v in sorted(other.items())) or 'нет'))
+            ours.append('буря: условия по записям GST нет (записей других типов, здесь не образующих условие: %s; прогнозы ENLIL — раздел 5)'
+                        % (', '.join('%s %d' % (k, v) for k, v in sorted(other.items())) or 'нет'))
         if sep_c:
             s0 = min(sep_c, key=lambda x: x[0])
             ours.append('SEP: проверка с %s до %s (`%s`%s)' % (fmt_s(s0[0]), fmt_s(s0[1]), rid(s0[2].event_id),
@@ -572,6 +590,63 @@ def exp2_stability(bundle):
     return lines
 
 
+# ----------------------------------------------------------------------------- раздел 5: прогнозы на отсечке
+def exp5_forecast_at_cutoff(bundle, cutoff=datetime(2024, 5, 10, 12, 0, tzinfo=UTC), horizon_h=32, gap_cutoff=datetime(2024, 5, 20, 12, 0, tzinfo=UTC)):
+    """Что строгий режим видит на отсечке из внешних прогнозов (архив NOAA A1/A2 и ENLIL по политике R10).
+    Заменяет ручное «Дополнение 19.09»: числа считаются, а не переписываются."""
+    lines = ['', '## 5. Внешние прогнозы на отсечке %s: NOAA и WSA-ENLIL' % fmt(cutoff), '',
+             'Уведомления DONKI о буре Гэннон вышли после её начала (раздел 1.2), поэтому на отсечке %s строгий режим '
+             'может видеть бурю только из внешних прогнозов, выпущенных раньше. Отбор выпуска NOAA — по времени публикации '
+             '(A2, `vkd.integration.noaa_forecast`); прогноз ENLIL — по принятой публикации R10 (раздел 1.4).' % fmt_s(cutoff), '']
+    end = cutoff + timedelta(hours=horizon_h)
+    fc_lines, _ = noaa_forecasts(cutoff, cutoff, end)
+    rows = []
+    for line in fc_lines:
+        cells = [s for s in line.samples if s.valid_from_utc and s.valid_to_utc and s.valid_from_utc < end and s.valid_to_utc > cutoff]
+        if line.status in ('full', 'partial') and cells:
+            mx = max(cells, key=lambda s: s.value if s.value is not None else -1)
+            above = [s for s in cells if s.value is not None and line.channel_id == 'kp_forecast' and s.value >= KP_CHECK]
+            what = ('максимум %s: %s–%s' % (num(mx.value, 2), fmt(mx.valid_from_utc),
+                                           mx.valid_to_utc.strftime('%H:%MZ') if line.channel_id == 'kp_forecast' else fmt(mx.valid_to_utc))
+                    + ('; интервалы с Kp ≥ %g: %s' % (KP_CHECK, ', '.join('%s–%s (%s)' % (fmt_s(s.valid_from_utc), s.valid_to_utc.strftime('%H:%MZ'), num(s.value, 2)) for s in above)) if above else ''))
+        else:
+            what = 'выпуска до отсечки в архиве нет' if line.status == 'missing' else line.status
+        rows.append((line.label_ru, '`%s`' % line.release_id if line.release_id else '—',
+                     fmt(line.published_utc) if line.published_utc else '—', what))
+    lines += table(['линия NOAA', 'выпуск', 'публикация', 'на горизонте %d ч' % horizon_h], rows)
+    samples, events, raw = bundle
+    cut = apply_cutoff(samples, events, [], cutoff)
+    enl = sorted((e for e in cut.events if e.kind_of_event == 'CME_ARRIVAL' and e.start_utc and cutoff - timedelta(hours=6) <= e.start_utc <= end),
+                 key=lambda e: e.published_utc)
+    lines += ['', 'Прогнозы прихода выброса WSA-ENLIL, известные к отсечке по политике R10 и приходящиеся на горизонт (каждый прогон — запись; '
+              'связанные прогоны сводятся в одно условие):', '']
+    rows = []
+    for e in enl:
+        r = raw.get(e.raw_record_id, {})
+        rows.append(('`%s`' % r.get('activityID', '?'), fmt(_t(r.get('modelCompletionTime'))), fmt(e.published_utc), fmt(e.start_utc),
+                     num(float(r['estimatedDuration_h']), 1) if r.get('estimatedDuration_h') is not None else '—',
+                     num(float(r['kp_90']), 0) if r.get('kp_90') is not None else '—', num(float(r['kp_180']), 0) if r.get('kp_180') is not None else '—'))
+    lines += table(['activityID (CME)', 'завершение прогона', 'принятая публикация', 'приход к Земле', 'длительность, ч', 'Kp типичный (kp_90)', 'Kp верхний (kp_180)'], rows or [('нет', '—', '—', '—', '—', '—', '—')])
+    n_cond = sum(1 for e in enl if any(k is not None and float(k) >= KP_CHECK for k in (raw.get(e.raw_record_id, {}).get(f) for f in SH.ENLIL_KP_FIELDS)))
+    excl_2025 = [e for e in events if e.kind_of_event == 'CME_ARRIVAL' and e.published_utc and e.published_utc.year >= 2025
+                 and e.start_utc and cutoff - timedelta(hours=6) <= e.start_utc <= end]
+    lines += ['', 'Из них с ожидаемым Kp ≥ %g по полям `%s` (условие «прогноз прихода выброса»): %d. Прогоны, чьи анализы переподаны в 2025 году '
+              '(%d на этом горизонте), отсечкой исключены — их содержимое не считается известным в 2024 году.' % (
+                  KP_CHECK, '+'.join(SH.ENLIL_KP_FIELDS), n_cond, len(excl_2025)),
+              '', 'Чтение: базовая линия «последнее наблюдение» на этой отсечке условий по буре не имеет (Kp накануне ниже порога), '
+              'различие с правилом условий — вклад датированных внешних прогнозов, и заблаговременность здесь принадлежит NOAA и ENLIL, '
+              'а не сервису. Уровень: условие по буре ставится только при Kp ≥ %g (наблюдение, уведомление с уровнем в теле или прогноз '
+              'модели), иначе бури ниже порога помечали бы окна наравне с G3+. Полный пересчёт по отсечкам мая–июня — '
+              '`experiments/forecast_lines.py` → `docs/EKSPERIMENTY_PROGNOZ.md`.' % KP_CHECK]
+    fc_gap, _ = noaa_forecasts(gap_cutoff, gap_cutoff, gap_cutoff + timedelta(hours=horizon_h))
+    kp_gap = next((l for l in fc_gap if l.channel_id == 'kp_forecast'), None)
+    if kp_gap is not None:
+        lines += ['', 'На отсечке %s линия «прогноз Kp NOAA» имеет статус `%s` (разрыв каталога 3-day forecast 15.05–16.06): канал '
+                  'объявлен отсутствующим, оценка окна не блокируется; суточные вероятности daypre остаются и не пересчитываются в '
+                  'вероятность за окно.' % (fmt(gap_cutoff), kp_gap.status)]
+    return lines + ['']
+
+
 # ----------------------------------------------------------------------------- отчёт
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
@@ -591,18 +666,28 @@ def main():
         rows.append(('`data/archive_2024/%s`' % f, len(lst), sum(len(c.get('sentNotifications') or []) for c in lst), '`%s`' % sha256(p)))
     lines += table(['файл', 'карточек', 'прикреплений уведомлений', 'SHA-256'], rows)
     msg_types = Counter(m['mid'].split('-')[1] if m['mid'].count('-') >= 2 else '?' for m in msgs.values())
+    n_a1 = len(SH._a1())
     lines += ['', 'Уникальных уведомлений в архиве: %d (одно сообщение может быть прикреплено к нескольким карточкам). '
-              'Типы по `messageID`: %s; тел сообщений в архиве нет.' % (
-                  len(msgs), ', '.join('`%s` — %d' % (k, v) for k, v in sorted(msg_types.items()))), '',
+              'Типы по `messageID`: %s. Тела сообщений и время выпуска с секундами — в реестре A1 (`data/source_registry_2024/donki/`, '
+              '%d записей, статус `strict_replay_eligibility` у всех — датированное уведомление, аудит содержания и версий не завершён); '
+              'из тела берутся уровень Kp бури и происхождение (наблюдение / прогноз).' % (
+                  len(msgs), ', '.join('`%s` — %d' % (k, v) for k, v in sorted(msg_types.items())), n_a1), '',
+              'Настройки: `%s` — пороги приложения (`kp_check = %g`), `[history].enlil_kp_fields = %s`, '
+              '`[history].enlil_publication_lag_min = %d`.' % (os.path.relpath(settings_path(), ROOT).replace('\\', '/'), KP_CHECK,
+                                                                '+'.join(SH.ENLIL_KP_FIELDS), SH.ENLIL_PUBLICATION_LAG_MIN), '',
               'Соглашения эксперимента:', '',
               '* заблаговременность = физическое начало − `messageIssueTime`; «−» — сообщение вышло после начала;',
-              '* Kp с `observedTime` = T относится к интервалу [T − %d ч, T): проверено вручную по строке GFZ за 10.05.2024 в '
-              '`data/spaceweather/kp_ap_sn_f107.txt` (15–18 UT: 7,667 = DONKI `observedTime` 18:00); в расчётах GFZ не используется;' % KP_INTERVAL_H,
+              '* Kp с `observedTime` = T относится к интервалу [T − %d ч, T): проверено по строке GFZ за 10.05.2024 в '
+              '`data/spaceweather/kp_ap_sn_f107.txt` (15–18 UT: 7,667 = DONKI `observedTime` 18:00); в разборе после факта '
+              'поставщик истории берёт окончательный ряд GFZ (D = 2), карточки GST — резерв;' % KP_INTERVAL_H,
               '* действие записи без известного конца — %d ч от публикации или начала (как в `vkd/windows/compare.py`);' % VALID_H,
               '* окна ВКД %d ч, начало каждый час в течение %d ч после отсечки (%d окон); условие проверки — пересечение окна с интервалом действия записи;' % (
                   DURATION_MIN // 60, SEARCH_H, len(windows_for(CUTOFFS[0]))),
               '* условия по договору (CONTRACT v3.1, раздел 4, п. 2) образуют только записи GST (триггер Kp ≥ %g) и SEP (предупреждение); '
-              'класс «приоритетное» из тела сообщения не выводится — тела нет; CME/FLR/IPS/RBE — сообщения без условия;' % KP_CHECK,
+              'класс «приоритетное» из тела сообщения не выводится; CME/FLR/IPS/RBE — сообщения без условия; прогнозы прихода выброса '
+              'WSA-ENLIL — условие по политике R10 (раздел 5);' % KP_CHECK,
+              '* карточки событий DONKI (SEP, GST.allKpIndex) — только разбор после факта (CONTRACT §10): в строгий отбор входят '
+              'датированные уведомления и прогнозы ENLIL по принятой публикации;',
               '* строгий отбор — `vkd.assess.cutoff.apply_cutoff` на выдаче `experiments.stub_history.history_bundle()`.', '',
               '## 1. Эксперимент 1 — внешние сообщения и последующие наблюдения', '']
     l1, storm_start, kp7, peak = exp1_storm(cards)
@@ -635,20 +720,20 @@ def main():
          '(сервис при N = %s ч применит в %s)' % (len(CUTOFFS), len(bundle[0]), fmt_s(t0), '/'.join(str(N) for N in RUN_PERIODS_H),
                                                     ' / '.join(apply_at(t0, N).strftime('%H:%MZ') for N in RUN_PERIODS_H)), '`%s`' % n0['messageID']),
         ('контрольная неделя %s – %s' % (fmt_s(a), fmt_s(b)), '%d уведомлений, %d событий; по договору помечено %d окон из %d, ложных %d; '
-         'при «любом уведомлении — проверка» помечено %d окон, все ложные' % (n_msg, n_truth, n_flag_c, n_win, n_flag_c - n_truth, n_flag_i), 'таблица 1.6'),
+         'отвергнутый вариант «любое уведомление — проверка» пометил бы %d окон, все ложные' % (n_msg, n_truth, n_flag_c, n_win, n_flag_c - n_truth, n_flag_i), 'таблица 1.6'),
     ])
     lines += ['', '## 4. Ограничения эксперимента', '',
-              '* Тел уведомлений в архиве нет: известны только `messageID`, `messageIssueTime`, `messageURL` и привязка к карточке. '
-              'Ни класс условия (S ≥ 3 / S1–S2), ни заявленный в сообщении срок действия, ни предсказанное время прихода не восстанавливаются; '
-              'действие %d ч — соглашение прототипа.' % VALID_H,
-              '* Kp взят из карточек DONKI (предварительные значения NOAA), а не из окончательного ряда GFZ; интервалы Kp — по соглашению выше. '
-              'Истина «после факта» для бури — Kp ≥ %g по этим же карточкам.' % KP_CHECK,
+              '* Из тела уведомления (реестр A1) берутся уровень Kp и происхождение; класс условия (S ≥ 3 / S1–S2) и заявленный в сообщении '
+              'срок действия не разбираются; действие %d ч — соглашение прототипа. Аудит содержания и версий уведомлений (A1) не завершён.' % VALID_H,
+              '* Kp в таблицах раздела 1 — из карточек DONKI (предварительные значения NOAA); поставщик истории в разборе после факта '
+              'использует окончательный ряд GFZ (D = 2), значения совпадают с точностью округления. Истина «после факта» для бури — Kp ≥ %g.' % KP_CHECK,
               '* Истина по протонным событиям из архива не выводится: у карточек SEP нет конца события и потоков; для SEP оценена только '
-              'заблаговременность относительно `eventTime`, пропуски и ложные тревоги по SEP не считались.',
-              '* `submissionTime` карточек SEP принято за публикацию условно (карточки версий 1–3 могли редактироваться); '
-              'датированный выпуск — только `messageIssueTime`.',
-              '* Оценки прихода ENLIL из `cmeAnalyses` использованы только после факта: их доступность к отсечке не доказана (R4), '
-              'часть анализов подана в 2025 году.',
+              'заблаговременность относительно `eventTime`; попадания/пропуски по SEP считаются против своей величины в `docs/EKSPERIMENTY_PROGNOZ.md`.',
+              '* Карточки SEP не имеют датированной публикации (`submissionTime` — подача версии, у %d из %d карточек `versionId` > 1) и в строгий '
+              'режим не входят (CONTRACT §10); датированный выпуск — только `messageIssueTime` уведомления.' % (
+                  sum(1 for s in cards['sep'] if (s.get('versionId') or 1) > 1), len(cards['sep'])),
+              '* Прогнозы прихода ENLIL: публикация принята = завершение прогона + %d мин, не раньше подачи анализа (политика прототипа R10); '
+              'доступность к отсечке не доказана датированным выпуском; анализы, поданные в 2025 году, отсечкой исключаются.' % SH.ENLIL_PUBLICATION_LAG_MIN,
               '* Базовый метод «последнее наблюдение» проверен только по Kp: архива GOES за май 2024 в репозитории нет.',
               '* Контрольная неделя выбрана по отсутствию карточек GST/SEP в DONKI; отсутствие карточки не доказывает отсутствие '
               'слабой активности (DONKI заводит GST при заметной буре).',
@@ -656,9 +741,10 @@ def main():
               'но не изменит заблаговременность поставщика.' % (DURATION_MIN // 60, SEARCH_H),
               '* Поставщик истории — временная заглушка `experiments/stub_history.py`; после появления `vkd/history` (A2) эксперимент '
               'повторяется на реестре выпусков с доказанной доступностью.',
-              '* Ветка условий в `vkd/windows/compare.py` сейчас помечает окно любым событием, включая CME и FLR; в договоре условия образуют '
-              'только буря, протонное событие и сближение. Таблица 1.6 показывает цену этого расхождения; исправление — вне этого скрипта.',
+              '* Вариант «любое уведомление — проверка» (таблица 1.6) отвергнут: ветка условий `vkd/windows/compare.py` образует условия только '
+              'из протонных событий, бурь с Kp ≥ порога и прогнозов прихода выброса (тест `test_storm_level_below_threshold_is_information_not_condition`).',
               '']
+    lines += exp5_forecast_at_cutoff(bundle)
     text = '\n'.join(lines)
     print(text)
     with io.open(OUT_MD, 'w', encoding='utf-8', newline='\n') as f:
