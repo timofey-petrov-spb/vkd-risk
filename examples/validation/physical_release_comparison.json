@@ -1,0 +1,101 @@
+[
+  {
+    "name": "live_now",
+    "old_verdict": "preferred",
+    "new_verdict": "preferred",
+    "old_preferred": "2026-09-19T15:56:00+00:00",
+    "new_preferred": "2026-09-19T15:56:00+00:00",
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "gannon_2024-05-10_cutoff12Z",
+    "old_verdict": "all_need_check",
+    "new_verdict": "all_need_check",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "gannon_2024-05-10_cutoff19Z",
+    "old_verdict": "all_need_check",
+    "new_verdict": "all_need_check",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "quiet_2024-05-03_12Z",
+    "old_verdict": "preferred",
+    "new_verdict": "preferred",
+    "old_preferred": "2024-05-03T20:00:00+00:00",
+    "new_preferred": "2024-05-03T20:00:00+00:00",
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 145
+  },
+  {
+    "name": "gap_2024-05-20_12Z",
+    "old_verdict": "preferred",
+    "new_verdict": "trade_off",
+    "old_preferred": "2024-05-20T20:00:00+00:00",
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 145
+  },
+  {
+    "name": "end_2024-06-25_12Z",
+    "old_verdict": "preferred",
+    "new_verdict": "preferred",
+    "old_preferred": "2024-06-25T20:00:00+00:00",
+    "new_preferred": "2024-06-25T20:00:00+00:00",
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 145
+  },
+  {
+    "name": "equal_2024-05-04_12Z",
+    "old_verdict": "equivalent",
+    "new_verdict": "equivalent",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 145
+  },
+  {
+    "name": "review_2024-05-10",
+    "old_verdict": "all_need_check",
+    "new_verdict": "all_need_check",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "whatif_sep_now",
+    "old_verdict": "all_need_check",
+    "new_verdict": "all_need_check",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "whatif_delay_90min",
+    "old_verdict": "preferred",
+    "new_verdict": "preferred",
+    "old_preferred": "2026-09-19T17:26:00+00:00",
+    "new_preferred": "2026-09-19T17:26:00+00:00",
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  },
+  {
+    "name": "refusal_goes_off",
+    "old_verdict": "insufficient",
+    "new_verdict": "insufficient",
+    "old_preferred": null,
+    "new_preferred": null,
+    "max_absolute_baseline_N_change": 0.0,
+    "window_count": 73
+  }
+]

@@ -1,0 +1,1392 @@
+{
+  "schema_version": 1,
+  "git_commit": "f6a99bb3a965f736e38aaede43a32dd1a1f60314",
+  "core_physics": {
+    "sgp4": {
+      "vectors": 18,
+      "max_position_component_error_km": 4.998582880944014e-09,
+      "max_velocity_component_error_km_s": 4.983471413311236e-10,
+      "passed": true,
+      "meaning": "Vallado published implementation reference, NOT actual ISS orbit prediction error"
+    },
+    "igrf": {
+      "points": 6,
+      "max_field_difference_nT": 0.006702127160679083,
+      "passed": true,
+      "meaning": "Independent evaluator, same IGRF13 coefficients; not storm field observation accuracy"
+    },
+    "energy_integration": {
+      "analytic_spectra": 6,
+      "max_relative_error": 1.1102230246251565e-16,
+      "passed": true,
+      "meaning": "Analytic power law integration, not absolute belt flux validation"
+    }
+  },
+  "source_files": {
+    "usage": "validation only; no application ingestion",
+    "forecast_issued_utc": "2023-11-02T00:00:00Z",
+    "publication_time_precision": "date; midnight is not proven issue time",
+    "files": {
+      "flux_data.txt": {
+        "sha256": "c7b1abc031c04f04255f9c7f40ec2f1612ce2f921e06c5d34be5b39149700a1f",
+        "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/flux_data.txt"
+      },
+      "method_2019.pdf": {
+        "sha256": "23314bb105e700ee826c80d0e57e2454607d313834839b0b7c3adcf6ff7f70d1",
+        "url": "https://ntrs.nasa.gov/api/citations/20190030373/downloads/20190030373.pdf"
+      },
+      "fluence_data.txt": {
+        "sha256": "6c270827e479107d1be1a7b554afb5d3e54866c78829a7eeefbdcc0382b93a78",
+        "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/fluence_data.txt"
+      },
+      "LEO_Forecast_2024.pdf": {
+        "sha256": "66d06b1760da3b73b3282e3251d8e1c2e5bd9ec9f960e5e702c8173693e8eb43",
+        "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/LEO_Forecast_2024.pdf"
+      }
+    }
+  },
+  "solar": {
+    "count": 8791,
+    "max_abs_difference_deg": 0.008018896939006481,
+    "p95_abs_difference_deg": 0.007113362125295453,
+    "reference_rounding_deg": 0.001,
+    "acceptance_deg": 0.02,
+    "meaning": "External solar-coordinate agreement for 2024 only; not flux accuracy",
+    "passed": true
+  },
+  "grun_table": {
+    "published_table_nodes": 30,
+    "max_relative_difference": 0.004876630648665392,
+    "acceptance_relative": 0.005,
+    "passed": true,
+    "meaning": "Agreement with rounded ECSS J-5, not observation validation"
+  },
+  "independent_stream_orbits": [
+    {
+      "start_utc": "2024-05-05T12:00:00+00:00",
+      "duration_min": 360,
+      "inclination_deg": 51.6,
+      "N_streams_app": 1.4873712993900558e-08,
+      "N_streams_oracle": 1.4875305026962393e-08,
+      "relative_difference": 0.00010702523806727093,
+      "acceptance_relative": 0.005,
+      "passed": true,
+      "oracle_half_step_relative_change": 1.2958835946319525e-05,
+      "per_stream": [
+        {
+          "name": "μVirginids",
+          "N_app": 8.722091025635467e-09,
+          "N_oracle": 8.720505493190564e-09,
+          "absolute_difference": 1.5855324449030445e-12
+        },
+        {
+          "name": "ηAquarids",
+          "N_app": 3.310534978897339e-09,
+          "N_oracle": 3.3119541804744037e-09,
+          "absolute_difference": 1.4192015770648516e-12
+        },
+        {
+          "name": "αScorpiids",
+          "N_app": 2.19014160333281e-09,
+          "N_oracle": 2.1922187514942763e-09,
+          "absolute_difference": 2.077148161466162e-12
+        },
+        {
+          "name": "γSagitarids",
+          "N_app": 3.443520169058157e-10,
+          "N_oracle": 3.4420005935147207e-10,
+          "absolute_difference": 1.5195755434362384e-13
+        },
+        {
+          "name": "θOphiuchids",
+          "N_app": 2.0253784565618787e-10,
+          "N_oracle": 2.0240241007256334e-10,
+          "absolute_difference": 1.3543558362453883e-13
+        },
+        {
+          "name": "Da.Arietids",
+          "N_app": 4.831895717115425e-11,
+          "N_oracle": 4.828430085929489e-11,
+          "absolute_difference": 3.465631185935474e-14
+        },
+        {
+          "name": "βCorona Aust.",
+          "N_app": 2.0767188036280925e-11,
+          "N_oracle": 2.0775051386602205e-11,
+          "absolute_difference": 7.863350321279943e-15
+        },
+        {
+          "name": "Lyrids",
+          "N_app": 1.4055683226495802e-11,
+          "N_oracle": 1.4055683196272511e-11,
+          "absolute_difference": 3.022329096132811e-20
+        },
+        {
+          "name": "δLeonids",
+          "N_app": 9.687566340698619e-12,
+          "N_oracle": 9.683638256729109e-12,
+          "absolute_difference": 3.9280839695104185e-15
+        },
+        {
+          "name": "Pisces Aust.",
+          "N_app": 5.8040376409882394e-12,
+          "N_oracle": 5.805886722871574e-12,
+          "absolute_difference": 1.8490818833345033e-15
+        },
+        {
+          "name": "Capricornid",
+          "N_app": 2.635452272206896e-12,
+          "N_oracle": 2.6346097861441885e-12,
+          "absolute_difference": 8.424860627074936e-16
+        },
+        {
+          "name": "δPavonids",
+          "N_app": 2.324896919376685e-12,
+          "N_oracle": 2.3233039559852405e-12,
+          "absolute_difference": 1.5929633914445186e-15
+        },
+        {
+          "name": "Taurids",
+          "N_app": 3.0117305602627543e-13,
+          "N_oracle": 3.011190194275244e-13,
+          "absolute_difference": 5.403659875102119e-17
+        },
+        {
+          "name": "Perseids",
+          "N_app": 9.55897461359067e-14,
+          "N_oracle": 9.558974547790187e-14,
+          "absolute_difference": 6.580048349677931e-22
+        },
+        {
+          "name": "Puppids/Vel",
+          "N_app": 4.083435330025352e-14,
+          "N_oracle": 4.081437758679925e-14,
+          "absolute_difference": 1.9975713454266463e-17
+        },
+        {
+          "name": "τAquarids N",
+          "N_app": 1.7915241972591352e-14,
+          "N_oracle": 1.7903130550791705e-14,
+          "absolute_difference": 1.2111421799647172e-17
+        },
+        {
+          "name": "τAquarids S.",
+          "N_app": 4.82561506689154e-15,
+          "N_oracle": 4.8278182704942765e-15,
+          "absolute_difference": 2.2032036027365618e-18
+        },
+        {
+          "name": "δAquarids S.",
+          "N_app": 7.845128066703034e-16,
+          "N_oracle": 7.845645712883977e-16,
+          "absolute_difference": 5.176461809433987e-20
+        },
+        {
+          "name": "κCygnids",
+          "N_app": 6.154282475234803e-16,
+          "N_oracle": 6.156470834034986e-16,
+          "absolute_difference": 2.188358800182639e-19
+        },
+        {
+          "name": "οCygnids",
+          "N_app": 3.462367875068806e-18,
+          "N_oracle": 3.46236788664697e-18,
+          "absolute_difference": 1.1578163891223278e-26
+        },
+        {
+          "name": "τCetids",
+          "N_app": 3.2483500134203984e-19,
+          "N_oracle": 3.2489408658605593e-19,
+          "absolute_difference": 5.908524401608849e-23
+        },
+        {
+          "name": "γNormids",
+          "N_app": 1.2106976885912477e-19,
+          "N_oracle": 1.210743177736316e-19,
+          "absolute_difference": 4.548914506819039e-24
+        },
+        {
+          "name": "Virginids",
+          "N_app": 1.8199722968958263e-21,
+          "N_oracle": 1.8202023423161008e-21,
+          "absolute_difference": 2.3004542027452085e-25
+        },
+        {
+          "name": "αCrucids",
+          "N_app": 1.0051874586342758e-21,
+          "N_oracle": 1.0053290051684456e-21,
+          "absolute_difference": 1.4154653416974405e-25
+        },
+        {
+          "name": "οcentaurids",
+          "N_app": 5.00210833925947e-22,
+          "N_oracle": 5.002621601767049e-22,
+          "absolute_difference": 5.1326250757935783e-26
+        },
+        {
+          "name": "κAquarids",
+          "N_app": 2.9820713473630726e-22,
+          "N_oracle": 2.9821798197691442e-22,
+          "absolute_difference": 1.0847240607167869e-26
+        },
+        {
+          "name": "τAquarids",
+          "N_app": 2.0882181099964935e-22,
+          "N_oracle": 2.0888116395668145e-22,
+          "absolute_difference": 5.935295703210074e-26
+        },
+        {
+          "name": "γVelids",
+          "N_app": 3.525961910416012e-23,
+          "N_oracle": 3.526314841153469e-23,
+          "absolute_difference": 3.529307374569404e-27
+        },
+        {
+          "name": "εGeminids",
+          "N_app": 1.535044699423466e-23,
+          "N_oracle": 1.5341847942204705e-23,
+          "absolute_difference": 8.599052029956798e-27
+        },
+        {
+          "name": "αCarinids",
+          "N_app": 1.467280603181145e-23,
+          "N_oracle": 1.4670660481238947e-23,
+          "absolute_difference": 2.1455505725033073e-27
+        },
+        {
+          "name": "σHydrusids",
+          "N_app": 6.3627059955639534e-24,
+          "N_oracle": 6.361184749804487e-24,
+          "absolute_difference": 1.5212457594666433e-27
+        },
+        {
+          "name": "θCentaurids",
+          "N_app": 3.9545399772144644e-24,
+          "N_oracle": 3.956983745408559e-24,
+          "absolute_difference": 2.4437681940942537e-27
+        },
+        {
+          "name": "αCentaurids",
+          "N_app": 4.071268093928676e-25,
+          "N_oracle": 4.0680155537171973e-25,
+          "absolute_difference": 3.2525402114786948e-28
+        },
+        {
+          "name": "νPhoenicids",
+          "N_app": 1.1108949059063397e-25,
+          "N_oracle": 1.1110135046530053e-25,
+          "absolute_difference": 1.1859874666557538e-29
+        },
+        {
+          "name": "δVelids",
+          "N_app": 1.487284940373851e-26,
+          "N_oracle": 1.4877397191876062e-26,
+          "absolute_difference": 4.547788137552032e-30
+        },
+        {
+          "name": "Orionids",
+          "N_app": 7.693233022881673e-29,
+          "N_oracle": 7.693613182684147e-29,
+          "absolute_difference": 3.801598024741612e-33
+        },
+        {
+          "name": "γDoradids",
+          "N_app": 7.390282282976447e-29,
+          "N_oracle": 7.388125629258483e-29,
+          "absolute_difference": 2.1566537179638256e-32
+        },
+        {
+          "name": "πEridanids",
+          "N_app": 2.3304477457185374e-30,
+          "N_oracle": 2.3308046018222298e-30,
+          "absolute_difference": 3.568561036923883e-34
+        },
+        {
+          "name": "αHydrusids",
+          "N_app": 1.5114240418633326e-30,
+          "N_oracle": 1.5105416693941581e-30,
+          "absolute_difference": 8.823724691744539e-34
+        },
+        {
+          "name": "Aurigids",
+          "N_app": 2.973282622308404e-31,
+          "N_oracle": 2.971839267181317e-31,
+          "absolute_difference": 1.443355127086833e-34
+        },
+        {
+          "name": "ζPuppids",
+          "N_app": 2.0702492455809373e-31,
+          "N_oracle": 2.0709263302994294e-31,
+          "absolute_difference": 6.770847184921427e-35
+        },
+        {
+          "name": "Leo Minorids",
+          "N_app": 3.039242662982521e-33,
+          "N_oracle": 3.0397381980811642e-33,
+          "absolute_difference": 4.955350986432224e-37
+        },
+        {
+          "name": "Ursids",
+          "N_app": 1.3721483598833283e-35,
+          "N_oracle": 1.372394858048966e-35,
+          "absolute_difference": 2.4649816563766782e-39
+        },
+        {
+          "name": "Leonids",
+          "N_app": 1.2235077356480854e-35,
+          "N_oracle": 1.222758895076841e-35,
+          "absolute_difference": 7.488405712443577e-39
+        },
+        {
+          "name": "δEridanids",
+          "N_app": 2.27340364183381e-44,
+          "N_oracle": 2.274028862052903e-44,
+          "absolute_difference": 6.252202190926995e-48
+        },
+        {
+          "name": "Monoceroti.",
+          "N_app": 2.987608625649062e-45,
+          "N_oracle": 2.9866808335677593e-45,
+          "absolute_difference": 9.27792081302987e-49
+        },
+        {
+          "name": "Geminids",
+          "N_app": 1.7509323519391994e-52,
+          "N_oracle": 1.7509323361764305e-52,
+          "absolute_difference": 1.5762768941891004e-60
+        },
+        {
+          "name": "Phoenicids",
+          "N_app": 1.8359574197692895e-53,
+          "N_oracle": 1.836941760651653e-53,
+          "absolute_difference": 9.843408823636034e-57
+        },
+        {
+          "name": "Bootids",
+          "N_app": 8.289595899000248e-63,
+          "N_oracle": 8.291851165787272e-63,
+          "absolute_difference": 2.2552667870236685e-66
+        }
+      ],
+      "meaning": "Independent implementation, same climate/geometry assumptions"
+    },
+    {
+      "start_utc": "2024-05-10T12:00:00+00:00",
+      "duration_min": 360,
+      "inclination_deg": 51.6,
+      "N_streams_app": 1.7911088977715453e-08,
+      "N_streams_oracle": 1.790740731078365e-08,
+      "relative_difference": 0.00020559463845915005,
+      "acceptance_relative": 0.005,
+      "passed": true,
+      "oracle_half_step_relative_change": 5.053378946273668e-05,
+      "per_stream": [
+        {
+          "name": "αScorpiids",
+          "N_app": 9.306849450286515e-09,
+          "N_oracle": 9.303314860914039e-09,
+          "absolute_difference": 3.534589372476243e-12
+        },
+        {
+          "name": "μVirginids",
+          "N_app": 5.283836618934445e-09,
+          "N_oracle": 5.283650282618155e-09,
+          "absolute_difference": 1.863363162901166e-13
+        },
+        {
+          "name": "ηAquarids",
+          "N_app": 2.135319697633089e-09,
+          "N_oracle": 2.1356936219275042e-09,
+          "absolute_difference": 3.7392429441502003e-13
+        },
+        {
+          "name": "γSagitarids",
+          "N_app": 5.192390743975928e-10,
+          "N_oracle": 5.190296964438276e-10,
+          "absolute_difference": 2.093779537651352e-13
+        },
+        {
+          "name": "θOphiuchids",
+          "N_app": 3.0629430580772675e-10,
+          "N_oracle": 3.062239157155447e-10,
+          "absolute_difference": 7.039009218205281e-14
+        },
+        {
+          "name": "βCorona Aust.",
+          "N_app": 1.9199118812676363e-10,
+          "N_oracle": 1.919949160557603e-10,
+          "absolute_difference": 3.7279289966580704e-15
+        },
+        {
+          "name": "Da.Arietids",
+          "N_app": 1.4707062670011955e-10,
+          "N_oracle": 1.4701227827038345e-10,
+          "absolute_difference": 5.834842973609686e-14
+        },
+        {
+          "name": "Pisces Aust.",
+          "N_app": 8.083320175379252e-12,
+          "N_oracle": 8.082261959773861e-12,
+          "absolute_difference": 1.0582156053908893e-15
+        },
+        {
+          "name": "δLeonids",
+          "N_app": 5.596897307803167e-12,
+          "N_oracle": 5.599228354964188e-12,
+          "absolute_difference": 2.331047161020668e-15
+        },
+        {
+          "name": "Capricornid",
+          "N_app": 4.16114509289856e-12,
+          "N_oracle": 4.159428827510668e-12,
+          "absolute_difference": 1.71626538789187e-15
+        },
+        {
+          "name": "δPavonids",
+          "N_app": 1.016095445016688e-12,
+          "N_oracle": 1.0162024066256644e-12,
+          "absolute_difference": 1.0696160897638215e-16
+        },
+        {
+          "name": "Lyrids",
+          "N_app": 9.97740338208546e-13,
+          "N_oracle": 9.979541297691263e-13,
+          "absolute_difference": 2.1379156058037324e-16
+        },
+        {
+          "name": "Taurids",
+          "N_app": 4.021858550572824e-13,
+          "N_oracle": 4.020659683834938e-13,
+          "absolute_difference": 1.1988667378862783e-16
+        },
+        {
+          "name": "Perseids",
+          "N_app": 1.521618050077806e-13,
+          "N_oracle": 1.5214750353749078e-13,
+          "absolute_difference": 1.430147028981013e-17
+        },
+        {
+          "name": "τAquarids N",
+          "N_app": 3.6099047069181694e-14,
+          "N_oracle": 3.608719296198946e-14,
+          "absolute_difference": 1.1854107192236208e-17
+        },
+        {
+          "name": "Puppids/Vel",
+          "N_app": 2.8324367295098456e-14,
+          "N_oracle": 2.8319639220612293e-14,
+          "absolute_difference": 4.72807448616276e-18
+        },
+        {
+          "name": "τAquarids S.",
+          "N_app": 1.0511828415130535e-14,
+          "N_oracle": 1.0508711883783916e-14,
+          "absolute_difference": 3.1165313466192624e-18
+        },
+        {
+          "name": "δAquarids S.",
+          "N_app": 2.1631207260692795e-15,
+          "N_oracle": 2.1628433569306436e-15,
+          "absolute_difference": 2.7736913863583247e-19
+        },
+        {
+          "name": "κCygnids",
+          "N_app": 1.354287355360417e-15,
+          "N_oracle": 1.3541400839269653e-15,
+          "absolute_difference": 1.4727143345168482e-19
+        },
+        {
+          "name": "οCygnids",
+          "N_app": 1.4729159060509243e-17,
+          "N_oracle": 1.4729159103396474e-17,
+          "absolute_difference": 4.2887230462172994e-26
+        },
+        {
+          "name": "τCetids",
+          "N_app": 2.410446754472339e-18,
+          "N_oracle": 2.4118460950738406e-18,
+          "absolute_difference": 1.3993406015017938e-21
+        },
+        {
+          "name": "γNormids",
+          "N_app": 1.4682681779735425e-20,
+          "N_oracle": 1.468275354219343e-20,
+          "absolute_difference": 7.176245800606427e-26
+        },
+        {
+          "name": "τAquarids",
+          "N_app": 3.0249951322057374e-21,
+          "N_oracle": 3.0254213091762646e-21,
+          "absolute_difference": 4.26176970527157e-25
+        },
+        {
+          "name": "κAquarids",
+          "N_app": 1.0121386505519319e-21,
+          "N_oracle": 1.0118277789637212e-21,
+          "absolute_difference": 3.108715882106756e-25
+        },
+        {
+          "name": "αCrucids",
+          "N_app": 2.9576865118157673e-22,
+          "N_oracle": 2.9565662811646337e-22,
+          "absolute_difference": 1.1202306511335839e-25
+        },
+        {
+          "name": "Virginids",
+          "N_app": 1.9710778690205e-22,
+          "N_oracle": 1.9708139860266442e-22,
+          "absolute_difference": 2.6388299385581444e-26
+        },
+        {
+          "name": "οcentaurids",
+          "N_app": 9.45950291520408e-23,
+          "N_oracle": 9.452958561021654e-23,
+          "absolute_difference": 6.544354182425817e-26
+        },
+        {
+          "name": "εGeminids",
+          "N_app": 3.818701181742823e-23,
+          "N_oracle": 3.8166618501736117e-23,
+          "absolute_difference": 2.0393315692112624e-26
+        },
+        {
+          "name": "γVelids",
+          "N_app": 9.24688743433228e-24,
+          "N_oracle": 9.244676760281672e-24,
+          "absolute_difference": 2.2106740506077392e-27
+        },
+        {
+          "name": "αCarinids",
+          "N_app": 2.4517417045891672e-24,
+          "N_oracle": 2.451683694794523e-24,
+          "absolute_difference": 5.800979464419719e-29
+        },
+        {
+          "name": "σHydrusids",
+          "N_app": 2.080521583970731e-24,
+          "N_oracle": 2.0803563991038692e-24,
+          "absolute_difference": 1.6518486686179002e-28
+        },
+        {
+          "name": "νPhoenicids",
+          "N_app": 1.795142218319515e-24,
+          "N_oracle": 1.7960854179820366e-24,
+          "absolute_difference": 9.43199662521584e-28
+        },
+        {
+          "name": "θCentaurids",
+          "N_app": 4.280238836350095e-25,
+          "N_oracle": 4.281225820948099e-25,
+          "absolute_difference": 9.869845980034502e-29
+        },
+        {
+          "name": "αCentaurids",
+          "N_app": 5.501285502665648e-26,
+          "N_oracle": 5.499201223860859e-26,
+          "absolute_difference": 2.0842788047891508e-29
+        },
+        {
+          "name": "δVelids",
+          "N_app": 1.597791584146898e-27,
+          "N_oracle": 1.598672888083568e-27,
+          "absolute_difference": 8.813039366700162e-31
+        },
+        {
+          "name": "γDoradids",
+          "N_app": 5.494638794982449e-28,
+          "N_oracle": 5.4943554398114785e-28,
+          "absolute_difference": 2.833551709705358e-32
+        },
+        {
+          "name": "Orionids",
+          "N_app": 2.921886860026231e-28,
+          "N_oracle": 2.9221059122315865e-28,
+          "absolute_difference": 2.190522053555354e-32
+        },
+        {
+          "name": "πEridanids",
+          "N_app": 2.1625502738385196e-29,
+          "N_oracle": 2.1621642578035513e-29,
+          "absolute_difference": 3.860160349682935e-33
+        },
+        {
+          "name": "Aurigids",
+          "N_app": 2.4345576023384034e-30,
+          "N_oracle": 2.4364005698772953e-30,
+          "absolute_difference": 1.842967538891938e-33
+        },
+        {
+          "name": "αHydrusids",
+          "N_app": 1.6261392390259789e-31,
+          "N_oracle": 1.6264416499866754e-31,
+          "absolute_difference": 3.024109606965369e-35
+        },
+        {
+          "name": "ζPuppids",
+          "N_app": 4.8689172061556397e-32,
+          "N_oracle": 4.8662478051343136e-32,
+          "absolute_difference": 2.6694010213260455e-35
+        },
+        {
+          "name": "Leo Minorids",
+          "N_app": 1.4461166057315204e-32,
+          "N_oracle": 1.4464984030747977e-32,
+          "absolute_difference": 3.817973432773255e-36
+        },
+        {
+          "name": "Leonids",
+          "N_app": 2.293341030541341e-36,
+          "N_oracle": 2.293807472710431e-36,
+          "absolute_difference": 4.6644216909000135e-40
+        },
+        {
+          "name": "Ursids",
+          "N_app": 1.4744768763142394e-36,
+          "N_oracle": 1.4745518952317699e-36,
+          "absolute_difference": 7.50189175304288e-41
+        },
+        {
+          "name": "δEridanids",
+          "N_app": 6.206734659233002e-45,
+          "N_oracle": 6.205046583816031e-45,
+          "absolute_difference": 1.6880754169703414e-48
+        },
+        {
+          "name": "Monoceroti.",
+          "N_app": 1.8445856890421118e-46,
+          "N_oracle": 1.8449726407977307e-46,
+          "absolute_difference": 3.869517556189355e-50
+        },
+        {
+          "name": "Geminids",
+          "N_app": 5.545067228600729e-54,
+          "N_oracle": 5.545067175281173e-54,
+          "absolute_difference": 5.3319556748289615e-62
+        },
+        {
+          "name": "Phoenicids",
+          "N_app": 6.444153418986946e-55,
+          "N_oracle": 6.444716376206101e-55,
+          "absolute_difference": 5.629572191553773e-59
+        },
+        {
+          "name": "Bootids",
+          "N_app": 5.456633714852104e-65,
+          "N_oracle": 5.454515576699765e-65,
+          "absolute_difference": 2.118138152339304e-68
+        }
+      ],
+      "meaning": "Independent implementation, same climate/geometry assumptions"
+    },
+    {
+      "start_utc": "2024-06-07T12:00:00+00:00",
+      "duration_min": 360,
+      "inclination_deg": 51.6,
+      "N_streams_app": 7.942103868472715e-08,
+      "N_streams_oracle": 7.941046453826596e-08,
+      "relative_difference": 0.0001331580985286518,
+      "acceptance_relative": 0.005,
+      "passed": true,
+      "oracle_half_step_relative_change": 1.671021475524448e-06,
+      "per_stream": [
+        {
+          "name": "Da.Arietids",
+          "N_app": 7.080189725706117e-08,
+          "N_oracle": 7.079091328553718e-08,
+          "absolute_difference": 1.0983971523990531e-11
+        },
+        {
+          "name": "γSagitarids",
+          "N_app": 5.066486698914282e-09,
+          "N_oracle": 5.064424413658173e-09,
+          "absolute_difference": 2.0622852561083893e-12
+        },
+        {
+          "name": "θOphiuchids",
+          "N_app": 3.0127568041718665e-09,
+          "N_oracle": 3.0153639961360287e-09,
+          "absolute_difference": 2.607191964162231e-12
+        },
+        {
+          "name": "μVirginids",
+          "N_app": 3.1967921602064626e-10,
+          "N_oracle": 3.196109759624037e-10,
+          "absolute_difference": 6.824005824256051e-14
+        },
+        {
+          "name": "αScorpiids",
+          "N_app": 9.262862855761087e-11,
+          "N_oracle": 9.259007408945128e-11,
+          "absolute_difference": 3.855446815959179e-14
+        },
+        {
+          "name": "Capricornid",
+          "N_app": 5.289573549298051e-11,
+          "N_oracle": 5.2883582236651374e-11,
+          "absolute_difference": 1.2153256329136068e-14
+        },
+        {
+          "name": "Pisces Aust.",
+          "N_app": 5.136063157591749e-11,
+          "N_oracle": 5.1339628207283047e-11,
+          "absolute_difference": 2.100336863444325e-14
+        },
+        {
+          "name": "ηAquarids",
+          "N_app": 1.4931043768524135e-11,
+          "N_oracle": 1.4936035861240276e-11,
+          "absolute_difference": 4.992092716141121e-15
+        },
+        {
+          "name": "Perseids",
+          "N_app": 2.362608134232836e-12,
+          "N_oracle": 2.362828418029461e-12,
+          "absolute_difference": 2.2028379662509272e-16
+        },
+        {
+          "name": "Taurids",
+          "N_app": 2.010727102309269e-12,
+          "N_oracle": 2.010382335925512e-12,
+          "absolute_difference": 3.4476638375706537e-16
+        },
+        {
+          "name": "τAquarids N",
+          "N_app": 1.7767392650680284e-12,
+          "N_oracle": 1.7768863019121847e-12,
+          "absolute_difference": 1.4703684415630133e-16
+        },
+        {
+          "name": "τAquarids S.",
+          "N_app": 7.965746882093211e-13,
+          "N_oracle": 7.97075950550439e-13,
+          "absolute_difference": 5.0126234111788e-16
+        },
+        {
+          "name": "δAquarids S.",
+          "N_app": 6.067430460737093e-13,
+          "N_oracle": 6.064903017344895e-13,
+          "absolute_difference": 2.527443392197663e-16
+        },
+        {
+          "name": "δLeonids",
+          "N_app": 2.597616328652786e-13,
+          "N_oracle": 2.5968999330408035e-13,
+          "absolute_difference": 7.16395611982306e-17
+        },
+        {
+          "name": "βCorona Aust.",
+          "N_app": 1.8069305000162453e-13,
+          "N_oracle": 1.8056032795599752e-13,
+          "absolute_difference": 1.3272204562700552e-16
+        },
+        {
+          "name": "τCetids",
+          "N_app": 1.6896979421844524e-13,
+          "N_oracle": 1.6882445376436233e-13,
+          "absolute_difference": 1.4534045408291294e-16
+        },
+        {
+          "name": "κCygnids",
+          "N_app": 1.2375312154097253e-13,
+          "N_oracle": 1.2367938752874746e-13,
+          "absolute_difference": 7.373401222506243e-17
+        },
+        {
+          "name": "οCygnids",
+          "N_app": 4.6326551581832116e-14,
+          "N_oracle": 4.632655149941361e-14,
+          "absolute_difference": 8.2418508681485e-23
+        },
+        {
+          "name": "Leonids",
+          "N_app": 4.420285061409605e-14,
+          "N_oracle": 4.4227221485242877e-14,
+          "absolute_difference": 2.4370871146826934e-17
+        },
+        {
+          "name": "δPavonids",
+          "N_app": 1.0132087062332094e-14,
+          "N_oracle": 1.013201261193547e-14,
+          "absolute_difference": 7.445039662428135e-20
+        },
+        {
+          "name": "τAquarids",
+          "N_app": 8.623618049274522e-15,
+          "N_oracle": 8.631616913156688e-15,
+          "absolute_difference": 7.998863882166288e-18
+        },
+        {
+          "name": "Puppids/Vel",
+          "N_app": 6.802800971597039e-15,
+          "N_oracle": 6.8002811370624965e-15,
+          "absolute_difference": 2.519834534542799e-18
+        },
+        {
+          "name": "νPhoenicids",
+          "N_app": 9.585617527843372e-18,
+          "N_oracle": 9.587282461257574e-18,
+          "absolute_difference": 1.6649334142022485e-21
+        },
+        {
+          "name": "Lyrids",
+          "N_app": 9.166100271717464e-19,
+          "N_oracle": 9.172071559667088e-19,
+          "absolute_difference": 5.971287949624083e-22
+        },
+        {
+          "name": "κAquarids",
+          "N_app": 9.12988580887302e-19,
+          "N_oracle": 9.125573962157635e-19,
+          "absolute_difference": 4.31184671538553e-22
+        },
+        {
+          "name": "εGeminids",
+          "N_app": 6.1019023260822234e-21,
+          "N_oracle": 6.104039701100802e-21,
+          "absolute_difference": 2.1373750185786152e-24
+        },
+        {
+          "name": "γDoradids",
+          "N_app": 3.8857118143193113e-23,
+          "N_oracle": 3.885944071334347e-23,
+          "absolute_difference": 2.3225701503587636e-27
+        },
+        {
+          "name": "πEridanids",
+          "N_app": 5.218181511552273e-24,
+          "N_oracle": 5.217533388778634e-24,
+          "absolute_difference": 6.481227736390219e-28
+        },
+        {
+          "name": "Orionids",
+          "N_app": 4.923446593477418e-25,
+          "N_oracle": 4.921049337236941e-25,
+          "absolute_difference": 2.397256240476437e-28
+        },
+        {
+          "name": "αCrucids",
+          "N_app": 3.1697881732401738e-25,
+          "N_oracle": 3.170681591161129e-25,
+          "absolute_difference": 8.934179209551064e-29
+        },
+        {
+          "name": "Aurigids",
+          "N_app": 3.0254423651203482e-25,
+          "N_oracle": 3.0231717810374157e-25,
+          "absolute_difference": 2.270584082932505e-28
+        },
+        {
+          "name": "γNormids",
+          "N_app": 1.1792251190781166e-25,
+          "N_oracle": 1.1799186378845877e-25,
+          "absolute_difference": 6.935188064710591e-29
+        },
+        {
+          "name": "οcentaurids",
+          "N_app": 9.071503009191578e-27,
+          "N_oracle": 9.07283322828242e-27,
+          "absolute_difference": 1.33021909084126e-30
+        },
+        {
+          "name": "γVelids",
+          "N_app": 5.4058836628574855e-27,
+          "N_oracle": 5.405641698566651e-27,
+          "absolute_difference": 2.419642908343501e-31
+        },
+        {
+          "name": "σHydrusids",
+          "N_app": 4.191601170657906e-27,
+          "N_oracle": 4.193359730697257e-27,
+          "absolute_difference": 1.7585600393511508e-30
+        },
+        {
+          "name": "Virginids",
+          "N_app": 8.192749818911346e-28,
+          "N_oracle": 8.202696101777315e-28,
+          "absolute_difference": 9.94628286596875e-31
+        },
+        {
+          "name": "αCarinids",
+          "N_app": 1.1698065138477295e-28,
+          "N_oracle": 1.1702480441681884e-28,
+          "absolute_difference": 4.4153032045892235e-32
+        },
+        {
+          "name": "Leo Minorids",
+          "N_app": 8.366580803988565e-29,
+          "N_oracle": 8.364262856315436e-29,
+          "absolute_difference": 2.3179476731289203e-32
+        },
+        {
+          "name": "ζPuppids",
+          "N_app": 4.2230789268234255e-29,
+          "N_oracle": 4.2243985824765324e-29,
+          "absolute_difference": 1.3196556531069003e-32
+        },
+        {
+          "name": "θCentaurids",
+          "N_app": 1.8207236821857296e-30,
+          "N_oracle": 1.820691199998539e-30,
+          "absolute_difference": 3.248218719072126e-35
+        },
+        {
+          "name": "αCentaurids",
+          "N_app": 7.970001097056483e-31,
+          "N_oracle": 7.971426833967e-31,
+          "absolute_difference": 1.425736910516221e-34
+        },
+        {
+          "name": "δVelids",
+          "N_app": 6.553028876206056e-33,
+          "N_oracle": 6.557069422784737e-33,
+          "absolute_difference": 4.040546578680959e-36
+        },
+        {
+          "name": "αHydrusids",
+          "N_app": 6.663973130137662e-37,
+          "N_oracle": 6.660290391344689e-37,
+          "absolute_difference": 3.682738792973112e-40
+        },
+        {
+          "name": "δEridanids",
+          "N_app": 1.4796479367054914e-39,
+          "N_oracle": 1.479624289609073e-39,
+          "absolute_difference": 2.364709641831926e-44
+        },
+        {
+          "name": "Ursids",
+          "N_app": 6.025881836479148e-42,
+          "N_oracle": 6.028546959188712e-42,
+          "absolute_difference": 2.665122709564217e-45
+        },
+        {
+          "name": "Monoceroti.",
+          "N_app": 3.390144691754699e-53,
+          "N_oracle": 3.3909454047093197e-53,
+          "absolute_difference": 8.007129546208601e-57
+        },
+        {
+          "name": "Phoenicids",
+          "N_app": 3.8536137804853094e-60,
+          "N_oracle": 3.855455086288996e-60,
+          "absolute_difference": 1.8413058036868504e-63
+        },
+        {
+          "name": "Geminids",
+          "N_app": 2.524881141451093e-62,
+          "N_oracle": 2.524881097919673e-62,
+          "absolute_difference": 4.353142026541458e-70
+        },
+        {
+          "name": "Bootids",
+          "N_app": 4.0661419519152505e-77,
+          "N_oracle": 4.0663862118096115e-77,
+          "absolute_difference": 2.442598943610218e-81
+        }
+      ],
+      "meaning": "Independent implementation, same climate/geometry assumptions"
+    }
+  ],
+  "normalization_comparison": [
+    {
+      "name": "Bootids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.781501420453767e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 9.095256115739422e-13,
+      "ratio_ecss_over_alternate": 30.58189219806965,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "γVelids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.3090215892102867e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.542929000646866e-13,
+      "ratio_ecss_over_alternate": 9.080165386540173,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "αCrucids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.3526485402587716e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.816427511791958e-14,
+      "ratio_ecss_over_alternate": 7.48337107517357,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "αHydrusids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 5.14610824468311e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.613034811794524e-14,
+      "ratio_ecss_over_alternate": 7.781764940213061,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "αCarinids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.3047045792736874e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.812162414686083e-13,
+      "ratio_ecss_over_alternate": 7.406373518394163,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "δVelids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.234132228715843e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.3774198753503854e-13,
+      "ratio_ecss_over_alternate": 8.959738789901712,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "αCentaurids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 3.5334725682793115e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.797600719955875e-14,
+      "ratio_ecss_over_alternate": 5.19811726791486,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "οcentaurids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.875766372028797e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 3.8117037507364035e-14,
+      "ratio_ecss_over_alternate": 7.544569463125806,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "θCentaurids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.2052238279599967e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 3.755111480481953e-14,
+      "ratio_ecss_over_alternate": 5.872592170491208,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "δLeonids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 7.564036240516456e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 8.297669871124979e-13,
+      "ratio_ecss_over_alternate": 9.115855846276204,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Virginids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 5.9716075583024656e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.378696776541916e-13,
+      "ratio_ecss_over_alternate": 9.361798761564357,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "γNormids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 3.153215124131365e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.996255420412332e-14,
+      "ratio_ecss_over_alternate": 5.258640439827252,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "δPavonids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.556054891499087e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 4.422686854789855e-14,
+      "ratio_ecss_over_alternate": 5.779416394201254,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Lyrids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.7419271799121612e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.5345180892415105e-13,
+      "ratio_ecss_over_alternate": 6.87281415471553,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "μVirginids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.379178876088475e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 4.792056339465297e-13,
+      "ratio_ecss_over_alternate": 9.138412752002639,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "ηAquarids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.3064453849341208e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.0754887694091235e-13,
+      "ratio_ecss_over_alternate": 6.294639625084824,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "βCorona Aust.",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 9.038393791115353e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.0159203784424466e-13,
+      "ratio_ecss_over_alternate": 8.89675409895067,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "αScorpiids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.5563162709681793e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.5989241992730387e-12,
+      "ratio_ecss_over_alternate": 9.733521274340388,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Da.Arietids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.2645053338858093e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 3.1163032264679974e-12,
+      "ratio_ecss_over_alternate": 7.266639891306047,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "γSagitarids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.352648540258772e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.413812319083047e-13,
+      "ratio_ecss_over_alternate": 8.039895518572377,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "τCetids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.2251851494855878e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.0438125066010586e-14,
+      "ratio_ecss_over_alternate": 5.994606381595734,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "θOphiuchids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 5.2974643695267305e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.449378462417099e-13,
+      "ratio_ecss_over_alternate": 8.213914566181849,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "τAquarids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.947066981195063e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 4.8349516999341575e-14,
+      "ratio_ecss_over_alternate": 6.095339031484422,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "νPhoenicids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.035078643439094e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.210063942282074e-13,
+      "ratio_ecss_over_alternate": 8.553916923489407,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "οCygnids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.2193490259385128e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.614048895351375e-13,
+      "ratio_ecss_over_alternate": 7.554597815780935,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Capricornid",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.1457189396203938e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.8642818290158386e-13,
+      "ratio_ecss_over_alternate": 6.145631641033712,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "τAquarids N",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.969383352570381e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.112281365762407e-14,
+      "ratio_ecss_over_alternate": 9.720480930198732,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Pisces Aust.",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.368016259033863e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.4252929043634597e-13,
+      "ratio_ecss_over_alternate": 9.59814123009911,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "δAquarids S.",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.9693833525703825e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 5.174116125534417e-13,
+      "ratio_ecss_over_alternate": 9.604313532984555,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "τAquarids S.",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.6564611175234608e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.672204530695075e-13,
+      "ratio_ecss_over_alternate": 9.905852347110491,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Perseids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 3.9735734577910954e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 7.184534477643752e-13,
+      "ratio_ecss_over_alternate": 5.530731977354604,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "κCygnids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.6486226215728746e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.511053283152293e-13,
+      "ratio_ecss_over_alternate": 6.565462519788702,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "πEridanids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.573054122341555e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 3.662184455600196e-13,
+      "ratio_ecss_over_alternate": 7.026009076104434,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "γDoradids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.6649173732798295e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.1620453991172058e-13,
+      "ratio_ecss_over_alternate": 7.7006587093852845,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Aurigids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.5257944108726335e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 4.221534981996301e-14,
+      "ratio_ecss_over_alternate": 5.9831185141055565,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "κAquarids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 2.875766372028797e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 3.5253706175310622e-12,
+      "ratio_ecss_over_alternate": 8.157344812849194,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "εGeminids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 8.360250581623452e-14,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.1256576261553177e-14,
+      "ratio_ecss_over_alternate": 7.4269923530637625,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Orionids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 9.64095337718971e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.2517202648812788e-13,
+      "ratio_ecss_over_alternate": 7.70216289348333,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Leo Minorids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 9.580599489516885e-14,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.4967999239062488e-14,
+      "ratio_ecss_over_alternate": 6.400721523631612,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Taurids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 4.106468119892173e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.541223353587076e-13,
+      "ratio_ecss_over_alternate": 6.277828928804683,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "δEridanids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.1351709363271565e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.3784518456649576e-13,
+      "ratio_ecss_over_alternate": 8.235114921838683,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "ζPuppids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.984831324311337e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.924982283175808e-13,
+      "ratio_ecss_over_alternate": 10.310906971241268,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Leonids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 7.103606844903731e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 8.026280873402175e-14,
+      "ratio_ecss_over_alternate": 8.850433914472095,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Puppids/Vel",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.878511475269575e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.3841149312749014e-13,
+      "ratio_ecss_over_alternate": 7.879282372788313,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Phoenicids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 3.783903121090522e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 4.6322025871427645e-12,
+      "ratio_ecss_over_alternate": 8.168690919505982,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Monoceroti.",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.0435516278555653e-12,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 9.716037780091248e-14,
+      "ratio_ecss_over_alternate": 10.740506073307639,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Geminids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 3.909260422292722e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 6.03826925415619e-12,
+      "ratio_ecss_over_alternate": 6.4741406150478396,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "σHydrusids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.8711037016014393e-13,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 2.305939743614476e-14,
+      "ratio_ecss_over_alternate": 8.114278383825212,
+      "status": "model_disagreement_not_calibration"
+    },
+    {
+      "name": "Ursids",
+      "ecss_assumed_perpendicular_TOA_per_m2_s": 1.6923298659917715e-11,
+      "moorhead2019_same_catalogue_TOA_per_m2_s": 1.6396437263078192e-12,
+      "ratio_ecss_over_alternate": 10.321326754334565,
+      "status": "model_disagreement_not_calibration"
+    }
+  ],
+  "peak_comparison_2024": [
+    {
+      "name": "Bootids",
+      "ecss_peak_utc": "2024-01-04T12:36:34.451082+00:00",
+      "nasa2024_peak_utc": "2024-01-04T06:32:00+00:00",
+      "difference_hours": 6.076236411796676,
+      "nominal_radiant_separation_deg": 4.225757015625697,
+      "speed_difference_km_s": 2.0,
+      "status": "external_model_comparison_not_observations"
+    },
+    {
+      "name": "ηAquarids",
+      "ecss_peak_utc": "2024-05-06T21:39:29.158644+00:00",
+      "nasa2024_peak_utc": "2024-05-05T13:53:00+00:00",
+      "difference_hours": 31.774766289989152,
+      "nominal_radiant_separation_deg": 1.9996953593860227,
+      "speed_difference_km_s": 0.0,
+      "status": "external_model_comparison_not_observations"
+    },
+    {
+      "name": "Da.Arietids",
+      "ecss_peak_utc": "2024-06-07T14:49:49.685124+00:00",
+      "nasa2024_peak_utc": "2024-06-09T22:39:00+00:00",
+      "difference_hours": -55.81953190988965,
+      "nominal_radiant_separation_deg": 4.567487360994062,
+      "speed_difference_km_s": -1.0,
+      "status": "external_model_comparison_not_observations"
+    },
+    {
+      "name": "Perseids",
+      "ecss_peak_utc": "2024-08-12T18:54:59.855951+00:00",
+      "nasa2024_peak_utc": "2024-08-12T14:59:00+00:00",
+      "difference_hours": 3.9332933198081124,
+      "nominal_radiant_separation_deg": 0.0,
+      "speed_difference_km_s": 0.0,
+      "status": "external_model_comparison_not_observations"
+    },
+    {
+      "name": "Geminids",
+      "ecss_peak_utc": "2024-12-13T23:12:46.525145+00:00",
+      "nasa2024_peak_utc": "2024-12-14T02:10:00+00:00",
+      "difference_hours": -2.953743015196588,
+      "nominal_radiant_separation_deg": 0.0,
+      "speed_difference_km_s": 1.0,
+      "status": "external_model_comparison_not_observations"
+    }
+  ],
+  "numerical_checks_passed": true,
+  "absolute_flux_observation_validation": "NOT_ESTABLISHED",
+  "nasa_flux_direct_comparison": "NOT_COMPARABLE: energy thresholds and unshielded facing plate differ from mass-limited tumbling plate on actual ISS orbit",
+  "open_findings": [
+    "ECSS coefficient geometry remains assumed; independent empirical transfer differs",
+    "Climatology misses 2024 annual changes; NASA ETA 161 ZHR vs ECSS peak+base 36.7",
+    "Quiet-field cutoff is not a conservative upper bound on proton exposure in a storm",
+    "Trapped proton absolute flux lacks a collocated independent particle measurement",
+    "Numerical convergence, agreement between models and observation validation are distinct"
+  ]
+}
