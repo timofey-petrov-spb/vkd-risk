@@ -363,7 +363,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                 name, val, unit, Kind.EXTERNAL_FORECAST, Presence.UNKNOWN if val is None else Presence.DETECTED, cov,
                 tuple(sorted({s.raw_record_id for s in hit})), rule + (' %s' % pub.strftime('%m-%d %H:%MZ') if pub else ''),
                 ('суточная вероятность источника, не вероятность за окно; ' if unit == '%' else 'прогноз, не наблюдение; ')
-                + 'покрытие окна ячейками %.0f %%' % (100 * frac) + ('' if hit else '; выпуска до отсечки с ячейками на окно нет'),
+                + 'покрытие окна ячейками %.0f %%' % (100 * frac)
+                + ('' if hit else ('; выпуска до отсечки с ячейками на окно нет' if cutoff_utc
+                                   else '; выпуска с ячейками на это окно нет')),
                 horizon_utc=hz))
             if cid == 'kp_forecast' and val is not None and val >= th.kp_check:
                 cells = [s for s in hit if s.value is not None and s.value >= th.kp_check]
