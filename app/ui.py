@@ -141,6 +141,27 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
 .cond.none { border-left-color:var(--none-line); background:var(--none-bg); color:var(--none); }
 .cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
 .covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
+/* строка задачи: то, ради чего человек пришёл, — первым элементом главной области */
+.task { border:1px solid var(--calc-line); border-radius:12px; background:var(--calc-bg);
+        padding:8px 14px 2px 14px; margin:2px 0 10px 0; }
+.task .tl { font-size:0.95rem; font-weight:600; color:var(--calc); margin:0 0 2px 0; }
+/* блок рекомендации: ответ на вопрос человека. Рамка слева синяя — это наш расчёт; при отказе
+   серая или красная, чтобы заголовок не был увереннее расчёта. */
+.reco { border:1px solid var(--line); border-radius:12px; padding:16px 20px; background:var(--bg);
+        border-left:3px solid var(--calc); margin:4px 0 14px 0; }
+.reco h2 { margin:0 0 2px 0; font-size:1.55rem; color:var(--calc); }
+.reco .when { font-size:1.05rem; font-weight:600; margin-bottom:6px; }
+.reco .why { font-size:0.95rem; margin:4px 0 2px 0; }
+.reco .searched { font-size:0.84rem; color:var(--muted); margin:4px 0 0 0; }
+.reco .stop { margin:8px 0 0 0; padding:7px 10px; border-radius:8px; border-left:3px solid var(--cond);
+              background:var(--cond-bg); color:#922b21; font-size:0.9rem; }
+.reco .scope { margin:8px 0 0 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
+               background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
+.reco .scope b { color:var(--calc); font-weight:600; }
+.reco .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+.r-insufficient { border-left-color:var(--none); } .r-insufficient h2 { color:var(--ink); }
+.r-all_need_check { border-left-color:var(--cond); } .r-all_need_check h2 { color:var(--cond); }
+.r-equivalent h2 { color:var(--ink); }
 .legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:0.84rem; color:var(--muted); }
 .tcap { font-size:0.82rem; color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
@@ -164,6 +185,9 @@ NO_PICK_ON_GRID_RU = {
     'trade_off': 'на всей сетке порогов механизмы указывают на разные окна',
     'insufficient': 'на всей сетке порогов оснований для рекомендации недостаточно',
 }
+# Тот же синий, что у --calc в стилях: на графиках цвет означает то же, что на плашках, —
+# происхождение величины. Минуты в аномалии и флюенс считает сервис, поэтому оба ряда ленты синие.
+CALC_BLUE = '#1f4e79'
 COV_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'нет'}
 # покрытие — свойство нашего расчёта, а не «хорошо/плохо»: полное синим, частичное янтарём, нет — серым
 COV_KIND = {'full': 'calc', 'partial': 'warn', 'none': 'none'}
@@ -2405,3 +2429,359 @@ def map_caption(pro: bool = False) -> str:
                 '2° по долготе и 1° по широте; трасса за весь горизонт серым, окна-кандидаты цветом, точки трассы '
                 'в аномалии красным. Карта показывает, откуда берутся минуты в аномалии.')
     return 'Красным — область аномалии и точки трассы в ней, цветом — окна: откуда берутся минуты в аномалии.'
+
+
+# ================================================================= одиннадцатый круг: задача → ответ
+# Сервис отвечает на вопрос человека «нам надо выйти», а не требует от него расставить окна
+# ползунками. Человек задаёт длительность и срок, сервис перебирает все начала на сроке и
+# называет лучшие. Ручное сравнение двух-трёх окон остаётся, но как разбор, а не как вход.
+#
+# Форма данных перебора — договор раздела 1a техзадания одиннадцатого круга. Экран читает ТОЛЬКО
+# ключ `scan` снимка и не лезет во внутренности движка. Ключа нет — перебор не выполнялся, и экран
+# так и говорит, не подставляя выдуманных чисел.
+TASK_HINT_RU = ('Поля пересчитываются сразу: кнопка повторяет поиск на тех же данных. '
+                'Времена на экране — UTC.')
+SCAN_VERDICT_TITLE = {
+    'recommended': 'Есть рекомендованное окно',
+    'equivalent': 'Несколько начал равнозначны',
+    'all_need_check': 'Все начала требуют проверки аналитиком',
+    'insufficient': 'Оснований для рекомендации недостаточно',
+}
+# «Ниже — лучше» стоит у обоих графиков ленты: это единственная подсказка о направлении, и без неё
+# член жюри читает падающую линию как ухудшение.
+LOWER_IS_BETTER_RU = 'ниже — лучше'
+
+
+def scan_of(S: dict):
+    """Ключ перебора начал из снимка расчёта — или None, если перебора не было.
+
+    Договор раздела 1a: отсутствие ключа и пустой перебор — разные вещи, и путать их нельзя.
+    Пустой список кандидатов договором не допускается, поэтому такому ключу экран не верит:
+    он показывает прежний разбор окон, а не рисует ленту из ничего.
+    """
+    sc = (S or {}).get('scan')
+    if not isinstance(sc, dict):
+        return None
+    return sc if (sc.get('candidates') or []) else None
+
+
+def scan_absent_ru() -> str:
+    """Честная строка на месте рекомендации, когда перебора в расчёте нет.
+
+    Сказать «перебор не нашёл окна» здесь было бы неправдой: перебора не было вовсе.
+    """
+    return ('Перебор начал выхода в этом расчёте не выполнялся: движок перебора в него не вошёл. '
+            'Выше — вердикт по окнам, заданным вручную; сами окна и ползунки их сдвига стоят в '
+            'разделе «Разобрать конкретные окна» ниже. Рекомендации «когда выходить» из перебора '
+            'здесь нет, и выдуманных чисел на её место сервис не ставит.')
+
+
+def _iso_dt(v):
+    """Момент из строки снимка; не разобралось — None, экран от этого не падает."""
+    try:
+        return datetime.fromisoformat(str(v))
+    except (TypeError, ValueError):
+        return None
+
+
+def scan_searched_ru(scan: dict) -> str:
+    """«Перебрано 67 начал с шагом 10 мин на сроке 19.09 12:00 — 20.09 00:00.»
+
+    Число перебранных начал печатается ВСЕГДА: это и есть доказательство, что сервис искал,
+    а не показал две точки (техзадание, раздел 1).
+    """
+    cands = scan.get('candidates') or []
+    n = int(scan.get('n_candidates') or len(cands))
+    a, b = _iso_dt(scan.get('search_from_utc')), _iso_dt(scan.get('search_to_utc'))
+    span = (' на сроке %s — %s' % (dt_ru(a), dt_ru(b))) if (a and b) else ''
+    step = scan.get('step_min')
+    step_ru = (' с шагом %s мин' % fmt(step)) if step else ''
+    return ('Перебрано %s %s%s%s.'
+            % (nbsp_thousands(n), plural_ru(n, ('начало', 'начала', 'начал')), step_ru, span))
+
+
+def scan_recommended(scan: dict):
+    """Рекомендованный кандидат по договору: индекс из снимка, а не «первый попавшийся лучший»."""
+    cands = scan.get('candidates') or []
+    i = scan.get('recommended_index')
+    return cands[i] if isinstance(i, int) and 0 <= i < len(cands) else None
+
+
+def _rank_key(c: dict):
+    """Порядок таблицы лучших: сначала ранжированные по рангу, затем остальные по времени начала."""
+    r = c.get('rank')
+    return (0, int(r)) if isinstance(r, int) else (1, 0)
+
+
+def scan_best_rows(scan: dict, limit: int = 5) -> list[dict]:
+    """Короткая таблица лучших кандидатов: начало, минуты в аномалии, флюенс, условия.
+
+    Строк не больше пяти. Безразмерных баллов и нормировок в таблице нет: складывать минуты
+    в аномалии с флюенсом нельзя, это разные величины.
+    """
+    cands = list(scan.get('candidates') or [])
+    best = [i for i in (scan.get('best') or []) if isinstance(i, int) and 0 <= i < len(cands)]
+    rest = sorted((i for i in range(len(cands)) if i not in best),
+                  key=lambda i: (_rank_key(cands[i]), str(cands[i].get('start_utc') or '')))
+    rows = []
+    for i in (best + rest)[:max(0, int(limit))]:
+        c = cands[i]
+        conds = [screen_text(x) for x in (c.get('conditions') or [])]
+        rows.append({'начало выхода': dt_ru(_iso_dt(c.get('start_utc'))),
+                     'минут в аномалии': fmt(c.get('saa_min')),
+                     'флюенс, част./см²': fmt_fluence(c.get('fluence')),
+                     'условия проверки': '; '.join(conds) if conds else 'нет'})
+    return rows
+
+
+def ribbon_caption_ru(scan: dict, e_min_MeV=None) -> str:
+    """Подпись ленты окон: по одному предложению на каждый график и как их читать."""
+    e_ru = ('≥%s МэВ' % fmt(e_min_MeV)) if e_min_MeV is not None else 'выбранного канала'
+    return ('Верхний график: сколько минут внутри аномалии наберёт выход, начатый в этот момент. '
+            'Нижний график: сколько за такое же окно наберётся флюенса захваченных протонов %s. '
+            'У обоих %s; синяя полоса — рекомендованное начало, кружками помечены лучшие кандидаты. '
+            'Ось времени общая, и оба графика читаются по одной вертикали.'
+            % (e_ru, LOWER_IS_BETTER_RU))
+
+
+def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 320):
+    """Лента окон: два графика, делящих ось времени начала выхода.
+
+    Наверху — минуты в аномалии за окно, начинающееся в этот момент; внизу — флюенс захваченных
+    протонов за такое же окно. Ни третьей оси, ни безразмерных баллов, ни нормировки: складывать
+    минуты с флюенсом нельзя, а «суммарный балл воздействия» был бы выдумкой.
+
+    Рисунок живёт здесь, а не в `app/viz.py`: в этом круге правка ограничена `app/main.py` и
+    `app/ui.py`, а `app/viz.py` правят параллельно. Plotly импортируется ВНУТРИ функции, чтобы
+    модуль оформления оставался без тяжёлой зависимости на импорте и не спорил с `app/viz.py`,
+    который сам импортирует отсюда имена.
+    """
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    cands = list(scan.get('candidates') or [])
+    xs = [_iso_dt(c.get('start_utc')) for c in cands]
+    keep = [i for i, x in enumerate(xs) if x is not None]
+    x = [xs[i] for i in keep]
+    saa = [cands[i].get('saa_min') for i in keep]
+    flu = [cands[i].get('fluence') for i in keep]
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.09)
+    fig.add_trace(go.Scatter(x=x, y=saa, mode='lines+markers', name='минут в аномалии за окно',
+                             line={'color': CALC_BLUE, 'width': 2}, marker={'size': 4, 'color': CALC_BLUE},
+                             hovertemplate='начало %{x|%d.%m %H:%M} · %{y} мин<extra></extra>'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=x, y=flu, mode='lines+markers', name='флюенс за окно',
+                             line={'color': CALC_BLUE, 'width': 2}, marker={'size': 4, 'color': CALC_BLUE},
+                             customdata=[fmt_fluence(v) for v in flu],
+                             hovertemplate='начало %{x|%d.%m %H:%M} · %{customdata} част./см²<extra></extra>'),
+                  row=2, col=1)
+    # Лучшие кандидаты — открытыми кружками: они названы и в таблице под графиками, и здесь
+    # видно, где они стоят на сроке.
+    best = [i for i in (scan.get('best') or []) if isinstance(i, int) and i in keep]
+    if best:
+        bx = [xs[i] for i in best]
+        fig.add_trace(go.Scatter(x=bx, y=[cands[i].get('saa_min') for i in best], mode='markers',
+                                 name='лучшие кандидаты', legendgroup='best',
+                                 marker={'size': 11, 'color': 'rgba(0,0,0,0)', 'line': {'color': CALC_BLUE, 'width': 2}},
+                                 hoverinfo='skip'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=bx, y=[cands[i].get('fluence') for i in best], mode='markers',
+                                 name='лучшие кандидаты', legendgroup='best', showlegend=False,
+                                 marker={'size': 11, 'color': 'rgba(0,0,0,0)', 'line': {'color': CALC_BLUE, 'width': 2}},
+                                 hoverinfo='skip'), row=2, col=1)
+    # Рекомендованное начало — вертикальной полосой. Полоса нарисована рядом данных, а не фигурой
+    # разметки: у фигур разметки Plotly разных версий по-разному принимает время на оси, и пустая
+    # полоса на защите дороже лишнего ряда.
+    rec_i = scan.get('recommended_index')
+    if isinstance(rec_i, int) and rec_i in keep:
+        xr = xs[rec_i]
+        for row, vals in ((1, saa), (2, flu)):
+            good = [v for v in vals if v is not None]
+            lo, hi = (min(good), max(good)) if good else (0.0, 1.0)
+            if hi == lo:
+                lo, hi = lo - 1.0, hi + 1.0
+            fig.add_trace(go.Scatter(x=[xr, xr], y=[lo, hi], mode='lines', name='рекомендованное начало',
+                                     legendgroup='rec', showlegend=(row == 1),
+                                     line={'color': CALC_BLUE, 'width': 6}, opacity=0.22,
+                                     hoverinfo='skip'), row=row, col=1)
+    fig.update_yaxes(title_text='минут в аномалии за окно, мин (%s)' % LOWER_IS_BETTER_RU, row=1, col=1)
+    good_flu = [v for v in flu if v is not None]
+    if good_flu:
+        lo, hi = min(good_flu), max(good_flu)
+        # Деления оси флюенса подписаны сами: иначе Plotly рисует сокращения на латинице рядом
+        # с «2,43·10⁶» в тексте того же экрана.
+        vals = sorted({lo + (hi - lo) * k / 3.0 for k in range(4)}) if hi > lo else [lo]
+        fig.update_yaxes(tickmode='array', tickvals=vals, ticktext=[fmt_fluence(v) for v in vals], row=2, col=1)
+    fig.update_yaxes(title_text='флюенс за окно, част./см² (%s)' % LOWER_IS_BETTER_RU, row=2, col=1)
+    fig.update_xaxes(title_text='время начала выхода', row=2, col=1)
+    fig.update_layout(template='plotly_white', height=int(height), separators=',' + NBSP_THIN,
+                      margin={'l': 70, 'r': 20, 't': 54, 'b': 40}, hovermode='x unified',
+                      legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'x': 0},
+                      title={'text': 'Лента окон: воздействие на выход, начатый в этот момент', 'x': 0.0,
+                             'font': {'size': 14}})
+    return fig
+
+
+def _factor_source_ru(f, raw_records: dict | None) -> str:
+    """Источник величины ссылкой — той же записью, на которую ссылается карточка объяснения.
+
+    Ссылка идёт в разметке Markdown, а не тегом: голого адреса на оперативном уровне быть
+    не должно, а подпись ссылки — имя выпуска источника.
+    """
+    ids = list(getattr(f, 'record_ids', None) or ())
+    links, no_link = [], []
+    for rid in ids[:2]:
+        u = record_url(raw_record(raw_records, rid))
+        (links.append('[%s](%s)' % (record_label_ru(rid), u)) if u else no_link.append(rid))
+    if links:
+        return ', '.join(links)
+    if no_link:
+        return record_no_url_ru(no_link, raw_records) or 'источник назван в таблице источников'
+    return 'источник назван в таблице источников'
+
+
+def accounted_lines(a, raw_records: dict | None = None) -> list[str]:
+    """«Что учтено»: каждая величина окна со значением, единицей, происхождением и источником.
+
+    Это те же числа, что в карточке окна, собранные в одно место и обычными словами: постановка
+    требует, чтобы учтённые воздействия были перед глазами, а не только в карточках (раздел 3.4).
+    """
+    out = []
+    for m in (getattr(a, 'mechanisms', None) or ()):
+        if not (m.mandatory or m.coverage.value != 'none'):
+            continue
+        for f in m.factors:
+            unit = getattr(f, 'unit', '') or ''
+            # Прочерк рядом с тире читался как обрыв строки («поток GOES — —»). Отсутствие
+            # значения называется словами, как и в карточке окна: величины у окна нет.
+            val = factor_value_ru(f, unit)
+            val = 'значения на окно нет' if val == '—' else val
+            out.append('- **%s** — %s · %s · %s · %s'
+                       % (screen_text(f.name), screen_text(val), MECH_RU.get(m.mechanism_id, m.mechanism_id),
+                          kind_pill(f.kind.value if hasattr(f.kind, 'value') else f.kind),
+                          _factor_source_ru(f, raw_records)))
+    return out
+
+
+def accounted_lines_from_scan(cand: dict, e_min_MeV=None) -> list[str]:
+    """То же, но по кандидату перебора: перебор считает три различающие величины, и врать,
+    что посчитано больше, нельзя. Единицы и происхождение — как у полного расчёта окна."""
+    e_ru = ('≥%s МэВ' % fmt(e_min_MeV)) if e_min_MeV is not None else ''
+    rows = [('минут в аномалии', fmt(cand.get('saa_min'), 'мин'), 'космопогода',
+             'поле IGRF на трассе — формула (3), вкладка «Методика»'),
+            ('флюенс захваченных протонов %s' % e_ru if e_ru else 'флюенс захваченных протонов',
+             fmt_fluence(cand.get('fluence'), 'част./см²'), 'космопогода',
+             'таблицы ОСТ 134-1044-2007 — формулы (1) и (2), вкладка «Методика»'),
+            ('ожидаемое число попаданий метеороидов, пластина 1 м²', fmt(cand.get('mmod_hits')), 'метеороиды',
+             'модель ECSS/Grün — формулы (5)–(7), вкладка «Методика»')]
+    return ['- **%s** — %s · %s · %s · %s' % (screen_text(n), screen_text(v), mech, kind_pill('own_calculation'), src)
+            for n, v, mech, src in rows]
+
+
+# Структурные пробелы охвата. Каждый уже объявлен в другом месте сервиса — в политике прототипа,
+# в таблице порогов или в решении о суточных вероятностях, — и собран здесь обычными словами,
+# чтобы «чего не учли» стояло рядом с «что учтено», а не было разбросано по вкладкам.
+NOT_ACCOUNTED_ALWAYS_RU = [
+    'протонное событие внутри окна — прогноза потока с разрешением по окну не существует ни у одного '
+    'источника; суточная вероятность NOAA остаётся суточной и в вероятность за окно не пересчитывается',
+    'сближение с каталогизированным объектом — линия запланирована, но источник не подключён, '
+    'на вердикт она не влияет',
+    'доза на человека и защита скафандра — не вычисляются: нужны модели защиты и ткани, '
+    'которых в обязательной части нет',
+    'вероятность разгерметизации и попадания в космонавта — не вычисляется',
+    'техногенный мусор и потоки метеороидов конкретной даты — в модели ECSS/Grün не входят',
+]
+
+
+def not_accounted_ru(S: dict, mode: str = 'live') -> list[str]:
+    """Чего сервис НЕ учёл — поимённо и с причиной, обычными словами.
+
+    Сначала то, что объявил сам расчёт (пропуски охвата и состояние линии уведомлений), затем
+    структурные пробелы. Из головы здесь ничего не пишется: причина, которой нет в расчёте,
+    в список не попадает.
+    """
+    out = [screen_text(x) for x in (S.get('coverage_missing') or [])]
+    line = S.get('events_line') or {}
+    # Линия уведомлений называется РОВНО ОДИН раз (бриф §9.7): в текущем режиме слой расчёта уже
+    # кладёт её в пропуски охвата, и вторая строка о том же читалась бы как второй пробел.
+    if mode == 'live' and not line.get('connected') and not any('DONKI' in x for x in out):
+        reason = line.get('reason_ru') or ''
+        out.append('%s — %s' % (line.get('source_ru') or 'уведомления о событиях',
+                                screen_text(status_ru(reason)) if reason else 'источник не опрашивается'))
+    for x in NOT_ACCOUNTED_ALWAYS_RU:
+        if x not in out:
+            out.append(x)
+    return out
+
+
+def refusal_lift_ru(verdict: str, missing_ru=None, mode: str = 'live') -> str:
+    """Что нужно, чтобы отказ снялся, — без обещаний, которых сервис выполнить не может.
+
+    При структурном пробеле строка не обещает нового выпуска источника: прогноза потока протонов
+    с разрешением по окну не существует в природе, и сколько ни ждать следующего выпуска, покрытие
+    не появится (`docs/design/RESHENIE_TEKUSCHIY_REZHIM.md`, смежная находка).
+    """
+    need = [screen_text(x) for x in (missing_ru or [])]
+    head_ru = ('Чтобы отказ снялся, нужно то, чего сейчас нет: %s.' % '; '.join(need[:3])) if need \
+        else 'Чтобы отказ снялся, нужны данные обязательной линии на срок поиска.'
+    if verdict == 'all_need_check':
+        return ('Обстановка уже нештатная: условие проверки стоит у каждого начала, и правило команды '
+                'окно с условием не выбирает. Снимает условие либо возврат уровня к фону по наблюдению, '
+                'либо решение аналитика по фактической обстановке у смены.')
+    tail = ('Ожидание следующего выпуска прогноза этого не закрывает: прогноза потока протонов '
+            'с разрешением по окну не существует ни у одного источника. Посильное — вернуть источник '
+            'в работу в боковой панели либо считать на сроке, начинающемся ближе к моменту последнего '
+            'наблюдения.') if mode == 'live' else \
+        ('Посильное — сдвинуть срок поиска ближе к моменту последнего наблюдения или взять другой '
+         'момент разбора, где линия покрыта.')
+    return head_ru + ' ' + tail
+
+
+def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'live',
+                         missing_ru=None, duration_min: int | None = None) -> str:
+    """Крупный блок ответа: когда выходить, почему, область вывода, условия.
+
+    Это первое, что читает человек после своей же строки задачи. Заголовок не бывает увереннее
+    расчёта: при отказе на этом же месте крупно стоит причина и что нужно, чтобы он снялся.
+    """
+    v = str(scan.get('verdict') or '')
+    cand = scan_recommended(scan)
+    lines = ['<div class="reco r-%s">' % esc(v or 'none')]
+    if cand is not None and v == 'recommended':
+        a = _iso_dt(cand.get('start_utc'))
+        b = _iso_dt(cand.get('end_utc'))
+        dur = int(duration_min or scan.get('requested_duration_min') or 0)
+        lines.append('<h2>Выходить %s</h2>' % esc(dt_ru(a)))
+        span = '%s — %s' % (dt_ru(a), dt_ru(b, with_date=(a is None or b is None or a.date() != b.date())))
+        lines.append('<div class="when">окно %s%s</div>'
+                     % (esc(span), esc(', %d мин' % dur) if dur else ''))
+    else:
+        lines.append('<h2>%s</h2>' % esc(SCAN_VERDICT_TITLE.get(v, 'Рекомендации нет')))
+    why = scan.get('why')
+    if why:
+        lines.append('<div class="why">%s</div>' % esc(sentence_ru(screen_text(why))))
+    lines.append('<div class="searched">%s</div>' % esc(screen_text(scan_searched_ru(scan))))
+    if v in ('insufficient', 'all_need_check'):
+        lines.append('<div class="stop">%s</div>' % esc(screen_text(refusal_lift_ru(v, missing_ru, mode))))
+    if v == 'equivalent':
+        rows = scan_best_rows(scan)
+        starts = ', '.join(r['начало выхода'] for r in rows[:3])
+        lines.append('<div class="stop">Равнозначные начала%s: различие внутри объявленного допуска, '
+                     'и выбор между ними сервис не делает — он принимается по причинам вне охвата, '
+                     'таким как план смены и ресурс.</div>' % (esc(' — ' + starts) if starts else ''))
+    scope = scan.get('scope')
+    if scope:
+        lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
+    conds = [screen_text(x) for x in ((cand or {}).get('conditions') or [])]
+    if conds:
+        lines.append('<div class="cond">Условия проверки: %s</div>' % esc('; '.join(conds[:3])))
+    elif cand is not None:
+        lines.append('<div class="cond none">Условий проверки у рекомендованного окна нет</div>')
+    rule = scan.get('rule')
+    tol = scan.get('tolerance_note')
+    # Правило и допуск приходят из движка строчными — здесь они становятся двумя предложениями,
+    # а не одним слипшимся: «…хотя бы по одной. допуск равнозначности…» читается как обрыв.
+    tail = ' '.join(sentence_ru(screen_text(x))[0].upper() + sentence_ru(screen_text(x))[1:]
+                    for x in (rule, tol) if x and str(x).strip())
+    if tail:
+        lines.append('<div class="policy">%s</div>' % esc(tail))
+    lines.append('</div>')
+    return ''.join(lines)
