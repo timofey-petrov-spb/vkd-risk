@@ -24,7 +24,6 @@
 """
 from __future__ import annotations
 
-import inspect
 import json
 import logging
 import traceback
@@ -74,11 +73,6 @@ MODE_SUB = {'live': 'живые источники', 'history_review': 'весь
             'history_forecast': 'только публикации до отсечки'}
 ARCHIVE_FROM, ARCHIVE_TO = datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc)
 LOG = logging.getLogger('vkd.app')
-# Подсветка рекомендованного окна на глобусе. Необязательный параметр `recommended` добавляет
-# параллельный исполнитель области глобуса; пока его в подписи нет, вызывать с ним нельзя —
-# экран упал бы на TypeError до слияния веток. ИНТЕГРАТОРУ: после слияния ветки глобуса эту
-# проверку можно снять и звать globe.globe_payload(..., recommended=rec.preferred) напрямую.
-_GLOBE_RECOMMENDED = 'recommended' in inspect.signature(globe.globe_payload).parameters
 
 st.set_page_config(page_title='ВКД-Риск', layout='wide', initial_sidebar_state='expanded')
 st.markdown(CSS, unsafe_allow_html=True)
@@ -618,6 +612,15 @@ if mode == 'history_forecast' and R.verification:
 # Глобус переехал из вкладки на главный экран: он обыгрывает рекомендацию, а не иллюстрирует
 # методику (раздел 3.5 техзадания). Плоская карта остаётся запасным видом — она работает без
 # WebGL и без сети.
+_globe_recommended = None
+if scan_cand is not None and (scan_ans or {}).get('kind') in ('point', 'interval'):
+    try:
+        _globe_recommended = (datetime.fromisoformat(scan_cand['start_utc']),
+                              datetime.fromisoformat(scan_cand['end_utc']))
+    except (KeyError, TypeError, ValueError):
+        _globe_recommended = None
+if _globe_recommended is None and rec.preferred is not None:
+    _globe_recommended = rec.preferred      # перебора нет — подсвечивается предпочтительное окно разбора
 st.markdown('<div class="sect">Где и когда: трасса, аномалия и окно</div>', unsafe_allow_html=True)
 if traj:
     view = st.radio('Вид', [globe.VIEW_GLOBE, globe.VIEW_FLAT], index=0, horizontal=True, key='map_view',
@@ -626,12 +629,13 @@ if traj:
     if view == globe.VIEW_GLOBE:
         try:
             with st.spinner('Область аномалии по IGRF на сетке 4°…'):
-                # Рекомендованное окно подсвечивается глобусом. Параметр `recommended` добавляет
-                # параллельный исполнитель; пока его в подписи нет, вызов идёт без него, иначе
-                # экран падал бы до слияния. ИНТЕГРАТОРУ: после слияния ветки глобуса проверку
-                # `_GLOBE_RECOMMENDED` можно снять и звать globe_payload с `recommended` напрямую.
-                _gkw = {'recommended': rec.preferred} if (_GLOBE_RECOMMENDED and rec.preferred) else {}
-                _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0, **_gkw)
+                # Глобус подсвечивает РЕКОМЕНДОВАННОЕ окно — то самое, которое названо в блоке
+                # ответа выше, а не предпочтительное окно ручного разбора: иначе на одном экране
+                # подсвечено одно окно, а рекомендовано другое. При ответе промежутком берётся
+                # самое раннее начало из него — то же окно, что разобрано в блоке «Что учтено».
+                # Ответа нет (отказ или условие у всех начал) — подсветки нет, и это честно.
+                _gp = globe.globe_payload(traj, windows, th.saa_B_threshold_nT, t0,
+                                          recommended=_globe_recommended)
             globe.render_globe(_gp)
             # Подпись глобуса длинная и своя: на первом экране остаётся первая фраза — что
             # нарисовано, — остальное вместе с технической строкой уходит раскрытием.
