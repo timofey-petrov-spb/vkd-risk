@@ -349,35 +349,53 @@ _TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <title>Глобус ВКД-Риск</title>
 <style>
-  html,body{margin:0;height:100%;background:#ffffff;color:#1a1f2b;overflow:hidden;
-    font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;font-size:12px}
+  /* Палитра сцены — та же, что у страницы: фон #0e1117, текст #e8ebf2, приглушённый #a7b0c0,
+     разделитель #242b38. Космос тёмный, и единственное яркое пятно в кадре — сама Земля.
+     Гарнитура одна на всё: панели, подписи меток на шаре и строка бегунка. */
+  html,body{margin:0;height:100%;background:#0e1117;color:#e8ebf2;overflow:hidden;
+    font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.35;
+    -webkit-font-smoothing:antialiased}
   #scene{position:absolute;inset:0}
-  .panel{position:absolute;background:#ffffffee;border:1px solid #d7dbdf;border-radius:6px;padding:8px 10px}
-  #legend{left:10px;top:10px;max-width:290px}
-  #ctl{right:10px;top:10px}
-  #stat{left:10px;bottom:10px;right:10px;font-size:11px;color:#5b6675;line-height:1.45;
-    background:none;border:none;padding:0}
-  /* Панель бегунка стоит под кнопкой вращения, а не у нижнего края: внизу идёт строка состояния.
-     Ширина 300 px подобрана по самой длинной подписи «дд.мм чч:мм UTC · |B| 24 000 нТл · в аномалии». */
-  #tl{right:10px;top:52px;width:300px;display:none}
-  #tl .ttl{color:#5b6675;margin-bottom:3px}
-  /* accent-color красит заполненную часть дорожки цветом расчёта; своя рамка фокуса нужна затем,
-     чтобы вместо неё браузер не рисовал собственную оранжевую — оранжевого в палитре экрана нет. */
-  #tl input[type=range]{width:100%;margin:3px 0;accent-color:#1f4e79}
-  #tl input[type=range]:focus{outline:2px solid #1f4e79;outline-offset:2px}
-  #tl .val{white-space:nowrap;font-weight:600}
-  .row{display:flex;align-items:center;gap:7px;margin:4px 0}
-  .sw{width:15px;height:3px;border-radius:2px;flex:none}
-  .bx{width:13px;height:9px;border-radius:2px;flex:none;opacity:.45}
+  .panel{position:absolute;background:rgba(22,27,38,0.88);border:1px solid #242b38;border-radius:8px;
+    padding:11px 13px}
+  #legend{left:14px;top:14px}
+  #ctl{right:14px;top:14px;padding:0;background:none;border:none}
+  /* Низ сцены — одна полоса: слева бегунок, справа техническая строка. Прежде панель бегунка
+     стояла под кнопкой вращения и закрывала метку начала окна; здесь она шар не перекрывает.
+     Полоса не перехватывает мышь (pointer-events), иначе шар переставал вращаться над ней. */
+  #foot{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:flex-end;
+    gap:16px;justify-content:space-between;pointer-events:none}
+  #foot>*{pointer-events:auto}
+  #stat{flex:1;min-width:0;text-align:right;font-size:12px;color:#a7b0c0}
+  /* Ширина 320 px подобрана по самой длинной подписи «дд.мм чч:мм UTC · |B| 24 000 нТл · в аномалии». */
+  #tl{position:static;width:320px;flex:none;display:none}
+  #tl .ttl{color:#a7b0c0;font-size:12px;margin-bottom:7px}
+  /* Бегунок нарисован сам, а не оставлен браузеру: дорожка цветом разделителя, ползунок цветом
+     нашего расчёта. Своя рамка фокуса нужна затем, чтобы вместо неё браузер не рисовал
+     собственную оранжевую — оранжевого в палитре экрана нет. */
+  #tl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:16px;margin:2px 0 7px;
+    background:transparent;cursor:pointer}
+  #tl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:#242b38}
+  #tl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;
+    margin-top:-5px;border-radius:50%;background:#7ab8f5;border:2px solid #0e1117}
+  #tl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#242b38}
+  #tl input[type=range]::-moz-range-thumb{width:12px;height:12px;border:2px solid #0e1117;
+    border-radius:50%;background:#7ab8f5}
+  #tl input[type=range]:focus{outline:2px solid #7ab8f5;outline-offset:3px}
+  #tl .val{white-space:nowrap;font-weight:600;font-size:13px;color:#e8ebf2}
+  /* Легенда — сетка с одинаковым шагом строк и одинаковыми образцами, а не список разной длины. */
+  .row{display:flex;align-items:center;gap:10px;height:23px}
+  .sw{width:22px;height:4px;border-radius:2px;flex:none}
+  .bx{width:22px;height:12px;border-radius:3px;flex:none;opacity:.55}
   /* Приглушённое в легенде показано так же, как на шаре: тот же цвет, меньшая насыщенность. */
-  .dim{opacity:.45}
-  button{background:#fff;color:#1a1f2b;border:1px solid #d7dbdf;border-radius:5px;padding:5px 10px;
-    cursor:pointer;font-size:12px;font-family:inherit}
-  button:hover{border-color:#1f4e79;color:#1f4e79}
+  .dim{opacity:.5}
+  button{background:rgba(22,27,38,0.88);color:#e8ebf2;border:1px solid #242b38;border-radius:8px;
+    padding:8px 13px;cursor:pointer;font-size:12px;font-family:inherit}
+  button:hover{border-color:#7ab8f5;color:#7ab8f5}
   #err{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    padding:28px;text-align:center;line-height:1.65;background:#fff}
-  #err b{display:block;margin-bottom:8px;font-size:13px}
-  #err .hint{margin-top:12px;color:#1f4e79;border:1px solid #1f4e79;border-radius:5px;padding:7px 12px}
+    padding:28px;text-align:center;line-height:1.65;background:#0e1117;color:#e8ebf2}
+  #err b{display:block;margin-bottom:8px;font-size:14px}
+  #err .hint{margin-top:12px;color:#7ab8f5;border:1px solid #7ab8f5;border-radius:8px;padding:8px 13px}
 </style>
 <script>/*__VKD_DATA__*/</script>
 </head>
@@ -385,18 +403,31 @@ _TEMPLATE = r"""<!DOCTYPE html>
 <div id="scene"></div>
 <div class="panel" id="legend"></div>
 <div class="panel" id="ctl"><button id="spin">Пауза вращения</button></div>
-<div class="panel" id="tl">
-  <div class="ttl">Время в окне — тяните бегунок</div>
-  <input type="range" id="tlr" min="0" max="1" step="1" value="0" aria-label="Время внутри рекомендованного окна">
-  <div class="val" id="tlv"></div>
+<div id="foot">
+  <div class="panel" id="tl">
+    <div class="ttl">Время в окне</div>
+    <input type="range" id="tlr" min="0" max="1" step="1" value="0" aria-label="Время внутри рекомендованного окна">
+    <div class="val" id="tlv"></div>
+  </div>
+  <div id="stat">загрузка…</div>
 </div>
-<div class="panel" id="stat">загрузка…</div>
 <div id="err"></div>
 <script src="__VKD_THREE__" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 "use strict";
 var D = window.VKD || null;
-var TRACK_C = 0x7f8c8d, SAA_C = 0xc0392b, HALO_C = 0xffffff;
+/* Тёмные пары цветов величин — та же таблица, что подставляет графикам app/ui.dark_figure.
+   Строка данных несёт цвет ПРОИСХОЖДЕНИЯ величины (синий — наш расчёт), а оттенок под тёмную
+   сцену выбирает компонент: от этого строка данных не меняется ни на байт, и прежний экран,
+   который сверяет её контрольную сумму, ничего не замечает. */
+var DARK = {"#1f4e79": "#7ab8f5", "#5dade2": "#4f8fc0", "#85c1e9": "#3f6f97",
+            "#c0392b": "#f58b7f", "#7f8c8d": "#9aa5b5"};
+function dark(c) { var k = String(c).toLowerCase(); return DARK[k] || c; }
+/* Трасса горизонта — цвет вспомогательных линий, аномалия — красный тёмной темы: насыщенный,
+   но не кислотный. Кант меток белый: на тёмной текстуре океана он их и держит. */
+var TRACK_C = 0x9aa5b5, SAA_C = 0xf58b7f, HALO_C = 0xffffff;
+/* Свечение атмосферы: цвет нашего расчёта, три тонкие оболочки по краю диска. */
+var AIR_C = 0x7ab8f5;
 var scene, camera, renderer, globe, texInfo = "текстура загружается…", maxTex = 0;
 var camR = 2.9, camLat = 0.30, camLon = 0.6, dragging = false, px = 0, py = 0, idle = 0;
 var spinning = true, lastFrame = 0;
@@ -407,9 +438,11 @@ var vLon = 0, vLat = 0, lastMove = 0;
 var DAMP = 2.2, V_MAX = 3.0, V_STOP = 1e-4;
 /* Непрозрачность линий трассы. Когда экран передал рекомендованное окно, ярко идёт только оно:
    OP_REC — рекомендованное окно, OP_DIM — аномалия и окна-кандидаты вне рекомендации (их видно,
-   но они не спорят с ответом), OP_BG_DIM — остальной горизонт. Когда рекомендации нет, фон
-   остаётся прежним OP_BG, а всё остальное ярким: вид до круга 11 не меняется. */
-var OP_REC = 1.0, OP_DIM = 0.35, OP_BG_DIM = 0.22, OP_BG = 0.55;
+   но они не спорят с ответом), OP_BG_DIM — остальной горизонт. Когда рекомендации нет, фон идёт
+   OP_BG, а всё остальное ярко. На тёмной сцене приглушённое читается лучше, чем на светлой,
+   поэтому все три приглушённые яркости ниже прежних: ярче Земли и рекомендации не должно
+   быть ничего. */
+var OP_REC = 1.0, OP_DIM = 0.28, OP_BG_DIM = 0.12, OP_BG = 0.45;
 /* Радиусы меток, доли радиуса Земли: окно-кандидат 0,016 — как было; границы рекомендованного
    окна 0,020 и бегунок 0,022 крупнее, потому что читаются первыми. Белый кант 1,5 радиуса. */
 var R_WIN_MARK = 0.016, R_REC_MARK = 0.020, R_SLIDE_MARK = 0.022, RIM_K = 1.5;
@@ -420,7 +453,7 @@ function fail(title, body) {
   e.style.display = "flex";
   e.innerHTML = "<b>" + title + "</b>" + body +
     "<div class='hint'>показать плоскую карту: переключатель «Вид» над глобусом</div>";
-  var i, ids = ["legend", "ctl", "stat", "tl"];
+  var i, ids = ["legend", "ctl", "stat", "tl", "foot"];
   for (i = 0; i < ids.length; i++) document.getElementById(ids[i]).style.display = "none";
 }
 
@@ -430,30 +463,35 @@ function toVec(lat, lon, r) {
   var th = (90 - lat) * Math.PI / 180, ph = (lon + 180) * Math.PI / 180;
   return new THREE.Vector3(-r * Math.cos(ph) * Math.sin(th), r * Math.cos(th), r * Math.sin(ph) * Math.sin(th));
 }
-function hex(s) { return parseInt(String(s).replace("#", ""), 16); }
+function hex(s) { return parseInt(dark(s).replace("#", ""), 16); }
 
-/* Строка легенды: цвет, подпись и признак приглушения — тот же приём, что на шаре. */
+/* Строка легенды: образец одного размера, подпись и признак приглушения — тот же приём, что
+   на шаре. Образцы у всех строк одинаковые по ширине, поэтому подписи выстраиваются по сетке. */
 function lrow(cls, color, text, dim) {
   var d = dim ? " dim" : "";
-  return "<div class='row'><span class='" + cls + d + "' style='background:" + color + "'></span>" +
+  return "<div class='row'><span class='" + cls + d + "' style='background:" + dark(color) + "'></span>" +
          "<span class='" + (dim ? "dim" : "") + "'>" + text + "</span></div>";
 }
 
+/* Легенда читается за секунду: две-три слова на строку, ровный шаг строк, одинаковые образцы.
+   Всё, что подписью не является — шаг трассы, порог поля, шаг сетки контура, времена окон, —
+   стоит в строке под сценой и в подписи под глобусом, а не здесь: легенда называет, ЧТО каким
+   цветом нарисовано, и ничего больше. Времена начала и конца рекомендованного окна стоят
+   подписанными метками на самой трассе, повторять их в легенде незачем. */
 function legend() {
   var h = "", i, w = D.windows;
   if (D.rec) {
-    h += lrow("sw", D.rec.color, "рекомендованное окно " + D.rec.start + " — " + D.rec.end + " UTC", false);
-    h += lrow("sw", D.colors.saa, "трасса в аномалии внутри окна", false);
+    h += lrow("sw", D.rec.color, "рекомендованное окно", false);
+    h += lrow("sw", D.colors.saa, "аномалия в окне", false);
     h += lrow("sw", D.colors.saa, "аномалия вне окна", true);
-    h += lrow("sw", D.colors.track, "остальная трасса горизонта, шаг " + D.step_min + " мин", true);
+    h += lrow("sw", D.colors.track, "трасса горизонта", true);
   } else {
-    h += lrow("sw", D.colors.track, "трасса за горизонт, шаг " + D.step_min + " мин", false);
+    h += lrow("sw", D.colors.track, "трасса горизонта", false);
     h += lrow("sw", D.colors.saa, "трасса в аномалии", false);
   }
-  h += lrow("bx", D.colors.saa, "область аномалии, |B| ниже порога; контур по сетке " +
-            String(D.saa.step).replace(".", ",") + "°", false);
+  h += lrow("bx", D.colors.saa, "область аномалии", false);
   for (i = 0; i < w.length; i++) {
-    h += lrow("sw", w[i].color, "окно " + w[i].n + ": " + w[i].label + " UTC", !!D.rec);
+    h += lrow("sw", w[i].color, "окно " + w[i].n + " · " + w[i].label, !!D.rec);
   }
   document.getElementById("legend").innerHTML = h;
 }
@@ -492,12 +530,29 @@ function buildSaa() {
   var geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   geo.setIndex(idx);
-  scene.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color: SAA_C, transparent: true, opacity: 0.30,
+  scene.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color: SAA_C, transparent: true, opacity: 0.20,
             side: THREE.DoubleSide, depthWrite: false})));
   var eg = new THREE.BufferGeometry();
   eg.setAttribute("position", new THREE.Float32BufferAttribute(edge, 3));
-  scene.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({color: SAA_C, transparent: true, opacity: 0.9})));
+  scene.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({color: SAA_C, transparent: true, opacity: 0.7})));
   return idx.length / 3;
+}
+
+/* Тонкое свечение по краю диска. Оболочка чуть больше шара, у которой рисуются только ЗАДНИЕ
+   грани: там, где она за Землёй, её закрывает сам шар, и на экране остаётся только ободок по
+   краю диска. Три оболочки убывающей плотности дают мягкий спад вместо кольца с резким краем.
+   Сложением цвета (AdditiveBlending) и без записи глубины — чтобы свечение не гасило трассу.
+   Ни анимации, ни бликов: это оформление края, а не эффект. */
+var AIR_SHELLS = [[1.012, 0.10], [1.030, 0.06], [1.055, 0.03]];
+
+function buildAtmosphere() {
+  var i, r, o;
+  for (i = 0; i < AIR_SHELLS.length; i++) {
+    r = AIR_SHELLS[i][0]; o = AIR_SHELLS[i][1];
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32),
+      new THREE.MeshBasicMaterial({color: AIR_C, transparent: true, opacity: o, side: THREE.BackSide,
+                                   blending: THREE.AdditiveBlending, depthWrite: false})));
+  }
 }
 
 function inRec(t) { return !!D.rec && t >= D.rec.a && t <= D.rec.b; }
@@ -549,8 +604,10 @@ function buildTrack() {
       for (i = 0; i < seg.length; i++) p.push(seg[i].x, seg[i].y, seg[i].z);
       var gh = new THREE.BufferGeometry();
       gh.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
-      scene.add(new THREE.Points(gh, new THREE.PointsMaterial({color: HALO_C, size: 0.019,
-                transparent: true, opacity: 0.7})));
+      /* Подложка яркой линии — её собственный цвет вполсилы, а не белый: на тёмной сцене белая
+         обводка спорила бы с Землёй, а своим цветом линия просто читается толще. */
+      scene.add(new THREE.Points(gh, new THREE.PointsMaterial({color: cur.c, size: 0.021,
+                transparent: true, opacity: 0.30})));
       var gc = new THREE.BufferGeometry();
       gc.setAttribute("position", new THREE.Float32BufferAttribute(p.slice(), 3));
       scene.add(new THREE.Points(gc, new THREE.PointsMaterial({color: cur.c, size: 0.012})));
@@ -577,8 +634,8 @@ function buildTrack() {
    обрезали бы. Холст рисуется вдвое крупнее CSS-размера (s = 2) — иначе текст мылится на экранах
    с удвоенной плотностью. Высота плашки 40 px и высота в сцене 0,09 — как было; ширина в сцене
    берётся из тех же пропорций, поэтому буквы не растягиваются. */
-var LBL_H = 40, LBL_PAD = 12, LBL_WORLD_H = 0.09;
-var LBL_FONT = "600 15px 'Segoe UI', Arial, sans-serif";
+var LBL_H = 40, LBL_PAD = 14, LBL_WORLD_H = 0.095;
+var LBL_FONT = "600 17px Inter, 'Segoe UI', Arial, sans-serif";
 
 function label(text, color, v) {
   var cv = document.createElement("canvas"), s = 2, c = cv.getContext("2d");
@@ -587,10 +644,12 @@ function label(text, color, v) {
   cv.width = w * s; cv.height = LBL_H * s;
   c = cv.getContext("2d");
   c.scale(s, s);
-  c.fillStyle = "rgba(255,255,255,0.92)";
-  c.strokeStyle = color; c.lineWidth = 1.5;
+  /* Плашка тёмная, в тон панелям сцены, с кантом цвета самой метки: белая наклейка на тёмном
+     шаре была самым светлым пятном кадра и спорила с Землёй. */
+  c.fillStyle = "rgba(14,17,23,0.82)";
+  c.strokeStyle = dark(color); c.lineWidth = 1.5;
   c.beginPath(); c.rect(1, 1, w - 2, LBL_H - 2); c.fill(); c.stroke();
-  c.fillStyle = "#1a1f2b";
+  c.fillStyle = "#e8ebf2";
   c.font = LBL_FONT;
   c.textAlign = "center"; c.textBaseline = "middle";
   c.fillText(text, w / 2, LBL_H / 2);
@@ -715,16 +774,15 @@ function loadTexture() {
   });
 }
 
+/* Строка под сценой — одна, и в ней только то, чего нет ни в легенде, ни в подписи под глобусом:
+   сколько точек показано, с каким шагом, на какой высоте посчитано поле и что с текстурой.
+   Прежде здесь стоял абзац в пять строк, повторявший подпись под рисунком слово в слово; на
+   экране он читался как стена текста поверх сцены. Оговорка «это показ уже посчитанного» никуда
+   не делась — она стоит в подписи под глобусом (app/globe.caption), где ей и место. */
 function status() {
-  var rec = D.rec ? "Рекомендованное окно " + D.rec.start + " — " + D.rec.end +
-                    " UTC показано ярко, остальной горизонт приглушён; бегунок ведёт метку по трассе " +
-                    "внутри окна и берёт |B| из уже посчитанных точек. " : "";
   document.getElementById("stat").innerHTML =
-    "Трасса и окна — показ уже посчитанного: минуты в аномалии считает расчёт по точкам трассы, а не картинка. " +
-    rec + "Точек " + D.n_shown + " из " + D.n_full + ", шаг " + D.step_min + " мин; средняя высота " +
-    String(D.alt_km).replace(".", ",") + " км — число расчёта, а не масштаб рисунка: трасса это след " +
-    "станции на поверхности, и линия поднята над шаром лишь настолько, чтобы её было видно. " +
-    texInfo + ".";
+    "Точек " + D.n_shown + " из " + D.n_full + " · шаг " + D.step_min + " мин · высота " +
+    String(D.alt_km).replace(".", ",") + " км · " + texInfo;
 }
 
 function bind() {
@@ -808,13 +866,16 @@ function init() {
   }
   maxTex = renderer.getContext().getParameter(renderer.getContext().MAX_TEXTURE_SIZE);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0xffffff, 1);
+  renderer.setClearColor(0x0e1117, 1);
   renderer.setSize(host.clientWidth, host.clientHeight);
   host.appendChild(renderer.domElement);
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(42, host.clientWidth / Math.max(host.clientHeight, 1), 0.05, 100);
-  globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshBasicMaterial({color: 0xb8c2cc}));
+  /* Цвет шара до загрузки текстуры — тёмно-серый: на тёмном фоне светлый шар вспыхивал белым
+     кругом на те полсекунды, пока идёт текстура, и это читалось как поломка. */
+  globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshBasicMaterial({color: 0x39424f}));
   scene.add(globe);
+  buildAtmosphere();
   legend();
   buildSaa();
   buildTrack();

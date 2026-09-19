@@ -363,7 +363,8 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
 
     # --- ряд 1: прошлое затенено и подписано — пусто там не по ошибке, а по определению
     if (t0 - x_from) >= timedelta(hours=2):
-        fig.add_vrect(x0=x_from, x1=t0, fillcolor=PAST_FILL, opacity=0.55, line_width=0, layer='below', row=1, col=1)
+        fig.add_vrect(x0=x_from, x1=t0, fillcolor=PAST_FILL, opacity=0.55, line_width=0, layer='below',
+                      row=1, col=1, exclude_empty_subplots=False)
         fig.add_annotation(x=x_from + (t0 - x_from) / 2, y=0.45, xref='x', yref='y domain', row=1, col=1,
                            secondary_y=False, text='работ в прошлом нет: экспозиция считается<br>от начала каждого окна',
                            showarrow=False, align='center', font=dict(family=FONT, size=11, color=GREY))
@@ -371,13 +372,21 @@ def timeline(traj, windows, thr_nT: float, t0: datetime, horizon_min: int, goes,
     # --- ряд 1: полосы пролётов аномалии и полосы окон
     # Заливки полос берут тёмные пары цветов: на тёмной подложке тёмно-синяя и тёмно-карминовая
     # полосы исчезали совсем, и пролёты аномалии было не различить.
+    #
+    # exclude_empty_subplots=False обязателен. По умолчанию Plotly МОЛЧА выбрасывает полосу,
+    # если в ряду, куда её кладут, ещё нет ни одного ряда данных, — а полосы здесь рисуются до
+    # линий, потому что они подложка. В итоге ни одна полоса на ленту не попадала: ни пролёты
+    # аномалии, ни сами окна. Молчаливого выбрасывания в сервисе быть не может (CONTRACT.md,
+    # раздел 7), и «странность» верхнего ряда была ровно этим: ступени накопления висели без
+    # всякой привязки к тому, когда станция шла через аномалию.
     for a, b in _saa_spans(traj):
-        fig.add_vrect(x0=a, x1=b, fillcolor=dark_pair(RED), opacity=0.16, line_width=0, layer='below', row=1, col=1)
+        fig.add_vrect(x0=a, x1=b, fillcolor=dark_pair(RED), opacity=0.16, line_width=0, layer='below',
+                      row=1, col=1, exclude_empty_subplots=False)
     for i, w in enumerate(windows):
         x1 = w.start_utc + timedelta(minutes=w.duration_min)
         for r in range(1, rows + 1):
             fig.add_vrect(x0=w.start_utc, x1=x1, fillcolor=dark_pair(win_color(i)), opacity=0.10,
-                          line_width=0, layer='below', row=r, col=1)
+                          line_width=0, layer='below', row=r, col=1, exclude_empty_subplots=False)
         fig.add_annotation(x=w.start_utc, y=0.86, xref='x', yref='y domain', row=1, col=1, secondary_y=False,
                            text='окно %d' % (i + 1), showarrow=False, xanchor='left', yanchor='top',
                            font=dict(family=FONT, size=12, color=win_color(i)))

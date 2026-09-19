@@ -515,13 +515,33 @@ def _run_component(payload: dict, tmp_path) -> dict:
     return json.loads(r.stdout)
 
 
+def _ops_from_template() -> dict:
+    """Яркости линий трассы — из самого компонента, а не числами в тексте проверки.
+
+    Прежде числа стояли здесь литералами, и первая же правка оформления роняла проверку,
+    которая на самом деле про другое: про то, что ярких и приглушённых участков ровно столько,
+    сколько их должно быть. Значения берутся из объявления в шаблоне.
+    """
+    m = re.search(r'var OP_REC = ([\d.]+), OP_DIM = ([\d.]+), OP_BG_DIM = ([\d.]+), OP_BG = ([\d.]+);',
+                  globe._TEMPLATE)
+    assert m, 'в компоненте объявлены яркости OP_REC/OP_DIM/OP_BG_DIM/OP_BG'
+    names = ('OP_REC', 'OP_DIM', 'OP_BG_DIM', 'OP_BG')
+    ops = {n: m.group(i + 1) for i, n in enumerate(names)}
+    assert ops['OP_REC'] == '1.0', 'рекомендованное окно идёт в полную силу'
+    val = {n: float(v) for n, v in ops.items()}
+    assert val['OP_BG_DIM'] < val['OP_DIM'] < val['OP_REC'] and val['OP_BG'] < val['OP_REC'], val
+    # JSON печатает 1.0 как «1»: ключи снимка приходят из JSON.stringify
+    return {n: ('1' if v == '1.0' else v) for n, v in ops.items()}
+
+
 def test_component_without_recommendation_keeps_previous_look(traj, field, tmp_path):
     """Без рекомендации компонент работает как прежде: панели бегунка нет, трасса яркая,
     приглушённым идёт только фон горизонта."""
+    ops = _ops_from_template()
     out = _run_component(globe.globe_payload(traj, make_windows(), THR_NT, T0, field=field), tmp_path)
     assert out['err'] == '', 'отказ не объявлялся — сцена построилась'
     assert out['tl'] == '', 'без рекомендации бегунка на экране быть не должно'
-    assert sorted(out['ops']) == ['0.55', '1'], 'прежние две яркости: фон и всё остальное'
+    assert sorted(out['ops']) == sorted({ops['OP_BG'], ops['OP_REC']}),         'прежние две яркости: фон и всё остальное — %r' % out['ops']
     assert out['added'] > 10, 'на сцену что-то добавлено'
     assert 'бегунок' not in out['stat']
 
@@ -529,18 +549,25 @@ def test_component_without_recommendation_keeps_previous_look(traj, field, tmp_p
 def test_component_highlights_the_recommended_window(traj, field, tmp_path):
     """С рекомендацией появляются выделенные участки: часть трассы идёт ярко, остальная приглушена.
     Яркости считает сам код компонента на всех точках трассы, а не тест по своей формуле."""
+    ops = _ops_from_template()
     out = _run_component(globe.globe_payload(traj, make_windows(), THR_NT, T0,
                                              field=field, recommended=REC), tmp_path)
     assert out['err'] == ''
-    bright = out['ops'].get('1', 0)
-    dim = out['ops'].get('0.35', 0) + out['ops'].get('0.22', 0)
+    bright = out['ops'].get(ops['OP_REC'], 0)
+    dim = out['ops'].get(ops['OP_DIM'], 0) + out['ops'].get(ops['OP_BG_DIM'], 0)
     assert bright > 0 and dim > 0, 'должны быть и яркие, и приглушённые участки: %r' % out['ops']
     assert bright == 240 + 1, 'ярко идёт ровно рекомендованное окно, 240 мин по точкам шага 1 мин'
     assert bright + dim == TRACK_MIN
-    # красный остаётся цветом аномалии и внутри окна, и вне его
-    assert str(0xc0392b) in out['colors'] and str(0x1f4e79) in out['colors']
-    assert 'рекомендованное окно 19.09 14:00 — 19.09 18:00 UTC' in out['legend']
-    assert 'аномалия вне окна' in out['legend'] and 'контур по сетке 10°' in out['legend']
+    # Красный остаётся цветом аномалии и внутри окна, и вне его, а синий — цветом рекомендации.
+    # Оттенки берутся тёмные: сцена тёмная, и цвета величин в ней те же, что даёт графикам
+    # app/ui.dark_figure. Строка данных при этом прежняя — её проверяет контрольная сумма выше.
+    assert str(0xf58b7f) in out['colors'] and str(0x7ab8f5) in out['colors'], out['colors']
+    # Легенда читается за секунду: подпись в два-три слова на строку, без времён и порогов —
+    # времена стоят подписанными метками на самой трассе, пороги — в подписи под глобусом.
+    for text in ('рекомендованное окно', 'аномалия в окне', 'аномалия вне окна', 'область аномалии'):
+        assert text in out['legend'], out['legend']
+    assert 'окно 1 · 19.09 14:00' in out['legend'], out['legend']
+    assert '19.09 14:00 — 19.09 18:00' not in out['legend'], 'времена окна в легенде не повторяем'
 
 
 def test_component_slider_moves_the_mark_and_prints_time_and_field(traj, field, tmp_path):
