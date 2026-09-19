@@ -180,6 +180,10 @@ def provenance_summary(prov: dict) -> dict:
                                                  'strict_replay_eligibility', 'model', 'distribution')
                           if k in r} for rid, r in recs.items()},
         'segments': prov.get('segments', []), 'limitations': prov.get('limitations', []),
+        # Круг 11: происхождение модели обрезания (таблица Ж.1, её путь и sha256, сколько точек
+        # ушло на запасной диполь) должно доходить до снимка и выгрузки, а не только до слов
+        # в «ограничениях»: иначе подмену таблицы в выгрузке нечем увидеть.
+        'cutoff_model': prov.get('cutoff_model'),
         'earth_orientation': prov.get('earth_orientation'), 'max_tle_age_days': prov.get('max_tle_age_days'),
         'inertial_states': prov.get('inertial_states'),
         'strict_attempt_error': prov.get('strict_attempt_error'), 'errors': prov.get('errors'),

@@ -274,6 +274,12 @@ def trajectory_with_provenance(start_utc: datetime, minutes: int, saa_B_threshol
             raise OrbitDataError('Replay orbital input records/hashes differ from the saved calculation')
     provenance['limitations'].extend([
         'IGRF is the internal main field; no storm-time external field is modelled.',
+        # Круг 11: прежняя строка называла диполем и обрезание тоже. Когда таблица Ж.1 применена,
+        # это уже неправда, и на экране она вставала рядом с оговоркой про таблицу — два
+        # противоположных утверждения об одной величине. Русский текст экран печатает как есть.
+        ('L и B/B_0 — центральный наклонный диполь, не трассированная L Мак-Илвейна; '
+         'вертикальное обрезание считается отдельно (строки ниже), направленная жёсткость '
+         'обрезания во время бури не считается.') if field['cutoff_info'].get('n_table') else
         'L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.',
         'Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.',
         'SAA flag is the configured |B| threshold proxy, not an official region boundary.'])
