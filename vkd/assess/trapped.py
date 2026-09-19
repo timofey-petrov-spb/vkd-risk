@@ -79,6 +79,9 @@ class BeltTable:
             self.table[L].sort(key=lambda p: p[0])
         self.Ls = np.array(sorted(self.table))
         self.table_name = 'А.2.1' if solar_activity == 'min' else 'А.2.2'
+        # Фаза солнечной активности запоминается: нормировка дозы (vkd.assess.dose) обязана
+        # брать средний по орбите уровень ТОЙ ЖЕ таблицы, иначе отношение сшивает разные модели.
+        self.solar_activity = solar_activity
         self.file = 'data/ost1044_belts/' + fn
         self.sha256 = hashlib.sha256(raw).hexdigest()
         # идентификатор записи таблицы для прослеживаемости фактора до файла (Т1/Т2): имя + хеш содержимого
