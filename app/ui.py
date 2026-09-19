@@ -2638,11 +2638,11 @@ def windows_ribbon(scan: dict, e_min_MeV=None, height: int = 320):
         fig.update_yaxes(tickmode='array', tickvals=vals, ticktext=[fmt_fluence(v) for v in vals], row=2, col=1)
     fig.update_yaxes(title_text='флюенс за окно, част./см² (%s)' % LOWER_IS_BETTER_RU, row=2, col=1)
     fig.update_xaxes(title_text='время начала выхода', row=2, col=1)
+    # Заголовка у рисунка нет намеренно: над ним стоит заголовок блока, а под ним подпись о том,
+    # как читать. Третья строка о том же была бы вторым сообщением об одном и том же.
     fig.update_layout(template='plotly_white', height=int(height), separators=',' + NBSP_THIN,
-                      margin={'l': 70, 'r': 20, 't': 54, 'b': 40}, hovermode='x unified',
-                      legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'x': 0},
-                      title={'text': 'Лента окон: воздействие на выход, начатый в этот момент', 'x': 0.0,
-                             'font': {'size': 14}})
+                      margin={'l': 70, 'r': 20, 't': 34, 'b': 40}, hovermode='x unified',
+                      legend={'orientation': 'h', 'yanchor': 'bottom', 'y': 1.02, 'x': 0})
     return fig
 
 
