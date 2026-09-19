@@ -32,7 +32,7 @@ from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, DISABLED_KEY, MECH_RU, M
                     RELEASE_BY_MODE_RU, RULE_POLICY, RULE_THRESHOLDS, SEV_RU, STRICT_RU, VERDICT_TITLE,
                     age_ru, close_cut_parens, coverage_reasons, coverage_rows_ru, coverage_scope_ru, dedup_clauses,
                     dt_ru, event_kind_ru, excl_group_ru, excl_reason_ru, factor_value_ru, fmt, formula_ref, frac_ru,
-                    grid_cell_ru, head, kind_pill, limit_ru, nbsp_thousands, panel, pill, plural_ru, ratio_ru,
+                    grid_cell_ru, grid_refinement_caption, head, kind_pill, limit_ru, nbsp_thousands, panel, pill, plural_ru, ratio_ru,
                     raw_record, record_no_url_ru, record_release_ru, record_url, registry_row, robustness_gain_ru,
                     screen_text, short_reason, source_issues, source_name_ru, source_short, spread_offsets,
                     status_ru, tle_origin, verdict_panel, verification_ru, window_card)
@@ -204,6 +204,7 @@ with st.sidebar:
             st.info('Сценарий «Что если» отключён для строгого прогноза. Для моделирования выберите исторический разбор или текущую обстановку.')
         scenario = Scenario('none')
     TH0 = Thresholds.from_settings()          # config/settings.toml — настройки вне кода (Т7)
+    refine_grid = False
     if pro:
         with st.expander('Пороги и настройки', expanded=False):
             st.caption('Умолчания — из config/settings.toml; всё применённое попадает в снимок и выгрузку.')
@@ -216,6 +217,8 @@ with st.sidebar:
                          kp_check=st.number_input('Порог Kp для условия проверки', 5.0, 9.0, TH0.kp_check, 0.5, key='th_kp',
                                                   help='Применяется к наблюдению, уведомлениям о буре и прогнозам NOAA/ENLIL.'),
                          tle_max_age_days=st.number_input('Допустимый возраст TLE, сут', 1.0, 14.0, TH0.tle_max_age_days, 1.0, key='th_tle'))
+            refine_grid = st.checkbox('Проверить сходимость расчёта', value=False, key='refine_grid',
+                help='Повторный расчёт на сетках до 5 секунд. Проверяет численную устойчивость; не восполняет отсутствующую физическую модель.')
             T_months = st.slider('Длительность экспедиции для норм, мес', 1, 12, 6, key='T_months')
     else:
         th, T_months = TH0, 6
@@ -272,12 +275,15 @@ try:
         fetched, fetch_note = None, None   # архивные режимы: живые источники не запрашиваются вовсе — входы только из архива (Т1, Т6)
     with st.spinner('Траектория, поле, оценка окон, устойчивость…'):
         R = run(mode, t0, duration_min, search_min, offsets, disabled=disabled, thresholds=th,
-                scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note)
+                scenario=scenario, T_months=T_months, fetched=fetched, fetch_note=fetch_note,
+                refinement_policy={} if refine_grid else None)
 except Exception as e:            # noqa: BLE001 — экран не падает; подробности в лог, не зрителю (Т6, Т7)
     LOG.error('расчёт не выполнен: %s\n%s', e, traceback.format_exc())
     st.error('Расчёт не выполнен: %s. Измените запрос или повторите позже; подробности записаны в журнал сервера.' % type(e).__name__)
     st.stop()
 S, rec, meta, traj, rob = R.S, R.rec, R.meta, R.traj, R.rob
+if refine_grid:
+    st.caption(grid_refinement_caption(S.get('grid_refinement', {})))
 now = datetime.fromisoformat(S['computed_utc'])
 windows = [a.window for a in R.assessments]
 windows_ru = {a.window.start_utc: str(i + 1) for i, a in enumerate(R.assessments)}

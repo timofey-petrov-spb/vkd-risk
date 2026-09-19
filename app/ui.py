@@ -1741,3 +1741,15 @@ def grid_cell_ru(v, windows_ru_iso: dict) -> str:
         return str(v)
     n = windows_ru_iso.get(t)
     return ('Окно %s (%s)' % (n, t.strftime('%H:%MZ'))) if n else t.strftime('%d.%m %H:%MZ')
+
+
+def grid_refinement_caption(report: dict) -> str:
+    states = {'converged_known_support': 'согласие сеток на известном участке достигнуто',
+              'resolution_limit_reached': 'достигнут минимальный шаг; заданное согласие не подтверждено',
+              'point_budget_exhausted': 'достигнут лимит вычислений; заданное согласие не подтверждено',
+              'source_changed': 'изменились исходные данные; сохранена предыдущая сетка',
+              'refinement_unavailable': 'уточнение не выполнено; сохранена предыдущая сетка',
+              'unavailable': 'орбита недоступна', 'not_requested': 'не запрашивалась'}
+    return ('Проверка сходимости: %s. Шаг %s с. Это проверка численного расчёта, '
+            'не физической точности; пробелы модели остаются.' %
+            (states.get(report.get('status'), 'статус неизвестен'), report.get('selected_step_seconds', '—')))

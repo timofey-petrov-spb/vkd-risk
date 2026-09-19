@@ -45,6 +45,7 @@ from vkd.explain.cards import cards_for_window
 from vkd.history import history_bundle
 from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, live_forecasts, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
+from vkd.integration.orbit_refinement import RefinementPolicy, refine_orbit
 from vkd.sources import Fetch, goes_latest, kp_latest, noaa_latest, tle_latest
 from vkd.types import Request, SCHEMA_VERSION, Window
 from vkd.integration.manifest import collect_records
@@ -56,7 +57,7 @@ SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → с�
 HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.7.0'  # actual-dt quadrature, temporal coverage, linear threshold crossings
+ALGO_VERSION = '0.8.0'  # optional source-fixed grid refinement and common-support convergence
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -300,7 +301,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         disabled: Optional[dict] = None, thresholds: Optional[Thresholds] = None,
         scenario: Optional[Scenario] = None, T_months: int = 6,
         fetched: Optional[tuple] = None, now: Optional[datetime] = None,
-        tle_override_path: Optional[str] = None, fetch_note: Optional[str] = None) -> Result:
+        tle_override_path: Optional[str] = None, fetch_note: Optional[str] = None,
+        refinement_policy: Optional[dict] = None) -> Result:
     """tle_override_path — воспроизведение сохранённого расчёта текущего режима: орбита
     строится по сохранённому TLE, а не по текущему (Т8). В исторических режимах орбита
     берётся из архива OEM (A1/A3) и от TLE не зависит; живые источники не вызываются.
@@ -309,6 +311,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     получал вызывающий (экран получает их своим кешированным вызовом). Когда их получает сам
     run, причина берётся у app.fetch_guard. Причина стоит и в статусе каждого источника, и
     отдельным ключом снимка `sources['_live_fetch']` — чтобы выгрузка и примеры не гадали."""
+    grid_policy = RefinementPolicy(**refinement_policy) if refinement_policy is not None else None
     validate_request(mode, t0, duration_min, search_min, window_offsets_min)
     t0 = t0.astimezone(timezone.utc)
     disabled = {'goes': False, 'kp': False, **(disabled or {})}
@@ -560,17 +563,30 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     # момент расчёта в текущем режиме — не раньше момента получения TLE: иначе A3 честно ставит
     # «реконструкция» рядом со статусом «строго» (Т2)
     live_cutoff = max(now, t0, tle_fetched) if tle_fetched else max(now, t0)
-    orb = build_orbit(mode, orbit_start, horizon_min, th.saa_B_threshold_nT, tle_text=tle_text,
+    orbit_kwargs = dict(tle_text=tle_text,
                       tle_fetched_utc=tle_fetched, tle_available_utc=tle_fetched,
                       tle_url=(getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN),
                       tle_evidence=getattr(f_tle, 'status_ru', ''), max_tle_age_days=th.tle_max_age_days,
                       cutoff_utc=(t0 if mode != 'live' else live_cutoff))
+    def orbit_at_step(step):
+        return build_orbit(mode, orbit_start, horizon_min, th.saa_B_threshold_nT,
+                           step_seconds=step, **orbit_kwargs)
+    orb = orbit_at_step(60)
+    grid_report = {'status': 'not_requested', 'selected_step_seconds': 60}
+    if grid_policy is not None:
+        grid_windows = apply_to_windows([Window(t0 + timedelta(minutes=o), duration_min)
+                                       for o in window_offsets_min], scenario)
+        orb, grid_report = refine_orbit(orb, orbit_at_step,
+            [(w.start_utc, w.start_utc+timedelta(minutes=w.duration_min)) for w in grid_windows],
+            os.path.join(ROOT, 'data', 'orbit', 'IGRF13.shc' if t0.year < 2025 else 'IGRF14.shc'),
+            saa_threshold_nT=th.saa_B_threshold_nT, e_min_MeV=th.e_min_MeV, policy=grid_policy)
     meta = orb.meta
     # координаты для таблиц ОСТ — эксцентричный диполь (Б): центральный диполь A3 в ядре аномалии
     # даёт L ниже сетки и нулевой поток на всей трассе (см. vkd/assess/magcoords.py); |B| — от A3
     coeff_name = 'IGRF13.shc' if t0.year < 2025 else 'IGRF14.shc'
     coeff_path = os.path.join(ROOT, 'data', 'orbit', coeff_name)
-    traj, belt_coords = belt_coordinates(orb.points, coeff_path)
+    traj, belt_coords = belt_coordinates(orb.points, coeff_path, reference_utc=(
+        datetime.fromisoformat(grid_report['magnetic_epoch_utc']) if grid_report.get('magnetic_epoch_utc') else None))
     if traj:
         # в выгрузку — репозиторный путь и хеш коэффициентов из data/orbit/manifest.json, не путь машины (Т8)
         try:
@@ -635,6 +651,11 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     th = replace(th, equiv_tol_min=rob.tol_min, fluence_equiv_ratio=rob.tol_ratio)
     assessments = [_assess(w, traj, th) for w in windows]
     rec = recommend(assessments, th)
+    if grid_policy is not None and grid_report['status'] != 'converged_known_support':
+        reason = 'заданное численное согласие сеток не подтверждено; см. проверку сходимости'
+        rec = replace(rec, preferred=None, verdict='insufficient',
+                      rule_applied=rec.rule_applied + '; ' + reason,
+                      missing=rec.missing + (reason,), reasons=rec.reasons + (reason,))
     def _pair_txt(pair):
         if not pair:
             return ''
@@ -857,7 +878,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                  {'source_id': None, 'method': None, 'frame': None, 'epoch_utc': None, 'coverage_from_utc': None,
                   'coverage_to_utc': None, 'created_utc': None, 'available_utc': None, 'fetched_utc': None,
                   'is_reconstruction': None, 'field_model': None})
-    effective_config = {'thresholds': th.__dict__, 'thresholds_requested': (thresholds or Thresholds.from_settings()).__dict__,
+    effective_config = {'orbit_refinement': asdict(grid_policy) if grid_policy else None, 'thresholds': th.__dict__, 'thresholds_requested': (thresholds or Thresholds.from_settings()).__dict__,
                         'history': _cfg_section('history'), 'sources': _cfg_section('sources'), 'ui': _cfg_section('ui'),
                         'settings_path': settings_path(), 'mmod': {'area_m2': 1.0, 'm_min_g': 1e-3, 'solar_activity': 'min'},
                         'robustness_grid': {'thr_nT': list(rob.grid[0]), 'e_min_MeV': list(rob.grid[1])}}
@@ -867,8 +888,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'request': {'t0_utc': t0.isoformat(), 'duration_min': duration_min, 'search_min': search_min,
                     'windows': [w.start_utc.isoformat() for w in windows], 'window_offsets_min': list(window_offsets_min),
                     'thresholds': th.__dict__, 'disabled': disabled, 'cutoff_utc': cutoff_utc.isoformat() if cutoff_utc else None,
+                    'refinement_policy': asdict(grid_policy) if grid_policy else None,
                     'T_months': T_months, 'scenario': scenario.__dict__ if is_sim else None},
         'effective_config': effective_config,
+        'grid_refinement': grid_report,
         'source_versions': source_versions,
         'numerical_integration': numerical_reports,
         'coverage_map': coverage_map,

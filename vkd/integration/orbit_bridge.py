@@ -98,7 +98,8 @@ def stage_live_root(tle_text: str, fetched_utc: Optional[datetime], available_ut
 def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float, *,
                 tle_text: Optional[str] = None, tle_fetched_utc: Optional[datetime] = None,
                 tle_available_utc: Optional[datetime] = None, tle_url: str = '', tle_evidence: str = '',
-                max_tle_age_days: float = 3.0, cutoff_utc: Optional[datetime] = None) -> OrbitResult:
+                max_tle_age_days: float = 3.0, cutoff_utc: Optional[datetime] = None,
+                step_seconds: int = 60) -> OrbitResult:
     if mode == 'live':
         if not tle_text:
             return OrbitResult(None, [], {'errors': ['TLE не получен']}, 'орбита недоступна: TLE не получен ни живым '
@@ -107,7 +108,7 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
         try:
             # cutoff для текущего режима — момент расчёта: TLE, полученный после начала минуты t0,
             # но до расчёта, не реконструкция (t0 округлён вниз до минуты)
-            meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT, mode='live', include_inertial_states=True,
+            meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT, mode='live', include_inertial_states=True, step_seconds=step_seconds,
                                                          repo_root=root, max_tle_age_days=max_tle_age_days,
                                                          cutoff_utc=cutoff_utc)
         except OrbitDataError as e:
@@ -142,13 +143,13 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
     if mode == 'history_forecast':
         try:
             meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT,
-                                                         mode='history_forecast', cutoff_utc=cutoff, include_inertial_states=True)
+                                                         mode='history_forecast', cutoff_utc=cutoff, include_inertial_states=True, step_seconds=step_seconds)
             return OrbitResult(meta, pts, _stamp(prov), 'OEM NASA/JSC с доказанной публикацией до отсечки', 'strict', None)
         except OrbitDataError as e:
             errors.append(str(e))
     try:
         meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT,
-                                                     mode='history_review', cutoff_utc=cutoff, include_inertial_states=True)
+                                                     mode='history_review', cutoff_utc=cutoff, include_inertial_states=True, step_seconds=step_seconds)
     except OrbitDataError as e:
         errors.append(str(e))
         return OrbitResult(None, [], {'errors': errors}, 'орбита недоступна: ' + '; '.join(errors), 'unavailable', '; '.join(errors))

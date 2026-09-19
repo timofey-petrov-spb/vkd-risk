@@ -19,7 +19,7 @@ from typing import Any
 
 from types import SimpleNamespace
 
-from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, phrase_ru, raw_record,
+from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, grid_refinement_caption, phrase_ru, raw_record,
                     record_url, robustness_line_ru, rule_ru, screen_text, source_name_ru, status_ru, verification_ru)
 from vkd.explain.format import record_ru
 
@@ -379,6 +379,9 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
           '- допустимость реального выхода — за уполномоченными специалистами;',
           '- вероятность разгерметизации и попадания в космонавта;',
           '- дозу человека; поток GOES как поток у станции без обрезания.', '']
+    if S.get('grid_refinement', {}).get('status') not in (None, 'not_requested'):
+        L += ['', '## Численная сходимость', '', grid_refinement_caption(S['grid_refinement']),
+              'Подробности сравнения на одинаковых известных участках — grid_refinement.json в ZIP.']
     return _dates_outside_urls('\n'.join(L))
 
 
@@ -432,6 +435,8 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
         z.writestr('recommendation.json', _j(S['recommendation']))
         z.writestr('cards.json', _j(S['cards']))
         z.writestr('sources.json', _j(S['sources']))
+        if S.get('grid_refinement'):
+            z.writestr('grid_refinement.json', _j(S['grid_refinement']))
         if S.get('numerical_integration'):
             z.writestr('numerical_integration.json', _j(S['numerical_integration']))
         if S.get('verification') is not None:
@@ -455,6 +460,7 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             'history_audit': {k: v for k, v in (S.get('history') or {}).items()
                               if k in ('adapter_version', 'coverage_map', 'limitations', 'archive_access',
                                        'source_versions', 'event_facts', 'provider')},
+            'grid_refinement': S.get('grid_refinement'),
             'numerical_integration': S.get('numerical_integration'),
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))

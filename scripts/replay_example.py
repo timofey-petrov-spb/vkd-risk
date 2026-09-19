@@ -161,7 +161,7 @@ def main(path: str) -> int:
         fetched = fetch_none()
         print('источники      : не запрашивались — орбита из архива OEM 2024 (A1/A3), события из архива DONKI/NOAA, повтор детерминирован')
     r = run(mode, t0, req['duration_min'], req['search_min'], req['window_offsets_min'], disabled=req['disabled'],
-            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), fetched=fetched, now=now)
+            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), fetched=fetched, now=now, refinement_policy=req.get('refinement_policy'))
     old, new = S['recommendation'], r.S['recommendation']
     checks = [('вердикт', old['verdict'], new['verdict']), ('предпочтительное окно', old.get('preferred'), new.get('preferred')),
               ('сравнение по механизмам', old.get('per_mechanism'), new.get('per_mechanism')),

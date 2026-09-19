@@ -86,12 +86,13 @@ def eccentric_dipole(coeff_path: str, when: datetime) -> tuple[np.ndarray, float
     return axis, B_eq, offset_re
 
 
-def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[list[TrajectoryPoint], dict]:
+def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str, *, reference_utc: datetime | None = None) -> tuple[list[TrajectoryPoint], dict]:
     """Копии точек с L и B/B0 эксцентричного диполя для таблиц ОСТ; |B|, широта, высота,
     признак аномалии — без изменений (из A3). Возвращает также сводку для происхождения."""
     if not points:
         return [], {'method': 'eccentric_dipole', 'n': 0}
-    when = points[len(points) // 2].t_utc
+    # Refinement must not shift the model epoch merely by changing node count.
+    when = reference_utc if reference_utc is not None else points[len(points) // 2].t_utc
     axis, B_eq, off = eccentric_dipole(coeff_path, when)
     out, n_incons, n_nomodel = [], 0, 0
     for p in points:
