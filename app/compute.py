@@ -6,9 +6,13 @@ run(params) собирает один снимок расчёта. Его исп
   * scripts/make_examples.py — сохранённые примеры расчётов для сдачи (Т8);
   * эксперименты — прогоны без Streamlit.
 
-Слои А: орбита — vkd.orbit (A3) через vkd.integration.orbit_bridge, без заглушки;
-прогнозы NOAA до отсечки — vkd.history.replay (A2) через vkd.integration.noaa_forecast;
-живые источники (A4) и разбор DONKI (A2) — пока временные модули experiments/.
+Слои А: орбита — vkd.orbit (A3) через vkd.integration.orbit_bridge; живые источники —
+vkd.sources (A4); история (уведомления DONKI по исходным телам сообщений, архив наблюдений
+GOES 2024 NASA iSWA, окончательный ряд Kp GFZ) — vkd.history (A2). Заглушек в конвейере нет:
+прежние временные модули перенесены в experiments/legacy/ и в расчёте не участвуют.
+
+Прогнозы NOAA до отсечки — vkd.history.replay (A2) через vkd.integration.noaa_forecast;
+живой трёхсуточный прогноз NOAA — vkd.sources.noaa_latest через тот же адаптер линий.
 
 Исторические режимы НЕ обращаются к живым источникам: GOES и Kp берутся из архива
 (или честно отсутствуют), TLE не нужен — орбита из OEM. Записи sources в снимке
@@ -19,7 +23,6 @@ from __future__ import annotations
 import io
 import json
 import os
-import re
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
@@ -30,29 +33,23 @@ from vkd.assess.meteoroids import meteoroid_hits_track
 from vkd.assess.trapped import BeltTable
 from vkd.config import section as _cfg_section, settings_path
 from vkd.explain.cards import cards_for_window
-from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts
+from vkd.history import history_bundle
+from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, live_forecast_lines, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
-from vkd.types import SCHEMA_VERSION, Window
+from vkd.sources import Fetch, goes_latest, kp_latest, noaa_latest, tle_latest
+from vkd.types import Request, SCHEMA_VERSION, Window
 from vkd.windows.compare import Thresholds, action_span, assess_window, overlaps, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
-try:
-    from vkd.sources import goes_latest, kp_latest, tle_latest   # type: ignore  # A4 — когда появится
-    SRC_LAYER = 'vkd.sources'
-except ImportError:
-    from experiments.stub_sources import Fetch, goes_latest, kp_latest, tle_latest
-    SRC_LAYER = 'experiments.stub_sources — временно до A4: живой запрос, кеш, снимок'
-try:
-    from vkd.history import history_bundle    # type: ignore  # A2 — разбор содержания DONKI
-    HIST_SRC = 'vkd.history'
-except ImportError:
-    from experiments.stub_history import history_bundle
-    HIST_SRC = 'experiments.stub_history — временно до A2: события DONKI, время публикации по реестру A1'
+SRC_LAYER = 'vkd.sources'       # A4: живой запрос → кеш → снимок репозитория, три состояния источника
+HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы наблюдений GOES и Kp за 2024, выпуски NOAA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ALGO_VERSION = '0.5.1'      # 19.09, второй круг: конец действия записи по её собственному началу, окно вне архива — «оснований недостаточно» в обоих режимах,
-                            # покрытие механизма объявляется частичным без наблюдения Kp (0.5.0: правило по флюенсу и минутам, допуск как разброс разности, Kp разбора из ряда GFZ)
+ALGO_VERSION = '0.6.0'      # 19.09, третий круг: конвейер на слоях А (vkd.sources, vkd.history) без заглушек; архив наблюдений GOES 2024
+                            # в разборе; условия по структурированным фактам уведомлений (facts), R10 по опубликованному диапазону Kp
+                            # уведомления о приходе выброса (линия enlilList снята); живой прогноз NOAA в текущем режиме; R11 — WGS84 → ECEF
+                            # (0.5.1: конец действия записи по её собственному началу, окно вне архива — «оснований недостаточно»)
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
@@ -107,6 +104,14 @@ def validate_request(mode: str, t0: datetime, duration_min: int, search_min: int
     for o in offs:
         if not (0 <= int(o) <= int(search_min)):
             raise ValueError('сдвиг окна %s мин вне периода поиска 0…%s мин' % (o, search_min))
+    if mode != 'live':
+        # архив 2024 года ограничен: начало вне его границ — отказ с русским сообщением,
+        # а не английское исключение адаптера истории где-то в середине расчёта
+        a0, a1 = DONKI_ARCHIVE_DEFAULT
+        if not (a0 <= t0 < a1):
+            raise ValueError('начало периода %s вне архива исторических режимов %s — %s; выберите дату внутри архива'
+                             % (t0.strftime('%Y-%m-%d %H:%MZ'), a0.strftime('%d.%m.%Y'),
+                                (a1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
 
 
 def _donki_catalog_coverage() -> tuple:
@@ -124,46 +129,22 @@ def _donki_catalog_coverage() -> tuple:
     return DONKI_ARCHIVE_DEFAULT + (None, 'константа (реестр A1 не прочитан)')
 
 
-_A1_BODIES: dict = {}
-_PFU_RE = re.compile(r'>\s*10\s*MeV protons (?:had previously )?exceed(?:s|ed)\s+(\d[\d,.]*)\s*pfu', re.I)   # только канал шкалы S (>=10 МэВ)
+# причины исключения записей адаптером истории (A2) — по-русски для экрана и выгрузки
+EXCLUDED_RU = {
+    'not_available_at_cutoff': 'опубликовано или доступно позже отсечки',
+    'unknown_publication_or_availability': 'время публикации или доступности неизвестно',
+    'ambiguous_notification_versions': 'разные версии одного сообщения к отсечке — неоднозначно',
+    'historic_publication_and_version_availability_not_proven':
+        'историческая публикация и доступность именно этой версии не доказаны',
+}
+# исключения адаптера, которые НЕ являются отсечкой (запись вне отображаемого контекста запроса):
+# в список «после отсечки не использовано» они не попадают, иначе список перестаёт значить то, что назван
+_NOT_CUTOFF_REASONS = ('outside_requested_display_context',)
+GOES_CHANNEL = 'goes_p_ge10MeV'      # численные наблюдения GOES ≥10 МэВ (A2, архив NASA iSWA)
 
 
-def _a1_message_path(mid: str) -> Optional[str]:
-    """messageID → путь к каноническому телу уведомления DONKI в реестре A1 (только чтение файла)."""
-    if not _A1_BODIES:
-        p = os.path.join(ROOT, 'data', 'source_registry_2024', 'donki', 'records.json')
-        try:
-            for r in json.load(io.open(p, encoding='utf-8')).get('records', []):
-                _A1_BODIES[r['release_id']] = os.path.join(ROOT, r['raw_path'])
-        except Exception:        # noqa: BLE001 — реестра нет: уровни остаются неизвестными, это объявляется
-            _A1_BODIES['_missing'] = ''
-    return _A1_BODIES.get(mid)
-
-
-def _with_sep_levels(events: list) -> list:
-    """Уровень протонного события из тела уведомления DONKI («… exceeded 10 pfu») дописывается в note
-    как «pfu=N», чтобы правило различало S1–S2 и S3+ (Т3: уровень определяет класс условия).
-    Тело сообщения — та же запись реестра A1, по которой событие отобрано по времени публикации."""
-    out = []
-    for e in events:
-        if e.kind_of_event == 'SEP' and e.event_id.startswith('donki_msg#') and 'pfu' not in (e.note or ''):
-            path = _a1_message_path(e.event_id.split('#', 1)[1])
-            level = None
-            if path and os.path.exists(path):
-                try:
-                    body = json.load(io.open(path, encoding='utf-8')).get('messageBody', '') or ''
-                    vals = [float(m.group(1).replace(',', '')) for m in _PFU_RE.finditer(body)]
-                    level = max(vals) if vals else None
-                except (OSError, ValueError):
-                    level = None
-            if level is not None:
-                e = replace(e, note=(e.note + ', ' if e.note else '') + 'pfu=%g (по тексту уведомления)' % level)
-        out.append(e)
-    return out
-
-
-def _empty_fetch(source_id: str, why: str):
-    return Fetch(source_id, None, None, None, None, why, None, None) if 'Fetch' in globals() else None
+def _empty_fetch(source_id: str, why: str) -> Fetch:
+    return Fetch(source_id, False, False, None, None, why, None, None)
 
 
 def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offsets_min: list[int],
@@ -185,10 +166,16 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     is_sim = bool(scenario.work_delay_min or scenario.sep_onset_offset_min is not None or scenario.kp_override is not None)
 
     # ------------------------------------------------------------ источники
+    f_noaa, noaa_raw, noaa_samples = None, {}, ()
     if mode == 'live':
         if fetched is None:
             fetched = (goes_latest(disabled=disabled['goes']), kp_latest(disabled=disabled['kp']), tle_latest(disabled=False))
-        (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle) = fetched
+        fetched = tuple(fetched)
+        if len(fetched) == 3:
+            # живой прогноз NOAA не передан экраном — берём его здесь (C6): те же каналы,
+            # что и в истории (kp_forecast, s1_prob_daily), исходные 3-часовые и суточные ячейки
+            fetched = fetched + (noaa_latest(disabled=disabled.get('noaa', False)),)
+        (goes, goes_raw, f_goes), (kp, kp_raw, f_kp), (tle_text, f_tle), (noaa_samples, noaa_raw, f_noaa) = fetched
     else:
         # история: живые запросы не делаются и не учитываются, даже если экран их передал
         why = 'в историческом режиме живой источник не запрашивается'
@@ -206,23 +193,67 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         kp, kp_raw = None, {}
         f_kp = replace(f_kp, ok=False, from_cache=False, status_ru='источник исключён пользователем — данных нет', payload=None, raw_path=None)
     events, hist_raw, excluded, fc_lines, fc_raw, forecasts, kp_obs, verification = [], {}, [], [], {}, [], [], None
+    excluded_archive: list = []
     catalog = None
     kp_src_note = None
+    goes_src_note = None
+    goes_absent_ru = None
+    event_facts: dict = {}
+    hist_meta: dict = {}
     if mode != 'live':
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
         catalog = (c0, c1)
-        h_samples, h_events, hist_raw = history_bundle()
+        # A2: запрос передаётся адаптеру целиком — иначе он не может выбрать правильные выпуски
+        # NOAA и границы архива наблюдений (vkd/history/README.md). Сам адаптер применяет свою
+        # отсечку; apply_cutoff ниже — независимая потребительская проверка каждой записи (Т4).
+        hreq = Request(mode=mode, eva_start_utc=t0, duration_min=int(duration_min),
+                       search_period_min=int(search_min), cutoff_utc=cutoff_utc,
+                       disabled_sources=tuple(sorted(k for k, v in disabled.items() if v == 'off')),
+                       work_delay_min=int(scenario.work_delay_min or 0))
+        h_samples, h_events, hist_raw = history_bundle(hreq)
+        hist_meta = hist_raw.get('_history') or {}
+        # структурированные факты уведомлений (Kp бури, канал и порог SEP, диапазон Kp прихода выброса):
+        # правило читает их, а не русский текст заметки (разбор Codex, п. 3)
+        event_facts = {rid: dict(((meta.get('content_audit') or {}).get('facts') or {}))
+                       for recs in (hist_meta.get('source_versions') or {}).values() for rid, meta in recs.items()}
         cut = apply_cutoff(h_samples, h_events, [], cutoff_utc)
-        excluded = list(cut.excluded)
+        # «исключено отсечкой» — только там, где отсечка есть (строгий режим). В разборе
+        # отсечки нет, и называть ею записи, непригодные по другим причинам, нельзя:
+        # они идут отдельным списком с собственной причиной.
+        adapter_excluded = ['%s: %s' % (x['raw_record_id'], EXCLUDED_RU.get(x['reason'], x['reason']))
+                            for x in (hist_meta.get('excluded') or [])
+                            if not any(x['reason'].startswith(p) for p in _NOT_CUTOFF_REASONS)]
+        excluded = list(cut.excluded) + (adapter_excluded if cutoff_utc is not None else [])
+        excluded_archive = [] if cutoff_utc is not None else adapter_excluded
         kp_hist = [s for s in cut.samples if s.channel_id == 'kp' and s.t_utc <= t0]
         kp = max(kp_hist, key=lambda s: s.t_utc) if (kp_hist and disabled.get('kp') != 'off') else None
         kp_raw = {kp.raw_record_id: hist_raw.get(kp.raw_record_id)} if kp else {}
+        # C3: численные наблюдения GOES ≥10 МэВ из архива NASA iSWA (A2). В строгом режиме адаптер
+        # исключает их сам, а apply_cutoff исключает повторно: published_utc у выпуска нет.
+        goes_hist = [s for s in cut.samples if s.channel_id == GOES_CHANNEL and s.value is not None and s.t_utc <= t0]
+        goes = max(goes_hist, key=lambda s: s.t_utc) if (goes_hist and disabled.get('goes') != 'off') else None
+        goes_raw = {goes.raw_record_id: hist_raw.get(goes.raw_record_id)} if goes else {}
+        goes_cov_a2 = (hist_meta.get('coverage_map') or {}).get('goes_p_ge10MeV:observations') or {}
+        if disabled.get('goes') == 'off':
+            goes_src_note = 'источник исключён пользователем — данных нет'
+            goes_absent_ru = 'архив наблюдений GOES исключён пользователем'
+        elif goes is not None:
+            goes_src_note = ('разбор: численный архив наблюдений GOES ≥10 МэВ (NASA iSWA, 5-минутные средние), запись %s; '
+                             'временной охват горизонта %.2f %%' % (goes.raw_record_id, 100.0 * float(goes_cov_a2.get('coverage_fraction') or 0.0)))
+        elif mode == 'history_forecast':
+            goes_absent_ru = ('архив наблюдений GOES 2024 в строгом режиме исключён: %s'
+                              % EXCLUDED_RU['historic_publication_and_version_availability_not_proven'])
+            goes_src_note = 'строгий режим: ' + goes_absent_ru + ' (канал остаётся покрытым только датированными уведомлениями DONKI)'
+        else:
+            goes_absent_ru = 'численных наблюдений GOES в архиве на этот момент нет (%s)' % (goes_cov_a2.get('reason') or 'запись отсутствует')
+            goes_src_note = 'разбор: ' + goes_absent_ru
         if disabled.get('kp') == 'off':
             kp_src_note = 'источник исключён пользователем — данных нет'
         elif kp is None:
-            kp_src_note = ('строгий режим: наблюдений Kp с доказанной публикацией до отсечки в архиве нет (окончательный ряд GFZ '
-                           'и Kp карточек GST DONKI не имеют собственного времени публикации по интервалам)' if mode == 'history_forecast'
-                           else 'разбор: наблюдений Kp в архиве (ряд GFZ %s — %s, резерв — карточки GST DONKI) до %s нет' % (
+            kp_src_note = ('строгий режим: до отсечки %s нет уведомления DONKI с наблюдённым Kp; окончательный ряд GFZ '
+                           'в строгом режиме исключён — у его интервалов нет собственного времени публикации'
+                           % t0.strftime('%Y-%m-%d %H:%MZ') if mode == 'history_forecast'
+                           else 'разбор: наблюдений Kp в архиве (окончательный ряд GFZ %s — %s, резерв — уведомления DONKI о буре) до %s нет' % (
                                DONKI_ARCHIVE_DEFAULT[0].strftime('%d.%m.%Y'), (DONKI_ARCHIVE_DEFAULT[1] - timedelta(minutes=1)).strftime('%d.%m.%Y'),
                                t0.strftime('%Y-%m-%d %H:%MZ')))
         if mode == 'history_review':      # разбор: наблюдения Kp вокруг периода — контекст ленты, не вход строгого режима
@@ -243,12 +274,17 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         fc_lines, fc_raw = noaa_forecasts(t0, t0, t0 + timedelta(minutes=horizon_min))
         forecasts = [s for line in fc_lines for s in line.samples]
         if mode == 'history_forecast':
-            # проверка после отсечки: что наблюдалось потом — В РАСЧЁТ НЕ ВХОДИТ, только сопоставление (Т4, О6)
+            # Проверка после отсечки: что наблюдалось потом — В РАСЧЁТ НЕ ВХОДИТ, только сопоставление (Т4, О6).
+            # Строгий снимок по построению не содержит записей после отсечки, поэтому факт берётся
+            # ОТДЕЛЬНЫМ разбором того же архива (history_review) — он нигде не смешивается с расчётом.
             h_end = t0 + timedelta(minutes=horizon_min)
-            kp_after = sorted({(s.valid_from_utc, s.valid_to_utc, s.value, s.raw_record_id) for s in h_samples
+            v_samples, v_events, _ = history_bundle(replace(hreq, mode='history_review', cutoff_utc=None))
+            kp_after = sorted({(s.valid_from_utc, s.valid_to_utc, s.value, s.raw_record_id) for s in v_samples
                                if s.channel_id == 'kp' and s.valid_from_utc and s.valid_to_utc
                                and s.valid_to_utc > t0 and s.valid_from_utc < h_end})
-            ev_after = [e for e in h_events if e.published_utc and e.published_utc > cutoff_utc and e.published_utc <= h_end
+            goes_after = sorted((s.t_utc, s.value, s.raw_record_id) for s in v_samples
+                                if s.channel_id == GOES_CHANNEL and s.value is not None and t0 < s.t_utc <= h_end)
+            ev_after = [e for e in v_events if e.published_utc and e.published_utc > cutoff_utc and e.published_utc <= h_end
                         and e.kind_of_event in ('SEP', 'GST')]
             first_storm = next(((a, v) for a, b, v, _ in kp_after if v >= th.kp_check), None)
             kp_max = max((v for _, _, v, _ in kp_after), default=None)
@@ -256,21 +292,40 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
             summary += ('Kp %s с %s, максимум %s' % (('%.2f' % first_storm[1]).replace('.', ','), first_storm[0].strftime('%d.%m %H:%MZ'),
                                                      ('%.2f' % kp_max).replace('.', ',')) if first_storm
                         else ('максимум Kp %s, бури Kp ≥ %.0f не было' % (('%.2f' % kp_max).replace('.', ','), th.kp_check) if kp_max is not None
-                              else 'наблюдений Kp в архиве (ряд GFZ, резерв — карточки GST DONKI) на горизонте нет'))
+                              else 'наблюдений Kp в архиве (окончательный ряд GFZ, резерв — уведомления DONKI о буре) на горизонте нет'))
+            if goes_after:
+                g_max = max(goes_after, key=lambda x: x[1])
+                summary += '; максимум наблюдённого потока GOES ≥10 МэВ %s pfu в %s' % (
+                    ('%.6g' % g_max[1]).replace('.', ','), g_max[0].strftime('%d.%m %H:%MZ'))
             seps = [e for e in ev_after if e.kind_of_event == 'SEP']
             if seps:
                 summary += '; протонное событие: первая публикация %s' % min(e.published_utc for e in seps).strftime('%d.%m %H:%MZ')
             verification = {
-                'note': 'в расчёт не входит: наблюдения и публикации после отсечки, только для сопоставления прогноза с фактом',
+                'note': 'в расчёт не входит: наблюдения и публикации после отсечки, только для сопоставления прогноза с фактом; '
+                        'источник факта — тот же архив в режиме разбора (vkd.history, history_review)',
                 'cutoff_utc': cutoff_utc.isoformat(), 'horizon_to_utc': h_end.isoformat(),
                 'kp_obs': [{'from_utc': a.isoformat(), 'to_utc': b.isoformat(), 'kp': v, 'record': rid} for a, b, v, rid in kp_after],
+                'goes_obs_max': ({'t_utc': max(goes_after, key=lambda x: x[1])[0].isoformat(),
+                                  'value_pfu': max(goes_after, key=lambda x: x[1])[1],
+                                  'record': max(goes_after, key=lambda x: x[1])[2],
+                                  'n_samples': len(goes_after)} if goes_after else None),
                 'events': [{'id': e.event_id, 'kind': e.kind_of_event, 'published_utc': e.published_utc.isoformat(),
                             'start_utc': e.start_utc.isoformat() if e.start_utc else None, 'note': (e.note or '')[:120]} for e in ev_after],
                 'summary': summary,
             }
-        events = _with_sep_levels(events)
+    if mode == 'live':
+        # C6: живой трёхсуточный прогноз NOAA теми же линиями и каналами, что в истории —
+        # условие «прогноз Kp ≥ kp_check» работает и в текущем режиме
+        fc_lines, fc_raw = live_forecast_lines(noaa_samples, noaa_raw, f_noaa, t0, t0 + timedelta(minutes=horizon_min))
+        forecasts = [s for line in fc_lines for s in line.samples]
     kp = simulated_kp(kp, t0, scenario)
-    events = events + simulated_events(t0, scenario)
+    sim_events = simulated_events(t0, scenario)
+    events = events + sim_events
+    for e in sim_events:      # сценарий даёт те же структурированные факты, что и уведомление: правило одно
+        if e.kind_of_event == 'SEP' and scenario.sep_level_pfu is not None:
+            event_facts[e.raw_record_id] = {'detector': 'сценарий «что если»', 'energy_lower_bound_MeV': 10.0,
+                                            'energy_operator': '>', 'flux_lower_bound_pfu': float(scenario.sep_level_pfu),
+                                            'flux_operator': '=', 'measured_flux_pfu': float(scenario.sep_level_pfu)}
 
     # ------------------------------------------------------------ траектория (A3 через мост Б)
     if tle_override_path:
@@ -302,7 +357,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'coefficients_sha256': rec_c.get('sha256'), 'coefficients_record': rec_c.get('raw_record_id')}
         orb.provenance.setdefault('limitations', []).append(
             'Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), '
-            'не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; %d из %d точек с B/B0 < 1 помечены.'
+            'не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; %d из %d точек с B/B0 < 1 помечены. '
+            'Положение точки переводится WGS84 → ECEF (NIMA TR8350.2), сферическая формула не применяется. '
+            'Вертикальная жёсткость обрезания cutoff_GV остаётся методом A3 (центральный наклонённый диполь) — '
+            'это ДРУГАЯ модель, чем L и B/B0, и за одну систему координат они не выдаются.'
             % (belt_coords['n_inconsistent_BB0'], belt_coords['n']))
     orbit_ids = tuple((orb.provenance or {}).get('records', {}).keys()) or ('trajectory',)
 
@@ -329,7 +387,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         return assess_window(w, tr, belts, goes, kp, [], th_i, ref_now, events=events, catalog_coverage=catalog,
                              mmod_hits=mmod[w.start_utc][0], mmod_rule=mmod[w.start_utc][1],
                              mmod_cov_fraction=mmod[w.start_utc][2], forecasts=forecasts,
-                             trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc)
+                             trajectory_record_ids=orbit_ids, cutoff_utc=cutoff_utc,
+                             event_facts=event_facts, goes_absent_ru=goes_absent_ru)
 
     def _assess_all(tr, kw):
         th_i = replace(th, **kw)
@@ -382,7 +441,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                    'orbit_provenance': orb.provenance}
     if mode == 'live':
         raw_records['iss.tle'] = {'text': tle_text, 'epoch_utc': iso(meta.epoch_utc) if meta and meta.epoch_utc else None,
-                                  'fetch': getattr(f_tle, 'status_ru', None), 'url': getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN}
+                                  'fetch': getattr(f_tle, 'status_ru', None), 'url': getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN,
+                                  'metadata': dict(getattr(f_tle, 'metadata', None) or {})}
+        if noaa_raw:
+            raw_records.update(noaa_raw)
+        # точные байты ответа TLE и квитанция A4 — рядом с нормализованным текстом:
+        # повтор текущего режима разбирает исходный ответ, а не наш пересказ (стык, п. 2)
+        from vkd.sources.live_cache import raw_record as _raw_record
+        raw_records.update(_raw_record(f_tle))
 
     def _src(f, role, sample=None):
         # давность — от КОНЦА интервала измерения (valid_to_utc), как в compare.py: у Kp GFZ
@@ -406,14 +472,27 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
     if mode == 'live':
         sources['noaa_swpc_goes'] = _src(f_goes, 'протоны ≥10 МэВ', goes)
         sources['gfz_kp'] = _src(f_kp, 'Kp', kp if (kp and kp.source_id != 'scenario') else None)
+        sources['noaa_swpc_3day_forecast'] = {
+            **_src(f_noaa, 'прогноз Kp и вероятности NOAA (3 суток)'),
+            'data_utc': iso(min((s.published_utc for s in noaa_samples if s.published_utc), default=None)),
+            'cells': len(noaa_samples)}
     else:
         c0, c1, n_msg, cat_src = _donki_catalog_coverage()
-        sources['noaa_swpc_goes'] = {'role': 'протоны ≥10 МэВ', 'status': 'архива наблюдений GOES за 2024 в реестре нет — канал без данных; '
-                                                                           'живой источник в историческом режиме отключён',
-                                     'live_ok': None, 'from_cache': None, 'origin': 'нет данных', 'fetched_utc': None, 'data_utc': None, 'age_min': None}
+        goes_origin = ('архив наблюдений NASA iSWA (data/goes_2024), 5-минутные средние' if goes is not None
+                       else ('исключён строгим режимом' if mode == 'history_forecast' else 'нет данных'))
+        sources['noaa_swpc_goes'] = {'role': 'протоны ≥10 МэВ',
+                                     'status': goes_src_note or 'канал без данных',
+                                     'live_ok': None, 'from_cache': None, 'origin': goes_origin, 'fetched_utc': None,
+                                     'data_utc': iso(goes.t_utc) if goes is not None else None,
+                                     # давность GOES — от МОМЕНТА наблюдения (начала 5-минутного усреднения),
+                                     # как её считает фактор в compare.py; иначе таблица и фактор разойдутся
+                                     'age_min': round((t0 - goes.t_utc).total_seconds() / 60) if goes is not None else None,
+                                     'coverage_fraction': (hist_meta.get('coverage_map') or {}).get(
+                                         'goes_p_ge10MeV:observations', {}).get('coverage_fraction')}
         kp_origin = {'gfz_kp_archive': 'архив GFZ (окончательный ряд Kp по 3-часовым интервалам, без времени публикации)',
+                     'nasa_donki_notification': 'уведомление DONKI о буре (наблюдённый Kp с временем публикации)',
                      'nasa_donki_gst': 'архив DONKI (карточки GST)'}.get(kp.source_id if kp else '', 'архив (%s)' % kp.source_id if kp else 'нет данных')
-        sources['gfz_kp'] = {'role': 'Kp (в истории — окончательный ряд GFZ; резерв — карточки GST DONKI)',
+        sources['gfz_kp'] = {'role': 'Kp (в разборе — окончательный ряд GFZ; в строгом режиме — уведомления DONKI о буре)',
                              'status': (kp_src_note or 'разбор: Kp из %s, запись %s' % (kp_origin.split(' (')[0], kp.raw_record_id)) if not (kp and kp.source_id == 'scenario')
                              else 'сценарий «что если»: моделируемое значение',
                              'live_ok': None, 'from_cache': None,
@@ -422,10 +501,10 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                              'data_utc': iso(kp.t_utc) if kp and kp.source_id != 'scenario' else None,
                              'age_min': round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60)
                              if kp and kp.source_id != 'scenario' else None}
-        sources['donki_archive'] = {'role': 'события и уведомления (SEP, GST, прогнозы ENLIL)',
-                                    'status': 'архив DONKI %s — %s%s; отбор по времени публикации (%s)' % (
+        sources['donki_archive'] = {'role': 'уведомления DONKI (протонное событие, буря, прогноз прихода выброса)',
+                                    'status': 'архив уведомлений DONKI %s — %s%s; разбор исходных тел сообщений, отбор по времени публикации (%s)' % (
                                         c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'),
-                                        ', %d сообщений' % n_msg if n_msg else '', HIST_SRC.split(' — ')[0]),
+                                        ', %d сообщений' % n_msg if n_msg else '', HIST_SRC),
                                     'live_ok': None, 'from_cache': None, 'origin': 'архив A1 (%s)' % cat_src,
                                     'fetched_utc': None, 'data_utc': iso(t0), 'age_min': None,
                                     'events_used': len(events), 'excluded_by_cutoff': len(excluded)}
@@ -439,17 +518,19 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                       'live_ok': None, 'from_cache': None, 'origin': 'модель стандарта в репозитории'},
         '_layers': {'role': 'слои', 'status': 'орбита: %s; источники: %s; история: %s' % (ORBIT_SRC, SRC_LAYER, HIST_SRC)},
     })
-    if mode != 'live':
-        for line in fc_lines:
-            lr = line.last_release_before_cutoff
-            sources['noaa_forecast_' + line.channel_id] = {
-                'role': line.label_ru, 'status': FC_STATUS_RU.get(line.status, line.status) + (
-                    '; выпуск %s от %s' % (line.release_id, line.published_utc.strftime('%Y-%m-%d %H:%MZ')) if line.record_id_ok() else
-                    ('; ' + line.reason if line.reason else '')),
-                'live_ok': None, 'from_cache': None, 'origin': 'архив A1 (data/source_registry_2024/noaa)' + (
-                    ', sha256 %s…' % (fc_raw.get(line.raw_record_id, {}).get('sha256') or '')[:12] if line.raw_record_id else ''),
-                'coverage_fraction': line.coverage_fraction,
-                'last_release_before_cutoff': lr}
+    for line in fc_lines:
+        lr = line.last_release_before_cutoff
+        sources['noaa_forecast_' + line.channel_id] = {
+            'role': line.label_ru, 'status': FC_STATUS_RU.get(line.status, line.status) + (
+                '; выпуск %s от %s' % (line.release_id, line.published_utc.strftime('%Y-%m-%d %H:%MZ')) if line.record_id_ok() else
+                ('; ' + line.reason if line.reason else '')),
+            'live_ok': f_noaa.ok if mode == 'live' else None, 'from_cache': f_noaa.from_cache if mode == 'live' else None,
+            'origin': ('живой бюллетень NOAA SWPC' if mode == 'live' else 'архив A1 (data/source_registry_2024/noaa)' + (
+                ', sha256 %s…' % (fc_raw.get(line.raw_record_id, {}).get('sha256') or '')[:12] if line.raw_record_id else '')),
+            'fetched_utc': iso(f_noaa.fetched_utc) if mode == 'live' and f_noaa.fetched_utc else None,
+            'data_utc': iso(line.published_utc) if mode == 'live' and line.published_utc else None,
+            'coverage_fraction': line.coverage_fraction,
+            'last_release_before_cutoff': lr}
 
     meta_dict = ({**{k: iso(v) for k, v in meta.__dict__.items()}} if meta else
                  {'source_id': None, 'method': None, 'frame': None, 'epoch_utc': None, 'coverage_from_utc': None,
@@ -498,9 +579,20 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         'policy_note': POLICY_NOTE,
         'is_simulated': is_sim,
         'history': {'provider': HIST_SRC if mode != 'live' else None, 'excluded_by_cutoff': excluded,
+                    'excluded_by_archive': excluded_archive,
                     'catalog_coverage': ({'from_utc': iso(catalog[0]), 'to_utc': iso(catalog[1])} if catalog else None),
                     'events_used': [{'id': e.event_id, 'kind': e.kind_of_event, 'published_utc': iso(e.published_utc),
-                                     'start_utc': iso(e.start_utc), 'simulated': e.is_simulated} for e in events]},
+                                     'start_utc': iso(e.start_utc), 'simulated': e.is_simulated} for e in events],
+                    # аудит адаптера A2: покрытие по каналам, версия адаптера, ограничения и метаданные
+                    # ИМЕННО использованных записей — иначе фильтрация raw по событиям теряет доказательство (стык, п. 2)
+                    'adapter_version': hist_meta.get('adapter_version'),
+                    'coverage_map': hist_meta.get('coverage_map'),
+                    'limitations': hist_meta.get('limitations'),
+                    'archive_access': hist_meta.get('archive_access'),
+                    'source_versions': {sid: {rid: meta for rid, meta in recs.items() if rid in raw_records}
+                                        for sid, recs in (hist_meta.get('source_versions') or {}).items()
+                                        if any(rid in raw_records for rid in recs)},
+                    'event_facts': {rid: f for rid, f in event_facts.items() if rid in raw_records and f}},
         'verification': verification,
         'robustness': {'stable': rob.stable, 'ranking_stable': rob.ranking_stable, 'diff_spread_min': rob.diff_spread_min,
                        'fluence_ratio_spread': rob.fluence_ratio_spread, 'tol_min': rob.tol_min, 'tol_ratio': rob.tol_ratio,
@@ -512,5 +604,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'ranking_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.ranking_by_grid.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
-                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle}, forecasts=fc_lines, orbit=orb, kp_obs=kp_obs,
+                  {'goes': f_goes, 'kp': f_kp, 'tle': f_tle,
+                   'noaa': f_noaa or _empty_fetch('noaa_swpc_3day_forecast', 'в историческом режиме живой прогноз не запрашивается')},
+                  forecasts=fc_lines, orbit=orb, kp_obs=kp_obs,
                   cards_by_window=cards_by_window, verification=verification)

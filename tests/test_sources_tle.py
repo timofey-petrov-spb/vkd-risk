@@ -4,7 +4,7 @@ CelesTrak 19.09.2026 не отвечал — без резервов текущ�
 import json
 import os
 
-from experiments.stub_sources import tle_from_text
+from experiments.legacy.stub_sources import tle_from_text
 from vkd.orbit.trajectory import satellite_from_tle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional, Sequence
 
-from vkd.explain.format import fmt_ru
+from vkd.explain.format import EVENT_KIND_RU, SOURCE_ID_RU, fmt_ru, record_ru, source_ru
 from vkd.types import (Condition, Coverage, EnvironmentSample, EventInterval, FactorValue, Kind, Presence,
                        WindowAssessment)
 
@@ -37,26 +37,8 @@ SOURCE_RU = {
                                    'спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md)',
     'imo_calendar': 'календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR',
 }
-# Имена источников по-русски: на оперативном уровне не должно быть идентификаторов кода
-# (О5). Дублируется в app/ui.py — vkd из app не импортируется и наоборот.
-SOURCE_ID_RU = {
-    'nasa_donki_notification': 'уведомление NASA DONKI',
-    'nasa_donki_sep_card': 'карточка протонного события NASA DONKI',
-    'nasa_donki_wsa_enlil': 'прогон модели WSA-ENLIL (NASA DONKI)',
-    'nasa_donki_gst': 'карточка геомагнитной бури NASA DONKI',
-    'noaa_swpc_goes': 'GOES ≥10 МэВ (NOAA SWPC)',
-    'noaa_ngdc_3day_forecast': 'трёхсуточный прогноз NOAA SWPC',
-    'noaa_ngdc_daypre': 'суточный прогноз протонного события NOAA SWPC',
-    'gfz_kp': 'Kp (GFZ)',
-    'gfz_kp_archive': 'Kp, окончательный ряд GFZ',
-    'scenario': 'сценарий «что если»',
-}
 NOTE_LIMIT = 160          # заметку источника не режем по символам: либо целиком, либо по границе слова
 HOURS_PER_YEAR = 8766.0
-
-
-def source_ru(source_id: str) -> str:
-    return SOURCE_ID_RU.get(source_id, source_id)
 
 
 def short_note(note: str, limit: int = NOTE_LIMIT) -> str:
@@ -126,11 +108,14 @@ _COND_IMPACT = {
 }
 _COND_LIMITS = {
     'SEP': ('Уверенность: конец события не объявляется — принятая длительность действия задана настройкой '
-            'sep_valid_hours, поэтому пересечение с окном условно. Уровень S — из текста записи, если он там есть.'),
+            'sep_valid_hours, поэтому пересечение с окном условно. Уведомление DONKI сообщает ПОРОГ («поток > 10 pfu»), '
+            'а не измеренное значение: уровень S здесь — нижняя граница, если в записи нет измеренного потока. '
+            'Каналы > 10 МэВ и > 100 МэВ различны; шкала S определена по каналу ≥10 МэВ.'),
     'GST': ('Уверенность: конец действия записи без объявленного конца — принятая длительность, настройка '
-            'event_valid_hours. Kp измеряется по 3-часовым интервалам; уровень уведомления — из тела сообщения; прогноз '
-            'WSA-ENLIL имеет типичный разброс времени прихода порядка ±6–12 ч (оценка CCMC, не наша), «Kp до N» — '
-            'оценка kp_90 (верхняя при южном поле — kp_180); прогноз NOAA — по 3-часовым ячейкам выпуска. Наблюдение '
+            'event_valid_hours. Kp измеряется по 3-часовым интервалам; уровень уведомления о буре — наблюдённый Kp '
+            'из тела сообщения; у прогноза прихода выброса «Kp до N» — граница ОПУБЛИКОВАННОГО в уведомлении диапазона '
+            'максимума Kp (не поле прогона модели из поздней карточки), а объявленная неопределённость времени прихода '
+            'не является длительностью бури; прогноз NOAA — по 3-часовым ячейкам выпуска. Наблюдение '
             'сейчас распространено на окно как условие проверки объявленно, не молча.'),
     'GOES': ('Уверенность: последнее наблюдение GOES с давностью; на будущие участки окна не распространяется; '
              'перенос на станцию — через обрезание, см. фактор доступности.'),
@@ -166,8 +151,8 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
             parts.append('значение задано пользователем в сценарии «что если», не наблюдение (запись %s)' % s.raw_record_id)
         elif s is not None:
             pub = s.published_utc.strftime('%Y-%m-%d %H:%MZ') if s.published_utc else 'время публикации неизвестно'
-            parts.append('%s, запись %s, момент %s, публикация %s, получено %s, %s' % (
-                source_ru(s.source_id), s.raw_record_id, s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
+            parts.append('%s, %s, момент %s, публикация %s, получено %s, %s' % (
+                source_ru(s.source_id), record_ru(s.raw_record_id), s.t_utc.strftime('%Y-%m-%d %H:%MZ'), pub,
                 s.fetched_utc.strftime('%Y-%m-%d %H:%MZ'), QUALITY_RU.get(s.quality, s.quality)))
         elif rid in traj_ids or rid == 'trajectory':
             parts.append('%s (запись %s)' % (_traj_line(meta), rid))
@@ -176,7 +161,7 @@ def _source_line(f: FactorValue, samples: dict[str, EnvironmentSample], meta, tr
         elif rid in SOURCE_RU:
             parts.append(SOURCE_RU[rid])
         else:
-            parts.append('запись %s' % rid)
+            parts.append(record_ru(rid))
     if parts:
         return '; '.join(dict.fromkeys(parts))
     # записи нет: подпись по происхождению, а не «собственный расчёт» для наблюдения
@@ -273,14 +258,14 @@ def _condition_card(c: Condition, a: WindowAssessment, period: str, prefix: str,
             pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение%s'
                         % (e.event_id, ('; ' + short_note(e.note)) if e.note else ''))
         elif e is not None:
-            pubs.append('%s %s (%s%s)' % (
-                e.event_id, 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
-                source_ru(e.source_id), ('; ' + short_note(e.note)) if e.note else ''))
+            pubs.append('%s, %s%s' % (
+                record_ru(e.event_id), 'опубликовано ' + e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'без времени публикации',
+                ('; ' + short_note(e.note)) if e.note else ''))
         elif s is not None and s.source_id == 'scenario':
             pubs.append('%s: значение задано пользователем в сценарии «что если», не наблюдение' % s.raw_record_id)
         elif s is not None:
             pubs.append('%s, момент %s, публикация %s, получено %s' % (
-                s.raw_record_id, s.t_utc.strftime('%d.%m %H:%MZ'),
+                record_ru(s.raw_record_id), s.t_utc.strftime('%d.%m %H:%MZ'),
                 s.published_utc.strftime('%d.%m %H:%MZ') if s.published_utc else 'в реальном времени (NOAA/GFZ)',
                 s.fetched_utc.strftime('%d.%m %H:%MZ')))
     if pubs:

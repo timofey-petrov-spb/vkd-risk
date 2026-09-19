@@ -13,6 +13,12 @@ IGRF) это смещение воспроизводит; L и экватори�
 помечается статусом inconsistent_BB0, не обрезается. Это ОБЪЯВЛЕННОЕ приближение
 до трассировки силовых линий (будущая работа A3); статус точек — approximation.
 Коэффициенты — из тех же файлов IGRF, что использует A3 (data/orbit/*.shc).
+
+R11, разбор Codex 19.09: широта и высота A3 ГЕОДЕЗИЧЕСКИЕ, поэтому вектор положения
+строится точным переводом WGS84 (lat, lon, h) → ECEF, а не сферической формулой
+r = R_E + h (ошибка положения до ~21 км у полюсов). Вертикальная жёсткость обрезания
+cutoff_GV в точке остаётся методом A3 (центральный наклонённый диполь) и здесь НЕ
+пересчитывается: методы разных величин подписаны раздельно в сводке происхождения.
 """
 from __future__ import annotations
 
@@ -27,7 +33,27 @@ import ppigrf
 from vkd.types import MagMethod, TrajectoryPoint
 
 R_E_KM = 6371.2                      # опорный радиус IGRF
+# WGS84 (NIMA TR8350.2, 3-е изд., поправка 1, таблица 3.1): большая полуось и сжатие.
+# A3 отдаёт ГЕОДЕЗИЧЕСКИЕ широту и высоту (skyfield wgs84.geographic_position_of),
+# поэтому сферическая формула r = R + h здесь даёт ошибку положения до ~21 км.
+WGS84_A_KM = 6378.137
+WGS84_F = 1.0 / 298.257223563
+WGS84_E2 = 2.0 * WGS84_F - WGS84_F * WGS84_F
 _EPOCH0 = datetime(1970, 1, 1)
+
+
+def geodetic_to_ecef_km(lat_deg: float, lon_deg: float, alt_km: float) -> np.ndarray:
+    """WGS84 (геодезическая широта, долгота, высота над эллипсоидом) → ECEF, км.
+
+    N = a / sqrt(1 − e²·sin²φ);  X = (N+h)·cosφ·cosλ;  Y = (N+h)·cosφ·sinλ;
+    Z = (N·(1−e²)+h)·sinφ. Источник формул и констант — NIMA TR8350.2, раздел 4.
+    """
+    la, lo = math.radians(lat_deg), math.radians(lon_deg)
+    sin_la, cos_la = math.sin(la), math.cos(la)
+    N = WGS84_A_KM / math.sqrt(1.0 - WGS84_E2 * sin_la * sin_la)
+    return np.array([(N + alt_km) * cos_la * math.cos(lo),
+                     (N + alt_km) * cos_la * math.sin(lo),
+                     (N * (1.0 - WGS84_E2) + alt_km) * sin_la])
 
 
 @lru_cache(maxsize=4)
@@ -68,9 +94,9 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
     axis, B_eq, off = eccentric_dipole(coeff_path, when)
     out, n_incons, n_nomodel = [], 0, 0
     for p in points:
-        la, lo = math.radians(p.lat_deg), math.radians(p.lon_deg)
-        r_re = (R_E_KM + p.alt_km) / R_E_KM
-        pos = r_re * np.array([math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)]) - off
+        # R11 (разбор Codex): широта и высота A3 геодезические, поэтому вектор положения
+        # строится точным переводом WGS84 → ECEF, а не сферической формулой r = R_E + h
+        pos = geodetic_to_ecef_km(p.lat_deg, p.lon_deg, p.alt_km) / R_E_KM - off
         rr = float(np.linalg.norm(pos))
         s = float(np.dot(pos / rr, axis))
         cos2 = 1.0 - s * s
@@ -87,5 +113,11 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
     return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(),
                  'offset_km': [float(x) * R_E_KM for x in off], 'B_eq_nT': B_eq, 'n': len(points),
                  'n_inconsistent_BB0': n_incons, 'n_outside_model': n_nomodel,
+                 'position_frame': 'WGS84 geodetic (lat, lon, h) → ECEF, NIMA TR8350.2; a = %.3f км, 1/f = %.9f'
+                                   % (WGS84_A_KM, 1.0 / WGS84_F),
+                 'L_B0_method': 'эксцентричный диполь (Fraser-Smith 1987) по квадрупольным членам IGRF; B — полный IGRF точки (A3)',
+                 'cutoff_GV_method': 'вертикальная жёсткость обрезания остаётся от A3 (центральный наклонённый диполь) '
+                                     'и НЕ пересчитана эксцентричным диполем: это отдельная модель, подписана раздельно (R11)',
                  'note': 'L и B0 от смещённого центра диполя (Fraser-Smith 1987), B — полный IGRF точки (A3); '
-                         'приближение до трассировки силовых линий; B/B0 < 1 помечается, не обрезается'}
+                         'приближение до трассировки силовых линий; B/B0 < 1 помечается, не обрезается; '
+                         'жёсткость обрезания в точке — метод A3, не этот модуль'}

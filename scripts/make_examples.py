@@ -25,9 +25,11 @@ sys.path.insert(0, _ROOT)
 
 from app.compute import ALGO_VERSION, run                 # noqa: E402
 from app.export import _git_sha, build_zip                # noqa: E402
-from experiments.stub_history import gfz_archive_kp_samples, sep_events   # noqa: E402
-from experiments.stub_sources import fetch_none                            # noqa: E402
+from app.compute import GOES_CHANNEL                      # noqa: E402
 from vkd.config import settings_path                      # noqa: E402
+from vkd.history import history_bundle                    # noqa: E402
+from vkd.integration.replay_live import fetch_none        # noqa: E402
+from vkd.types import Request                             # noqa: E402
 from vkd.windows.compare import Thresholds                # noqa: E402
 from vkd.windows.scenario import Scenario                 # noqa: E402
 
@@ -55,13 +57,19 @@ T5_EVENT = 'gannon_2024-05-10_cutoff12Z'
 T5_CONTROL = ('quiet_2024-05-03_12Z', 'end_2024-06-25_12Z')
 
 
-def fact_after(t0: datetime, horizon_min: int, kp_check: float) -> str:
-    """Факт после отсечки по архиву — только для проверки (Т4): максимум окончательного Kp GFZ на
-    горизонте и протонные события DONKI по наблюдательным приборам с началом на горизонте."""
-    end = t0 + timedelta(minutes=horizon_min)
-    ks, _ = gfz_archive_kp_samples()
-    in_h = [s for s in ks if s.valid_from_utc < end and s.valid_to_utc > t0]
-    seps = [e for e in sep_events()[0] if e.kind.value == 'observation' and e.start_utc and t0 <= e.start_utc < end]
+def fact_after(t0: datetime, duration_min: int, search_min: int, kp_check: float, pfu_warn: float) -> str:
+    """Факт после отсечки по архиву — только для проверки (Т4).
+
+    Берётся ТОТ ЖЕ поставщик, что у приложения (vkd.history в режиме разбора):
+    окончательный ряд Kp GFZ и численные наблюдения GOES ≥10 МэВ (NASA iSWA).
+    Это измеренные величины, а не пороговые сообщения; в расчёт они не входят.
+    """
+    end = t0 + timedelta(minutes=duration_min + search_min)
+    samples, events, _ = history_bundle(Request('history_review', t0, int(duration_min), int(search_min), None))
+    in_h = [s for s in samples if s.channel_id == 'kp' and s.source_id == 'gfz_kp_archive'
+            and s.valid_from_utc and s.valid_to_utc and s.valid_from_utc < end and s.valid_to_utc > t0]
+    goes = [s for s in samples if s.channel_id == GOES_CHANNEL and s.value is not None and t0 <= s.t_utc < end]
+    seps = [e for e in events if e.kind_of_event == 'SEP' and e.start_utc and t0 <= e.start_utc < end]
     if not in_h:
         return 'ряда Kp GFZ за период нет'
     mx = max(in_h, key=lambda s: s.value)
@@ -72,9 +80,17 @@ def fact_after(t0: datetime, horizon_min: int, kp_check: float) -> str:
         kp_txt += ', Kp ≥ %g с %s UTC' % (kp_check, min(above, key=lambda s: s.valid_from_utc).valid_from_utc.strftime('%d.%m %H:%M'))
     else:
         kp_txt += ', бури Kp ≥ %g не было' % kp_check
-    sep_txt = ('протонных событий: %d (первое %s UTC)' % (len(seps), min(e.start_utc for e in seps).strftime('%d.%m %H:%M'))
-               if seps else 'протонных событий не было')
-    return kp_txt + '; ' + sep_txt
+    if goes:
+        g = max(goes, key=lambda s: s.value)
+        over = [s for s in goes if s.value >= pfu_warn]
+        goes_txt = 'поток GOES ≥10 МэВ макс. %.6g pfu (%s UTC)' % (g.value, g.t_utc.strftime('%d.%m %H:%M'))
+        goes_txt += (', ≥%g pfu с %s UTC' % (pfu_warn, min(over, key=lambda s: s.t_utc).t_utc.strftime('%d.%m %H:%M'))
+                     if over else ', порога %g pfu не достигал' % pfu_warn)
+    else:
+        goes_txt = 'наблюдений GOES на горизонте в архиве нет'
+    sep_txt = ('уведомлений о протонном событии: %d (первое %s UTC)' % (len(seps), min(e.start_utc for e in seps).strftime('%d.%m %H:%M'))
+               if seps else 'уведомлений о протонном событии не было')
+    return kp_txt + '; ' + goes_txt + '; ' + sep_txt
 
 
 def short_conditions(S: dict) -> str:
@@ -106,11 +122,11 @@ def main():
         io.open(os.path.join(OUT, name + '.json'), 'w', encoding='utf-8').write(json.dumps({**r.S, 'git_commit': sha}, ensure_ascii=False, indent=1, default=str))
         open(os.path.join(OUT, name + '.zip'), 'wb').write(build_zip(r.S, r.raw_records))
         rec = r.S['recommendation']
-        n_kp_excl = sum(1 for x in r.excluded if x.startswith('gfz_kp_archive#') or x.startswith('donki_gst#'))
+        n_kp_excl = sum(1 for x in r.excluded if x.startswith('gfz_kp_archive'))
         index.append({'name': name, 'mode': r.S['mode'], 'mode_id': mode, 't0_utc': t0.isoformat(), 'verdict': rec['verdict'],
                       'rule': rec['rule'], 'conditions': short_conditions(r.S),
                       'excluded_by_cutoff': len(r.excluded), 'excluded_kp': n_kp_excl, 'events_used': len(r.events),
-                      'fact': fact_after(t0, search + dur, th.kp_check) if mode != 'live' else '—',
+                      'fact': fact_after(t0, dur, search, th.kp_check, th.goes_p10_warning_pfu) if mode != 'live' else '—',
                       'is_simulated': r.S['is_simulated']})
         print('%-30s %-22s вердикт %-15s исключено %3d событий %2d | %s' % (name, r.S['mode'], rec['verdict'], len(r.excluded), len(r.events),
                                                                               index[-1]['conditions'][:90]))
@@ -136,8 +152,8 @@ def main():
         pair.append('- **Контроль** — `%s`: отсечка %s, вердикт `%s` (%s). Условия: %s. Факт после отсечки: %s.'
                     % (c, x['t0_utc'][:16].replace('T', ' '), x['verdict'], x['rule'], x['conditions'], x['fact']))
     pair.append('')
-    pair.append('Строгий режим использует только записи, опубликованные до отсечки; факт взят из окончательного ряда Kp GFZ и карточек SEP DONKI '
-                'после события и ни в один расчёт не входит.' + t5)
+    pair.append('Строгий режим использует только записи, опубликованные до отсечки; факт взят из окончательного ряда Kp GFZ '
+                'и численного архива наблюдений GOES ≥10 МэВ (NASA iSWA) после события и ни в один расчёт не входит.' + t5)
     head = ['# Сохранённые примеры расчётов', '',
             'Созданы `scripts/make_examples.py` тем же конвейером, что и интерфейс (`app.compute.run`); %s UTC; версия алгоритма `%s`; '
             'коммит кода `%s`; настройки `%s` (kp_check = %g, goes_p10_warning_pfu = %g). Каждый пример: `<имя>.json` — снимок; '
@@ -157,7 +173,7 @@ def main():
     notes = ['', '## Что означают столбцы', '',
              '- «условия по окнам» — заголовки условий проверки из панели вердикта (полный текст с идентификаторами записей — в `cards.json` и `factors.json` архива);',
              '- «исключено отсечкой» — записи, отброшенные строгим отбором по времени публикации (`manifest.json` → `excluded_by_cutoff`, каждая с причиной); '
-             'в скобках — интервалы Kp окончательного ряда GFZ и карточек GST, у которых нет времени публикации по интервалам (только разбор после факта);',
+             'в скобках — записи окончательного ряда Kp GFZ, у которых нет собственного времени публикации по интервалам (только разбор после факта);',
              '- «факт после отсечки» — из архива после события, для проверки прогноза (Т4/Т5); в расчёт не входит;',
              '- «Текущая обстановка» — живые источники на момент генерации; их сырые записи (GOES, Kp, TLE с адресом и временем получения) лежат в `raw/`, '
              'и повтор по ZIP их использует вместо живых запросов.', '']

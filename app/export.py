@@ -204,8 +204,14 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             'source_versions': S['sources'], 'raw_record_ids': sorted(raw_records),
             'effective_config': S.get('effective_config') or {'thresholds': S['request']['thresholds']},
             'excluded_by_cutoff': S.get('history', {}).get('excluded_by_cutoff', []),
+            'excluded_by_archive': S.get('history', {}).get('excluded_by_archive', []),
             'events_used': S.get('history', {}).get('events_used', []),
             'catalog_coverage': S.get('history', {}).get('catalog_coverage'),
+            # аудит адаптера истории (A2) целиком: покрытие по каналам, версия адаптера,
+            # ограничения и метаданные использованных записей — не только список event_ids
+            'history_audit': {k: v for k, v in (S.get('history') or {}).items()
+                              if k in ('adapter_version', 'coverage_map', 'limitations', 'archive_access',
+                                       'source_versions', 'event_facts', 'provider')},
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
         }))
         for rid, rec in raw_records.items():

@@ -32,7 +32,7 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
 
 from app.compute import ALGO_VERSION, run                        # noqa: E402
-from experiments.stub_sources import fetch_none, from_records    # noqa: E402
+from vkd.integration.replay_live import fetch_none, from_saved_records    # noqa: E402
 from vkd.windows.compare import Thresholds                       # noqa: E402
 from vkd.windows.scenario import Scenario                        # noqa: E402
 
@@ -60,19 +60,14 @@ def load_snapshot(path: str) -> dict:
 
 
 def saved_sources(S: dict, now: datetime) -> tuple | None:
-    """Кортеж источников текущего режима из сырых записей архива; None, если записей нет."""
+    """Кортеж источников текущего режима из сырых записей архива; None, если записей нет.
+
+    Записи A4 хранят точные байты ответа: повтор разбирает их тем же разборщиком,
+    что и живой запрос (vkd.integration.replay_live)."""
     raw = S.get('raw') or {}
-    goes = next((v for k, v in raw.items() if k.startswith('goes_p10_')), None)
-    kp = next((v for k, v in raw.items() if k.startswith('gfz_kp_')), None)
     tle = raw.get('iss.tle') or {}
     tle_text = tle.get('text') or (S.get('trajectory_meta') or {}).get('tle_text')
-    if not tle_text or goes is None:
-        return None
-    meta = S.get('trajectory_meta') or {}
-    prov = (raw.get('orbit_provenance') or {}).get('records') or {}
-    tle_url = next((r.get('url') for r in prov.values() if isinstance(r, dict) and r.get('source_id') == 'celestrak_gp'), None)
-    tle_rec = {'fetched_utc': meta.get('fetched_utc'), 'fetch': tle.get('fetch'), 'url': tle_url}
-    return from_records(goes, kp, tle_text, now, tle_rec)
+    return from_saved_records(raw, now, tle_text=tle_text, tle_status=tle.get('fetch'))
 
 
 def code_state(commit: str | None) -> tuple[str, bool]:
