@@ -2268,13 +2268,27 @@ def test_stroka_zadachi_stoit_v_glavnoy_oblasti(mode):
     assert 'режим:' in caps and 'Выход на' in caps, caps[:300]
 
 
-def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
+def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo(monkeypatch):
     """Договор раздела 1a: ключа `scan` в снимке нет — экран показывает прежний разбор окон и
-    честно говорит, что перебор не выполнялся. Выдуманных чисел на месте рекомендации нет."""
+    честно говорит, что перебор не выполнялся. Выдуманных чисел на месте рекомендации нет.
+
+    После слияния движка перебор в расчёте ЕСТЬ, и снимок без ключа приходится собирать нарочно:
+    иначе эта ветка экрана перестала бы проверяться вовсе. Она нужна — старые сохранённые примеры
+    и любой расчёт, где перебор не сделан, приходят без ключа.
+    """
+    import app.compute as compute
     from app.ui import scan_of
     assert scan_of({}) is None
     assert scan_of({'scan': None}) is None
     assert scan_of({'scan': {'candidates': []}}) is None, 'пустой перебор договором не допускается'
+    real_run = compute.run
+
+    def run_without_scan(*a, **kw):
+        r = real_run(*a, **kw)
+        r.S.pop('scan', None)
+        return r
+
+    monkeypatch.setattr(compute, 'run', run_without_scan)
     at = run_app(MODES[1])
     assert not at.exception, at.exception
     body = texts(at)
@@ -2282,6 +2296,7 @@ def test_bez_perebora_ekran_govorit_chto_perebora_ne_bylo():
     assert 'Перебор начал не выполнялся' in body, body[:400]
     assert 'Ленты нет: перебор начал не выполнялся' in body, body[:400]
     assert any('class="verdict' in m.value for m in at.markdown), 'вердикт по окнам обязан остаться'
+    assert 'Выходить' not in body.split('Разобрать конкретные окна')[0], 'рекомендация без перебора выдумана'
 
 
 _NOTSET = object()

@@ -680,6 +680,13 @@ _PROBE_TAIL_RE = re.compile(r'[;,]?\s*проверка адресов:.*$', re.S
 _PROBE_FAIL_RE = re.compile(r'(?:%s|timeout|time-out)' % _NET_ALT, re.I)
 # обороты слоёв программы, которым на оперативном уровне нужен русский (U2)
 PHRASE_RU = [('интеграл по dt', 'интеграл по времени'), ('Table J-6', 'табл. J-6'), ('Rev.1', 'ред. 1'),
+             # «Ранжирование» — слово профессионального уровня (R4-18): на оперативном экране
+             # оно ничего не объясняет. Движок перебора пишет им своё «почему», и перевод идёт
+             # здесь, там же, где переводятся остальные слова слоёв.
+             ('все ранжированные начала', 'все отобранные правилом начала'),
+             ('ранжированные начала', 'отобранные правилом начала'),
+             ('ранжированных начал', 'отобранных правилом начал'),
+             ('ранжированное начало', 'отобранное правилом начало'),
              # «настройка config/settings.toml» стоит в скобке рядом с порогом различимости окон по
              # линии метеороидов: имя файла зрителю ничего не говорит, а происхождение числа — говорит
              ('настройка config/settings.toml', 'порог задан в настройках сервиса'),
@@ -3066,8 +3073,9 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
     why = scan.get('why')
     if why:
         # Числа «почему» пишет движок — и при промежутке, и при споре величин он уже говорит
-        # словами промежутка. Свой текст поверх не сочиняем.
-        lines.append('<div class="why">%s</div>' % esc(sentence_ru(screen_text(why))))
+        # словами промежутка. Свой текст поверх не сочиняем, но переводим слова слоёв так же,
+        # как переводятся все готовые строки экрана: на оперативном уровне жаргона быть не должно.
+        lines.append('<div class="why">%s</div>' % esc(sentence_ru(screen_text(status_ru(why, pro)))))
     lines.append('<div class="searched">%s</div>' % esc(screen_text(scan_searched_ru(scan))))
     if kind == 'none':
         # Отказ — только здесь. Ни промежуток равнозначных начал, ни условия у всех начал
@@ -3080,7 +3088,8 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
                      'числа обеих сторон стоят строкой выше.</div>')
     scope = scan.get('scope')
     if scope:
-        lines.append('<div class="scope"><b>Область вывода:</b> %s</div>' % esc(sentence_ru(screen_text(scope))))
+        lines.append('<div class="scope"><b>Область вывода:</b> %s</div>'
+                     % esc(sentence_ru(screen_text(status_ru(scope, pro)))))
     # Условия берутся по ВСЕЙ лучшей группе: ответ-промежуток называет несколько начал, и условие
     # у любого из них относится к ответу целиком, а не к одному кандидату.
     _cands_all = scan.get('candidates') or []
@@ -3117,8 +3126,8 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
     tol = scan.get('tolerance_note')
     # Правило и допуск приходят из движка строчными — здесь они становятся двумя предложениями,
     # а не одним слипшимся: «…хотя бы по одной. допуск равнозначности…» читается как обрыв.
-    tail = ' '.join(sentence_ru(screen_text(x))[0].upper() + sentence_ru(screen_text(x))[1:]
-                    for x in (rule, tol) if x and str(x).strip())
+    _s = lambda x: sentence_ru(screen_text(status_ru(x, pro)))
+    tail = ' '.join(_s(x)[0].upper() + _s(x)[1:] for x in (rule, tol) if x and str(x).strip())
     if tail:
         lines.append('<div class="policy">%s</div>' % esc(tail))
     lines.append('</div>')
