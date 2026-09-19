@@ -9,7 +9,14 @@
   * над сырыми записями стоит подпись «на языке источника» (U3);
   * правая ось GOES размечена своими метками, степени печатаются надстрочными (U4);
   * на оперативном уровне нет идентификаторов записей в таблице событий (U5);
-  * «исключён», «отказ», стресс-сценарий и три окна считаются без исключений.
+  * «исключён», «отказ», стресс-сценарий и три окна считаются без исключений;
+  * S1: «условие поставлено» печатается только там, где условия были; дроби с запятой;
+  * S2: каждый пресет выставляет режим, дату, час и окна и считается без исключений;
+  * S3: вкладка «Методика» есть, формулы поднимаются, кириллицы внутри формул нет;
+  * S4: на экране нет эмодзи и градиентных заливок;
+  * S5: приборная полоса в две строки, давность печатается только в ней;
+  * S6: на главном экране не больше двух графиков, панель инструментов Plotly скрыта, легенда ленты ≤ 4 строк;
+  * S8: новые ключи снимка читаются через .get и их отсутствие экран не роняет.
 """
 from __future__ import annotations
 
@@ -21,8 +28,9 @@ from types import SimpleNamespace
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from app.ui import dedup_clauses, fmt, frac_ru, spread_offsets, status_ru, sup
-from app.viz import GOES_TICKVALS, timeline, window_bars
+from app.ui import (METHOD_BLOCKS, age_ru, dedup_clauses, dt_ru, fmt, formula_ref, frac_ru, nbsp_thousands, panel,
+                    spread_offsets, status_ru, sup, verification_ru)
+from app.viz import GOES_TICKVALS, PLOTLY_CONFIG, timeline
 
 APP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app', 'main.py')
 TIMEOUT = 300
@@ -50,13 +58,18 @@ def texts(at: AppTest, drop_urls: bool = False) -> str:
 
 
 def source_rows(at: AppTest) -> list[dict]:
-    """Строки таблицы источников вкладки «Данные и выгрузка»."""
+    """Строки таблицы состояния источников вкладки «Данные» (не реестра и не таблицы порогов)."""
     for d in at.dataframe:
         rows = d.value
         rows = rows.to_dict('records') if hasattr(rows, 'to_dict') else list(rows)
-        if rows and 'источник' in rows[0]:
+        if rows and 'источник' in rows[0] and 'статус' in rows[0]:
             return rows
     return []
+
+
+def main_charts(at: AppTest) -> int:
+    """Сколько графиков на главном экране: всего минус те, что лежат во вкладках."""
+    return len(at.get('plotly_chart')) - sum(len(t.get('plotly_chart')) for t in at.tabs)
 
 
 # ----------------------------------------------------------------- оформление чисел (U4)
@@ -100,7 +113,8 @@ def test_dedup_clauses_povtor_odin_raz():
     ('отбор по времени публикации (experiments.stub_history)', 'отбор по времени публикации', 'experiments'),
     ('прил. А; файл data/ost1044_belts/A_2_1.csv, sha256 59e573afafa8…', 'прил. А', 'sha256'),
     ('разбор: Kp из архив GFZ, запись gfz_kp_archive#2024-05-10T09:00Z', 'Kp из архива GFZ', 'gfz_kp_archive'),
-    ('выпуск 202405100030three_day_forecast от 2024-05-10 00:30Z', 'выпуск от 2024-05-10', 'forecast'),
+    # S7: дата источника печатается в виде экрана — «дд.мм.гггг чч:мм», а не как в ответе службы
+    ('выпуск 202405100030three_day_forecast от 2024-05-10 00:30Z', 'выпуск от 10.05.2024 00:30', 'forecast'),
     ('ответ не разбирается (JSONDecodeError: нет значения)', 'ответ источника не разобран', 'JSONDecodeError'),
 ])
 def test_status_ru_operativnyy(raw, must_have, must_not):
@@ -129,21 +143,26 @@ def test_timeline_metki_pravoy_osi_goes():
     assert list(goes_axis[0]['ticktext']) == ['0,1', '1', '10', '100', '1000']
 
 
-def _fake_assessment(start, saa, flu, mm):
-    f = [SimpleNamespace(name='минут в аномалии', value=saa, unit='мин'),
-         SimpleNamespace(name='флюенс захваченных протонов ≥30 МэВ', value=flu, unit='част./см²'),
-         SimpleNamespace(name='ожидаемое число попаданий, пластина 1 м²', value=mm, unit='шт')]
-    mech = SimpleNamespace(mechanism_id='spaceweather', factors=f, needs_check=False)
-    return SimpleNamespace(window=SimpleNamespace(start_utc=start, duration_min=360), mechanisms=[mech])
-
-
-def test_window_bars_podpis_meteoroidov_bez_latinicy():
+def test_timeline_zagolovok_i_legenda_ne_dlinnee_chetyryoh():
+    """S6: у ленты есть заголовок «что и откуда», подписи осей с единицами, легенда не длиннее четырёх строк."""
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
-    fig = window_bars([_fake_assessment(t0, 77.0, 1.27e6, 5.64e-7),
-                       _fake_assessment(t0 + timedelta(hours=4), 91.0, 2.2e6, 6.1e-7)])
-    ann = [a.text for a in fig.layout.annotations]
-    assert any('метеороиды: 5,64·10⁻⁷ попаданий на 1 м²' == t for t in ann), ann
-    assert not any(re.search(r'\bN\s*=', t) for t in ann)
+    obs = [(t0 - timedelta(hours=h), 10.0 ** (h % 3)) for h in range(6, 0, -1)]
+    kp = [(t0 - timedelta(hours=h + 3), t0 - timedelta(hours=h), 3.0) for h in range(6, 0, -3)]
+    ev = [SimpleNamespace(kind_of_event='SEP', event_id='x1', note='протонное событие', is_simulated=False,
+                          start_utc=t0 + timedelta(hours=1), valid_from_utc=None)]
+    fig = timeline([], [], 24000.0, t0, 360, None, None, ev, [], 'live', kp_obs=kp, goes_obs=obs, search_min=360)
+    assert fig.layout.title.text and 'наш расчёт' in fig.layout.title.text
+    legend = [tr.name for tr in fig.data if tr.showlegend is not False]
+    assert len(legend) <= 4, legend
+    axes = fig.layout.to_plotly_json()
+    titles = [(v.get('title') or {}).get('text') for k, v in axes.items() if k.startswith(('xaxis', 'yaxis'))]
+    assert 'время, UTC' in titles, titles
+    assert '|B|, нТл' in titles, titles
+
+
+def test_plotly_panel_instrumentov_skryta():
+    """S6: панель инструментов Plotly скрыта — на защите она только мешает."""
+    assert PLOTLY_CONFIG['displayModeBar'] is False
 
 
 # ----------------------------------------------------------------- экран: три режима × два уровня
@@ -265,3 +284,301 @@ def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
     assert any('одинаков' in w for w in warn), warn
     assert any('считаю по сдвигам' in w for w in warn), warn
     assert any('class="verdict' in m.value for m in at.markdown)
+
+
+# ================================================================= S1: мелкие правки экрана
+def test_verification_ru_bez_usloviy_ne_vryot():
+    """S1: «условие поставлено в 12:00Z» печатается только там, где условия действительно были."""
+    raw = 'условие поставлено в 12:00Z; факт: максимум Kp 2.67, бури Kp ≥ 7 не было'
+    assert verification_ru(raw, False).startswith('условий проверки на отсечку не ставилось; факт:')
+    assert 'условие поставлено' not in verification_ru(raw, False)
+    assert verification_ru(raw, True).startswith('условие поставлено в 12:00Z')
+    assert '2,67' in verification_ru(raw, True)          # дробь приводится к запятой в обоих случаях
+    assert verification_ru('наблюдений Kp нет', False) == 'наблюдений Kp нет'      # чужую сводку не трогаем
+
+
+def test_tihaya_data_ne_govorit_chto_uslovie_stavilos():
+    """S1 на живом экране: тихая дата 25.06.2024 — ни одного условия и ни одной фразы «условие поставлено»."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_quiet').click().run()
+    assert not at.exception, at.exception
+    body = texts(at)
+    assert 'Условий проверки нет' in body
+    assert 'условие поставлено' not in body
+    assert 'условий проверки на отсечку не ставилось' in body
+
+
+def test_chisla_na_ekrane_s_zapyatoy():
+    """S1: на оперативном уровне нет десятичной точки в числе, ни «e+», ни «10^»."""
+    at = run_app(MODES[1])
+    body = re.sub(r'<style>.*?</style>', '', texts(at, drop_urls=True), flags=re.S)     # CSS не текст экрана
+    bad = [m.group(0) for m in re.finditer(r'(?<![\d.A-Za-z])\d+\.\d+(?=\s*(?:[А-Яа-я%·)\],;]|$))', body)]
+    assert not bad, bad
+    assert 'e+' not in body
+    assert '10^' not in body
+
+
+def test_nbsp_thousands_dt_ru_age_ru():
+    """S7: разряды тысяч узким неразрывным пробелом, дата «дд.мм чч:мм», давность в одних единицах."""
+    assert nbsp_thousands(24000.0) == '24 000'
+    assert nbsp_thousands(None) == '—'
+    assert dt_ru(datetime(2024, 5, 10, 12, 0, tzinfo=timezone.utc)) == '10.05 12:00'
+    assert dt_ru(datetime(2024, 5, 10, 12, 0, tzinfo=timezone.utc), with_utc=True) == '10.05 12:00 UTC'
+    assert dt_ru(None) == '—'
+    assert age_ru(92, 60) == 'давность 92 мин (предел 60 мин)'
+    assert age_ru(600) == 'давность 10 ч'
+    assert age_ru(None) == 'давность не определена'
+
+
+# ================================================================= S2: пресеты запроса
+@pytest.mark.parametrize('key, mode_ru, date, hour, search, offsets', [
+    ('gannon', 'Прогноз из прошлого', (2024, 5, 10), 12, 720, [0, 240]),
+    ('quiet', 'Прогноз из прошлого', (2024, 6, 25), 12, 1440, [0, 480]),
+])
+def test_preset_vystavlyaet_zapros(key, mode_ru, date, hour, search, offsets):
+    """S2: одно нажатие выставляет режим, дату, час и окна; экран считается без исключений."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_' + key).click().run()
+    assert not at.exception, at.exception
+    assert not at.error, [e.value for e in at.error]
+    assert at.sidebar.radio('mode').value == mode_ru
+    assert at.sidebar.date_input('hist_date').value == datetime(*date).date()
+    assert at.sidebar.slider('hist_hour').value == hour
+    assert at.sidebar.slider('search').value == search
+    for i, off in enumerate(offsets):
+        assert at.sidebar.slider('w%d' % i).value == off
+    assert any('class="verdict' in m.value for m in at.markdown), 'вердикт должен быть на экране'
+
+
+def test_preset_seychas_vozvrashchaet_v_tekushchiy_rezhim():
+    """S2: пресет «Сейчас» возвращает экран в текущий режим после исторического."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    assert at.sidebar.radio('mode').value == 'Прогноз из прошлого'
+    at.sidebar.button('preset_now').click().run()
+    assert not at.exception, at.exception
+    assert at.sidebar.radio('mode').value == 'Текущая обстановка'
+    assert at.sidebar.slider('search').value == 720
+    assert any('class="verdict' in m.value for m in at.markdown)
+
+
+def test_preset_podpisan_tem_chto_pokazyvaet():
+    """S2: под кнопками — одна строка о том, что этот пресет показывает."""
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.sidebar.button('preset_gannon').click().run()
+    caps = ' '.join(c.value for c in at.sidebar.caption)
+    assert 'Буря Гэннон' in caps
+    assert 'до 10.05 12:00 UTC' in caps
+
+
+# ================================================================= S3: вкладка «Методика»
+def test_vkladka_metodika_tretya_i_s_formulami():
+    """S3: «Методика» стоит третьей, формулы поднимаются AppTest, кириллицы внутри формул нет."""
+    at = run_app(MODES[1])
+    assert not at.exception, at.exception
+    labels = [t.label for t in at.tabs]
+    assert labels[:3] == ['Объяснения', 'Окна и факторы', 'Методика'], labels
+    lat = [x.value for x in at.latex]
+    assert len(lat) >= 9, lat
+    for f in lat:
+        assert not re.search(r'[А-Яа-яёЁ]', f), f
+
+
+def test_metodika_kazhdaya_formula_s_istochnikom_i_ogranicheniem():
+    """S3: у каждой формулы — стандарт с пунктом или таблицей и то, что НЕ учтено."""
+    nos = [b['no'] for b in METHOD_BLOCKS]
+    assert nos == sorted(nos) and len(set(nos)) == len(nos)
+    for b in METHOD_BLOCKS:
+        assert b['source'].strip() and b['limits'].strip() and b['symbols'].strip(), b['no']
+        assert not re.search(r'[А-Яа-яёЁ]', b['latex']), b['no']
+    src = ' '.join(b['source'] for b in METHOD_BLOCKS)
+    for std in ('ОСТ 134-1044-2007', 'ECSS-E-ST-10-04C', 'Fraser-Smith', 'договор команды', 'ГОСТ 25645.215-85'):
+        assert std in src, std
+
+
+def test_kartochki_ssylayutsya_na_formuly_po_nomeram():
+    """S3: карточка объяснения указывает номер формулы; сопоставление — по смыслу текста."""
+    assert formula_ref('флюенс захваченных протонов ≥30 МэВ') == '(1) и (2)'
+    assert formula_ref('минут в аномалии') == '(3)'
+    assert formula_ref('ожидаемое число попаданий метеороидов') == '(5)–(7)'
+    assert formula_ref('окна равнозначны, допуск') == '(8) и (9)'
+    assert formula_ref('что-то постороннее') is None
+    at = run_app(MODES[1])
+    assert 'вкладка «Методика», формул' in texts(at)
+
+
+# ================================================================= S4: монотонный цвет, без эмодзи
+EMOJI = re.compile('[\U0001F300-\U0001FAFF☀-➿️]')
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_bez_emodzi_i_gradientov(mode):
+    """S4: ни эмодзи, ни градиентных заливок — на проекторе они дают грязь."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = '\n'.join([m.value for m in at.markdown] + [c.value for c in at.caption]
+                     + [str(e.label) for e in at.expander])
+    assert not EMOJI.findall(body), EMOJI.findall(body)
+    assert 'linear-gradient' not in body
+
+
+def test_uroven_preduprezhdeniya_slovami():
+    """S4: заголовок карточки начинается словом КРИТИЧНО / ВНИМАНИЕ, а не значком."""
+    at = run_app(MODES[1])
+    labels = [str(e.label) for e in at.expander]
+    assert any(l.startswith(('КРИТИЧНО', 'ВНИМАНИЕ', '—')) for l in labels), labels
+
+
+def test_cvet_oznachaet_proishozhdenie():
+    """S4: на экране объявлено, что цвет означает происхождение, а не «безопасно»."""
+    body = texts(run_app(MODES[1]))
+    assert 'синий — наш расчёт' in body and 'зелёный — наблюдение' in body
+    assert 'янтарный — внешний прогноз' in body
+    assert 'безопас' not in body.lower()
+
+
+# ================================================================= S5: приборная полоса
+def test_panel_dve_stroki():
+    """S5: полоса состояния — строки фиксированной сетки, у ячейки метка, значение и подпись."""
+    html = panel([[('Режим', 'Текущая обстановка', 'живые источники', 'calc')],
+                  [('Kp (GFZ)', '2,33', 'давность 14 мин', 'obs')]])
+    assert html.count('class="prow"') == 2
+    assert html.count('class="cell k-') == 2
+    assert 'class="cl"' in html and 'class="cv"' in html and 'class="cs"' in html
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_davnost_tolko_v_pribornoy_polose(mode):
+    """S5: давность печатается в полосе состояния и в сводке источников, но не в карточках окон."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    strip_html = [m.value for m in at.markdown if 'class="panel"' in m.value]
+    assert strip_html, 'приборная полоса должна быть на экране'
+    assert strip_html[0].count('class="prow"') == 2
+    for card in [m.value for m in at.markdown if 'class="wcard' in m.value]:
+        assert 'давность' not in card, card
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_polosa_bez_identifikatorov_koda(mode):
+    """S5: на оперативном уровне в полосе нет идентификаторов кода."""
+    at = run_app(mode)
+    strip_html = ' '.join(m.value for m in at.markdown if 'class="panel"' in m.value)
+    for bad in ('experiments.', 'vkd.', 'sha256', 'noaa_swpc_goes', 'gfz_kp', 'None', 'strict'):
+        assert bad not in strip_html, bad
+
+
+# ================================================================= S6: графики
+@pytest.mark.parametrize('mode', MODES)
+def test_ne_bolshe_dvuh_grafikov_na_glavnom_ekrane(mode):
+    """S6: на главном экране графиков не больше двух."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    assert main_charts(at) <= 2, main_charts(at)
+
+
+def test_lenta_v_svyortke_na_operativnom_i_razvyornuta_na_professionalnom():
+    """S6 (И6): на оперативном уровне лента убрана в свёртку, на профессиональном — развёрнута."""
+    at_op = run_app(MODES[1], pro=False)
+    assert any('Картина по времени' in str(e.label) for e in at_op.expander), [str(e.label) for e in at_op.expander]
+    at_pro = run_app(MODES[1], pro=True)
+    assert any('Картина по времени' in str(s.value) for s in at_pro.subheader)
+
+
+def test_okna_i_faktory_tablitsa_bez_grafika():
+    """S6: «Окна и факторы» — таблица «как в статье» с группами строк и подписью, без столбцов с двумя осями."""
+    at = run_app(MODES[1])
+    rows = []
+    for d in at.dataframe:
+        vals = d.value
+        vals = vals.to_dict('records') if hasattr(vals, 'to_dict') else list(vals)
+        if vals and 'показатель' in vals[0]:
+            rows = vals
+            break
+    assert rows, 'таблица сравнения окон должна быть на экране'
+    labels = [r['показатель'] for r in rows]
+    assert 'ВЕЛИЧИНЫ' in labels and 'ПОКРЫТИЕ' in labels and 'УСЛОВИЯ' in labels, labels
+    assert 'минут в аномалии, мин' in labels, labels          # единица — в подписи строки
+    assert any('Таблица 1.' in m.value for m in at.markdown)
+
+
+# ================================================================= S8: новые ключи снимка
+def test_novye_klyuchi_snimka_otsutstvuyut_i_ekran_zhivoy():
+    """S8: новых ключей снимка ещё нет — экран читает их через .get и не падает."""
+    at = run_app(MODES[1], pro=True)
+    assert not at.exception, at.exception
+    assert any('class="verdict' in m.value for m in at.markdown)
+
+
+def test_reestr_istochnikov_s_edinitsami_i_licenziey():
+    """S3: во вкладке «Данные» есть реестр: величина, единица, частота, публикация, лицензия."""
+    at = run_app(MODES[1])
+    reg = []
+    for d in at.dataframe:
+        vals = d.value
+        vals = vals.to_dict('records') if hasattr(vals, 'to_dict') else list(vals)
+        if vals and 'лицензия' in vals[0]:
+            reg = vals
+            break
+    assert reg, 'реестр источников должен быть на экране'
+    for col in ('источник', 'величина', 'единица', 'частота', 'публикация', 'лицензия', 'ограничение'):
+        assert col in reg[0], col
+    assert any('CC BY 4.0' in str(r['лицензия']) for r in reg), 'записанная лицензия должна печататься'
+    assert any('не указана' in str(r['лицензия']) for r in reg), 'незаписанная лицензия объявляется, а не додумывается'
+
+
+def _body_bez_metodiki(at: AppTest) -> str:
+    """Весь текст экрана, кроме вкладки «Методика»: в ней символы формул и библиографические
+    ссылки стоят законно, а во всём остальном голых идентификаторов быть не должно."""
+    skip = set()
+    for tab in at.tabs:
+        if tab.label == 'Методика':
+            skip = {id(e) for e in list(tab.get('markdown')) + list(tab.get('caption'))}
+    parts = [e.value for e in at.markdown if id(e) not in skip] \
+        + [e.value for e in at.caption if id(e) not in skip] \
+        + [e.value for e in at.warning] + [e.value for e in at.info] + [str(e.label) for e in at.expander]
+    body = '\n'.join(str(p) for p in parts)
+    body = re.sub(r'<style>.*?</style>', '', body, flags=re.S)         # CSS — не текст экрана
+    body = re.sub(r'\sclass="[^"]*"', '', body)                        # имена классов зритель не видит
+    return re.sub(r'\(https?://[^)]*\)', '()', body)
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_operativnyy_uroven_bez_stub_i_golyh_identifikatorov(mode):
+    """S8: на оперативном уровне нет строки «stub», путей модулей и имён вида имя_поля."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    body = _body_bez_metodiki(at)
+    assert 'stub' not in body.lower(), 'слой заглушек не должен называться на экране'
+    assert '.py' not in body
+    mods = re.findall(r'\b(?:vkd|app|experiments|scripts|tests)\.[a-z_]+', body)
+    assert not mods, mods
+    snake = sorted(set(re.findall(r'(?<![\w/])[a-z][a-z0-9]*_[a-z0-9_]+(?![\w/])', body)))
+    assert not snake, snake
+
+
+def test_screen_text_daty_i_razryady():
+    """S7: готовая строка модуля печатается в виде экрана — дата, дробь и разряды тысяч."""
+    from app.ui import screen_text
+    assert screen_text('событие с 05-09 14:00Z пересекает окно') == 'событие с 09.05 14:00 пересекает окно'
+    assert screen_text('наблюдение 2026-09-19 01:35Z') == 'наблюдение 19.09.2026 01:35'
+    assert screen_text('порог 24000 нТл') == 'порог 24 000 нТл'
+    assert screen_text('разница 1.5 мин') == 'разница 1,5 мин'
+    assert screen_text('архив DONKI 30.04.2024 — 30.06.2024') == 'архив DONKI 30.04.2024 — 30.06.2024'
+
+
+@pytest.mark.parametrize('mode', MODES)
+def test_punkt_4_kartochki_bez_povtora_istochnika(mode):
+    """S1: в пункте 4 карточки одна и та же часть подписи печатается один раз."""
+    at = run_app(mode)
+    assert not at.exception, at.exception
+    fours = [m.value for m in at.markdown if m.value.startswith('**4. Источник')]
+    assert fours, 'карточки объяснений должны быть на экране'
+    for txt in fours:
+        body = txt.partition('**4. Источник и время публикации.** ')[2]
+        parts = [p.strip().rstrip('.').lower() for p in body.split('; ') if p.strip()]
+        assert len(parts) == len(set(parts)), txt

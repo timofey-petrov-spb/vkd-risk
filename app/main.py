@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Экран сервиса «ВКД-Риск» — один путь пользователя (О5): запрос в боковой панели →
-ответ первым (вердикт) → окна-кандидаты карточками → лента времени → вкладки с объяснениями,
-факторами, картой, наблюдениями и прогнозами, данными и выгрузкой.
+"""Экран сервиса «ВКД-Риск» — один путь пользователя (О5): запрос в боковой панели (пресеты, режим,
+когда, окно работ, источники) → приборная полоса состояния → ответ первым (вердикт) → окна-кандидаты
+карточками → лента времени → вкладки: Объяснения, Окна и факторы, Методика, Карта, Наблюдения
+и прогнозы, Данные (и Устойчивость и нормы на профессиональном уровне).
 
 Экран ничего не считает: всё берётся из одного снимка расчёта app.compute.run (Т7, Т8).
+Новые ключи снимка читаются через .get: их отсутствие не должно ронять экран (стык третьего круга).
 Два уровня: «Оперативный» показывает решение и условия, «Профессиональный» — все величины,
 пороги, устойчивость, нормы и происхождение записей. На экране нет идентификаторов кода:
 методы, типы событий, источники и ограничения модулей переводятся словарями app.ui.
+
+Оформление: монотонная академическая система (app/ui.py) — цвет означает происхождение величины,
+градиентов и эмодзи нет; на главном экране не больше двух графиков, панель инструментов Plotly скрыта.
 """
 from __future__ import annotations
 
@@ -22,10 +27,12 @@ from app.compute import ALGO_VERSION, HIST_SRC, ORBIT_SRC, SRC_LAYER, goes_lates
 from app.export import _git_sha, build_zip
 from app.norms import norms_rows, s_level
 from app.obs import forecast_panel, observations_panel
-from app.ui import (COV_RU, CSS, MECH_RU, METHOD_RU, STRICT_RU, coverage_reasons, event_kind_ru, fmt, head, kind_pill,
-                    dedup_clauses, frac_ru, grid_cell_ru, limit_ru, pill, short_reason, source_issues, source_name_ru, source_short,
-                    spread_offsets, status_ru, strip, tle_origin, verdict_panel, window_card, BOOL_RU)
-from app.viz import ground_track, timeline, window_bars
+from app.ui import (BOOL_RU, COLOR_LEGEND, COV_RU, CSS, MECH_RU, METHOD_BLOCKS, METHOD_RU, PRESETS, RULE_POLICY, VERDICT_TITLE, plural_ru,
+                    RULE_THRESHOLDS, SEV_RU, STRICT_RU, age_ru, coverage_reasons, dedup_clauses, dt_ru, event_kind_ru,
+                    fmt, formula_ref, frac_ru, grid_cell_ru, head, kind_pill, limit_ru, nbsp_thousands, panel, pill,
+                    registry_row, short_reason, source_issues, source_name_ru, source_short, spread_offsets, status_ru,
+                    tle_origin, verdict_panel, verification_ru, window_card)
+from app.viz import PLOTLY_CONFIG, ground_track, timeline
 from vkd.config import section as _settings_section
 from vkd.explain.cards import KIND_RU
 from vkd.windows.compare import Thresholds
@@ -33,38 +40,69 @@ from vkd.windows.scenario import Scenario
 
 UI = _settings_section('ui')          # умолчания элементов управления — config/settings.toml (Т7)
 MODE_IDS = {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}
-SEV_ICON = {'critical': '🔴', 'limiting': '🟠', 'info': '○'}
+MODE_SUB = {'live': 'живые источники', 'history_review': 'архив, без отсечки',
+            'history_forecast': 'только публикации до отсечки'}
 ARCHIVE_FROM, ARCHIVE_TO = datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc)
 LOG = logging.getLogger('vkd.app')
 
-st.set_page_config(page_title='ВКД-Риск', page_icon='🛰', layout='wide', initial_sidebar_state='expanded')
+st.set_page_config(page_title='ВКД-Риск', layout='wide', initial_sidebar_state='expanded')
 st.markdown(CSS, unsafe_allow_html=True)
 st.session_state.setdefault('fetch_nonce', 0)     # Т6: обновление данных — сессионное, не st.cache_data.clear()
+
+
+def _apply_preset(p: dict) -> None:
+    """Пресет запроса (И1): выставляет режим, дату, час и окна одним нажатием и ничего не считает.
+    Состояние ползунков меняется ДО их создания в этом же прогоне, поэтому значения применяются сразу."""
+    st.session_state['mode'] = p['mode']
+    if p['date'] is not None:
+        st.session_state['hist_date'] = datetime(*p['date']).date()
+        st.session_state['hist_hour'] = int(p['hour'])
+    st.session_state['duration'] = int(p['duration_min'])
+    st.session_state['search'] = int(p['search_min'])
+    st.session_state['_search_prev'] = int(p['search_min'])       # период задан пресетом, пересчёта сдвигов не нужно
+    st.session_state['n_windows'] = len(p['offsets_min'])
+    for i, off in enumerate(p['offsets_min']):
+        st.session_state['w%d' % i] = int(off)
+    st.session_state['_preset'] = p['key']
+
 
 # ================================================================= боковая панель: запрос
 with st.sidebar:
     st.markdown('### ВКД-Риск')
+    st.markdown('<div class="sect">Пресеты запроса</div>', unsafe_allow_html=True)
+    for _p, _col in zip(PRESETS, st.columns(len(PRESETS))):
+        if _col.button(_p['label'].split(',')[0], key='preset_' + _p['key'], width='stretch', help=_p['label']):
+            _apply_preset(_p)
+    _cur = next((p for p in PRESETS if p['key'] == st.session_state.get('_preset')), None)
+    st.caption(('%s — %s' % (_cur['label'], _cur['shows'])) if _cur else
+               'Одна кнопка выставляет режим, дату, час и окна; расчёт запускается обычным путём.')
     level = st.radio('Уровень интерфейса', ['Оперативный', 'Профессиональный'], index=0, horizontal=True, key='level',
                      help='Оперативный — решение и условия; профессиональный — все величины, пороги, устойчивость, происхождение.')
     pro = level == 'Профессиональный'
-    mode_ru = st.radio('Режим', list(MODE_IDS), index=0, key='mode',
+    # умолчание задаётся только при первом показе: у элемента с сохранённым значением Streamlit
+    # предупреждает и всё равно берёт сохранённое (пресет пишет состояние до создания элементов)
+    _def = lambda key, kw: ({} if key in st.session_state else kw)
+    mode_ru = st.radio('Режим', list(MODE_IDS), key='mode', **_def('mode', {'index': 0}),
                        help='Текущая обстановка — живые источники. Исторический разбор — весь архив мая–июня 2024. '
                             'Прогноз из прошлого — только записи, опубликованные до отсечки.')
     mode = MODE_IDS[mode_ru]
     if mode == 'live':
         t0 = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-        st.caption('Начало периода поиска: **%s UTC** (сейчас)' % t0.strftime('%Y-%m-%d %H:%M'))
+        st.caption('Начало периода поиска: **%s UTC** (сейчас)' % t0.strftime('%d.%m.%Y %H:%M'))
     else:
-        d = st.date_input('Дата (1 мая — 30 июня 2024)', value=datetime(2024, 5, 10).date(), key='hist_date',
+        d = st.date_input('Дата (1 мая — 30 июня 2024)', key='hist_date',
+                          **_def('hist_date', {'value': datetime(2024, 5, 10).date()}),
                           min_value=ARCHIVE_FROM.date(), max_value=datetime(2024, 6, 30).date())
-        hh = st.slider('Час начала периода, UTC', 0, 23, 12, key='hist_hour')
+        hh = st.slider('Час начала периода, UTC', 0, 23, key='hist_hour', **_def('hist_hour', {'value': 12}))
         t0 = datetime(d.year, d.month, d.day, hh, tzinfo=timezone.utc)
         if mode == 'history_forecast':
-            st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%Y-%m-%d %H:%M'))
+            st.caption('Отсечка публикации: **%s UTC** — позже ничего не используется.' % t0.strftime('%d.%m.%Y %H:%M'))
     st.markdown('**Окно работ**')
-    duration_min = st.slider('Длительность ВКД, мин', 60, 480, int(UI.get('duration_min', 360)), step=30, key='duration',
+    duration_min = st.slider('Длительность ВКД, мин', 60, 480, step=30, key='duration',
+                             **_def('duration', {'value': int(UI.get('duration_min', 360))}),
                              help='Постановка: 60…480 мин. Сокращение длительности — изменение плана, не улучшение обстановки.')
-    search_min = st.slider('Период поиска начала ВКД, мин', 60, 1440, max(60, int(UI.get('search_min', 720))), step=60, key='search',
+    search_min = st.slider('Период поиска начала ВКД, мин', 60, 1440, step=60, key='search',
+                           **_def('search', {'value': max(60, int(UI.get('search_min', 720)))}),
                            help='В этом периоде размещаются начала окон-кандидатов; постановка — до 1440 мин (сутки).')
     n_windows = st.radio('Окон для сравнения', [2, 3], horizontal=True, key='n_windows')
     OFF_STEP = 30
@@ -187,7 +225,7 @@ horizon_min = search_min + duration_min
 if mode != 'live' and t0 + timedelta(minutes=horizon_min) > ARCHIVE_TO:
     st.warning('Горизонт до %s UTC выходит за границу архива 30.06.2024 — покрытие обязательной линии за пределами архива '
                'отсутствует, рекомендации не будет. Сократите период поиска или длительность либо выберите более раннюю дату.'
-               % (t0 + timedelta(minutes=horizon_min)).strftime('%d.%m.%Y %H:%M'))
+               % (t0 + timedelta(minutes=horizon_min)).strftime('%d.%m.%Y %H:%M UTC'))
 try:                              # границы постановки проверяются до любого запроса (Т7): сообщение зрителю, расчёта нет
     validate_request(mode, t0, duration_min, search_min, offsets)
 except ValueError as e:
@@ -226,53 +264,87 @@ if sc_delay:
 if plan_change:
     S['request']['plan_change'] = plan_change
 
-# ================================================================= шапка и полоса состояния
-st.markdown(head('ВКД-Риск', 'внешняя обстановка на траектории МКС и выбор окна ВКД · %s · все времена UTC' % mode_ru), unsafe_allow_html=True)
+# ================================================================= шапка и приборная полоса
+st.markdown(head('ВКД-Риск', 'внешняя обстановка на траектории МКС и выбор окна ВКД · %s · времена UTC' % mode_ru), unsafe_allow_html=True)
 src = S['sources']
 tm = S['trajectory_meta']
-orbit_kind = 'crit' if meta is None else ('ok' if tm['strictness'] == 'strict' else 'warn')
-orbit_txt = ('недоступна' if meta is None else '%s%s' % (METHOD_RU.get(meta.method, meta.method),
-                                                       ' · ' + STRICT_RU.get(tm['strictness'], tm['strictness']) if tm['strictness'] != 'strict' else ''))
-items = [('Режим', mode_ru, 'calc' if mode == 'live' else 'fc'), ('Орбита', orbit_txt, orbit_kind)]
-if meta and mode == 'live' and meta.epoch_utc:
-    age_h = src['orbit'].get('age_h')
-    items.append(('TLE', 'эпоха %s · давность %s · %s' % (meta.epoch_utc.strftime('%d.%m %H:%MZ'),
-                                                         ('%.0f ч' % age_h) if age_h is not None else '—', tle_origin(tm.get('tle_fetch_status'))),
-                  'warn' if (age_h is not None and age_h > 24) or src['orbit'].get('from_cache') else 'ok'))
-elif meta and meta.created_utc:
-    items.append(('OEM', 'создан %s · за %.0f ч до начала периода' % (meta.created_utc.strftime('%d.%m %H:%MZ'),
-                                                                     (t0 - meta.created_utc).total_seconds() / 3600), None))
+QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
+horizon_to = t0 + timedelta(minutes=horizon_min)
+# --- строка 1: обстановка. Всё в ней — наш расчёт и запрос, поэтому тон синий.
+orbit_kind = 'cond' if meta is None else ('calc' if tm['strictness'] == 'strict' else 'fc')
+orbit_val = 'недоступна' if meta is None else METHOD_RU.get(meta.method, meta.method)
+orbit_sub = status_ru(tm['status'], pro) if meta is None else '%s · шаг трассы 1 мин, точек %s' % (
+    STRICT_RU.get(tm['strictness'], tm['strictness']), nbsp_thousands(tm['n_points']))
+row1 = [('Время расчёта', dt_ru(now), 'все времена на экране — UTC', 'calc'),
+        ('Режим', mode_ru, MODE_SUB[mode], 'calc'),
+        ('Орбита', orbit_val, orbit_sub, orbit_kind),
+        ('Горизонт', '%s ч от начала периода' % fmt(horizon_min / 60.0),
+         'последнее окно кончается %s' % dt_ru(horizon_to), 'calc')]
+# --- строка 2: источники. Зелёный — наблюдение получено, янтарный — кеш или прогноз, красный — отказ.
+row2 = []
 if mode == 'live':
     g, k = R.goes, R.kp
     g_src, k_src = src['noaa_swpc_goes'], src['gfz_kp']
     if g:
-        items.append(('GOES ≥10 МэВ', '%s pfu · %s · %s%s' % (fmt(float(g.value)), s_level(g.value), g.t_utc.strftime('%H:%MZ'), ' · кеш' if g_src.get('from_cache') else ''),
-                      'crit' if g.value >= th.goes_p10_priority_pfu else 'warn' if (g.value >= th.goes_p10_warning_pfu or g_src.get('from_cache')) else 'ok'))
+        row2.append(('GOES ≥10 МэВ, pfu', fmt(float(g.value)),
+                     '%s · наблюдение %s · %s%s' % (s_level(g.value), dt_ru(g.t_utc, with_date=False),
+                                                    age_ru(g_src.get('age_min'), th.goes_max_age_min),
+                                                    ' · кеш' if g_src.get('from_cache') else ''),
+                     'cond' if g.value >= th.goes_p10_priority_pfu else
+                     'fc' if (g.value >= th.goes_p10_warning_pfu or g_src.get('from_cache')) else 'obs'))
     else:
-        items.append(('GOES ≥10 МэВ',) + source_short(g_src))
-    QUALITY_RU = {'final': 'окончательное', 'preliminary': 'предварительное', 'model': 'модель', 'unknown': 'качество не указано'}
+        _v, _k = source_short(g_src)
+        row2.append(('GOES ≥10 МэВ, pfu', '—', _v, {'ok': 'obs', 'warn': 'fc', 'crit': 'cond'}.get(_k, 'none')))
     if k:
-        items.append(('Kp', '%s · %s · %s%s' % (fmt(float(k.value)), QUALITY_RU.get(k.quality, k.quality), k.t_utc.strftime('%d.%m %H:%MZ'), ' · кеш' if k_src.get('from_cache') else ''),
-                      'crit' if k.value >= th.kp_check else 'warn' if k_src.get('from_cache') else 'ok'))
+        row2.append(('Kp (GFZ)', fmt(float(k.value)),
+                     '%s · интервал до %s · %s%s' % (QUALITY_RU.get(k.quality, k.quality), dt_ru(k.t_utc),
+                                                     age_ru(k_src.get('age_min'), th.kp_max_age_min),
+                                                     ' · кеш' if k_src.get('from_cache') else ''),
+                     'cond' if k.value >= th.kp_check else 'fc' if k_src.get('from_cache') else 'obs'))
     else:
-        items.append(('Kp',) + source_short(k_src))
+        _v, _k = source_short(k_src)
+        row2.append(('Kp (GFZ)', '—', _v, {'ok': 'obs', 'warn': 'fc', 'crit': 'cond'}.get(_k, 'none')))
+    if meta and meta.epoch_utc:
+        age_h = src['orbit'].get('age_h')
+        row2.append(('Элементы орбиты', 'двухстрочные (TLE)',
+                     'эпоха %s · %s · %s' % (dt_ru(meta.epoch_utc),
+                                             age_ru(age_h * 60 if age_h is not None else None,
+                                                    limit_ru='%s сут' % fmt(th.tle_max_age_days)),
+                                             tle_origin(tm.get('tle_fetch_status'))),
+                     'fc' if (age_h is not None and age_h > 24) or src['orbit'].get('from_cache') else 'obs'))
+    else:
+        row2.append(('Элементы орбиты', '—', 'элементов нет — орбита не построена', 'cond'))
+    row2.append(('События на горизонте', fmt(len(R.events)),
+                 'уведомления и датированные прогнозы, учтённые в окнах', 'obs' if R.events else 'none'))
 else:
-    items.append(('Отсечка' if mode == 'history_forecast' else 'Начало периода', t0.strftime('%Y-%m-%d %H:%MZ'), None))
-    if mode == 'history_forecast':
-        items.append(('После отсечки не использовано', '%d записей' % len(R.excluded), None))
-    else:
-        items.append(('Архив', 'весь, без отсечки — разбор после факта', None))
+    row2.append(('Отсечка публикации' if mode == 'history_forecast' else 'Начало периода', dt_ru(t0),
+                 ('позже отсечки не используется ничего: не использовано %s %s'
+                  % (nbsp_thousands(len(R.excluded)), plural_ru(len(R.excluded), ('запись', 'записи', 'записей'))))
+                 if mode == 'history_forecast' else 'архив взят весь — разбор после факта', 'calc'))
     if kp_off_hist:
-        items.append(('Kp', 'исключён пользователем', 'crit'))
+        row2.append(('Kp (архив GFZ)', 'исключён', 'исключён пользователем — проверка отказа источника', 'cond'))
     elif R.kp is not None and R.kp.source_id != 'scenario':
-        items.append(('Kp (архив GFZ)', '%s · интервал до %s · давность %s мин' % (
-            fmt(float(R.kp.value)), R.kp.t_utc.strftime('%d.%m %H:%MZ'), src['gfz_kp'].get('age_min', '—')),
-            'crit' if R.kp.value >= th.kp_check else 'warn' if (src['gfz_kp'].get('age_min') or 0) > th.kp_max_age_min else 'ok'))
+        row2.append(('Kp (архив GFZ)', fmt(float(R.kp.value)),
+                     'интервал до %s · %s' % (dt_ru(R.kp.t_utc), age_ru(src['gfz_kp'].get('age_min'), th.kp_max_age_min)),
+                     'cond' if R.kp.value >= th.kp_check else 'obs'))
     elif mode == 'history_forecast':
-        items.append(('Kp', 'наблюдения до отсечки нет', 'warn'))
+        row2.append(('Kp (архив GFZ)', '—', 'наблюдения до отсечки нет', 'fc'))
+    else:
+        row2.append(('Kp (архив GFZ)', '—', 'в архиве на этот момент нет', 'none'))
+    if meta and meta.created_utc:
+        row2.append(('Элементы орбиты', 'эфемериды OEM NASA/JSC',
+                     'создан %s · за %s ч до начала периода' % (dt_ru(meta.created_utc),
+                                                                fmt(round((t0 - meta.created_utc).total_seconds() / 3600))),
+                     'fc' if tm['strictness'] != 'strict' else 'obs'))
+    else:
+        row2.append(('Элементы орбиты', '—', 'эфемерид на этот момент нет — орбита не построена', 'cond'))
+    _cat = (S.get('history') or {}).get('catalog_coverage') or {}
+    _cat_ru = lambda k: (datetime.fromisoformat(_cat[k]).strftime('%d.%m.%Y') if _cat.get(k) else '—')
+    row2.append(('Архив уведомлений', '%s — %s' % (_cat_ru('from_utc'), _cat_ru('to_utc')),
+                 'уведомления и карточки событий NASA DONKI', 'obs' if _cat else 'none'))
 if S['is_simulated']:
-    items.append(('Сценарий', 'моделируемые значения', 'warn'))
-st.markdown(strip(items), unsafe_allow_html=True)
+    row2.append(('Сценарий «что если»', 'моделируемые значения', 'часть величин задана пользователем, не источником', 'fc'))
+st.markdown(panel([row1, row2]), unsafe_allow_html=True)
 if meta is None:
     st.error('**Орбита недоступна.** %s Оценка без траектории невозможна: покрытие обязательной линии отсутствует, '
              'рекомендации нет. Заглушка не подставляется.' % status_ru(tm['status'], pro))
@@ -302,16 +374,17 @@ c_btn.download_button('Скачать отчёт (ZIP)', _zip, file_name=_fname 
 c_btn.caption('отчёт, запрос, факторы, сырые записи')
 cols = st.columns(len(R.assessments))
 for i, (col, a) in enumerate(zip(cols, R.assessments)):
-    col.markdown(window_card(i, a, best=(rec.preferred is not None and rec.preferred.start_utc == a.window.start_utc), mode=mode),
-                 unsafe_allow_html=True)
-st.markdown('<div class="legend">Происхождение: %s %s %s — минуты в аномалии и флюенс по трассе, условия по наблюдениям и датированным прогнозам.</div>'
-            % (kind_pill('observation'), kind_pill('external_forecast'), kind_pill('own_calculation')), unsafe_allow_html=True)
+    col.markdown(window_card(i, a, best=(rec.preferred is not None and rec.preferred.start_utc == a.window.start_utc),
+                             mode=mode, saa_thr_nT=th.saa_B_threshold_nT), unsafe_allow_html=True)
+st.markdown('<div class="legend">Происхождение величин: %s — измерено источником; %s — выпуск с указанием времени публикации; '
+            '%s — посчитано сервисом по траектории и стандартам. %s</div>'
+            % (kind_pill('observation'), kind_pill('external_forecast'), kind_pill('own_calculation'), COLOR_LEGEND),
+            unsafe_allow_html=True)
 if mode == 'history_forecast' and R.verification:
     st.info('**Проверка после отсечки** (в расчёт не входит — только сопоставление прогноза с фактом): %s. '
-            'Подробности — вкладка «Наблюдения и прогнозы».' % R.verification['summary'])
+            'Подробности — вкладка «Наблюдения и прогнозы».' % verification_ru(R.verification['summary'], any_cond))
 
-# ================================================================= лента времени
-st.subheader('Картина по времени')
+# ================================================================= лента времени (график 1 из 2 на главном экране)
 kp_obs, goes_obs = [], []
 if mode == 'live':
     from app.obs import goes_series, kp_series
@@ -321,24 +394,42 @@ if mode == 'live':
     goes_obs = [(t, v) for t, v in zip(tg, vg) if t >= t0 - timedelta(hours=12)]
 elif mode == 'history_review':
     kp_obs = R.kp_obs or []
-st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events, S.get('forecasts', []), mode,
-                         kp_obs=kp_obs, goes_obs=goes_obs, search_min=search_min), width='stretch')
+# S8: снимок третьего круга может принести наблюдения GOES из архива 2024 — рисуем их, если ключ есть.
+for _row in (S.get('observations') or []):
+    if _row.get('channel') in ('goes_p_ge10MeV', 'goes') and not goes_obs:
+        goes_obs = [(datetime.fromisoformat(c['t']), float(c['value'])) for c in (_row.get('points') or [])
+                    if c.get('t') and c.get('value') is not None]
 _mid_ru = ('прогноз Kp NOAA по 3-часовым интервалам из выпуска до отсечки' if mode == 'history_forecast' else
            'наблюдения Kp (GFZ) и GOES ≥10 МэВ за последние 12 ч' if mode == 'live' else
            'наблюдения Kp из архива (разбор после факта)')
-if pro:
-    st.caption('Верх: |B| по трассе (наш расчёт по IGRF), красные полосы — пролёты аномалии, синие — окна-кандидаты. '
-               'Середина: %s. Низ: события и прогнозы по типам — положение по вертикали означает тип, не значение.' % _mid_ru)
-else:
-    st.caption('Верх — |B| на трассе: красным аномалия, синим окна. Середина — %s. Низ — события по типам.'
+_tl_caption = ('Ряд 1 — |B| на трассе, наш расчёт по IGRF: красные полосы — пролёты аномалии, синие — окна-кандидаты. '
+               'Ряд 2 — %s. Ряд 3 — события и прогнозы по типам: положение по вертикали означает тип, не значение.' % _mid_ru) if pro else \
+              ('Ряд 1 — |B| на трассе, наш расчёт. Ряд 2 — %s. Ряд 3 — события по типам.'
                % _mid_ru.split(' из выпуска')[0].split(' за последние')[0].split(' (разбор')[0])
 
+
+def _timeline_chart():
+    st.plotly_chart(timeline(traj, windows, th.saa_B_threshold_nT, t0, horizon_min, R.goes, R.kp, R.events,
+                             S.get('forecasts', []), mode, kp_obs=kp_obs, goes_obs=goes_obs, search_min=search_min),
+                    width='stretch', config=PLOTLY_CONFIG)
+    st.caption(_tl_caption)
+
+
+if pro:
+    st.subheader('Картина по времени')
+    _timeline_chart()
+else:
+    # И6: на оперативном уровне лента убрана в свёртку — экран короче, первые четыре блока видны без прокрутки
+    with st.expander('Картина по времени: обстановка на трассе и события', expanded=False):
+        _timeline_chart()
+
 # ================================================================= вкладки
-tab_names = ['Объяснения', 'Окна и факторы', 'Карта', 'Наблюдения и прогнозы', 'Данные и выгрузка'] + (['Устойчивость и нормы'] if pro else [])
+tab_names = ['Объяснения', 'Окна и факторы', 'Методика', 'Карта', 'Наблюдения и прогнозы', 'Данные'] \
+    + (['Устойчивость и нормы'] if pro else [])
 tabs = st.tabs(tab_names)
 
 with tabs[0]:
-    _win_labels = ['Окно %d (%s)%s' % (i + 1, a.window.start_utc.strftime('%d.%m %H:%MZ'),
+    _win_labels = ['Окно %d (%s)%s' % (i + 1, dt_ru(a.window.start_utc),
                                         ' — предпочтительное' if rec.preferred is not None and rec.preferred.start_utc == a.window.start_utc else '')
                    for i, a in enumerate(R.assessments)]
     if len(_win_labels) > 1:
@@ -356,7 +447,8 @@ with tabs[0]:
                    'Каждое предупреждение раскрывается по семи пунктам: что, когда, по каким данным и из какого источника.'),
                 unsafe_allow_html=True)
     for c in shown:
-        label = '%s %s · %s' % (SEV_ICON.get(c.severity, '•'), c.title, KIND_RU[c.kind])
+        _sev = SEV_RU.get(c.severity, '—')
+        label = '%s · %s · %s' % (_sev, c.title, KIND_RU[c.kind])
         with st.expander(label, expanded=(c.severity != 'info')):
             # повтор одной и той же части подписи убираем, обрывки кода — на профессиональный уровень (U2, U5)
             _txt = lambda t: dedup_clauses(status_ru(t, pro))
@@ -364,7 +456,9 @@ with tabs[0]:
             st.markdown('**2. Период.** ' + _txt(c.period_ru))
             st.markdown('**3. Данные и единицы.** ' + _txt(c.data_ru))
             st.markdown('**4. Источник и время публикации.** ' + _txt(c.source_ru))
-            st.markdown('**5. Применённое правило или модель.** ' + _txt(c.rule_ru))
+            _fref = formula_ref(c.title, c.rule_ru, c.data_ru)
+            st.markdown('**5. Применённое правило или модель.** ' + _txt(c.rule_ru)
+                        + (' Формальная запись — вкладка «Методика», формула %s.' % _fref if _fref else ''))
             st.markdown('**6. Ограничения и уверенность.** ' + _txt(c.limits_ru))
             st.markdown('**7. Происхождение.** ' + KIND_RU[c.kind])
             links, no_link = [], 0
@@ -398,11 +492,14 @@ with tabs[0]:
                     '- неизвестное не превращается ни в нуль, ни в «благоприятно»: отсутствие данных объявляется.')
 
 with tabs[1]:
-    st.plotly_chart(window_bars(R.assessments), width='stretch')
-    # таблица сравнения: строки — величины, покрытие, условия; столбцы — окна (O5-7)
-    col_names = ['Окно %d (%s)' % (i + 1, a.window.start_utc.strftime('%d.%m %H:%MZ')) for i, a in enumerate(R.assessments)]
+    # Таблица «как в статье» (PROPOSAL_A п. 6): единица — в подписи строки, в ячейке только число;
+    # строки сгруппированы заголовками ВЕЛИЧИНЫ / ПОКРЫТИЕ / УСЛОВИЯ; под таблицей — подпись «Таблица 1.».
+    # Столбчатого графика с двумя осями здесь нет: он сравнивал минуты и флюенс в разных масштабах и
+    # читался как «во столько раз хуже», чего из него не следует.
+    col_names = ['Окно %d (%s)' % (i + 1, dt_ru(a.window.start_utc)) for i, a in enumerate(R.assessments)]
     row_keys: list[tuple[str, str]] = []
     cells: dict[tuple[str, str], list] = {}
+    units: dict[tuple[str, str], str] = {}
     for j, a in enumerate(R.assessments):
         for m in a.mechanisms:
             if not (m.mandatory or m.coverage.value != 'none'):
@@ -410,8 +507,8 @@ with tabs[1]:
             for f in m.factors:
                 k_ = ('величина', f.name)
                 if k_ not in cells:
-                    row_keys.append(k_); cells[k_] = ['—'] * len(R.assessments)
-                cells[k_][j] = fmt(f.value, f.unit)
+                    row_keys.append(k_); cells[k_] = ['—'] * len(R.assessments); units[k_] = f.unit or ''
+                cells[k_][j] = fmt(f.value)                # единица — в подписи строки, не в ячейке
             k_ = ('покрытие', MECH_RU.get(m.mechanism_id, m.mechanism_id))
             if k_ not in cells:
                 row_keys.append(k_); cells[k_] = ['—'] * len(R.assessments)
@@ -423,22 +520,65 @@ with tabs[1]:
             if m.needs_check:
                 cells[k_][j] = '; '.join(short_reason(r) for r in m.needs_check_reasons)
     order = {'величина': 0, 'покрытие': 1, 'условия': 2}
-    rows = [{'показатель': '%s%s' % (k_[1], '' if k_[0] == 'величина' else ' — ' + k_[0]),
-             **{cn: cells[k_][j] for j, cn in enumerate(col_names)}}
-            for k_ in sorted(row_keys, key=lambda k: (order[k[0]], row_keys.index(k)))]
+    group_ru = {'величина': 'ВЕЛИЧИНЫ', 'покрытие': 'ПОКРЫТИЕ', 'условия': 'УСЛОВИЯ'}
+    rows, last_group = [], None
+    for k_ in sorted(row_keys, key=lambda k: (order[k[0]], row_keys.index(k))):
+        if k_[0] != last_group:                            # разделительная строка-заголовок группы
+            rows.append({'показатель': group_ru[k_[0]], **{cn: '' for cn in col_names}})
+            last_group = k_[0]
+        label = k_[1] + ((', ' + units[k_]) if k_[0] == 'величина' and units.get(k_) not in (None, '', '1') else '')
+        rows.append({'показатель': label, **{cn: frac_ru(cells[k_][j]) for j, cn in enumerate(col_names)}})
     st.dataframe(rows, width='stretch', hide_index=True,
                  column_config={'показатель': st.column_config.TextColumn(width='medium'),
                                 **{cn: st.column_config.TextColumn(width='large') for cn in col_names}})
+    st.markdown('<div class="tcap">Таблица 1. Сравнение окон по учтённым механизмам; допуск равнозначности — %s.</div>'
+                % frac_ru(rec.tolerance_basis), unsafe_allow_html=True)
     if pro:
         st.caption('Порядок сравнения — пять шагов: охват → условия → сравнение по каждому механизму → сведение → допуск '
-                   '(подробно — README, раздел 5). Допуск равнозначности: %s.' % frac_ru(rec.tolerance_basis))
+                   '(формальная запись — вкладка «Методика», формулы (8) и (9)).')
     else:
-        st.caption('Порядок сравнения: охват → условия → сравнение по механизмам → сведение → допуск равнозначности.')
+        st.caption('Порядок сравнения: охват → условия → сравнение по механизмам → сведение → допуск равнозначности '
+                   '(формулы — вкладка «Методика»).')
 
 with tabs[2]:
+    st.markdown('**Как считается то, что показано на экране.** У каждой формулы — номер, расшифровка символов, '
+                'стандарт с пунктом или таблицей и то, что в ней НЕ учтено. Карточки во вкладке «Объяснения» '
+                'ссылаются на эти номера.')
+    st.caption('Внутри формул только латиница и греческие буквы: шрифты набора формул не содержат кириллицы, '
+               'и русские слова в них на части браузеров не рисуются. Все пояснения — обычным текстом под формулой.')
+    _group = None
+    for b in METHOD_BLOCKS:
+        if b.get('pro') and not pro:
+            continue
+        if b['group'] != _group:
+            _group = b['group']
+            st.markdown('<div class="sect">%s</div>' % _group, unsafe_allow_html=True)
+        st.markdown('**(%d) %s**' % (b['no'], b['title']))
+        st.latex(b['latex'])
+        st.markdown('<div class="small">%s</div>' % b['symbols'], unsafe_allow_html=True)
+        st.markdown('<div class="small">Источник: %s</div>' % b['source'], unsafe_allow_html=True)
+        st.markdown('<div class="small">Не учтено и ограничения: %s</div>' % b['limits'], unsafe_allow_html=True)
+    st.markdown('<div class="sect">Пороги условий проверки</div>', unsafe_allow_html=True)
+    st.dataframe(RULE_THRESHOLDS, width='stretch', hide_index=True,
+                 column_config={'условие': st.column_config.TextColumn(width='medium'),
+                                'источник': st.column_config.TextColumn(width='medium')})
+    st.markdown('<div class="tcap">Таблица 2. Пороги, по которым окно получает условие проверки; источник — на каждую строку.</div>',
+                unsafe_allow_html=True)
+    st.markdown('<div class="small">%s</div>' % RULE_POLICY, unsafe_allow_html=True)
+    if pro:
+        st.caption('Тексты правил и порогов — CONTRACT.md, раздел 4; настройки — config/settings.toml.')
+        st.markdown('<div class="sect">Подстановка текущего расчёта</div>', unsafe_allow_html=True)
+        _flu = next((f for a in R.assessments for m in a.mechanisms for f in m.factors if f.name.startswith('флюенс')), None)
+        st.markdown('<div class="small">Канал захваченных протонов: от %s МэВ. Порог аномалии |B|: %s нТл. '
+                    'Шаг трассы: 1 мин, точек трассы %s. Флюенс окна 1: %s. Допуск равнозначности: %s.</div>'
+                    % (fmt(th.e_min_MeV), nbsp_thousands(th.saa_B_threshold_nT), fmt(tm['n_points']),
+                       fmt(_flu.value if _flu else None, _flu.unit if _flu else ''), frac_ru(rec.tolerance_basis)),
+                    unsafe_allow_html=True)
+
+with tabs[3]:
     if traj:
         with st.spinner('Область аномалии по IGRF на сетке 4°…'):
-            st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch')
+            st.plotly_chart(ground_track(traj, windows, th.saa_B_threshold_nT, t0), width='stretch', config=PLOTLY_CONFIG)
         if pro:
             st.caption('Область аномалии — наш расчёт |B| по IGRF на средней высоте трассы; трасса за весь горизонт серым, '
                        'окна-кандидаты цветом, точки трассы в аномалии красным. Карта показывает, откуда берутся минуты в аномалии.')
@@ -447,20 +587,35 @@ with tabs[2]:
     else:
         st.write('Трассы нет: орбита недоступна.')
 
-with tabs[3]:
+with tabs[4]:
     if mode == 'live':
         obs_fig = observations_panel(R.fetch_status['goes'].raw_path, R.fetch_status['kp'].raw_path, t0)
         if obs_fig is not None:
-            st.plotly_chart(obs_fig, width='stretch')
+            st.plotly_chart(obs_fig, width='stretch', config=PLOTLY_CONFIG)
             st.caption('Наблюдения источников за последние дни, не расчёт. Пороги — шкалы NOAA S и G.' + (
                 ' GOES меряет на геостационарной орбите и переносится на станцию только через геомагнитное обрезание.'
                 if pro else ''))
         else:
             st.write('Рядов наблюдений нет: источники отключены или недоступны.')
+        # S8: в текущем режиме снимок третьего круга может принести датированный прогноз NOAA —
+        # показываем его теми же строками, что и в архивных режимах; ключа нет — блока нет.
+        _live_fc = S.get('forecasts') or []
+        if _live_fc:
+            st.markdown('**Внешний прогноз NOAA на горизонте окон** (выпуск с указанием времени публикации)')
+            for line in _live_fc:
+                _pub = (line.get('published_utc') or '')[:16].replace('T', ' ')
+                st.markdown('%s **%s** — %s' % (pill(line.get('status_ru') or '—',
+                                                     'ok' if line.get('status') == 'full' else
+                                                     'warn' if line.get('status') == 'partial' else 'none'),
+                                                line.get('label') or '—',
+                                                ('выпуск от %s UTC' % _pub) if _pub else 'времени выпуска в записи нет'),
+                            unsafe_allow_html=True)
+            st.caption('Внешний прогноз, не наблюдение. Суточные вероятности относятся к суткам, а не к окну ВКД, '
+                       'и в вероятность за окно не пересчитываются.')
     else:
         fc_fig = forecast_panel(S.get('forecasts', []), t0, horizon_min)
         if fc_fig is not None:
-            st.plotly_chart(fc_fig, width='stretch')
+            st.plotly_chart(fc_fig, width='stretch', config=PLOTLY_CONFIG)
         for line in S.get('forecasts', []):
             if line['release_id']:
                 u = (R.raw_records.get(line['record']) or {}).get('url') if line.get('record') else None
@@ -471,11 +626,13 @@ with tabs[3]:
             st.markdown('%s **%s** — %s' % (pill(line['status_ru'], 'ok' if line['status'] == 'full' else 'warn' if line['status'] == 'partial' else 'none'),
                                             line['label'], rel), unsafe_allow_html=True)
         st.caption('Внешний прогноз, не наблюдение. Суточные вероятности относятся к суткам, а не к окну ВКД; прогноз Kp — по '
-                   '3-часовым интервалам.' + (' Отбор выпуска по времени публикации.' if pro else ''))
+                   '3-часовым интервалам. В архиве трёхсуточных выпусков NOAA есть разрыв 15.05–16.06.2024: на отсечках '
+                   'внутри него канал объявляется отсутствующим, а не заполняется устаревшим бюллетенем.'
+                   + (' Отбор выпуска по времени публикации.' if pro else ''))
     if mode == 'history_forecast' and R.verification:
         ver = R.verification
         with st.expander('Проверка после отсечки — что наблюдалось потом (в расчёт не входит)', expanded=True):
-            st.markdown('**%s.**' % frac_ru(ver['summary']))
+            st.markdown('**%s.**' % verification_ru(ver['summary'], any_cond))
             st.caption('%s. Отсечка %s, горизонт до %s UTC.%s'
                        % (ver['note'], ver['cutoff_utc'][:16].replace('T', ' '), ver['horizon_to_utc'][:16].replace('T', ' '),
                           ' Наблюдения Kp — окончательный ряд GFZ по 3-часовым интервалам; '
@@ -501,9 +658,9 @@ with tabs[3]:
             u = (rec_.get('url') or rec_.get('link') or rec_.get('messageURL')) if isinstance(rec_, dict) else None
             row = {'тип': event_kind_ru(e.kind_of_event) + (' (сценарий)' if e.is_simulated else ''),
                    'происхождение': KIND_RU[e.kind],
-                   'начало / приход': e.start_utc.strftime('%d.%m %H:%MZ') if e.start_utc else '—',
-                   'публикация': e.published_utc.strftime('%d.%m %H:%MZ') if e.published_utc else 'нет — моделируемое' if e.is_simulated else 'нет',
-                   'примечание': frac_ru(e.note or ''), 'ссылка': u}
+                   'начало / приход': dt_ru(e.start_utc),
+                   'публикация': dt_ru(e.published_utc) if e.published_utc else 'нет — моделируемое' if e.is_simulated else 'нет',
+                   'примечание': status_ru(e.note or '', pro), 'ссылка': u}
             if pro:                       # идентификатор записи — только на профессиональном уровне (U5)
                 row['запись'] = e.event_id
             ev_rows.append(row)
@@ -516,7 +673,7 @@ with tabs[3]:
                                     'примечание': st.column_config.TextColumn(width='large'),
                                     **({'запись': st.column_config.TextColumn('запись', width='medium')} if pro else {})})
 
-with tabs[4]:
+with tabs[5]:
     st.markdown('**Источники этого расчёта** — состояние, получение, давность; каждый фактор прослеживается до записи в выгрузке.')
     src_rows = []
     for k, v in src.items():
@@ -548,13 +705,36 @@ with tabs[4]:
                          'из кеша': BOOL_RU.get(v.get('from_cache'), '—') if not static and mode == 'live' else '—',
                          'получено': 'встроено' if static else '—' if hist_obs else (v.get('fetched_utc') or '—')[:16].replace('T', ' '),
                          'данные на': '—' if hist_obs else (v.get('data_utc') or v.get('epoch_utc') or '—')[:16].replace('T', ' '),
-                         'давность, мин': ('%d' % round(age)) if (age is not None and not hist_obs) else '—',
+                         'давность, мин': fmt(round(age)) if (age is not None and not hist_obs) else '—',
                          'строгость': STRICT_RU.get(v.get('strictness'), '—') if k == 'orbit' else '—',
                          'статус': status_ru(status, pro)})
     st.dataframe(src_rows, width='stretch', hide_index=True,
                  column_config={'статус': st.column_config.TextColumn(width='large'), 'источник': st.column_config.TextColumn(width='medium')})
+    st.markdown('<div class="tcap">Таблица 3. Состояние источников этого расчёта: получение, момент данных и давность.</div>',
+                unsafe_allow_html=True)
+    # Реестр источников: величина, единица, частота, что считается публикацией, лицензия, ограничение.
+    # Лицензия печатается только там, где она записана в самом ответе службы или в документе стандарта.
+    st.markdown('<div class="sect">Реестр источников</div>', unsafe_allow_html=True)
+    reg_rows = []
+    for k in src:
+        if k.startswith('_'):
+            continue
+        r = registry_row(k)
+        if r['величина'] == '—' and not k.startswith('noaa_forecast_'):
+            continue
+        reg_rows.append({'источник': source_name_ru(k), **r})
+    st.dataframe(reg_rows, width='stretch', hide_index=True,
+                 column_config={'источник': st.column_config.TextColumn(width='medium'),
+                                'величина': st.column_config.TextColumn(width='medium'),
+                                'публикация': st.column_config.TextColumn(width='medium'),
+                                'ограничение': st.column_config.TextColumn(width='large')})
+    st.markdown('<div class="tcap">Таблица 4. Реестр источников: величина, единица, частота выпуска, что считается '
+                'временем публикации, условия использования и ограничение. Где лицензия не записана в ответе службы, '
+                'так и сказано — сервис её не додумывает.</div>', unsafe_allow_html=True)
     if mode == 'history_forecast':
-        with st.expander('После отсечки не использовано: %d записей' % len(R.excluded), expanded=False):
+        with st.expander('После отсечки не использовано: %s %s'
+                         % (nbsp_thousands(len(R.excluded)), plural_ru(len(R.excluded), ('запись', 'записи', 'записей'))),
+                         expanded=False):
             st.caption('Записи архива, опубликованные позже отсечки или без времени публикации; ни одна не участвует в расчёте.'
                        + (' Сначала итог по источникам и причинам, ниже — записи поимённо (интервалы Kp свёрнуты в одну строку).'
                           if pro else ''))
@@ -576,6 +756,20 @@ with tabs[4]:
                          + '\n'.join('- ' + x for x in _rest[:200]) + ('\n- …' if len(_rest) > 200 else ''))
             elif _kp_n:
                 st.write('- интервалы Kp GFZ: %d записей, одна причина — ряд окончательный, времени публикации по интервалам нет' % _kp_n)
+    # S8: снимок третьего круга может принести карту покрытия истории и версии записей источников.
+    # Ключей нет — блока нет; экран от их отсутствия не падает.
+    _hist = S.get('history') or {}
+    _hcov, _hver = _hist.get('coverage') or {}, _hist.get('source_versions') or {}
+    if pro and (_hcov or _hver):
+        with st.expander('История: покрытие каналов и версии записей', expanded=False):
+            if _hcov:
+                st.dataframe([{'канал': ch, 'состояние': (c or {}).get('status', '—'),
+                               'доля покрытия окна': fmt((c or {}).get('coverage_fraction')),
+                               'причина': status_ru((c or {}).get('reason') or '—', pro)}
+                              for ch, c in _hcov.items()], width='stretch', hide_index=True)
+            if _hver:
+                st.caption('Версий записей источников: %s. Полный перечень — в манифесте выгрузки.'
+                           % fmt(sum(len(v or {}) for v in _hver.values())))
     if pro and tm['provenance'].get('limitations'):
         with st.expander('Орбита: происхождение и ограничения', expanded=False):
             st.write('\n'.join('- ' + limit_ru(x) for x in tm['provenance']['limitations']))
@@ -595,7 +789,7 @@ with tabs[4]:
         st.caption('Слои: %s; %s; %s.' % (ORBIT_SRC.split(':')[0], SRC_LAYER.split(' — ')[0], HIST_SRC.split(' — ')[0]))
 
 if pro:
-    with tabs[5]:
+    with tabs[6]:
         from collections import Counter
         grid_vals = list(rob.preferred_starts.values())
         rank_vals = list(rob.ranking_by_grid.values())
@@ -603,33 +797,42 @@ if pro:
         counts = Counter(grid_cell_ru(v, windows_ru) for v in grid_vals)
         st.markdown('**Устойчивость вердикта на сетке порогов (О7).** Сетка: порог аномалии |B| %s нТл × канал захваченных протонов '
                     'от %s МэВ. В каждой ячейке два исхода: лучшее окно по ранжированию без допуска и предпочтительное окно с итоговым '
-                    'допуском равнозначности (%.0f мин, ×%.2f по флюенсу). ' % (
-                        '/'.join('%.0f' % x for x in rob.grid[0]), '/'.join('%g' % x for x in rob.grid[1]), rob.tol_min, rob.tol_ratio) + (
+                    'допуском равнозначности (%s мин, ×%s по флюенсу — формула (9)). ' % (
+                        ' / '.join(nbsp_thousands(x) for x in rob.grid[0]), ' / '.join(fmt(float(x)) for x in rob.grid[1]),
+                        fmt(round(rob.tol_min)), fmt(round(rob.tol_ratio, 2))) + (
                         '**Сетка исход не меняет**: ни в одной ячейке автоматический выбор не делается.'
                         if main_pref is None and all(v is None for v in grid_vals) else
                         '**Вердикт устойчив на сетке**: во всех ячейках один и тот же исход.' if rob.stable else
                         '**Вердикт меняется на сетке** — рекомендация чувствительна к настройке порогов.') + (
                         ' Лучшее окно без допуска %s.' % ('одно на всей сетке' if rob.ranking_stable else 'меняется по ячейкам')
                         if any(v is not None for v in rank_vals) else ''))
-        st.dataframe([{'порог |B|, нТл': '%.0f' % k[0], 'канал, МэВ от': '%g' % k[1],
+        st.dataframe([{'порог |B|, нТл': nbsp_thousands(k[0]), 'канал, МэВ от': fmt(float(k[1])),
                        'лучшее без допуска': grid_cell_ru(rob.ranking_by_grid.get(k), windows_ru) if rob.ranking_by_grid.get(k)
                        else 'нет (все окна под условием или отказ)',
                        'предпочтительное с допуском': grid_cell_ru(v, windows_ru)}
                       for k, v in rob.preferred_starts.items()], width='stretch', hide_index=True)
+        st.markdown('<div class="tcap">Таблица 5. Устойчивость выбора на сетке порогов: два исхода в каждой ячейке.</div>',
+                    unsafe_allow_html=True)
         st.caption('Исход с допуском на сетке: %s. Основной расчёт: %s. Допуск: %s.' % (
-            '; '.join('%s — %d из %d ячеек' % (lbl, n, len(grid_vals)) for lbl, n in counts.most_common()),
+            '; '.join('%s — %s из %s ячеек' % (lbl, fmt(n), fmt(len(grid_vals))) for lbl, n in counts.most_common()),
             ('предпочтительное окно %s' % windows_ru.get(rec.preferred.start_utc, '')) if rec.preferred else
-            'без предпочтительного окна (%s)' % rec.verdict, rec.tolerance_basis))
+            'без предпочтительного окна (%s)' % VERDICT_TITLE.get(rec.verdict, rec.verdict).lower(),
+            frac_ru(rec.tolerance_basis)))
         if rob.diff_by_thr or rob.ratio_by_e:
             rc1, rc2 = st.columns(2)
             if rob.diff_by_thr:
-                rc1.dataframe([{'порог |B|, нТл': '%.0f' % k, 'разность минут в аномалии (второе − лучшее)': fmt(v)} for k, v in rob.diff_by_thr.items()],
+                rc1.dataframe([{'порог |B|, нТл': nbsp_thousands(k), 'разность минут в аномалии (второе − лучшее), мин': fmt(v)}
+                               for k, v in rob.diff_by_thr.items()],
                               width='stretch', hide_index=True)
             if rob.ratio_by_e:
-                rc2.dataframe([{'канал, МэВ от': '%g' % k, 'отношение флюенсов (второе / лучшее)': fmt(v)} for k, v in rob.ratio_by_e.items()],
+                rc2.dataframe([{'канал, МэВ от': fmt(float(k)), 'отношение флюенсов (второе / лучшее)': fmt(v)}
+                               for k, v in rob.ratio_by_e.items()],
                               width='stretch', hide_index=True)
-            rc1.caption('Разброс разности по порогу: %.1f мин → допуск по минутам не меньше него. Разброс отношения по каналу: ×%.2f → допуск по флюенсу не меньше него.'
-                        % (rob.diff_spread_min, rob.fluence_ratio_spread))
+            rc1.caption('Разброс разности по порогу: %s мин → допуск по минутам не меньше него. Разброс отношения по каналу: '
+                        '×%s → допуск по флюенсу не меньше него. Формальная запись — вкладка «Методика», формула (9).'
+                        % (fmt(round(rob.diff_spread_min, 1)), fmt(round(rob.fluence_ratio_spread, 2))))
         st.markdown('**Нормы — справочный контекст, не вердикт по дозе.** Сервис не вычисляет дозу человека: для этого нужны '
-                    'модели защиты и ткани, которых в обязательной части нет.')
+                    'модели защиты и ткани, которых в обязательной части нет. Формула предела — вкладка «Методика», формула (10).')
         st.dataframe(norms_rows(T_months), width='stretch', hide_index=True)
+        st.markdown('<div class="tcap">Таблица 6. Нормы и шкалы как контекст: значение, источник, применимость.</div>',
+                    unsafe_allow_html=True)

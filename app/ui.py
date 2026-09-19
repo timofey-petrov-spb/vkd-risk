@@ -1,10 +1,25 @@
 # -*- coding: utf-8 -*-
-"""Оформление экрана: стили, плашки статусов, панель вердикта, карточки окон, полоса состояния,
-словари перевода идентификаторов модулей в подписи для пользователя.
+"""Оформление экрана: стили, плашки статусов, панель вердикта, карточки окон, приборная полоса,
+словари перевода идентификаторов модулей в подписи для пользователя, реестр источников и
+блоки вкладки «Методика».
 
 Только разметка. Ничего не считает и не решает: все значения приходят из снимка расчёта.
-Правило оформления — три происхождения (наблюдение, внешний прогноз, наш расчёт) и
-четыре состояния (в порядке, внимание, критично, нет данных) везде одними и теми же цветами.
+
+Цветовая система — монотонная, академическая (PROPOSAL_A п. 2 в редакции задания):
+цвет означает происхождение величины, а не «хорошо/плохо». Четыре тона и один служебный:
+  синий  --calc — наш расчёт;
+  зелёный --obs — наблюдение;
+  янтарный --fc — внешний прогноз, а также данные из кеша (объявленное устаревание);
+  красный --cond — условие проверки, аномалия, отказ источника;
+  серый  --none — данных нет.
+Светофора на экране нет: «условий проверки нет» — серым, а не зелёным; предпочтительное окно —
+синим (это наш расчёт), а не зелёным. Ни градиентов, ни эмодзи: на проекторе они дают грязь,
+а эмодзи по-разному рисуются в Windows, macOS и на телефоне.
+
+Типографика — одна лестница размеров на весь экран (PROPOSAL_A п. 2.1): заголовок 1,55 rem,
+микрозаголовок 0,72 rem прописными, крупное число 1,35 rem, подпись 0,78 rem; все числовые
+ячейки — tabular-nums, включая st.dataframe.
+
 На оперативном уровне на экране нет идентификаторов кода: методы, типы событий, источники и
 ограничения модулей переводятся словарями ниже; неизвестная строка выводится как есть с пометкой.
 """
@@ -17,28 +32,49 @@ from datetime import datetime, timedelta
 CSS = """
 <style>
 :root { --ink:#1a1f2b; --muted:#6b7280; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f7f9;
-        --ok:#1e8449; --ok-bg:#eafaf1; --warn:#b9770e; --warn-bg:#fef5e7; --crit:#c0392b; --crit-bg:#fdedec;
-        --none:#566573; --none-bg:#f2f3f4; --calc:#1f4e79; --calc-bg:#eaf2fb; --obs:#1e8449; --fc:#b9770e; }
-html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink); }
+        --calc:#1f4e79; --calc-bg:#eaf2fb; --calc-line:#c4d8ee;
+        --obs:#1e8449;  --obs-bg:#eafaf1;  --obs-line:#bfe8cf;
+        --fc:#b9770e;   --fc-bg:#fef5e7;   --fc-line:#f3dcb0;
+        --cond:#c0392b; --cond-bg:#fdedec; --cond-line:#f2c0bb;
+        --none:#566573; --none-bg:#f2f3f4; --none-line:#d7dbdf;
+        /* прежние имена состояний — те же четыре тона, чтобы правила ниже читались одинаково */
+        --ok:var(--obs); --ok-bg:var(--obs-bg); --warn:var(--fc); --warn-bg:var(--fc-bg);
+        --crit:var(--cond); --crit-bg:var(--cond-bg); }
+html, body, [class*="css"] { font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif; color: var(--ink);
+        font-variant-numeric: tabular-nums; }
 .block-container { padding-top: 3.2rem; padding-bottom: 2rem; max-width: 1400px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
+div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeric: tabular-nums; }
 .vk-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:2px; }
 .vk-title { font-size:1.55rem; font-weight:700; margin:0; }
 .vk-sub { color:var(--muted); font-size:0.92rem; }
+.sect { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+        margin:10px 0 4px 0; }
 .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:0.78rem; font-weight:600;
         line-height:1.5; border:1px solid transparent; margin:1px 4px 1px 0; white-space:nowrap; }
-.pill-ok { background:var(--ok-bg); color:var(--ok); border-color:#bfe8cf; }
-.pill-warn { background:var(--warn-bg); color:var(--warn); border-color:#f3dcb0; }
-.pill-crit { background:var(--crit-bg); color:var(--crit); border-color:#f2c0bb; }
-.pill-none { background:var(--none-bg); color:var(--none); border-color:#d7dbdf; }
-.pill-calc { background:var(--calc-bg); color:var(--calc); border-color:#c4d8ee; }
-.pill-obs { background:#eafaf1; color:#1e8449; border-color:#bfe8cf; }
-.pill-fc { background:#fef5e7; color:#b9770e; border-color:#f3dcb0; }
-.strip { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:8px 12px; background:var(--soft);
-         border:1px solid var(--line); border-radius:10px; margin:6px 0 14px 0; font-size:0.85rem; }
-.strip b { font-weight:600; }
-.strip .sep { color:#c9cdd3; }
-.verdict { border-radius:12px; padding:16px 20px; border:1px solid var(--line); border-left:8px solid var(--none);
+.pill-ok { background:var(--obs-bg); color:var(--obs); border-color:var(--obs-line); }
+.pill-warn { background:var(--fc-bg); color:var(--fc); border-color:var(--fc-line); }
+.pill-crit { background:var(--cond-bg); color:var(--cond); border-color:var(--cond-line); }
+.pill-none { background:var(--none-bg); color:var(--none); border-color:var(--none-line); }
+.pill-calc { background:var(--calc-bg); color:var(--calc); border-color:var(--calc-line); }
+.pill-obs { background:var(--obs-bg); color:var(--obs); border-color:var(--obs-line); }
+.pill-fc { background:var(--fc-bg); color:var(--fc); border-color:var(--fc-line); }
+/* приборная полоса: две строки фиксированной сетки, метка — значение — давность и происхождение */
+.panel { border:1px solid var(--line); border-radius:10px; background:var(--soft); margin:6px 0 12px 0; overflow:hidden; }
+.prow { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+.prow + .prow { border-top:1px solid var(--line); }
+.cell { padding:7px 12px 8px 12px; border-left:3px solid var(--none-line); box-shadow:inset 1px 0 0 var(--line); min-width:0; }
+.cell:first-child { box-shadow:none; }
+.cl { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv { font-size:1.05rem; font-weight:600; line-height:1.35; overflow-wrap:anywhere; }
+.cs { font-size:0.78rem; color:var(--muted); line-height:1.35; overflow-wrap:anywhere; }
+.k-calc { border-left-color:var(--calc); } .k-calc .cv { color:var(--calc); }
+.k-obs  { border-left-color:var(--obs); }  .k-obs .cv  { color:var(--obs); }
+.k-fc   { border-left-color:var(--fc); }   .k-fc .cv   { color:var(--fc); }
+.k-cond { border-left-color:var(--cond); } .k-cond .cv { color:var(--cond); }
+.k-none { border-left-color:var(--none-line); } .k-none .cv { color:var(--ink); }
+.verdict { border-radius:12px; padding:16px 20px; border:1px solid var(--line); border-left:3px solid var(--none);
            background:var(--bg); margin:4px 0 14px 0; }
 .verdict h2 { margin:0 0 4px 0; font-size:1.35rem; }
 .verdict .rule { color:var(--muted); font-size:0.92rem; margin-bottom:8px; }
@@ -47,18 +83,20 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .verdict ul { margin:6px 0 0 18px; padding:0; }
 .verdict li { margin:2px 0; font-size:0.93rem; }
 .verdict li.more { color:var(--muted); list-style:none; margin-left:-18px; font-size:0.86rem; }
-.verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; background:var(--calc-bg); color:var(--calc);
-                 font-size:0.88rem; }
+.verdict .plan { margin:8px 0 2px 0; padding:6px 10px; border-radius:8px; border-left:3px solid var(--calc);
+                 background:var(--calc-bg); color:var(--calc); font-size:0.88rem; }
 .verdict .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
-.v-preferred { border-left-color:var(--ok); background:linear-gradient(90deg, var(--ok-bg) 0, #fff 60%); }
-.v-equivalent { border-left-color:var(--none); background:linear-gradient(90deg, var(--none-bg) 0, #fff 60%); }
-.v-trade_off { border-left-color:var(--calc); background:linear-gradient(90deg, var(--calc-bg) 0, #fff 60%); }
-.v-all_need_check { border-left-color:var(--warn); background:linear-gradient(90deg, var(--warn-bg) 0, #fff 60%); }
-.v-insufficient { border-left-color:var(--crit); background:linear-gradient(90deg, var(--crit-bg) 0, #fff 60%); }
-.wcard { border:1px solid var(--line); border-radius:12px; padding:14px 16px 12px 16px; background:#fff; height:100%; }
-.wcard.best { border:2px solid var(--ok); box-shadow:0 0 0 3px var(--ok-bg); }
-.wcard.flag { border-color:#f3dcb0; }
-.wcard.crit { border-color:#f2c0bb; }
+/* вердикт — наш расчёт (синий); условие у всех окон — красный; нет оснований — серый. Без заливок. */
+.v-preferred { border-left-color:var(--calc); }
+.v-equivalent { border-left-color:var(--calc); }
+.v-trade_off { border-left-color:var(--calc); }
+.v-all_need_check { border-left-color:var(--cond); }
+.v-insufficient { border-left-color:var(--none); }
+.wcard { border:1px solid var(--line); border-radius:12px; padding:14px 16px 12px 16px; background:#fff; height:100%;
+         border-left:3px solid var(--line); }
+.wcard.best { border-left-color:var(--calc); }
+.wcard.flag { border-left-color:var(--fc); }
+.wcard.crit { border-left-color:var(--cond); }
 .wcard .wh { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
 .wcard .wt { font-weight:700; font-size:1.02rem; }
 .wcard .wtime { color:var(--muted); font-size:0.86rem; }
@@ -66,13 +104,17 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .kv .k { color:var(--muted); }
 .kv .v { font-weight:600; text-align:right; font-variant-numeric: tabular-nums; }
 .kv .v.big { font-size:1.35rem; }
-.cond { font-size:0.85rem; margin:4px 0 0 0; padding:6px 8px; border-radius:8px; background:var(--warn-bg); color:#7d5a12; }
-.cond.crit { background:var(--crit-bg); color:#922b21; }
-.cond.ok { background:var(--ok-bg); color:#196f3d; }
+.kv .u { color:var(--muted); font-weight:400; }
+.wnote { font-size:0.78rem; color:var(--muted); margin:-2px 0 6px 0; }
+.cond { font-size:0.85rem; margin:4px 0 0 0; padding:6px 8px; border-radius:8px; border-left:3px solid var(--fc);
+        background:var(--fc-bg); color:#7d5a12; }
+.cond.crit { border-left-color:var(--cond); background:var(--cond-bg); color:#922b21; }
+.cond.none { border-left-color:var(--none-line); background:var(--none-bg); color:var(--none); }
 .cov { margin-top:8px; font-size:0.78rem; color:var(--muted); }
 .covwhy { margin-top:4px; font-size:0.78rem; color:var(--muted); }
 .legend { font-size:0.82rem; color:var(--muted); margin:2px 0 10px 0; }
 .small { font-size:0.84rem; color:var(--muted); }
+.tcap { font-size:0.82rem; color:var(--muted); font-style:italic; margin:2px 0 10px 0; }
 div[data-testid="stMetric"] { background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
 div[data-testid="stExpander"] details { border-radius:10px; }
 footer { visibility:hidden; }
@@ -87,9 +129,15 @@ VERDICT_TITLE = {
     'insufficient': 'Оснований для рекомендации недостаточно',
 }
 COV_RU = {'full': 'полное', 'partial': 'частичное', 'none': 'нет'}
-COV_KIND = {'full': 'ok', 'partial': 'warn', 'none': 'crit'}
+# покрытие — свойство нашего расчёта, а не «хорошо/плохо»: полное синим, частичное янтарём, нет — серым
+COV_KIND = {'full': 'calc', 'partial': 'warn', 'none': 'none'}
 MECH_RU = {'spaceweather': 'космопогода', 'mmod_stat': 'метеороиды', 'conjunctions': 'сближения'}
 KIND_PILL = {'observation': ('наблюдение', 'obs'), 'external_forecast': ('внешний прогноз', 'fc'), 'own_calculation': ('наш расчёт', 'calc')}
+# уровень предупреждения — текстом, без эмодзи (одинаково в Windows, macOS и на телефоне)
+SEV_RU = {'critical': 'КРИТИЧНО', 'limiting': 'ВНИМАНИЕ', 'info': '—'}
+# одна строка, объясняющая цвет: он означает происхождение величины, а не «безопасно/опасно»
+COLOR_LEGEND = ('Цвет означает происхождение: синий — наш расчёт, зелёный — наблюдение, янтарный — внешний прогноз '
+                'или данные из кеша, красный — условие проверки, аномалия или отказ источника, серый — данных нет.')
 
 # --- словари перевода идентификаторов модулей (О5: без английских идентификаторов на экране) ---
 METHOD_RU = {'sgp4': 'SGP4 по TLE', 'oem_interp': 'OEM NASA/JSC (интерполяция)'}
@@ -132,6 +180,19 @@ RULE_RU = [
     ('п.5', 'шаг 5 из 5, допуск равнозначности'),
 ]
 BOOL_RU = {True: 'да', False: 'нет', None: '—'}
+# Пресеты запроса (И1): одна кнопка выставляет режим, дату, час и окна. Значения — те же,
+# что у сохранённых примеров examples/, чтобы показанное на защите воспроизводилось из файла.
+PRESETS = [
+    {'key': 'now', 'label': 'Сейчас', 'mode': 'Текущая обстановка', 'date': None, 'hour': None,
+     'duration_min': 360, 'search_min': 720, 'offsets_min': [0, 240],
+     'shows': 'живые источники на момент нажатия: GOES ≥10 МэВ, Kp и элементы орбиты'},
+    {'key': 'gannon', 'label': 'Буря Гэннон, 10.05.2024 12:00 UTC', 'mode': 'Прогноз из прошлого',
+     'date': (2024, 5, 10), 'hour': 12, 'duration_min': 360, 'search_min': 720, 'offsets_min': [0, 240],
+     'shows': 'только публикации до 10.05 12:00 UTC; на умолчаниях порогов оба окна получают условие проверки'},
+    {'key': 'quiet', 'label': 'Тихая дата, 25.06.2024 12:00 UTC', 'mode': 'Прогноз из прошлого',
+     'date': (2024, 6, 25), 'hour': 12, 'duration_min': 360, 'search_min': 1440, 'offsets_min': [0, 480],
+     'shows': 'только публикации до 25.06 12:00 UTC; условий проверки нет, окна сравниваются по величинам'},
+]
 
 
 def esc(s) -> str:
@@ -183,6 +244,21 @@ def fmt(v, unit='') -> str:
     return s + (' ' + unit if unit and unit not in ('1',) else '')
 
 
+NBSP_THIN = ' '          # узкий неразрывный пробел: «24 000 нТл» не рвётся по строкам
+
+
+def nbsp_thousands(v) -> str:
+    """Разряды тысяч узким неразрывным пробелом (PROPOSAL_A п. 2.2, правило 3): 24000 → «24 000»."""
+    if v is None:
+        return '—'
+    s = fmt(v)
+    m = re.match(r'^(-?)(\d+)(,\d+)?$', s)
+    if not m:
+        return s
+    whole = m.group(2)
+    return m.group(1) + NBSP_THIN.join(_groups3(whole)) + (m.group(3) or '')
+
+
 def spread_offsets(offsets, search_min: int, step: int = 30) -> list[int]:
     """Развести совпавшие сдвиги окон внутри периода поиска (U1): последнее окно — в конец
     периода, предыдущие на шаг раньше. Раскладка ползунков, а не оценка риска: экран из-за
@@ -203,15 +279,54 @@ def head(title: str, sub: str) -> str:
     return '<div class="vk-head"><div class="vk-title">%s</div><div class="vk-sub">%s</div></div>' % (esc(title), esc(sub))
 
 
-def strip(items) -> str:
-    """items: список (подпись, значение, kind|None). kind задаёт плашку; None — обычный текст."""
-    parts = []
-    for label, value, kind in items:
-        if kind:
-            parts.append('<span><b>%s</b> %s</span>' % (esc(label), pill(value, kind)))
-        else:
-            parts.append('<span><b>%s</b> %s</span>' % (esc(label), esc(value)))
-    return '<div class="strip">' + '<span class="sep">·</span>'.join(parts) + '</div>'
+def plural_ru(n: int, forms: tuple[str, str, str]) -> str:
+    """«733 записи», «1 запись», «5 записей»: число с существительным в нужной форме."""
+    n = abs(int(n))
+    if n % 10 == 1 and n % 100 != 11:
+        return forms[0]
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return forms[1]
+    return forms[2]
+
+
+def dt_ru(t, with_date: bool = True, with_utc: bool = False) -> str:
+    """Единый формат времени на экране: «10.05 12:00 UTC» или «12:00». Слово UTC — только там,
+    где оно не повторяется у каждой ячейки (PROPOSAL_A п. 2.2, правило 5)."""
+    if t is None:
+        return '—'
+    s = t.strftime('%d.%m %H:%M') if with_date else t.strftime('%H:%M')
+    return s + (' UTC' if with_utc else '')
+
+
+def age_ru(minutes, limit_min=None, limit_ru: str | None = None) -> str:
+    """Давность в одних единицах: до 180 мин — минуты, до 48 ч — часы, дальше — сутки.
+    Порог печатается рядом, если задан: «давность 92 мин (предел 60 мин)»."""
+    if minutes is None:
+        return 'давность не определена'
+    m = float(minutes)
+    if m < 180:
+        s = 'давность %s мин' % fmt(round(m))
+    elif m < 48 * 60:
+        s = 'давность %s ч' % fmt(round(m / 60))
+    else:
+        s = 'давность %s сут' % fmt(round(m / 1440))
+    lim = limit_ru if limit_ru is not None else (('%s мин' % fmt(round(float(limit_min)))) if limit_min is not None else None)
+    return s + ((' (предел %s)' % lim) if lim else '')
+
+
+def panel(rows) -> str:
+    """Приборная полоса в две строки (PROPOSAL_A п. 3). rows — список строк, строка — список ячеек
+    (метка, значение, подпись, kind). kind из calc|obs|fc|cond|none задаёт левую границу и цвет числа.
+    Давность печатается только здесь: в карточках окон её нет (дублирование = шум)."""
+    out = ['<div class="panel">']
+    for row in rows:
+        out.append('<div class="prow">')
+        for label, value, sub, kind in row:
+            out.append('<div class="cell k-%s"><div class="cl">%s</div><div class="cv">%s</div><div class="cs">%s</div></div>'
+                       % (kind or 'none', esc(label), esc(value), esc(sub or '')))
+        out.append('</div>')
+    out.append('</div>')
+    return ''.join(out)
 
 
 def rule_ru(rule_applied: str) -> str:
@@ -268,7 +383,13 @@ PHRASE_RU = [('интеграл по dt', 'интеграл по времени'
              # имена ключей настроек: на профессиональном уровне как есть, на оперативном — по-русски.
              # Ключи всегда стоят после слова «настройка/настройке/настройкой», поэтому заменяем само имя.
              ('sep_valid_hours', 'срока действия уведомления о протонном событии'),
-             ('event_valid_hours', 'срока действия записи о буре или приходе выброса')]
+             ('event_valid_hours', 'срока действия записи о буре или приходе выброса'),
+             # поля прогона WSA-ENLIL: оценки Kp по углу межпланетного магнитного поля
+             ('kp_180', 'угол поля 180°'), ('kp_135', 'угол поля 135°'), ('kp_90', 'при угле межпланетного поля 90°'),
+             # номера решений команды и имена задач — только на профессиональном уровне и в выгрузке
+             ('(R11)', '(решение команды по магнитным координатам)'),
+             ('точки (A3)', 'точки трассы'), ('(A3)', '(модуль орбиты)'), ('из A3', 'из модуля орбиты'),
+             ('работа A3', 'работа модуля орбиты')]
 _INNER_ID_RE = re.compile(r',\s*[a-z][a-z0-9]*(?:[-_][a-z0-9]+)+(?=\))')
 _CLEAN_RE = re.compile(r'\s{2,}')
 
@@ -310,7 +431,7 @@ def status_ru(text, pro: bool = False) -> str:
     s = re.sub(r'[;,]\s*(?=[;,])', '', s)
     s = re.sub(r'договор команды,\s*,', 'договор команды,', s)
     s = _CLEAN_RE.sub(' ', s).strip()
-    return s.rstrip(' ;,')
+    return screen_text(s.rstrip(' ;,'))
 
 
 def dedup_clauses(text) -> str:
@@ -334,7 +455,7 @@ def source_short(v: dict) -> tuple[str, str]:
         return 'исключён пользователем', 'crit'
     if v.get('live_ok') is False and v.get('from_cache'):
         age = v.get('age_min')
-        return ('кеш, давность %d мин' % round(age)) if age is not None else 'кеш', 'warn'
+        return ('кеш, %s' % age_ru(age)) if age is not None else 'кеш', 'warn'
     if 'данных нет' in st_ or 'не разбирается' in st_:
         return 'нет ответа и кеша — данных нет', 'crit'
     if v.get('live_ok'):
@@ -358,20 +479,20 @@ def source_issues(src: dict, th, mode: str, kp_excluded_hist: bool = False, tle_
             elif v.get('live_ok') is False and v.get('from_cache'):
                 age = v.get('age_min')
                 out.append('%s: живого ответа нет, взят кеш%s — покрытие частичное, объявлено'
-                           % (name, (', давность %d мин' % round(age)) if age is not None else ''))
+                           % (name, (', %s' % age_ru(age)) if age is not None else ''))
             elif v.get('live_ok') is False:
                 out.append('%s: %s' % (name, status_ru(v.get('status') or 'нет данных', pro)))
             elif sid == 'noaa_swpc_goes' and v.get('age_min') is not None and th is not None \
                     and v['age_min'] > th.goes_max_age_min:
-                out.append('GOES ≥10 МэВ: наблюдение устарело (%d мин при допустимых %.0f) — для будущих участков '
-                           'окна покрытие частичное' % (round(v['age_min']), th.goes_max_age_min))
+                out.append('GOES ≥10 МэВ: наблюдение устарело (%s) — для будущих участков окна покрытие частичное'
+                           % age_ru(v['age_min'], th.goes_max_age_min))
         o = src.get('orbit') or {}
         if o.get('live_ok') is False and o.get('from_cache'):
-            out.append('TLE: живого ответа нет — орбита построена по %s (%s)' % (
+            out.append('Элементы орбиты: живого ответа нет — орбита построена по %s (%s)' % (
                 'снимку репозитория' if 'снимок' in (tle_fetch or '') else 'кешу', tle_origin(tle_fetch)))
         if o.get('age_h') is not None and o['age_h'] > 24:
-            out.append('TLE: эпоха старше суток (%.0f ч) — точность положения снижается, предел %s сут задан порогом'
-                       % (o['age_h'], fmt(th.tle_max_age_days) if th is not None else '—'))
+            out.append('Элементы орбиты: эпоха старше суток (%s) — точность положения снижается, предел %s сут задан порогом'
+                       % (age_ru(o['age_h'] * 60), fmt(th.tle_max_age_days) if th is not None else '—'))
     else:
         if kp_excluded_hist:
             out.append('Kp: исключён пользователем из архива (проверка отказа) — условие по наблюдению Kp не проверяется')
@@ -451,9 +572,10 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
                   plan_change: str | None = None, missing_ru=None, policy_short: str | None = None) -> str:
     v = rec.verdict
     title = VERDICT_TITLE.get(v, v)
-    rule = 'Правило: ' + esc(rule_ru(rec.rule_applied))
+    rule = 'Правило: ' + esc(frac_ru(rule_ru(rec.rule_applied))) + \
+           ' · формальная запись — вкладка «Методика», формулы (8) и (9)'
     if pro:
-        rule += ' <span class="orig">(%s)</span>' % esc(rec.rule_applied)
+        rule += ' <span class="orig">(%s)</span>' % esc(frac_ru(rec.rule_applied))
     lines = ['<div class="verdict v-%s">' % v, '<h2>%s</h2>' % esc(title), '<div class="rule">%s</div>' % rule]
     if rec.preferred is not None:
         lines.append('<div class="win">Окно %s — %s</div>' % (_win_num(windows_ru, rec.preferred.start_utc), esc(win_span(rec.preferred))))
@@ -461,7 +583,7 @@ def verdict_panel(rec, S: dict, windows_ru: dict, assessments=None, pro: bool = 
     missing = list(missing_ru) if missing_ru is not None else list(rec.missing)
     bullets += ['Чего не хватает: ' + x for x in missing]
     if bullets:
-        lis = ''.join('<li>%s</li>' % esc(frac_ru(b)) for b in bullets)
+        lis = ''.join('<li>%s</li>' % esc(screen_text(b)) for b in bullets)
         if more:
             lis += '<li class="more">… ещё %d, см. карточки окон и вкладку «Окна и факторы»</li>' % more
         lines.append('<ul>' + lis + '</ul>')
@@ -488,9 +610,46 @@ def win_span(w) -> str:
 _win_span = win_span     # прежнее имя
 
 
+_ISO_DT_RE = re.compile(r'(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?Z?')
+_MD_DT_RE = re.compile(r'(?<![\d.\-])(\d{2})-(\d{2}) (\d{2}):(\d{2})Z')
+_AGE_CLAUSE_RE = re.compile(r'[,;]?\s*давность\s+\d+(?:[.,]\d+)?\s*(?:мин|ч|сут)\b')
+# разряды тысяч в готовых строках модулей: «24000 нТл» → «24 000 нТл» (единица обязательна, год не трогаем)
+_THOUSANDS_RE = re.compile(r'(?<![\d,.])(\d{4,})(?=\s*(?:нТл|мин\b|км\b|сут\b|Зв\b|част\.|пфу\b|pfu\b))')
+
+
+def dates_ru(text) -> str:
+    """Дата источника в едином виде экрана (S7): «2026-09-19 01:35Z» → «19.09.2026 01:35»,
+    «05-09 14:00Z» → «09.05 14:00». Времена всюду UTC, слово UTC печатается один раз в шапке."""
+    s = _ISO_DT_RE.sub(lambda m: '%s.%s.%s %s:%s' % (m.group(3), m.group(2), m.group(1), m.group(4), m.group(5)),
+                       str(text or ''))
+    return _MD_DT_RE.sub(lambda m: '%s.%s %s:%s' % (m.group(2), m.group(1), m.group(3), m.group(4)), s)
+
+
+def screen_text(text) -> str:
+    """Готовая строка модуля в виде экрана: дробь с запятой, степени надстрочно, даты «дд.мм чч:мм»,
+    разряды тысяч узким неразрывным пробелом."""
+    s = dates_ru(frac_ru(text))
+    return _THOUSANDS_RE.sub(lambda m: NBSP_THIN.join(_groups3(m.group(1))), s)
+
+
+def _groups3(whole: str) -> list[str]:
+    out = []
+    while len(whole) > 3:
+        out.insert(0, whole[-3:])
+        whole = whole[:-3]
+    out.insert(0, whole)
+    return out
+
+
+def drop_age(text) -> str:
+    """Убрать оборот давности: она печатается только в приборной полосе (PROPOSAL_A п. 3)."""
+    return _CLEAN_RE.sub(' ', _AGE_CLAUSE_RE.sub('', str(text or ''))).strip().rstrip(' ;,')
+
+
 def _cov_reason(f) -> str | None:
-    """Причина неполного покрытия одного фактора — одной фразой для карточки окна (DEMO-11)."""
-    note = f.limits_note or ''
+    """Причина неполного покрытия одного фактора — одной фразой для карточки окна (DEMO-11).
+    Давность из неё убрана (она только в приборной полосе), даты приведены к виду экрана."""
+    note = drop_age(dates_ru(f.limits_note or ''))
     name = f.name
     m = re.search(r'доля точек с моделью (\d+) %', note)
     if name.startswith('флюенс') and m:
@@ -500,9 +659,8 @@ def _cov_reason(f) -> str | None:
             return 'GOES: наблюдений за 2024 нет, канал по датированным уведомлениям DONKI'
         if 'наблюдений GOES нет' in note and 'каталог' in note:
             return 'GOES: наблюдений за 2024 нет; каталог DONKI покрывает период, событий не объявлено'
-        m2 = re.search(r'давность (\d+) мин', note)
-        if 'устарело' in note and m2:
-            return 'GOES: наблюдение устарело (давность %s мин) — для будущих участков' % m2.group(1)
+        if 'устарело' in note:
+            return 'GOES: наблюдение устарело — для будущих участков окна'
         if 'нет данных' in note:
             return 'GOES: данных нет'
     if name == 'минут в аномалии':
@@ -542,7 +700,7 @@ def fluence_label(flu) -> str:
     return flu.name.replace('захваченных ', '') + ', ' + (flu.unit or 'част./см²')
 
 
-def window_card(i: int, a, best: bool, mode: str) -> str:
+def window_card(i: int, a, best: bool, mode: str, saa_thr_nT: float | None = None) -> str:
     """Карточка окна: заголовок, состояние, ключевые величины, условия, покрытие по механизмам с причиной."""
     f = {x.name: x for m in a.mechanisms for x in m.factors}
     reasons = [r for m in a.mechanisms for r in m.needs_check_reasons]
@@ -554,7 +712,8 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
     mm = f.get('ожидаемое число попаданий, пластина 1 м²')
     goes = f.get('поток протонов GOES ≥10 МэВ')
     kpf = f.get('прогноз Kp NOAA, максимум в окне')
-    rows = [('минут в аномалии', fmt(saa.value if saa else None, 'мин'), True),
+    # единица — в подписи строки, в ячейке только число (PROPOSAL_A п. 2.2, правило 4)
+    rows = [('минут в аномалии, мин', fmt(saa.value if saa else None), True),
             (fluence_label(flu), fmt(flu.value if flu else None), False),
             ('метеороиды, попаданий на 1 м²', fmt(mm.value if mm else None), False)]
     if mode == 'live':
@@ -562,19 +721,22 @@ def window_card(i: int, a, best: bool, mode: str) -> str:
     else:
         rows.append(('прогноз Kp NOAA, макс. в окне', fmt(kpf.value if kpf else None), False))
     kv = ''.join('<div class="k">%s</div><div class="v%s">%s</div>' % (esc(k), ' big' if big else '', esc(v)) for k, v, big in rows)
-    conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(frac_ru(_short_reason(r))))
+    conds = ''.join('<div class="cond%s">%s</div>' % (' crit' if 'приоритетное' in r else '', esc(screen_text(_short_reason(r))))
                     for r in reasons[:4])
     if len(reasons) > 4:
         conds += '<div class="small">… ещё %d</div>' % (len(reasons) - 4)
     if not reasons:
-        conds = '<div class="cond ok">Условий проверки нет по данным до отсечки</div>' if mode == 'history_forecast' else '<div class="cond ok">Условий проверки нет</div>'
+        conds = '<div class="cond none">Условий проверки нет по данным до отсечки</div>' if mode == 'history_forecast' \
+            else '<div class="cond none">Условий проверки нет</div>'
     cov = ' '.join(pill('%s: %s' % (MECH_RU.get(m.mechanism_id, m.mechanism_id), COV_RU[m.coverage.value]), COV_KIND[m.coverage.value])
                    for m in a.mechanisms if m.mandatory or m.coverage.value != 'none')
     why = coverage_reasons(a)
-    why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(frac_ru('; '.join(why)))) if why else ''
+    why_html = ('<div class="covwhy">почему неполное — %s</div>' % esc(screen_text('; '.join(why)))) if why else ''
+    note = ('<div class="wnote">минуты в аномалии: |B| &lt; %s нТл, шаг трассы 1 мин — формула (3)</div>' % esc(nbsp_thousands(saa_thr_nT))) \
+        if saa_thr_nT is not None else ''
     return ('<div class="%s"><div class="wh"><div><div class="wt">Окно %d%s</div><div class="wtime">%s</div></div>%s</div>'
-            '<div class="kv">%s</div>%s<div class="cov">покрытие: %s</div>%s</div>'
-            % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv, conds, cov, why_html))
+            '<div class="kv">%s</div>%s%s<div class="cov">покрытие: %s</div>%s</div>'
+            % (cls, i + 1, ' · предпочтительное' if best else '', esc(win_span(a.window)), pill(*state), kv, note, conds, cov, why_html))
 
 
 def _short_reason(r: str) -> str:
@@ -625,6 +787,196 @@ def tle_origin(tle_fetch_status: str | None) -> str:
     if 'воспроизведение' in s:
         return 'из сохранённого расчёта'
     return s or '—'
+
+
+def verification_ru(summary: str, had_conditions: bool) -> str:
+    """Сводка проверки после отсечки: начало зависит от того, ставилось ли условие (PLAN 3.3, п. 1).
+
+    Слой расчёта печатает «условие поставлено в 12:00Z; факт: …» безусловно, и на тихой дате
+    эта фраза противоречит карточкам обоих окон («условий проверки нет»). Здесь она заменяется
+    на честную: условий не ставилось. Само сопоставление с фактом не меняется."""
+    s = screen_text(str(summary or ''))
+    if had_conditions:
+        return s
+    head_, sep, tail = s.partition('; факт: ')
+    if not sep or not head_.startswith('условие поставлено'):
+        return s
+    return 'условий проверки на отсечку не ставилось; факт: ' + tail
+
+
+# ---------------------------------------------------------------- вкладка «Методика» (PROPOSAL_A п. 5)
+# Внутри st.latex кириллицы нет: KaTeX подставляет шрифты без кириллических глифов и на части
+# браузеров рисует пустые прямоугольники. Все пояснения — обычным текстом под формулой.
+METHOD_BLOCKS = [
+    {'no': 1, 'group': 'Захваченные протоны',
+     'title': 'Флюенс за окно',
+     'latex': r'\Phi(\ge E_{min}) \;=\; \sum_{i} J_i\,\Delta t, \qquad '
+              r'J_i \;=\; \int_{E_{min}}^{E_{max}} f\!\left(L_i,\; B_i/B_{0,i},\; E\right)\,dE',
+     'symbols': 'Φ — флюенс за окно, част./см²; J — интегральный всенаправленный поток выше E_min, см⁻²·с⁻¹; '
+                'Δt = 1 мин — шаг трассы; L и B/B_0 — магнитные координаты точки трассы; сумма берётся по точкам окна.',
+     'source': 'ОСТ 134-1044-2007, прил. А, табл. А.2.1 (минимум солнечной активности). Единицы — из вводного текста '
+               'приложения: спектры всенаправленного потока, см⁻²·с⁻¹·МэВ⁻¹, без домножения на 4π.',
+     'limits': 'Хвост выше E_max = 300 МэВ отброшен и объявлен. Вне сетки L = 1,14…9 модели нет — это «нет модели», '
+               'а не нуль; выше точки отражения поток физически нулевой.'},
+    {'no': 2, 'group': 'Захваченные протоны',
+     'title': 'Интегрирование по энергии между узлами таблицы',
+     'latex': r'f(E) = a\,E^{\,b}, \qquad b = \frac{\ln\left(f_{k+1}/f_k\right)}{\ln\left(E_{k+1}/E_k\right)}',
+     'symbols': 'f — дифференциальный поток в узле таблицы; E_k и E_{k+1} — соседние узлы энергетической сетки; '
+                'между узлами принят степенной закон, интеграл берётся аналитически.',
+     'source': 'ОСТ 134-1044-2007, прил. А: сетка энергий и значения потоков; способ интерполяции — степенной, '
+               'как принято для спектров захваченных частиц.',
+     'limits': 'Интерполяция только внутри сетки; экстраполяция за крайний узел не делается.'},
+    {'no': 3, 'group': 'Магнитные координаты',
+     'title': 'L-оболочка и B/B₀ эксцентричного диполя',
+     'latex': r"L = \frac{r'}{\cos^{2}\lambda'}, \qquad r' = \frac{\left|\mathbf{r} - \mathbf{d}\right|}{R_E}, "
+              r"\qquad \frac{B}{B_0} = \frac{\left|\mathbf{B}\right|_{IGRF}}{B_{eq}\,L^{-3}}",
+     'symbols': "r′ — расстояние точки от смещённого центра диполя в радиусах Земли; λ′ — геомагнитная широта от "
+                "смещённой оси; d — смещение центра диполя (около 0,08 R_E); |B| — полное поле IGRF в точке трассы; "
+                "минуты в аномалии считаются по порогу |B| из настроек, шаг трассы 1 мин.",
+     'source': 'Fraser-Smith A. C. Centered and eccentric geomagnetic dipoles and their poles. Rev. Geophys. 25(1), 1987; '
+               'коэффициенты IGRF — те же файлы, что у модуля орбиты.',
+     'limits': 'Объявленное приближение до трассировки силовых линий: L и B_0 — от смещённого диполя, |B| — полное IGRF; '
+               'отношение B/B_0 < 1 помечается, а не обрезается. Центральный диполь для таблиц ОСТ не годится: в ядре '
+               'аномалии он даёт L ≈ 1,07 — ниже первой строки сетки (1,14), и флюенс обращается в нуль на всей трассе '
+               '(проверено 19.09.2026). Признак аномалии — порог |B| из настроек, не официальная граница области.'},
+    {'no': 4, 'group': 'Магнитные координаты',
+     'title': 'Жёсткость геомагнитного обрезания',
+     'latex': r'R(T) = \frac{\sqrt{T^{2} + 2\,T\,m_p c^{2}}}{Z\,e}, \qquad R_c(\mathbf{r}) < R(T)',
+     'symbols': 'T — кинетическая энергия протона, МэВ; m_p c² = 938,272 МэВ; R — жёсткость, ГВ; '
+                'R_c — вертикальная жёсткость обрезания в точке трассы; частица канала доступна там, где R_c ниже R.',
+     'source': 'Определение жёсткости — общепринятое; m_p c² — CODATA 2018; R_c — расчёт модуля орбиты '
+               '(центральный наклонный диполь), метод подписан отдельно от формулы (3).',
+     'limits': 'Обрезание спокойных условий: при буре Kp ≥ 7 оно снижается, и это не моделируется. Поток GOES на станцию '
+               'не переносится: GOES меряет на геостационарной орбите, где обрезания нет.'},
+    {'no': 5, 'group': 'Метеороиды',
+     'title': 'Поток природных метеороидов по Grün',
+     'latex': r'F_{met,0}(m) = 3{,}15576\cdot 10^{7}\,\left(F_1 + F_2 + F_3\right)',
+     'symbols': 'm — масса частицы, г; нижняя масса модели m ≥ 10⁻³ г; F_met,0 — поток на 1 м² в год в свободном '
+                'пространстве; F_1, F_2, F_3 — три слагаемых распределения Grün.',
+     'source': 'ECSS-E-ST-10-04C Rev.1 (15.06.2020), формула (10-1), п. 10.2.2.2a.',
+     'limits': 'Одна модель на всю трассу; потоки метеорных потоков конкретной даты не включены (п. 10.2.2.2c) — '
+               'календарь IMO даёт только признак активности.'},
+    {'no': 6, 'group': 'Метеороиды',
+     'title': 'Поправки на орбиту и ожидаемое число попаданий',
+     'latex': r'F = F_0\,\bar{G}\,s_f\,K, \qquad N = A\int_{t_0}^{t_1} F\,dt',
+     'symbols': 'Ḡ — гравитационное усиление, s_f — экранирование Землёй, K — множитель средней скорости; '
+                'A = 1 м² — односторонняя случайно кувыркающаяся пластина; N — ожидаемое число попаданий за окно, '
+                'интеграл берётся по фактической высоте трассы, концы окна включены.',
+     'source': 'ECSS-E-ST-10-04C Rev.1: поправки (C-25) Annex C.1.5, множители Table J-6, число попаданий (10-2) п. 10.2.5a.',
+     'limits': 'Неопределённость потока ×0,33…3 (п. J.2.3.2); техногенный мусор не включён. При равной длительности окна '
+               'различаются по этой линии меньше чем на 0,01 %: роль линии — охват и абсолютная оценка, а не выбор окна.'},
+    {'no': 7, 'group': 'Метеороиды',
+     'title': 'Вероятность хотя бы одного попадания',
+     'latex': r'P_{\ge 1} = 1 - e^{-N}',
+     'symbols': 'N — ожидаемое число попаданий из формулы (6); распределение принято пуассоновским.',
+     'source': 'ECSS-E-ST-10-04C Rev.1, формула (10-3).',
+     'limits': 'Это попадания в опорную пластину 1 м², а не в космонавта и не пробой скафандра: '
+               'валидированного уравнения пробоя многослойной ткани у нас нет, и вероятность разгерметизации не считается.'},
+    {'no': 8, 'group': 'Правило выбора окна',
+     'title': 'Отношения «не хуже» и «лучше»',
+     'latex': r'A \preceq B \iff m_A \le m_B + \delta_m \;\wedge\; \Phi_A \le \rho\,\Phi_B, \qquad '
+              r'A \prec B \iff \left(A \preceq B\right) \wedge \left( m_A < m_B - \delta_m \;\vee\; \rho\,\Phi_A < \Phi_B \right)',
+     'symbols': 'm — минуты в аномалии, Φ — флюенс за окно; «не хуже» требует обеих величин, «лучше» — строгого выигрыша '
+                'хотя бы по одной. Если минуты и флюенс указывают на разные окна, вердикт — компромисс без победителя.',
+     'source': 'договор команды, раздел 4 — правило рекомендации; пять шагов правила печатаются на экране в строке «Правило».',
+     'limits': 'Это правило команды, а не эксплуатационная норма: шкалы NOAA сами по себе ВКД не запрещают. '
+               'Окна с условием проверки из автоматического выбора исключаются — политика прототипа.'},
+    {'no': 9, 'group': 'Правило выбора окна',
+     'title': 'Допуск равнозначности',
+     'latex': r'\delta_m = \max\!\left(\delta_{min},\; \operatorname{span}_{thr}\left[m_2 - m_1\right]\right), \qquad '
+              r'\rho = \max\!\left(1{,}5,\; \operatorname{span}_{E}\left[\Phi_2/\Phi_1\right]\right)',
+     'symbols': 'δ_m — допуск по минутам: разброс РАЗНОСТИ минут двух лучших окон по оси порога аномалии; '
+                'ρ — допуск по флюенсу: разброс отношения флюенсов по оси канала E_min, не меньше 1,5.',
+     'source': 'договор команды, раздел 4; сетка порогов и разбросы печатаются во вкладке «Устойчивость и нормы».',
+     'limits': 'Допуском не может быть разброс абсолютных минут одного окна: порог сдвигает оба окна синфазно, '
+               'и такой допуск объявлял бы равнозначными 54 и 86 мин.'},
+    {'no': 10, 'group': 'Нормы как контекст', 'pro': True,
+     'title': 'Предельно допустимая доза за полёт',
+     'latex': r'G_{lim}(T) = 0{,}05 + 4\left(1 - e^{-T/72}\right), \qquad g_{h} = \frac{G_{lim}(T)}{720\,T}',
+     'symbols': 'T — длительность экспедиции, мес; G_lim — предельно допустимая доза за полёт, Зв; '
+                'g_h — контрольная часовая доза, Зв/ч; месяц принят равным 720 ч.',
+     'source': 'ГОСТ 25645.215-85, пп. 2.2 и 2.3; формула сверена с таблицей стандарта, 8 строк из 8.',
+     'limits': 'Сервис не вычисляет дозу человека. Это справочный контекст рядом с показателями среды, а не вердикт: '
+               'для дозы нужны модели защиты станции, скафандра и ткани, которых в обязательной части нет.'},
+]
+# Пороги условий: на каждый — источник. Печатаются таблицей под формулами (8) и (9).
+RULE_THRESHOLDS = [
+    {'условие': 'протонное событие, наблюдение или уведомление', 'порог': '≥ 1000 pfu (S3)',
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'приоритетная проверка'},
+    {'условие': 'протонное событие', 'порог': '≥ 10 pfu (S1)',
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки'},
+    {'условие': 'геомагнитная буря', 'порог': 'Kp ≥ 7 (G3)',
+     'источник': 'NOAA SWPC, Space Weather Scales', 'класс': 'условие проверки'},
+    {'условие': 'сближение с расчётным моментом внутри окна', 'порог': 'качественно, без порога',
+     'источник': 'CelesTrak SOCRATES', 'класс': 'ручная оценка'},
+]
+RULE_POLICY = ('Это правило команды, а не эксплуатационная норма. Шкалы NOAA сами по себе не запрещают ВКД; '
+               'исключение помеченного окна из автоматического выбора — политика прототипа, её устойчивость '
+               'проверена на сетке порогов.')
+# Ключевые слова карточки → номер формулы. Карточка ссылается на формальную запись по номеру (PROPOSAL_A п. 5).
+_FORMULA_KEYS = [(('флюенс', 'захвач', 'ост 134'), '(1) и (2)'), (('аномали', 'минут', '|b|', 'l-оболоч'), '(3)'),
+                 (('обрезан', 'жёсткост', 'жесткост'), '(4)'), (('метеороид', 'попадан', 'grün', 'grun'), '(5)–(7)'),
+                 (('сравнен', 'предпочт', 'равнознач', 'правил', 'допуск'), '(8) и (9)')]
+
+
+def formula_ref(*texts) -> str | None:
+    """Номер формулы вкладки «Методика» по тексту карточки: «формула (3)». Совпадения нет — None."""
+    s = ' '.join(str(t or '') for t in texts).lower()
+    for keys, no in _FORMULA_KEYS:
+        if any(k in s for k in keys):
+            return no
+    return None
+
+
+# ---------------------------------------------------------------- реестр источников (вкладка «Данные»)
+# Единица, частота выпуска, что считается временем публикации, лицензия и ограничение — по одной записи
+# на источник. Лицензия печатается только там, где она записана в самом ответе службы или в документе;
+# где не записана — так и сказано, а не додумано.
+SOURCE_REGISTRY = {
+    'noaa_swpc_goes': {'величина': 'интегральный поток протонов ≥10 МэВ', 'единица': 'pfu = част./(см²·с·ср)',
+                       'частота': 'лента 1 мин, выпуск примерно раз в 5 мин',
+                       'публикация': 'время измерения из поля записи (time_tag)',
+                       'лицензия': 'в ответе службы не указана; условия — на сайте NOAA SWPC',
+                       'ограничение': 'измерение на геостационарной орбите; на станцию не переносится без геомагнитного обрезания'},
+    'gfz_kp': {'величина': 'планетарный индекс Kp', 'единица': 'безразмерный',
+               'частота': '3-часовые интервалы',
+               'публикация': 'конец 3-часового интервала; окончательный ряд выходит позже предварительного',
+               'лицензия': 'CC BY 4.0 — из поля meta.license ответа службы',
+               'ограничение': 'планетарный индекс, а не локальная величина на трассе'},
+    'orbit': {'величина': 'положение МКС на трассе', 'единица': 'широта и долгота — град, высота — км',
+              'частота': 'TLE — по мере выпуска (несколько раз в сутки), OEM — по мере выпуска NASA/JSC',
+              'публикация': 'TLE — эпоха элементов; OEM — дата создания файла (публичная доступность в 2024 не доказана)',
+              'лицензия': 'в ответе службы не указана; условия — на сайтах CelesTrak и NASA',
+              'ограничение': 'манёвры не предсказываются; возраст элементов — инженерное ограничение, не оценка ошибки положения'},
+    'donki_archive': {'величина': 'уведомления и карточки событий (протонные события, бури, выбросы)',
+                      'единица': 'текст уведомления, Kp — безразмерный, энергии — МэВ',
+                      'частота': 'по мере событий',
+                      'публикация': 'время подачи уведомления (messageIssueTime / submissionTime записи)',
+                      'лицензия': 'в ответе службы не указана; условия — на сайте NASA DONKI',
+                      'ограничение': 'вложенные значения карточек без собственного времени публикации в строгий режим не идут'},
+    'ost1044_belts': {'величина': 'спектры всенаправленного потока захваченных протонов',
+                      'единица': 'см⁻²·с⁻¹·МэВ⁻¹', 'частота': 'таблица стандарта, не обновляется',
+                      'публикация': 'ОСТ 134-1044-2007, дата издания стандарта',
+                      'лицензия': 'отраслевой стандарт, печатный документ', 'ограничение': 'минимум солнечной активности; сетка L = 1,14…9, E ≤ 300 МэВ'},
+    'ecss_grun': {'величина': 'поток природных метеороидов', 'единица': '1/(м²·год)',
+                  'частота': 'модель стандарта, не обновляется',
+                  'публикация': 'ECSS-E-ST-10-04C Rev.1, 15.06.2020',
+                  'лицензия': 'стандарт ECSS, публикуемый документ',
+                  'ограничение': 'неопределённость ×0,33…3; техногенный мусор и потоки конкретной даты не включены'},
+}
+_REGISTRY_FORECAST = {'величина': 'внешний прогноз NOAA', 'единица': 'Kp — безразмерный, вероятности — %',
+                      'частота': 'выпуск примерно раз в сутки',
+                      'публикация': 'время выпуска бюллетеня (заголовок :Issued:)',
+                      'лицензия': 'в ответе службы не указана; условия — на сайте NOAA SWPC',
+                      'ограничение': 'суточные вероятности относятся к суткам, а не к окну ВКД, и не пересчитываются'}
+
+
+def registry_row(sid: str) -> dict:
+    """Строка реестра источников по идентификатору; для выпусков NOAA — общая запись прогноза."""
+    if sid.startswith('noaa_forecast_'):
+        return dict(_REGISTRY_FORECAST)
+    return dict(SOURCE_REGISTRY.get(sid, {'величина': '—', 'единица': '—', 'частота': '—', 'публикация': '—',
+                                          'лицензия': '—', 'ограничение': '—'}))
 
 
 def grid_cell_ru(v, windows_ru_iso: dict) -> str:
