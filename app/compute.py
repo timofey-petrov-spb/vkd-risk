@@ -33,7 +33,7 @@ from vkd.explain.cards import cards_for_window
 from vkd.integration.noaa_forecast import STATUS_RU as FC_STATUS_RU, noaa_forecasts
 from vkd.integration.orbit_bridge import ORBIT_SRC, TLE_URL_UNKNOWN, build_orbit, provenance_summary
 from vkd.types import SCHEMA_VERSION, Window
-from vkd.windows.compare import Thresholds, assess_window, recommend
+from vkd.windows.compare import Thresholds, action_span, assess_window, overlaps, recommend
 from vkd.windows.scenario import Scenario, apply_to_windows, simulated_events, simulated_kp
 from vkd.windows.sensitivity import robustness
 
@@ -231,11 +231,12 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
         # события, чей интервал касается [t0 − 6 ч, конец горизонта]; давность публикации не ограничивается —
         # прогноз прихода выброса, выпущенный за трое суток, всё равно относится к окну
         def _touches(e):
-            a0 = e.valid_from_utc or e.start_utc
+            # то же правило пересечения, что при отборе условий в compare.action_span/overlaps:
+            # конец действия по настройке своего типа события, пересечение не меньше минуты
+            a0, a1 = action_span(e, th)
             if a0 is None:
                 return True
-            a1 = e.valid_to_utc or e.end_utc or (a0 + timedelta(hours=th.sep_valid_hours))
-            return a0 <= t0 + timedelta(minutes=horizon_min) and a1 >= t0 - timedelta(hours=6)
+            return overlaps(a0, a1, t0 - timedelta(hours=6), t0 + timedelta(minutes=horizon_min))
         events = [e for e in cut.events if _touches(e)]
         # прогнозы NOAA, выпущенные до отсечки (в разборе — до начала периода): A1/A2 через адаптер Б
         fc_lines, fc_raw = noaa_forecasts(t0, t0, t0 + timedelta(minutes=horizon_min))
@@ -363,7 +364,9 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                       max(1.0, (thresholds or Thresholds.from_settings()).fluence_equiv_ratio),
                                       '/'.join('%g' % x for x in rob.grid[1]), r_txt,
                                       'сохраняется' if rob.ranking_stable else 'МЕНЯЕТСЯ',
-                                      'выбор устойчив' if rob.stable else 'ВЫБОР МЕНЯЕТСЯ на сетке'))
+                                      'выбор устойчив: на всей сетке одинаковы и вердикт, и предпочтительное окно'
+                                      if rob.stable else
+                                      'ВЫБОР МЕНЯЕТСЯ на сетке: вердикт или предпочтительное окно на ней не одни и те же'))
     samples = {**({goes.raw_record_id: goes} if goes else {}), **({kp.raw_record_id: kp} if kp else {}),
                **{s.raw_record_id: s for s in forecasts}}
     cards_by_window = {a.window.start_utc: cards_for_window(a, samples, events=events, window_index=i + 1, meta=meta,
@@ -381,11 +384,14 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                                   'fetch': getattr(f_tle, 'status_ru', None), 'url': getattr(f_tle, 'url', None) or TLE_URL_UNKNOWN}
 
     def _src(f, role, sample=None):
+        # давность — от КОНЦА интервала измерения (valid_to_utc), как в compare.py: у Kp GFZ
+        # t_utc — начало трёхчасового интервала, и таблица источников расходилась с фактором на 3 ч
+        ref_t = (sample.valid_to_utc or sample.t_utc) if sample else None
         return {'role': role, 'status': f.status_ru, 'live_ok': f.ok, 'from_cache': f.from_cache,
                 'origin': ('живой запрос' if f.ok else ('кеш или снимок репозитория' if f.from_cache else 'данных нет')),
                 'fetched_utc': iso(f.fetched_utc) if f.fetched_utc else None,
                 'data_utc': iso(sample.t_utc) if sample else None,
-                'age_min': round((ref_now - sample.t_utc).total_seconds() / 60) if sample else f.age_min}
+                'age_min': round((ref_now - ref_t).total_seconds() / 60) if sample else f.age_min}
 
     orbit_src = {'role': 'орбита', 'status': orb.status_ru, 'strictness': orb.strictness,
                  'origin': ('живой запрос TLE' if mode == 'live' and getattr(f_tle, 'ok', None) else
@@ -413,7 +419,8 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                              'origin': kp_origin if kp and kp.source_id != 'scenario' else ('сценарий' if kp else 'нет данных'),
                              'fetched_utc': None,
                              'data_utc': iso(kp.t_utc) if kp and kp.source_id != 'scenario' else None,
-                             'age_min': round((t0 - kp.t_utc).total_seconds() / 60) if kp and kp.source_id != 'scenario' else None}
+                             'age_min': round((t0 - (kp.valid_to_utc or kp.t_utc)).total_seconds() / 60)
+                             if kp and kp.source_id != 'scenario' else None}
         sources['donki_archive'] = {'role': 'события и уведомления (SEP, GST, прогнозы ENLIL)',
                                     'status': 'архив DONKI %s — %s%s; отбор по времени публикации (%s)' % (
                                         c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y'),
@@ -500,6 +507,7 @@ def run(mode: str, t0: datetime, duration_min: int, search_min: int, window_offs
                        'diff_by_thr': {'%.0f' % k: v for k, v in rob.diff_by_thr.items()},
                        'ratio_by_e': {'%g' % k: v for k, v in rob.ratio_by_e.items()},
                        'preferred_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.preferred_starts.items()},
+                       'verdict_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in (rob.verdict_by_grid or {}).items()},
                        'ranking_by_grid': {'%.0f nT / %g MeV' % k: v for k, v in rob.ranking_by_grid.items()}},
     }
     return Result(S, raw_records, traj, meta, assessments, rec, cards, events, rob, goes, kp, excluded,
