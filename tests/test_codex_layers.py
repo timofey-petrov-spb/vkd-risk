@@ -188,7 +188,12 @@ def test_live_storm_condition_from_noaa_forecast_works_now_too(tmp_path):
     r = run('live', t0, 360, 720, [0, 240], fetched=((g, g_raw, f_goes), kp3, (txt, f_tle), (samples, raw, fetch)), now=t0)
     storm = [c for m in r.assessments[0].mechanisms for c in m.conditions if c.kind == 'GST']
     assert len(storm) == 1 and 'прогноз NOAA: Kp 8' in storm[0].text
-    assert r.rec.verdict == 'insufficient'
+    # ИЗМЕНЕНО в круге 11 (R14): раньше вердикт был `insufficient` из-за пустого канала GOES у
+    # второго окна, и условие по буре на исход не влияло вовсе. Теперь канал объявлен общим,
+    # линия не обнуляется, и исход определяется именно условием: оба окна под условием —
+    # `all_need_check`. Это и есть то, ради чего проверка написана: условие по прогнозу Kp
+    # работает и в текущем режиме, и теперь оно видно в вердикте, а не тонет в отказе.
+    assert r.rec.verdict == 'all_need_check', r.rec.rule_applied
     assert all(any(m.needs_check for m in a.mechanisms) for a in r.assessments)
 
 

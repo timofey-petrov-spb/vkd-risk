@@ -161,7 +161,14 @@ class SeasonalResult:
 
 
 def seasonal_hits_track(
-    times_utc, alts_km, states, area_m2=1.0, mass_g=1e-3, max_step_s=60.0, integration_step_s=10.0
+    times_utc,
+    alts_km,
+    states,
+    area_m2=1.0,
+    mass_g=1e-3,
+    max_step_s=60.0,
+    integration_step_s=10.0,
+    _prepare=False,
 ):
     """One full window. Missing/gapped/unsynchronised states fail; never fill with zero.
 
@@ -233,6 +240,24 @@ def seasonal_hits_track(
     toa_to_infty = (entries**2 - 2 * MU / ABSORBING_KM) / entries**2
     grun = grun_flux_1au(mass_g) / SEC_PER_YEAR
 
+    # One prepared horizon serves manual windows and the automatic scan.
+    # Cumulative integrals avoid recomputing 49 streams for every candidate.
+    from scipy.integrate import cumulative_trapezoid
+
+    grid_cache = {}
+    left_s, right_s = 0.0, ts[-1] - ts[0]
+
+    def summarize_grid(grid):
+        x, c_stream, c_visible, c_bg, c_mean, audit, removed = grid
+        lo, hi = np.searchsorted(x, [left_s, right_s])
+        if hi >= len(x) or abs(x[lo] - left_s) > 1e-6 or abs(x[hi] - right_s) > 1e-6:
+            raise ValueError("Seasonal window boundaries must coincide with supplied trajectory times")
+        parts = (c_stream[:, hi] - c_stream[:, lo]).tolist()
+        visible = (c_visible[:, hi] - c_visible[:, lo]).tolist()
+        ns = float(sum(parts))
+        nb = float(c_bg[hi] - c_bg[lo])
+        return nb + ns, nb, ns, parts, visible, audit, removed, float(c_mean[hi] - c_mean[lo])
+
     def calculate(
         step,
         *,
@@ -244,6 +269,9 @@ def seasonal_hits_track(
         shift_deg=0.0,
         shadow=True,
     ):
+        key = (step, projection, truncate, peak_only, bootids110, of_date, shift_deg, shadow)
+        if key in grid_cache:
+            return summarize_grid(grid_cache[key])
         x = np.unique(
             np.concatenate(
                 [
@@ -299,86 +327,105 @@ def seasonal_hits_track(
             moving = np.linalg.norm(-speed[:, None] * u - v, axis=1) / speed
             vis = visible_rays(p, u) if shadow else np.ones(len(x), dtype=bool)
             flux = peaks[i] * q[i] * (speed / entries[i]) ** 2 * moving * projection * vis
-            parts.append(float(area_m2 * np.trapezoid(flux, x=x)))
-            visible_times.append(float(np.trapezoid(vis.astype(float), x=x)))
-        ns = float(sum(parts))
-        nb = float(area_m2 * np.trapezoid(bg, x=x))
-        return (
-            nb + ns,
-            nb,
-            ns,
-            parts,
-            visible_times,
+            parts.append(area_m2 * cumulative_trapezoid(flux, x=x, initial=0))
+            visible_times.append(cumulative_trapezoid(vis.astype(float), x=x, initial=0))
+        grid_cache[key] = (
+            x,
+            np.asarray(parts),
+            np.asarray(visible_times),
+            area_m2 * cumulative_trapezoid(bg, x=x, initial=0),
+            area_m2 * cumulative_trapezoid(grun * j6, x=x, initial=0),
             audit,
             removed,
-            float(area_m2 * np.trapezoid(grun * j6, x=x)),
+        )
+        return summarize_grid(grid_cache[key])
+
+    def evaluate(start_utc, end_utc):
+        nonlocal left_s, right_s
+        if start_utc.tzinfo is None or end_utc.tzinfo is None:
+            raise ValueError("Window needs timezone-aware UTC bounds")
+        left_s, right_s = start_utc.timestamp() - ts[0], end_utc.timestamp() - ts[0]
+        if not 0 <= left_s < right_s <= ts[-1] - ts[0]:
+            raise ValueError("Seasonal window outside the prepared orbital coverage")
+        if start_utc.timestamp() not in by_time or end_utc.timestamp() not in by_time:
+            raise ValueError("Window boundary lacks an inertial state")
+        base = calculate(integration_step_s)
+        fine = calculate(integration_step_s / 2)
+        scenarios = {"base": base[0], "half_step": fine[0]}
+        variants = {
+            "catalogue_already_plate": {"projection": 1.0},
+            "bootids_110": {"bootids110": True},
+            "peak_only_normalization": {"peak_only": True},
+            "tails_cut_1pct": {"truncate": True},
+            "solar_minus_0_02deg": {"shift_deg": -0.02},
+            "solar_plus_0_02deg": {"shift_deg": 0.02},
+            "catalogue_of_date": {"of_date": True},
+            "no_earth_shadow": {"shadow": False},
+        }
+        invalid = {}
+        for name, kw in variants.items():
+            try:
+                scenarios[name] = calculate(integration_step_s, **kw)[0]
+            except ValueError as e:
+                invalid[name] = str(e)
+        contributions = tuple(
+            {"name": row["name"], "expected_hits": n, "unblocked_duration_s": vis}
+            for row, n, vis in sorted(zip(rows, base[3], base[4]), key=lambda x: x[1], reverse=True)
+        )
+        return SeasonalResult(
+            base[0],
+            base[7],
+            base[1],
+            base[2],
+            mass_g,
+            area_m2,
+            1.0,
+            "engineering_approximation",
+            True,
+            contributions,
+            {
+                "hypotheses_N": scenarios,
+                "invalid_hypotheses": invalid,
+                "min_N": min(scenarios.values()),
+                "max_N": max(scenarios.values()),
+                "half_step_relative_change": abs(fine[0] - base[0]) / base[0],
+                "interpretation": "alternative hypotheses, not a confidence interval",
+            },
+            {
+                "model_id": MODEL_ID,
+                "catalogue_sha256": CATALOGUE_SHA256,
+                "frame": "EME2000; C-2 radiant epoch assumed J2000",
+                "inertial_states_sha256": states.get("content_sha256"),
+                "orbit_method": states.get("method"),
+                "orbit_source_hashes": states.get("source_hashes", {}),
+                "mass_threshold_kg": mass_g / 1000.0,
+                "flux_unit": "m^-2 s^-1",
+                "result_unit": "expected count",
+                "source_records": [CATALOGUE_ID, METHOD_ID],
+                "solar_method": "USNO approximate apparent longitude minus general precession to J2000; 2000–2050",
+                "solar_control_max_error_deg": 0.004,
+                "annual_cycle": base[5],
+                "annual_stream_plate_infty_per_m2_s": base[6],
+                "integration_step_s": integration_step_s,
+                "check_step_s": integration_step_s / 2,
+                "geometry": "one-sided randomly oriented plate; k assumed perpendicular TOA flux; /4 once",
+                "profile": "(Zp*qp+Zb*qb)/(Zp+Zb), all 49 tails retained",
+                "radiant_drift_policy": "linear drift extrapolated with all tails; 1% tail-cut sensitivity reported",
+                "is_reconstruction": states.get("is_reconstruction", True),
+            },
         )
 
-    base = calculate(integration_step_s)
-    fine = calculate(integration_step_s / 2)
-    scenarios = {"base": base[0], "half_step": fine[0]}
-    variants = {
-        "catalogue_already_plate": {"projection": 1.0},
-        "bootids_110": {"bootids110": True},
-        "peak_only_normalization": {"peak_only": True},
-        "tails_cut_1pct": {"truncate": True},
-        "solar_minus_0_02deg": {"shift_deg": -0.02},
-        "solar_plus_0_02deg": {"shift_deg": 0.02},
-        "catalogue_of_date": {"of_date": True},
-        "no_earth_shadow": {"shadow": False},
-    }
-    invalid = {}
-    for name, kw in variants.items():
-        try:
-            scenarios[name] = calculate(integration_step_s, **kw)[0]
-        except ValueError as e:
-            invalid[name] = str(e)
-    contributions = tuple(
-        {"name": row["name"], "expected_hits": n, "unblocked_duration_s": vis}
-        for row, n, vis in sorted(zip(rows, base[3], base[4]), key=lambda x: x[1], reverse=True)
-    )
-    return SeasonalResult(
-        base[0],
-        base[7],
-        base[1],
-        base[2],
-        mass_g,
-        area_m2,
-        1.0,
-        "engineering_approximation",
-        True,
-        contributions,
-        {
-            "hypotheses_N": scenarios,
-            "invalid_hypotheses": invalid,
-            "min_N": min(scenarios.values()),
-            "max_N": max(scenarios.values()),
-            "half_step_relative_change": abs(fine[0] - base[0]) / base[0],
-            "interpretation": "alternative hypotheses, not a confidence interval",
-        },
-        {
-            "model_id": MODEL_ID,
-            "catalogue_sha256": CATALOGUE_SHA256,
-            "frame": "EME2000; C-2 radiant epoch assumed J2000",
-            "inertial_states_sha256": states.get("content_sha256"),
-            "orbit_method": states.get("method"),
-            "orbit_source_hashes": states.get("source_hashes", {}),
-            "mass_threshold_kg": mass_g / 1000.0,
-            "flux_unit": "m^-2 s^-1",
-            "result_unit": "expected count",
-            "source_records": [CATALOGUE_ID, METHOD_ID],
-            "solar_method": "USNO approximate apparent longitude minus general precession to J2000; 2000–2050",
-            "solar_control_max_error_deg": 0.004,
-            "annual_cycle": base[5],
-            "annual_stream_plate_infty_per_m2_s": base[6],
-            "integration_step_s": integration_step_s,
-            "check_step_s": integration_step_s / 2,
-            "geometry": "one-sided randomly oriented plate; k assumed perpendicular TOA flux; /4 once",
-            "profile": "(Zp*qp+Zb*qb)/(Zp+Zb), all 49 tails retained",
-            "radiant_drift_policy": "linear drift extrapolated with all tails; 1% tail-cut sensitivity reported",
-            "is_reconstruction": states.get("is_reconstruction", True),
-        },
-    )
+    return evaluate if _prepare else evaluate(times_utc[0], times_utc[-1])
+
+
+def prepare_seasonal_track(times_utc, alts_km, states, **kwargs):
+    """Return an evaluator for exact-node subwindows; reuse immutable orbit physics.
+
+    The callable is owned by one computation, not a global mutable UI cache.
+    Grid gaps or inconsistent states reject preparation; callers may evaluate
+    separate contiguous windows instead, preserving local coverage failures.
+    """
+    return seasonal_hits_track(times_utc, alts_km, states, _prepare=True, **kwargs)
 
 
 def comparison_sensitivity(results, equal_pct):

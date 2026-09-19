@@ -785,7 +785,9 @@ with tabs[TAB_FACTORS]:
             st.caption('Сезонная инженерная модель: 49 потоков ECSS, масса ≥0,001 г, '
                        'случайно ориентированная односторонняя пластина 1 м². '
                        'Всплески конкретного года не предсказываются.')
-            for number, (start, model) in enumerate(S['meteoroids'].items(), 1):
+            manual_starts = {w['start_utc'] for w in S['windows']}
+            models = ((start, m) for start, m in S['meteoroids'].items() if start in manual_starts)
+            for number, (start, model) in enumerate(models, 1):
                 st.markdown('**Окно %d**' % number)
                 if not model.get('streams_included'):
                     st.warning(model.get('error', 'Сезонный расчёт недоступен'))
@@ -797,9 +799,9 @@ with tabs[TAB_FACTORS]:
                               for part in model['contributions'][:5]], hide_index=True, width='stretch')
                 sensitivity = model['sensitivity']
                 st.write('Разброс при альтернативных гипотезах: %s…%s попаданий. '
-                         'Это не доверительный интервал. При уменьшении шага вдвое итог меняется на %.4g %%.' % (
+                         'Это не доверительный интервал. При уменьшении шага вдвое итог меняется на %s %%.' % (
                          fmt(sensitivity['min_N']), fmt(sensitivity['max_N']),
-                         100*sensitivity['half_step_relative_change']))
+                         fmt(100*sensitivity['half_step_relative_change'])))
                 st.caption(model['limits'])
             st.caption('Все 49 вкладов, варианты расчёта и происхождение данных сохранены в ZIP-отчёте.')
 

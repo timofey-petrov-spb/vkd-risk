@@ -1008,12 +1008,14 @@ def bullet_short_ru(text: str) -> str:
     Происхождение порога различимости остаётся в короткой форме: имя файла настроек переводится
     словами (PHRASE_RU), а не отрезается вместе с закрывающей скобкой."""
     s = str(text or '')
-    if 'линия метеороидов' not in s and 'линии метеороидов' not in s:
+    if 'линия метеороидов' not in s and 'линии метеороидов' not in s and 'сезонная оценка' not in s:
         return s
     head_ = _SEMI_OUTSIDE_PARENS_RE.split(s)[0].strip().rstrip('.')
     for a, b in PHRASE_RU:
         head_ = head_.replace(a, b)
-    return head_ + ' — ' + _MMOD_ROLE_RU + '.'
+    role = (_MMOD_ROLE_RU if 'сезонная оценка' in s else
+            'роль линии: абсолютная оценка и охват, не выбор окна')
+    return head_ + ' — ' + role + '.'
 
 
 def robustness_pill(rec, rob: dict) -> str:

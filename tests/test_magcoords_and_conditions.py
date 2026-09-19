@@ -144,11 +144,20 @@ def test_geodetic_to_ecef_differs_from_the_spherical_shortcut():
 
 
 def test_belt_coordinates_declare_both_methods_separately():
-    """R11: L и B/B0 — эксцентричный диполь, cutoff_GV — метод A3; подписаны раздельно."""
+    """R11: L и B/B0 — эксцентричный диполь, cutoff_GV — из модуля орбиты; подписаны раздельно.
+
+    ИЗМЕНЕНО в круге 11: проверка требовала слов «A3» и «центральный», потому что обрезание и
+    правда считалось центральным диполем. Теперь его считает таблица Ж.1 ОСТ, а диполь остался
+    запасным путём, и подпись обязана называть таблицу — иначе снимок утверждал бы диполь рядом
+    с ограничениями модуля орбиты, которые говорят о таблице. Требование «две модели подписаны
+    раздельно» не ослаблено: проверяется, что подпись по-прежнему отделяет обрезание от
+    эксцентричного диполя этого модуля.
+    """
     _, info = belt_coordinates(_traj(60), IGRF13)
     assert 'WGS84' in info['position_frame'] and 'ECEF' in info['position_frame']
     assert 'эксцентричный диполь' in info['L_B0_method']
-    assert 'A3' in info['cutoff_GV_method'] and 'центральный' in info['cutoff_GV_method']
+    assert 'Ж.1' in info['cutoff_GV_method'] and 'A3' in info['cutoff_GV_method']
+    assert 'НЕ пересчитана' in info['cutoff_GV_method']
 
 
 def test_storm_condition_uses_observed_kp_fact_and_window_overlap():

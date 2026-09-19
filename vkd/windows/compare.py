@@ -4,6 +4,15 @@
 Правило (по порядку, каждый пункт виден пользователю):
   1. Охват: у обязательной линии отсутствие покрытия → рекомендации нет,
      названо, чего не хватает (по каналам); частичное — объявляется.
+     R14 (решение владельца 19.09): канал, у которого прогнозного продукта с
+     разрешением по сравниваемому окну НЕ СУЩЕСТВУЕТ в природе, а последнее
+     наблюдение получено и не устарело сверх своего предела, объявляется ОБЩИМ
+     для всех окон: он их не различает и обязательную линию не обнуляет, а
+     уходит в объявленную область вывода (`declared_common_ru`). Полный отказ по
+     такому каналу остаётся там, где наблюдения нет вовсе или оно устарело;
+     уровень выше фона ставит условие проверки ВСЕМ окнам (исход all_need_check).
+     Суточные вероятности источников в вероятность за окно не пересчитываются
+     ни при каких обстоятельствах и их отсутствие правилу не мешает.
   2. Условия: приоритетное (S ≥ 3) и предупреждение — по разделу 4 п. 2
      договора; пороги — настройки с источником. Помеченные окна из
      автоматического выбора исключаются (правило команды, не норма).
@@ -67,6 +76,29 @@ def _min_ru(x: float) -> str:
     return ('%.0f' % x) if x >= 1 or x == 0 else ('%.1f' % x).replace('.', ',')
 
 
+# Умолчание для причины отсутствия численного наблюдения GOES: значит «вызывающий причину не
+# назвал», и тогда отказ ссылается на блок состояния источников, а не выдумывает архив.
+_GOES_ABSENT_DEFAULT_RU = 'наблюдений GOES в архиве 2024 нет'
+
+
+def _cutoff_fallback_note_ru(traj: Sequence[TrajectoryPoint]) -> str:
+    """Сколько точек окна ушло на запасной путь обрезания.
+
+    Круг 11: таблица Ж.1 стала основным источником жёсткости, но за пределами её широт и при
+    недоступном файле считает прежняя дипольная формула. Молчать об этом нельзя — иначе
+    примечание утверждало бы таблицу там, где стоит диполь. Пустая строка означает, что весь
+    участок трассы окна посчитан таблицей."""
+    fallback = sum(1 for p in traj if p.cutoff_kind == 'dipole_centred')
+    unknown = sum(1 for p in traj if p.cutoff_kind is None)
+    parts = []
+    if fallback:
+        parts.append('в %d из %d точек окна значение дало не таблица, а запасная дипольная формула '
+                     '(вне широт таблицы либо файл недоступен)' % (fallback, len(traj)))
+    if unknown:
+        parts.append('у %d из %d точек происхождение обрезания не проставлено' % (unknown, len(traj)))
+    return ('; ' + '; '.join(parts)) if parts else ''
+
+
 def s_level_ru(pfu: Optional[float]) -> str:
     if pfu is None:
         return 'нет данных'
@@ -82,6 +114,108 @@ def s_level_ru(pfu: Optional[float]) -> str:
 def rigidity_GV(T_MeV: float) -> float:
     """Жёсткость протона с кинетической энергией T: R = sqrt(T² + 2·T·m_p)/(Z·e), ГВ."""
     return math.sqrt(T_MeV * T_MeV + 2.0 * T_MeV * M_P_MEV) / 1000.0
+
+
+# Уровень фона канала протонных событий — НИЖНЯЯ ГРАНИЦА S1 по шкале NOAA SWPC (10 pfu по
+# каналу ≥10 МэВ). Отдельного порога «фон» не заводится: это то же число, что в NOAA_S_PFU и в
+# настройке goes_p10_warning_pfu, и брать его надо из одного места, иначе «ниже S1» на экране и
+# «фон» в правиле разойдутся при изменении настройки.
+S1_PFU = NOAA_S_PFU[0][1]
+
+# Состояния канала протонных событий по последнему наблюдению GOES (R14, ТЗ круга 11 раздел 2).
+PROTON_STATE_RU = {
+    'no_data': 'наблюдения нет вовсе',
+    'ahead': 'время наблюдения впереди момента расчёта',
+    'stale': 'наблюдение устарело сверх предела',
+    'background': 'фон (ниже S1)',
+    'above_background': 'выше фона (S1 и выше)',
+}
+
+
+def proton_channel_state(goes: Optional[EnvironmentSample], now_utc, th: Thresholds):
+    """Состояние канала протонных событий по ПОСЛЕДНЕМУ наблюдению GOES: (состояние, давность).
+
+    Величина не зависит от окна — в этом и суть R14: прогноза потока протонов с разрешением по
+    окну не публикует ни один источник, поэтому последнее наблюдение относится ко ВСЕМ
+    сравниваемым окнам одинаково и различать их не может.
+
+    Предел давности — тот же `goes_max_age_min` (60 мин), который уже печатается на экране как
+    «срок действия данных»; нового порога не вводится. Уровень фона — `S1_PFU`.
+    Отрицательная давность (наблюдение впереди момента расчёта) — отдельное состояние, а не
+    молчаливый ноль: это признак рассогласования времён, и он должен быть виден.
+    """
+    if goes is None or goes.value is None:
+        return 'no_data', None
+    age_min = (now_utc - goes.t_utc).total_seconds() / 60.0
+    if age_min < 0:
+        return 'ahead', age_min
+    if age_min > th.goes_max_age_min:
+        return 'stale', age_min
+    return ('background' if goes.value < S1_PFU else 'above_background'), age_min
+
+
+def proton_channel_common_ru(goes: EnvironmentSample, state: str, daily_ru: str = '') -> str:
+    """Фраза объявленной области для ОБЩЕГО канала протонных событий (R14).
+
+    Отвечает ровно на то, о чём вывод молчать не имеет права: что именно не сравнивается,
+    почему это не лечится данными, каков уровень последнего наблюдения и когда оно сделано, и
+    что наличие события ВНУТРИ окна остаётся неизвестным. Ни одна вероятность здесь не
+    пересчитывается: суточная величина источника печатается суточной (см. `proton_daily_ru`).
+
+    Фраза КОРОТКАЯ намеренно. Она стоит на оперативном уровне рядом с вердиктом, где на весь
+    блок отведено 1250 знаков (`tests/test_ui_app.py`), и длинная версия этот бюджет съедала.
+    Числа, которых здесь нет, никуда не делись и не «упрощены»: уровень в pfu, давность и
+    предел стоят у самой величины — в карточке фактора «поток протонов GOES ≥10 МэВ», в её
+    ограничениях, в отчёте и в снимке. Повторять их в области вывода незачем.
+    """
+    head = ('протонные события в сравнение не входят — прогноза потока с разрешением по окну '
+            'не существует ни у одного источника; ')
+    tail = '; наличие события внутри окна неизвестно'
+    if state == 'background':
+        body = 'на момент расчёта фон по наблюдению %s' % goes.t_utc.strftime('%H:%MZ')
+    else:
+        body = ('последнее наблюдение %s выше фона, условие проверки поставлено всем окнам'
+                % goes.t_utc.strftime('%H:%MZ'))
+    return head + body + tail + daily_ru
+
+
+def proton_daily_ru(forecasts: Sequence[EnvironmentSample], win: Window,
+                    cutoff_utc: Optional[datetime] = None) -> str:
+    """Суточная вероятность NOAA рядом с общим каналом — КАК ЕСТЬ, с прямым указанием, что она
+    суточная. В вероятность за окно она не пересчитывается ни линейно, ни как угодно иначе
+    (решение команды, записанное в восьми документах; CONTRACT §9, R14).
+
+    Отсутствие выпуска НЕ является условием применения правила: на живом экране 19.09 выпуска
+    с суточной вероятностью не было вовсе, и требование его наличия означало бы, что правило не
+    срабатывает никогда. Поэтому отсутствие просто называется словами и на вывод не влияет.
+    """
+    from vkd.integration.noaa_forecast import in_window
+    hits = in_window([s for s in (forecasts or []) if s.channel_id == 's1_prob_daily'],
+                     win.start_utc, win.duration_min)
+    val = max((s.value for s in hits if s.value is not None), default=None)
+    if val is None:
+        return ('; выпуска NOAA с суточной вероятностью %s — на вывод это не влияет'
+                % ('до отсечки нет' if cutoff_utc is not None else 'нет'))
+    return ('; суточная вероятность S1 по NOAA %s %% — она СУТОЧНАЯ и в вероятность за окно '
+            'не пересчитывается' % fmt_ru(float(val)))
+
+
+def _goes_cells_in_window(goes_observations: Sequence[EnvironmentSample], start: datetime, end: datetime) -> list:
+    """Ячейки архива наблюдений GOES, ФАКТИЧЕСКИ пересекающие окно (исторический разбор).
+    Одно место на весь модуль: его читают и оценка окна, и перебор начал."""
+    return [s for s in goes_observations if s.value is not None
+            and s.valid_from_utc is not None and s.valid_to_utc is not None
+            and s.valid_from_utc < end and s.valid_to_utc > start]
+
+
+def kp_observation_age(kp: Optional[EnvironmentSample], now_utc, th: Thresholds):
+    """(давность наблюдения Kp в минутах, свежее ли оно). Давность считается от КОНЦА интервала
+    измерения: у Kp GFZ t_utc — начало трёхчасового интервала."""
+    if kp is None or kp.value is None:
+        return None, False
+    ref = kp.valid_to_utc or kp.t_utc
+    age_min = max(0.0, (now_utc - ref).total_seconds() / 60.0)
+    return age_min, age_min <= th.kp_max_age_min
 
 
 @dataclass(frozen=True)
@@ -164,471 +298,89 @@ def overlaps(a0, a1, start, end, min_overlap: timedelta = MIN_OVERLAP) -> bool:
     return (min(a1, end) - max(a0, start)) >= min_overlap
 
 
-def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
-                  goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],
-                  conj: Sequence[Conjunction], th: Thresholds,
-                  now_utc, mmod_hits: Optional[float] = None,
-                  mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается',
-                  events: Sequence[EventInterval] = (),
-                  catalog_coverage: Optional[tuple] = None,
-                  forecasts: Sequence[EnvironmentSample] = (),
-                  mmod_cov_fraction: float = 1.0,
-                  trajectory_record_ids: Sequence[str] = ('trajectory',),
-                  cutoff_utc: Optional[datetime] = None,
-                  goes_observations: Optional[Sequence[EnvironmentSample]] = None,
-                  event_facts: Optional[dict] = None,
-                  goes_absent_ru: Optional[str] = None,
-                  numerical_report: Optional[dict] = None,
-                  mmod_seasonal: Optional[dict] = None) -> WindowAssessment:
-    """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
-    спецификации A5). None — линия не подключена, покрытие NONE.
-    events: события с интервалами (в т. ч. моделируемые); пересечение окна
-    с интервалом действия или физическим интервалом даёт условие проверки.
-    catalog_coverage: (начало, конец) архива уведомлений DONKI; cutoff_utc —
-    отсечка строгого режима (меняет формулировки: «до отсечки», а не «за период»).
-    trajectory_record_ids: идентификаторы записей орбиты (TLE/OEM, IGRF) для
-    прослеживаемости собственных расчётов до исходной записи.
-    event_facts: структурированные факты записи (raw_record_id -> facts адаптера A2):
-    Kp наблюдения бури, канал и порог протонного события, опубликованный диапазон Kp
-    прихода выброса. Правило читает их, а не русский текст заметки; разбор note —
-    только запасной вариант для записей без фактов.
-    goes_absent_ru: чем именно объясняется отсутствие численного наблюдения GOES
-    (нет архива / исключён строгим режимом / исключён пользователем) — чтобы на экране
-    не стояла одна и та же фраза для разных причин."""
+def window_conditions(win: Window, th: Thresholds, now_utc, *,
+                      goes: Optional[EnvironmentSample] = None,
+                      goes_observations: Optional[Sequence[EnvironmentSample]] = None,
+                      kp: Optional[EnvironmentSample] = None,
+                      events: Sequence[EventInterval] = (),
+                      forecasts: Sequence[EnvironmentSample] = (),
+                      event_facts: Optional[dict] = None) -> tuple[Condition, ...]:
+    """Условия проверки окна — ОДИН расчёт на весь сервис.
+
+    Его зовут и полная оценка окна (`assess_window`), и перебор начал (`vkd/windows/scan.py`):
+    правило «кандидат с условием не может стоять выше кандидата без условий» обязано опираться
+    на те же условия, что потом стоят в карточке окна. Второй реализации условий в проекте нет
+    и быть не должно — иначе перебор и карточка разойдутся на глазах у читателя.
+
+    Источники условий: наблюдение GOES ≥10 МэВ, прогноз Kp NOAA, наблюдение Kp и уведомления
+    DONKI (протонное событие, буря, прогноз прихода выброса). Сближения (SOCRATES) — отдельная
+    необязательная линия, её условия добавляет `assess_window`: они относятся к своему механизму.
+
+    Порядок в кортеже — приоритетные (S ≥ 3) впереди, как и прежде; внутри класса сохраняется
+    порядок появления.
+    """
     end = win.start_utc + timedelta(minutes=win.duration_min)
     facts_of = (event_facts or {})
-    goes_absent_ru = goes_absent_ru or 'наблюдений GOES в архиве 2024 нет'
-    # Include both window endpoints and bracketing samples for clipped boundaries.
-    # Values outside this temporal support are never extrapolated.
-    times = [p.t_utc for p in traj]
-    duration_s = (end-win.start_utc).total_seconds()
-    def integrate(values, threshold=None):
-        return integrate_time(times, values, win.start_utc, end,
-                              max_gap_seconds=60.0, threshold=threshold)
-    def coverage(result):
-        return _cov(result.covered_seconds, duration_s)
-    pts = [p for p in traj if win.start_utc <= p.t_utc <= end]
-    track_int = integrate([1.0]*len(traj))
-    cov_traj = coverage(track_int)
-    lo = max(0, bisect_right(times, win.start_utc)-1)
-    hi = min(len(times), bisect_left(times, end)+1)
-    traj, times = traj[lo:hi], times[lo:hi]
-    traj_ids = tuple(trajectory_record_ids) or ('trajectory',)
-    notes: list[str] = []
-    # Какие из заметок о покрытии говорят об ОТСУТСТВИИ данных по своему каналу, а какие — о
-    # частичном покрытии. Разделять обязательно: покрытие механизма берётся минимумом по каналам,
-    # и без этого разделения при одном пустом канале ВСЕ заметки механизма попадали в «не покрыто
-    # совсем» — в том числе «флюенс: модель ОСТ покрывает 83,3 % времени окна»: отказ печатался
-    # рядом с числом, которое его опровергает.
-    blocking: list[str] = []
-
-    def note(text: str, absent: bool) -> None:
-        notes.append(text)
-        if absent:
-            blocking.append(text)
-
-    # Linear threshold crossings resolve fractional minutes instead of counting nodes.
-    saa_int = integrate([p.B_nT for p in traj], th.saa_B_threshold_nT)
-    minutes_saa = (saa_int.below_threshold_seconds / 60
-                   if saa_int.below_threshold_seconds is not None else None)
-    cov_saa = coverage(saa_int)
-    if cov_traj != Coverage.FULL:
-        note('трасса: известные интервалы орбиты покрывают %.1f %% времени окна' % (100*track_int.coverage_fraction), cov_traj == Coverage.NONE)
-
-    flux = [belts.integral_flux(p.L, p.B_over_B0, th.e_min_MeV) for p in traj]
-    fl_int = integrate([r.value_per_cm2_s for r in flux])
-    fluence, cov_fl = fl_int.known_integral, coverage(fl_int)
-    fl_status = {}
-    for p, r in zip(traj, flux):
-        if win.start_utc <= p.t_utc <= end:
-            fl_status[r.status] = fl_status.get(r.status, 0) + 1
-    # Пропуски — В МИНУТАХ И С ПРИЧИНАМИ (разбор Codex п. 3). Доля покрытия и счётчики узлов
-    # ниже остаются, но на вопрос «сколько времени окна без модели и почему» отвечает эта строка.
-    fl_gaps = uncovered_minutes_by_reason(times, [r.value_per_cm2_s for r in flux],
-                                          [r.status for r in flux], win.start_utc, end,
-                                          max_gap_seconds=60.0)
-    fl_gap_min = sum(g.minutes for g in fl_gaps)
-    fl_note = ['известный вклад: интеграл трапециями по фактическим интервалам времени; '
-               'оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются',
-               'покрытие по времени %.1f %% (%.1f из %.1f с)' %
-               (100*fl_int.coverage_fraction, fl_int.covered_seconds, duration_s)]
-    if fl_gaps:
-        fl_note.append('без модели %s мин из %d мин окна: %s' %
-                       (_min_ru(fl_gap_min), win.duration_min, gaps_ru(fl_gaps)))
-    fl_note.append('статусы узлов: ' + ', '.join('%s — %d' % (MAG_STATUS_RU.get(k, k), v) for k,v in sorted(fl_status.items())))
-    # Node counts are an explanatory diagnostic, NOT the time coverage above.
-    saa_flux = [r for p,r in zip(traj, flux) if win.start_utc <= p.t_utc <= end and p.in_saa]
-    if saa_flux:
-        known = sum(r.value_per_cm2_s is not None for r in saa_flux)
-        unknown_L = sum(r.status == 'no_model_L' for r in saa_flux)
-        inconsistent = sum(r.status == 'inconsistent_BB0' for r in saa_flux)
-        mirror = sum(r.status == 'beyond_mirror' for r in saa_flux)
-        fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (диагностика узлов, не покрытие времени)' % (known, len(saa_flux)))
-        if unknown_L:
-            fl_note.append('у %d точек L вне сетки — вклад неизвестен' % unknown_L)
-        if inconsistent:
-            fl_note.append('у %d точек B/B0 < 1 — магнитные координаты несовместимы, вклад неизвестен' % inconsistent)
-        if mirror:
-            fl_note.append(('ещё у %d точек' if unknown_L or inconsistent else 'у %d точек') % mirror +
-                           ' значение известно и равно нулю — выше точки отражения')
-    if cov_fl != Coverage.FULL:
-        note('флюенс: модель ОСТ покрывает %.1f %% времени окна (%s мин из %d без модели: %s); '
-             'полный флюенс неизвестен, вне модели не ноль'
-             % (100*fl_int.coverage_fraction, _min_ru(fl_gap_min), win.duration_min, gaps_ru(fl_gaps)),
-             cov_fl == Coverage.NONE)
-        fl_note.append('полный флюенс окна неизвестен; показан только известный вклад')
-    if fl_int.grid_relative_delta is not None:
-        fl_note.append('чувствительность к объединению соседних интервалов %.2f %% на %.1f %% времени окна; '
-                       'не граница физической погрешности' %
-                       (100*fl_int.grid_relative_delta, 100*fl_int.grid_compared_seconds/duration_s))
-    else:
-        fl_note.append('для проверки сетки нет сопоставимых соседних интервалов')
-    if numerical_report is not None:
-        numerical_report.update({'method': 'piecewise_linear_actual_dt_v1', 'max_gap_seconds': 60.0,
-                                 'fluence': asdict(fl_int), 'saa': asdict(saa_int),
-                                 'fluence_unit': 'particles/cm2',
-                                 'limitations': 'partial integral is not total; grid delta is not a physical error bound'})
-
-    # доступность канала GOES на трассе через вертикальное обрезание (CONTRACT §3, «минут доступности частиц канала»)
-    cut_factors = []
-    for T_MeV in (10.0, 100.0):
-        R = rigidity_GV(T_MeV)
-        cut_int = integrate([p.cutoff_GV for p in traj], R)
-        val = cut_int.below_threshold_seconds/60 if cut_int.below_threshold_seconds is not None else None
-        cut_factors.append(FactorValue(
-            'минут доступности протонов ≥%.0f МэВ по обрезанию' % T_MeV, val, 'мин', Kind.OWN_CALCULATION,
-            _presence(val), coverage(cut_int), traj_ids,
-            'время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже %.2f ГВ — жёсткости протона %.0f МэВ; '
-            'предположение о спектре: порог по жёсткости канала, без формы спектра' % (R, T_MeV),
-            ('жёсткость обрезания считает A3 по ЦЕНТРАЛЬНОМУ наклонённому диполю; L и B/B0 для таблиц ОСТ считает '
-             'vkd.assess.magcoords по ЭКСЦЕНТРИЧНОМУ диполю (R11) — это две разные модели, не одна система координат, '
-             'и складывать их точность нельзя; '
-             'дипольное вертикальное обрезание A3 в спокойных условиях; при буре Kp ≥ 7 обрезание снижается — не моделируется'
-             + ('; по дипольному обрезанию протоны %.0f МэВ на трассе окна недоступны — условие GOES относится к штормовому '
-                'ослаблению обрезания' % T_MeV if val == 0 else ''))))
-
-    # Coverage belongs to each source, not to a shared calendar boundary.
-    # A DONKI gap cannot erase actual GOES cells or valid NOAA forecast intervals.
-    event_cov = Coverage.FULL
-    if catalog_coverage and (win.start_utc < catalog_coverage[0] or end > catalog_coverage[1]):
-        event_cov = Coverage.NONE
-        note('DONKI: окно за границей архива уведомлений; полнота событий на непокрытом участке неизвестна', True)
-
-    goes_note, goes_val, goes_cov, goes_hz, goes_frac = 'нет данных GOES', None, Coverage.NONE, None, None
-    goes_records = (goes.raw_record_id,) if goes else ()
-    goes_rule = 'NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)'
-    if goes_observations is not None:
-        # Retrospective observations only: intersect actual averaging cells.
-        # No forward fill, no extension by goes_max_age_min and no conversion to forecast.
-        from vkd.sources.goes_archive import interval_coverage
-        cells = [s for s in goes_observations if s.value is not None and
-                 s.valid_from_utc is not None and s.valid_to_utc is not None and
-                 s.valid_from_utc < end and s.valid_to_utc > win.start_utc]
-        report = interval_coverage(cells, win.start_utc, end)
-        fraction = goes_frac = report['coverage_fraction']
-        goes_cov = Coverage.FULL if fraction == 1 else (Coverage.PARTIAL if fraction > 0 else Coverage.NONE)
-        goes = max(cells, key=lambda s: s.value, default=None)
-        goes_val = goes.value if goes else None
-        goes_hz = goes.valid_to_utc if goes else None
-        goes_records = tuple(sorted({s.raw_record_id for s in cells}))
-        goes_rule = 'Архив GOES iSWA: максимум наблюдённых 5-минутных средних внутри окна; не прогноз'
-        goes_note = ('разбор: фактические ячейки GOES покрывают %.1f %% окна; '
-                     'пропуски не заполняются, качество инструмента в архиве неизвестно' % (100*fraction))
-        if fraction < 1:
-            note('GOES: архивные наблюдения покрывают %.1f %% окна' % (100*fraction), fraction <= 0)
-    elif goes is not None and goes.value is not None:
-        age_min = (now_utc - goes.t_utc).total_seconds() / 60.0
-        goes_val = goes.value
-        goes_hz = goes.t_utc + timedelta(minutes=th.goes_max_age_min)
-        # покрытие — доля окна внутри горизонта наблюдения [t_obs, t_obs + goes_max_age_min]:
-        # наблюдение сейчас не распространяется молча на будущие участки окна (CONTRACT §4 п. 2)
-        lo, hi = max(win.start_utc, goes.t_utc), min(end, goes_hz)
-        frac = max(0.0, (hi - lo).total_seconds()) / (end - win.start_utc).total_seconds()
-        goes_frac = frac
-        goes_cov = Coverage.FULL if frac == 1 else (Coverage.PARTIAL if frac > 0 else Coverage.NONE)
-        # ЯВНАЯ ЦЕПОЧКА (разбор Codex п. 7): срок действия данных → покрываемая часть окна →
-        # допустимый вывод. Наблюдение сейчас и прогноз на всё окно — разные сущности, и решает
-        # это не читатель: три звена печатаются подряд, каждое со своим числом, и последнее
-        # звено НАЗЫВАЕТ допустимый вывод, а не оставляет его домыслить.
-        # Уровень подставляется БЕЗ внешних скобок: s_level_ru сам печатает «фон (ниже S1)»,
-        # и в шаблоне «наблюдение %s (%s)» получалась скобка в скобке (пятый круг).
-        unc_min = (1 - frac) * win.duration_min
-        # Звено 2 обязано содержать оборот «горизонт наблюдения … покрывает N % окна» ДОСЛОВНО:
-        # по нему `app.ui.obs_share_pct` узнаёт долю и ставит прочерк вместо числа у окна, которое
-        # наблюдение не покрывает. Связь проверяется `tests/test_goes_chain.py`, иначе переписанная
-        # фраза молча вернула бы прошлое измерение в качестве величины будущего окна.
-        goes_note = ('наблюдение %s, %s, давность %.0f мин; '
-                     'срок действия данных — %.0f мин после измерения (настройка команды, не норма): '
-                     'горизонт наблюдения до %s покрывает %.0f %% окна, это %s мин из %d' % (
-                         goes.t_utc.strftime('%Y-%m-%d %H:%MZ'), s_level_ru(goes_val), age_min,
-                         th.goes_max_age_min, goes_hz.strftime('%H:%MZ'),
-                         100 * frac, _min_ru(frac * win.duration_min), win.duration_min))
-        if frac >= 1:
-            goes_note += '; допустимый вывод: уровень потока известен по наблюдению на всё окно'
-        else:
-            goes_note += ('; допустимый вывод: на остальные %s мин окна наблюдение не распространяется — '
-                          'оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов '
-                          'на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается'
-                          % _min_ru(unc_min))
-            note('GOES: наблюдение %s покрывает %.0f %% окна (%s мин из %d без данных), '
-                 'прогноза потока протонов на окно нет'
-                 % (goes.t_utc.strftime('%H:%MZ'), 100 * frac, _min_ru(unc_min), win.duration_min), frac <= 0)
-        if frac <= 0.0:
-            # горизонт наблюдения кончился до начала окна: наличие протонного события В ОКНЕ неизвестно.
-            # Покрытие остаётся частичным (уровень и время наблюдения объявлены), но «не выявлено» писать нельзя.
-            gap_h = (win.start_utc - goes.t_utc).total_seconds() / 3600.0
-            # уровень назван в начале заметки и второй раз не повторяется (бриф §9.7):
-            # здесь важно не какой он, а к чему относится
-            goes_note += ('; на само окно наблюдения нет — наличие протонного события в окне неизвестно, '
-                          'названный уровень относится к моменту наблюдения, а не к окну')
-            note('наблюдение GOES не покрывает окно (до его начала %.0f ч)' % gap_h, True)
-    elif any(e.kind_of_event == 'SEP' and e.published_utc is not None for e in events):
-        # архива GOES нет, но есть датированные уведомления о протонных событиях: частичное покрытие канала
-        goes_cov = Coverage.PARTIAL
-        goes_note = goes_absent_ru + '; канал частично покрыт датированными уведомлениями DONKI о протонных событиях'
-        # Два разных канала — две разные строки. Пока причина отсутствия наблюдений GOES
-        # («исключён пользователем», «исключён строгим режимом») стояла в одной строке с
-        # уведомлениями DONKI, исключение читалось как относящееся и к ним (девятый круг, М3).
-        notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
-        notes.append('уведомления DONKI: канал протонных событий покрыт только ими — это другой источник')
-    elif catalog_coverage:
-        c0, c1 = catalog_coverage[0], catalog_coverage[1]
-        if cutoff_utc is not None:
-            # строгий режим: важно, что архив содержит все публикации до отсечки и период действия событий до окна
-            ok = c0 <= win.start_utc - timedelta(hours=th.sep_valid_hours) and c1 >= cutoff_utc
-            if ok:
-                goes_cov = Coverage.PARTIAL
-                goes_note = ('%s; в уведомлениях DONKI, опубликованных до отсечки %s, протонных '
-                             'событий с действием в окне не объявлено; после отсечки сведения не использованы; каталог в '
-                             'репозитории охватывает %s — %s' % (goes_absent_ru, cutoff_utc.strftime('%Y-%m-%d %H:%MZ'), c0.strftime('%d.%m.%Y'),
-                                                                  (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
-                notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
-                notes.append('уведомления DONKI: протонных событий с действием в окне до отсечки %s не объявлено'
-                             % cutoff_utc.strftime('%Y-%m-%d %H:%MZ'))
-            else:
-                goes_note = ('архив уведомлений DONKI %s — %s не покрывает публикации до отсечки %s'
-                             % (c0.strftime('%d.%m.%Y'), c1.strftime('%d.%m.%Y'), cutoff_utc.strftime('%Y-%m-%d %H:%MZ')))
-                note('GOES/DONKI: ' + goes_note, True)
-        elif c0 <= win.start_utc and end <= c1:
-            # пустой каталог за период — это результат «событий не объявлено», а не отсутствие данных
-            # (CONTRACT v3.1, правило 9); покрытие частичное, потому что самого наблюдения GOES нет
-            goes_cov = Coverage.PARTIAL
-            goes_note = ('%s; в уведомлениях DONKI за %s — %s протонных событий с действием '
-                         'в окне не объявлено' % (goes_absent_ru, c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
-            notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
-            notes.append('уведомления DONKI: за %s — %s протонных событий с действием в окне не объявлено'
-                         % (c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
-        else:
-            goes_note = ('уведомления DONKI: архив до %s, окно %s — %s за его пределами — сократите период поиска или сдвиг'
-                         % (c1.strftime('%Y-%m-%d %H:%MZ'), win.start_utc.strftime('%d.%m %H:%MZ'), end.strftime('%d.%m %H:%MZ')))
-            note('GOES/DONKI: ' + goes_note, True)
-    else:
-        # тот же разбор, что у Kp ниже: слой сравнения знает только, что значения нет; исключил ли
-        # источник пользователь и что именно случилось с запросом, называет блок состояния источников
-        note('GOES: наблюдения нет — источник значения не дал, кеша нет; причина — в состоянии источников', True)
-
-    # --- наблюдение Kp: отдельный фактор с давностью; условие — только при свежем наблюдении ---
-    kp_factor, kp_fresh, kp_age_min, kp_cov = None, False, None, Coverage.PARTIAL
-    if kp is not None and kp.value is not None:
-        ref = kp.valid_to_utc or kp.t_utc
-        kp_age_min = max(0.0, (now_utc - ref).total_seconds() / 60.0)
-        kp_fresh = kp_age_min <= th.kp_max_age_min
-        sim = kp.source_id == 'scenario'
-        kp_note = 'интервал %s — %s, давность %.0f мин (предел %.0f мин)' % (
-            (kp.valid_from_utc or kp.t_utc).strftime('%d.%m %H:%MZ'), ref.strftime('%H:%MZ'), kp_age_min, th.kp_max_age_min)
-        if sim:
-            kp_note = 'МОДЕЛИРУЕМОЕ значение сценария «что если»; ' + kp_note
-        if not kp_fresh:
-            kp_note += ' — устарело: условие проверки по нему не ставится; на окно наблюдение не распространяется'
-            note('Kp: последнее наблюдение %s устарело (давность %.0f мин)' % (ref.strftime('%d.%m %H:%MZ'), kp_age_min), False)
-        kp_cov = Coverage.FULL if kp_fresh else Coverage.PARTIAL
-        kp_factor = FactorValue('Kp, последнее наблюдение' + (' (сценарий)' if sim else ''), kp.value, KP_UNIT, kp.kind,
-                                Presence.DETECTED if kp.value >= th.kp_check else Presence.NOT_DETECTED,
-                                kp_cov, (kp.raw_record_id,),
-                                'порог проверки Kp ≥ %.0f (G3 по шкале NOAA); %s' % (th.kp_check, TEAM_RULE_RU), kp_note,
-                                horizon_utc=ref + timedelta(minutes=th.kp_max_age_min))
-    else:
-        # канал Kp без наблюдения: у величины покрытия нет (NONE), но у МЕХАНИЗМА это объявленное
-        # частичное покрытие — как у GOES без архива. Отсутствие Kp не должно молча исчезать
-        # из покрытия и делать вердикт благоприятнее, чем с наблюдением Kp.
-        kp_cov = Coverage.PARTIAL
-        # Слой сравнения знает только то, что значения нет; исключил ли источник пользователь —
-        # знает блок состояния источников (признак state == 'off'), и он это и печатает. Пока
-        # здесь стояло «источник исключён ИЛИ …», отчёт утверждал исключение источника там, где
-        # тремя строками выше стояло «источники, отключённые пользователем: нет» (пятый круг).
-        note('Kp: наблюдения нет — %s'
-             % ('записей с доказанной публикацией до отсечки нет' if cutoff_utc else 'источник значения не дал'), False)
-        kp_factor = FactorValue('Kp, последнее наблюдение', None, KP_UNIT, Kind.OBSERVATION, Presence.UNKNOWN, Coverage.NONE, (),
-                                'порог проверки Kp ≥ %.0f (G3 по шкале NOAA); %s' % (th.kp_check, TEAM_RULE_RU),
-                                'наблюдения Kp нет' + (' (в строгом режиме — только с доказанной публикацией до отсечки)' if cutoff_utc else ''))
-
-    # --- прогнозы NOAA, выпущенные до отсечки (история): факторы-прогнозы, не наблюдения ---
-    # Исходное разрешение источника сохраняется: суточная вероятность остаётся суточной
-    # (vkd/history/README.md), прогноз Kp — по 3-часовым интервалам. Покрытие окна
-    # ячейками объявляется; отсутствие прогноза не ухудшает покрытие механизма.
-    fc_factors, storm_signals, storm_ids, storm_span = [], [], [], []
-    if forecasts:
-        from vkd.integration.noaa_forecast import covered_fraction, in_window
-        for cid, name, unit, rule in (
-                ('kp_forecast', 'прогноз Kp NOAA, максимум в окне', KP_UNIT, 'NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации'),
-                ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA', '%', 'NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации'),
-                ('proton_prob_daily', 'вероятность протонного события за сутки, прогноз NOAA', '%', 'NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации')):
-            ss = [s for s in forecasts if s.channel_id == cid]
-            hit = in_window(ss, win.start_utc, win.duration_min)
-            frac = covered_fraction(ss, win.start_utc, win.duration_min)
-            cov = Coverage.FULL if frac >= 0.95 else (Coverage.PARTIAL if frac >= 0.5 else Coverage.NONE)
-            val = max((s.value for s in hit), default=None)
-            pub = max((s.published_utc for s in hit if s.published_utc), default=None)
-            hz = max((s.valid_to_utc for s in ss if s.valid_to_utc), default=None)
-            fc_factors.append(FactorValue(
-                name, val, unit, Kind.EXTERNAL_FORECAST, Presence.UNKNOWN if val is None else Presence.DETECTED, cov,
-                tuple(sorted({s.raw_record_id for s in hit})), rule + (' %s' % pub.strftime('%m-%d %H:%MZ') if pub else ''),
-                ('суточная вероятность источника, не вероятность за окно; ' if unit == '%' else 'прогноз, не наблюдение; ')
-                + 'покрытие окна ячейками %.0f %%' % (100 * frac)
-                + ('' if hit else ('; выпуска до отсечки с ячейками на окно нет' if cutoff_utc
-                                   else '; выпуска с ячейками на это окно нет')),
-                horizon_utc=hz))
-            if cid == 'kp_forecast' and val is not None and val >= th.kp_check:
-                cells = [s for s in hit if s.value is not None and s.value >= th.kp_check]
-                storm_signals.append('%s %s в окне (выпуск %s)' % (STORM_SIGNAL_RU['noaa_kp_forecast'], fmt_ru(val),
-                                                                   pub.strftime('%m-%d %H:%MZ') if pub else '?'))
-                storm_ids += sorted({s.raw_record_id for s in cells})
-                storm_span += [(max(s.valid_from_utc, win.start_utc), min(s.valid_to_utc, end)) for s in cells]
-
-    factors_m1 = (
-        FactorValue('минут в аномалии', minutes_saa, 'мин', Kind.OWN_CALCULATION,
-                    _presence(minutes_saa), cov_saa, traj_ids, 'время по линейным пересечениям |B| ниже порога %.0f нТл (настройка, варьируется в чувствительности)' % th.saa_B_threshold_nT,
-                    'дипольная L — исследовательское приближение' if any(p.mag_status != 'ok' for p in pts) else ''),
-        FactorValue('флюенс захваченных протонов ≥%g МэВ' % th.e_min_MeV, fluence, 'част./см²',
-                    Kind.OWN_CALCULATION, _presence(fluence), cov_fl, traj_ids + (belts.raw_record_id,),
-                    # «всенаправленный поток (%s)» с полной единицей давало «всенаправленный
-                    # (…, всенаправленный (ОСТ …))»: слово дважды подряд, скобка в скобке и
-                    # стандарт дважды в одном предложении (пятый круг). Стандарт назван один раз
-                    # в belts.source, поэтому единица подставляется короткой формой.
-                    belts.source + '; единицы потока: %s; интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
-                    % (belts.flux_unit_short_ru, belts.interpolation_ru),
-                    '; '.join(fl_note)),
-    ) + tuple(cut_factors) + (
-        FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
-                    (Presence.UNKNOWN if goes_val is None or (goes_frac is not None and goes_frac <= 0.0) else
-                     (Presence.DETECTED if goes_val >= th.goes_p10_warning_pfu else Presence.NOT_DETECTED)),
-                    goes_cov, goes_records, goes_rule,
-                    goes_note, horizon_utc=goes_hz),
-        kp_factor,
-    ) + tuple(fc_factors)
-
-    # --- механизм 2: статистика метеороидов ECSS по высоте трассы (B2 по A5) --------
-    mm_cov = Coverage.NONE if mmod_hits is None else (
-        Coverage.PARTIAL if mmod_cov_fraction > 0 else Coverage.NONE)
-    showers = active_showers(win.start_utc)
-    m2 = MechanismAssessment(
-        mechanism_id='mmod_stat', mandatory=True,
-        factors=(FactorValue('ожидаемое число попаданий, пластина 1 м²', mmod_hits, 'шт', Kind.OWN_CALCULATION,
-                             Presence.UNKNOWN if mmod_hits is None else Presence.DETECTED,
-                             mm_cov, () if mmod_hits is None else ('ecss_grun:grun-ecss-2020-v1',) + traj_ids,
-                             mmod_rule,
-                             'расчёт невозможен: нет трассы окна' if mmod_hits is None
-                             else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
-                                  '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены; ' + MMOD_ROLE_RU
-                                  + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),
-                 FactorValue('активных метеорных потоков на дату (календарь IMO)', float(len(showers)), 'шт', Kind.OWN_CALCULATION,
-                             Presence.DETECTED if showers else Presence.NOT_DETECTED, Coverage.FULL, ('imo_calendar',),
-                             SHOWERS_SOURCE_RU + '; признак активности потока на дату — в число попаданий не входит '
-                             '(формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, '
-                             'вклад в N не рассчитан',
-                             ('активны: ' + '; '.join('%s (пик %s, ZHR до %d, активность %s)' % (s['name'], s['peak'], s['zhr_peak'], s['active'])
-                                                     for s in showers) + ' — поток активен, вклад в число попаданий не рассчитан'
-                              if showers else 'главных потоков по календарю нет; спорадический фон учтён моделью Grün')
-                             + '; ZHR — визуальная величина, не поток на пластину; даты календаря смещаются на ±1 сут по годам')),
-        coverage=mm_cov, needs_check=False,
-        # Трасса покрывает окно целиком или частично; сезонный вклад не рассчитан НИГДЕ,
-        # поэтому он объявляется отдельным пропуском на ВСЮ длительность окна, а не долей
-        # времени (разбор Codex п. 5: совпадение с контрольным числом подтверждает формулу,
-        # а не полноту модели). Ноль вместо него не подставляется.
-        coverage_fraction=(None if mmod_hits is None else mmod_cov_fraction),
-        coverage_gaps=((CoverageGap('сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün)',
-                                    float(win.duration_min)),)
-                       + ((CoverageGap('трасса окна известна не полностью',
-                                       float(win.duration_min) * (1 - mmod_cov_fraction)),)
-                          if mmod_hits is not None and mmod_cov_fraction < 1 else ())),
-        coverage_notes=('метеороиды: сезонный вклад не рассчитан; средний Grün не полный охват короткой ВКД',) + (('метеороиды: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction),) if mmod_hits is not None and mmod_cov_fraction < 1
-                        else (('метеороиды: расчёт невозможен — нет трассы окна',) if mmod_hits is None else ())),
-        # Блокирует только ОТСУТСТВИЕ расчёта. Незакрытый сезонный вклад — объявленное
-        # ограничение модели (разбор Codex п. 5), а не пустой канал: число попаданий посчитано.
-        blocking_notes=(('метеороиды: расчёт невозможен — нет трассы окна',) if mmod_hits is None else ()),
-    )
-
-    if mmod_seasonal is not None:
-        from vkd.assess.seasonal import CATALOGUE_ID, METHOD_ID, LIMITS_RU
-        available = bool(mmod_seasonal.get('streams_included')) and mmod_hits is not None
-        model_records = ('ecss_grun:grun-ecss-2020-v1', CATALOGUE_ID, METHOD_ID) + traj_ids
-        issue = mmod_seasonal.get('error') or LIMITS_RU
-        def mm_factor(name, value, explanation):
-            return FactorValue(name, value, 'шт', Kind.OWN_CALCULATION,
-                               Presence.UNKNOWN if value is None else Presence.DETECTED,
-                               Coverage.PARTIAL if available else Coverage.NONE,
-                               model_records, mmod_rule, explanation)
-        mm_factors = [mm_factor('ожидаемое число попаданий, пластина 1 м²', mmod_hits, issue)]
-        if available:
-            mm_factors += [
-                mm_factor('спорадическая составляющая после исключения среднего вклада потоков',
-                          mmod_seasonal['N_sporadic_adjusted'], 'Фон и потоки приведены к одной геометрии и массе ≥0,001 г.'),
-                mm_factor('сезонная составляющая метеорных потоков', mmod_seasonal['N_streams'],
-                          'Сумма 49 профилей с тенью Земли и относительной скоростью; входит в итоговое число.'),
-                mm_factor('средняя модель Grün без сезонного перераспределения (для сравнения)',
-                          mmod_seasonal['N_mean_background'], 'Контрольная величина; к итогу повторно не прибавляется.')]
-        m2 = MechanismAssessment(
-            mechanism_id='mmod_stat', mandatory=True, factors=tuple(mm_factors),
-            coverage=Coverage.PARTIAL if available else Coverage.NONE, needs_check=False,
-            coverage_fraction=mmod_cov_fraction if available else 0.0,
-            coverage_gaps=(CoverageGap(
-                'неопределённость нормировки и эпохи каталога; модель инженерная' if available else issue,
-                float(win.duration_min)),),
-            coverage_notes=(('метеороиды: сезонный вклад рассчитан; нормировка каталога и эпоха радиантов '
-                             'остаются гипотезами, годовые всплески не предсказываются') if available else issue,),
-            blocking_notes=() if available else (issue,))
-
-    # --- линия 3: сближения, необязательная ----------------------------------
-    in_win = [c for c in conj if win.start_utc <= c.tca_utc < end]
-    conj_conds = tuple(Condition('CONJ', 'limiting',
-                                 'сообщение о сближении %s, промах %.1f км, TCA %s в окне: требует ручной оценки' % (
-                                     c.other_object, c.miss_distance_km, c.tca_utc.strftime('%m-%d %H:%MZ')),
-                                 (c.raw_record_id,), (c.tca_utc, c.tca_utc), 'промах %.1f км' % c.miss_distance_km,
-                                 ('CelesTrak SOCRATES, прогон %s, публикация %s' % (
-                                     c.run_utc.strftime('%m-%d %H:%MZ') if c.run_utc else '?',
-                                     c.published_utc.strftime('%m-%d %H:%MZ') if c.published_utc else 'неизвестна'),))
-                       for c in in_win)
-    m3 = MechanismAssessment(
-        mechanism_id='conjunctions', mandatory=False,
-        factors=(FactorValue('сближений с TCA в окне', float(len(in_win)) if conj else None, 'шт',
-                             Kind.EXTERNAL_FORECAST, Presence.DETECTED if in_win else (Presence.NOT_DETECTED if conj else Presence.UNKNOWN),
-                             Coverage.FULL if conj else Coverage.NONE, tuple(c.raw_record_id for c in in_win),
-                             'CelesTrak SOCRATES, TCA внутри окна', 'усечённая выдача не означает отсутствия других'
-                             + ('' if conj else '; источник не подключён (SOCRATES): данных нет')),),
-        coverage=Coverage.FULL if conj else Coverage.NONE, needs_check=bool(in_win),
-        needs_check_reasons=tuple(c.text for c in conj_conds), conditions=conj_conds,
-    )
-
-    # --- условия: приоритетное / предупреждение -------------------------------
     conds: list[Condition] = []
-    if (goes_val is not None and goes is not None and goes_hz is not None
-            and goes.t_utc < end and goes_hz > win.start_utc
-            and (goes_observations is not None or 0 <= (now_utc-goes.t_utc).total_seconds()/60 <= th.goes_max_age_min)):
-        obs_txt = 'наблюдение %s' % goes.t_utc.strftime('%m-%d %H:%MZ')
-        src_goes = ('GOES ≥10 МэВ %s pfu, %s, %s; %s' % (fmt_ru(goes_val), s_level_ru(goes_val), obs_txt,
-                    'архив iSWA, время исторической публикации неизвестно' if goes_observations is not None
+    storm_signals: list[str] = []
+    storm_ids: list[str] = []
+    storm_span: list[tuple] = []
+
+    # --- прогноз Kp NOAA: ячейки выпуска, попавшие в окно (это ПРОГНОЗ, не наблюдение) ---
+    if forecasts:
+        from vkd.integration.noaa_forecast import in_window
+        ss = [s for s in forecasts if s.channel_id == 'kp_forecast']
+        hit = in_window(ss, win.start_utc, win.duration_min)
+        val = max((s.value for s in hit), default=None)
+        pub = max((s.published_utc for s in hit if s.published_utc), default=None)
+        if val is not None and val >= th.kp_check:
+            cells = [s for s in hit if s.value is not None and s.value >= th.kp_check]
+            storm_signals.append('%s %s в окне (выпуск %s)' % (STORM_SIGNAL_RU['noaa_kp_forecast'], fmt_ru(val),
+                                                               pub.strftime('%m-%d %H:%MZ') if pub else '?'))
+            storm_ids += sorted({s.raw_record_id for s in cells})
+            storm_span += [(max(s.valid_from_utc, win.start_utc), min(s.valid_to_utc, end)) for s in cells]
+
+    # --- канал протонных событий: наблюдение GOES ---------------------------------
+    if goes_observations is not None:
+        # Исторический разбор: ячейки архива, фактически пересекающие окно. Прогнозом они не
+        # становятся, вперёд не продлеваются; условие ставится по максимуму внутри окна.
+        cells = _goes_cells_in_window(goes_observations, win.start_utc, end)
+        g = max(cells, key=lambda s: s.value, default=None)
+        g_val = g.value if g else None
+        g_hz = g.valid_to_utc if g else None
+        applies = g is not None and g_val is not None and g.t_utc < end and g_hz > win.start_utc
+        from_archive, common_note = True, ''
+    else:
+        g, from_archive = goes, False
+        g_val = goes.value if goes is not None else None
+        g_hz = (goes.t_utc + timedelta(minutes=th.goes_max_age_min)) if goes is not None else None
+        state, _age = proton_channel_state(goes, now_utc, th)
+        # R14: канал протонных событий ОБЩИЙ для всех сравниваемых окон, пока последнее
+        # наблюдение получено и не устарело. Поэтому уровень выше фона ставит условие КАЖДОМУ
+        # окну, а не только тому, на которое пришёлся горизонт наблюдения: прогноза с
+        # разрешением по окну не существует, и молчать об уже нештатной обстановке нельзя.
+        applies = g_val is not None and state in ('background', 'above_background')
+        common_note = ('' if (g is not None and g.t_utc < end and g_hz > win.start_utc) else
+                       '; канал общий для всех сравниваемых окон: прогноза потока с разрешением по окну не '
+                       'существует, названный уровень относится к моменту наблюдения, наличие события внутри '
+                       'окна неизвестно')
+    if applies:
+        obs_txt = 'наблюдение %s' % g.t_utc.strftime('%m-%d %H:%MZ')
+        src_goes = ('GOES ≥10 МэВ %s pfu, %s, %s; %s' % (fmt_ru(g_val), s_level_ru(g_val), obs_txt,
+                    'архив iSWA, время исторической публикации неизвестно' if from_archive
                     else 'наблюдение NOAA SWPC'),)
-        if goes_val >= th.goes_p10_priority_pfu:
+        if g_val >= th.goes_p10_priority_pfu:
             conds.append(Condition('GOES', 'critical',
                                    'GOES ≥10 МэВ = %.3g pfu (%s, %s): S3 и выше — приоритетное, срочная проверка специалистом'
-                                   % (goes_val, s_level_ru(goes_val), obs_txt), (goes.raw_record_id,), (goes.t_utc, goes_hz),
-                                   s_level_ru(goes_val), src_goes))
-        elif goes_val >= th.goes_p10_warning_pfu:
+                                   % (g_val, s_level_ru(g_val), obs_txt) + common_note, (g.raw_record_id,), (g.t_utc, g_hz),
+                                   s_level_ru(g_val), src_goes))
+        elif g_val >= th.goes_p10_warning_pfu:
             conds.append(Condition('GOES', 'limiting',
                                    'GOES ≥10 МэВ = %.3g pfu (%s, %s): предупреждение о протонном событии — окно не выбирается '
-                                   'автоматически (правило команды: S1–S2)' % (goes_val, s_level_ru(goes_val), obs_txt),
-                                   (goes.raw_record_id,), (goes.t_utc, goes_hz), s_level_ru(goes_val), src_goes))
+                                   'автоматически (правило команды: S1–S2)' % (g_val, s_level_ru(g_val), obs_txt) + common_note,
+                                   (g.raw_record_id,), (g.t_utc, g_hz), s_level_ru(g_val), src_goes))
     # Kp: свежее наблюдение ≥ порога — сигнал о буре; распространение на окно ОБЪЯВЛЯЕТСЯ в тексте
+    kp_age_min, kp_fresh = kp_observation_age(kp, now_utc, th)
     kp_sim = False
     if kp is not None and kp.value is not None and kp_fresh and kp.value >= th.kp_check:
         kp_sim = kp.source_id == 'scenario'
@@ -751,15 +503,518 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                                              ', '.join(record_ru(i) for i in ids if not i.startswith('sim_'))) if n_rec else '')),
             ids, (min(a for a, _ in storm_span), max(b for _, b in storm_span)) if storm_span else (),
             'Kp ≥ %.0f' % th.kp_check, tuple(storm_signals), is_simulated=storm_sim))
+    order = {'critical': 0, 'limiting': 1}
+    conds.sort(key=lambda c: order[c.severity])
+    return tuple(conds)
+
+
+def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable,
+                  goes: Optional[EnvironmentSample], kp: Optional[EnvironmentSample],
+                  conj: Sequence[Conjunction], th: Thresholds,
+                  now_utc, mmod_hits: Optional[float] = None,
+                  mmod_rule: str = 'ECSS-E-ST-10-04C, Grün — спецификация A5 ожидается',
+                  events: Sequence[EventInterval] = (),
+                  catalog_coverage: Optional[tuple] = None,
+                  forecasts: Sequence[EnvironmentSample] = (),
+                  mmod_cov_fraction: float = 1.0,
+                  trajectory_record_ids: Sequence[str] = ('trajectory',),
+                  cutoff_utc: Optional[datetime] = None,
+                  goes_observations: Optional[Sequence[EnvironmentSample]] = None,
+                  event_facts: Optional[dict] = None,
+                  goes_absent_ru: Optional[str] = None,
+                  numerical_report: Optional[dict] = None,
+                  mmod_seasonal: Optional[dict] = None) -> WindowAssessment:
+    """mmod_hits: ожидаемое число попаданий на пластину 1 м² за окно (B2 по
+    спецификации A5). None — линия не подключена, покрытие NONE.
+    events: события с интервалами (в т. ч. моделируемые); пересечение окна
+    с интервалом действия или физическим интервалом даёт условие проверки.
+    catalog_coverage: (начало, конец) архива уведомлений DONKI; cutoff_utc —
+    отсечка строгого режима (меняет формулировки: «до отсечки», а не «за период»).
+    trajectory_record_ids: идентификаторы записей орбиты (TLE/OEM, IGRF) для
+    прослеживаемости собственных расчётов до исходной записи.
+    event_facts: структурированные факты записи (raw_record_id -> facts адаптера A2):
+    Kp наблюдения бури, канал и порог протонного события, опубликованный диапазон Kp
+    прихода выброса. Правило читает их, а не русский текст заметки; разбор note —
+    только запасной вариант для записей без фактов.
+    goes_absent_ru: чем именно объясняется отсутствие численного наблюдения GOES
+    (нет архива / исключён строгим режимом / исключён пользователем) — чтобы на экране
+    не стояла одна и та же фраза для разных причин."""
+    end = win.start_utc + timedelta(minutes=win.duration_min)
+    facts_of = (event_facts or {})
+    # Исходное наблюдение GOES запоминается ДО того, как ветка исторического разбора подменит
+    # `goes` максимальной ячейкой архива: условия считает одна функция модуля, и ей нужны те же
+    # входы, что пришли в оценку окна, а не промежуточное состояние этой функции.
+    goes_in = goes
+    # Объявленные ОБЩИЕ каналы механизма (R14): не «чего не хватает», а часть объявленной
+    # области вывода — см. MechanismAssessment.declared_common_ru.
+    declared_common: list[str] = []
+    goes_absent_ru = goes_absent_ru or _GOES_ABSENT_DEFAULT_RU
+    # Include both window endpoints and bracketing samples for clipped boundaries.
+    # Values outside this temporal support are never extrapolated.
+    times = [p.t_utc for p in traj]
+    duration_s = (end-win.start_utc).total_seconds()
+    def integrate(values, threshold=None):
+        return integrate_time(times, values, win.start_utc, end,
+                              max_gap_seconds=60.0, threshold=threshold)
+    def coverage(result):
+        return _cov(result.covered_seconds, duration_s)
+    pts = [p for p in traj if win.start_utc <= p.t_utc <= end]
+    track_int = integrate([1.0]*len(traj))
+    cov_traj = coverage(track_int)
+    lo = max(0, bisect_right(times, win.start_utc)-1)
+    hi = min(len(times), bisect_left(times, end)+1)
+    traj, times = traj[lo:hi], times[lo:hi]
+    traj_ids = tuple(trajectory_record_ids) or ('trajectory',)
+    notes: list[str] = []
+    # Какие из заметок о покрытии говорят об ОТСУТСТВИИ данных по своему каналу, а какие — о
+    # частичном покрытии. Разделять обязательно: покрытие механизма берётся минимумом по каналам,
+    # и без этого разделения при одном пустом канале ВСЕ заметки механизма попадали в «не покрыто
+    # совсем» — в том числе «флюенс: модель ОСТ покрывает 83,3 % времени окна»: отказ печатался
+    # рядом с числом, которое его опровергает.
+    blocking: list[str] = []
+
+    def note(text: str, absent: bool) -> None:
+        notes.append(text)
+        if absent:
+            blocking.append(text)
+
+    # Linear threshold crossings resolve fractional minutes instead of counting nodes.
+    saa_int = integrate([p.B_nT for p in traj], th.saa_B_threshold_nT)
+    minutes_saa = (saa_int.below_threshold_seconds / 60
+                   if saa_int.below_threshold_seconds is not None else None)
+    cov_saa = coverage(saa_int)
+    if cov_traj != Coverage.FULL:
+        note('трасса: известные интервалы орбиты покрывают %.1f %% времени окна' % (100*track_int.coverage_fraction), cov_traj == Coverage.NONE)
+
+    flux = [belts.integral_flux(p.L, p.B_over_B0, th.e_min_MeV) for p in traj]
+    fl_int = integrate([r.value_per_cm2_s for r in flux])
+    fluence, cov_fl = fl_int.known_integral, coverage(fl_int)
+    fl_status = {}
+    for p, r in zip(traj, flux):
+        if win.start_utc <= p.t_utc <= end:
+            fl_status[r.status] = fl_status.get(r.status, 0) + 1
+    # Пропуски — В МИНУТАХ И С ПРИЧИНАМИ (разбор Codex п. 3). Доля покрытия и счётчики узлов
+    # ниже остаются, но на вопрос «сколько времени окна без модели и почему» отвечает эта строка.
+    fl_gaps = uncovered_minutes_by_reason(times, [r.value_per_cm2_s for r in flux],
+                                          [r.status for r in flux], win.start_utc, end,
+                                          max_gap_seconds=60.0)
+    fl_gap_min = sum(g.minutes for g in fl_gaps)
+    fl_note = ['известный вклад: интеграл трапециями по фактическим интервалам времени; '
+               'оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются',
+               'покрытие по времени %.1f %% (%.1f из %.1f с)' %
+               (100*fl_int.coverage_fraction, fl_int.covered_seconds, duration_s)]
+    if fl_gaps:
+        fl_note.append('без модели %s мин из %d мин окна: %s' %
+                       (_min_ru(fl_gap_min), win.duration_min, gaps_ru(fl_gaps)))
+    fl_note.append('статусы узлов: ' + ', '.join('%s — %d' % (MAG_STATUS_RU.get(k, k), v) for k,v in sorted(fl_status.items())))
+    # Node counts are an explanatory diagnostic, NOT the time coverage above.
+    saa_flux = [r for p,r in zip(traj, flux) if win.start_utc <= p.t_utc <= end and p.in_saa]
+    if saa_flux:
+        known = sum(r.value_per_cm2_s is not None for r in saa_flux)
+        unknown_L = sum(r.status == 'no_model_L' for r in saa_flux)
+        inconsistent = sum(r.status == 'inconsistent_BB0' for r in saa_flux)
+        mirror = sum(r.status == 'beyond_mirror' for r in saa_flux)
+        fl_note.append('точки аномалии со значением потока по таблице ОСТ: %d из %d (диагностика узлов, не покрытие времени)' % (known, len(saa_flux)))
+        if unknown_L:
+            fl_note.append('у %d точек L вне сетки — вклад неизвестен' % unknown_L)
+        if inconsistent:
+            fl_note.append('у %d точек B/B0 < 1 — магнитные координаты несовместимы, вклад неизвестен' % inconsistent)
+        if mirror:
+            fl_note.append(('ещё у %d точек' if unknown_L or inconsistent else 'у %d точек') % mirror +
+                           ' значение известно и равно нулю — выше точки отражения')
+    if cov_fl != Coverage.FULL:
+        note('флюенс: модель ОСТ покрывает %.1f %% времени окна (%s мин из %d без модели: %s); '
+             'полный флюенс неизвестен, вне модели не ноль'
+             % (100*fl_int.coverage_fraction, _min_ru(fl_gap_min), win.duration_min, gaps_ru(fl_gaps)),
+             cov_fl == Coverage.NONE)
+        fl_note.append('полный флюенс окна неизвестен; показан только известный вклад')
+    if fl_int.grid_relative_delta is not None:
+        fl_note.append('чувствительность к объединению соседних интервалов %.2f %% на %.1f %% времени окна; '
+                       'не граница физической погрешности' %
+                       (100*fl_int.grid_relative_delta, 100*fl_int.grid_compared_seconds/duration_s))
+    else:
+        fl_note.append('для проверки сетки нет сопоставимых соседних интервалов')
+    if numerical_report is not None:
+        numerical_report.update({'method': 'piecewise_linear_actual_dt_v1', 'max_gap_seconds': 60.0,
+                                 'fluence': asdict(fl_int), 'saa': asdict(saa_int),
+                                 'fluence_unit': 'particles/cm2',
+                                 'limitations': 'partial integral is not total; grid delta is not a physical error bound'})
+
+    # доступность канала GOES на трассе через вертикальное обрезание (CONTRACT §3, «минут доступности частиц канала»)
+    cut_factors = []
+    for T_MeV in (10.0, 100.0):
+        R = rigidity_GV(T_MeV)
+        cut_int = integrate([p.cutoff_GV for p in traj], R)
+        val = cut_int.below_threshold_seconds/60 if cut_int.below_threshold_seconds is not None else None
+        cut_factors.append(FactorValue(
+            'минут доступности протонов ≥%.0f МэВ по обрезанию' % T_MeV, val, 'мин', Kind.OWN_CALCULATION,
+            _presence(val), coverage(cut_int), traj_ids,
+            'время по линейным пересечениям порога вертикальной жёсткости обрезания (таблица Ж.1 ОСТ 134-1044-2007, '
+            'запасной путь — центральный диполь A3) ниже %.2f ГВ — жёсткости протона %.0f МэВ; '
+            'предположение о спектре: порог по жёсткости канала, без формы спектра' % (R, T_MeV),
+            ('жёсткость обрезания взята из таблицы Ж.1 ОСТ 134-1044-2007 (вертикальное обрезание, эпоха 2010, '
+             'высота 450 км, пересчёт высоты по Ж.3), происхождение значения стоит в каждой точке трассы '
+             '(cutoff_kind); L и B/B0 для таблиц ОСТ считает vkd.assess.magcoords по эксцентричному диполю — '
+             'это разные модели, складывать их точность нельзя; коррекция по Kp и местному времени (Ж.4–Ж.6) '
+             'не сделана, в бурю обрезание ниже табличного'
+             + _cutoff_fallback_note_ru(traj)
+             + ('; по обрезанию протоны %.0f МэВ на трассе окна недоступны — условие GOES относится к штормовому '
+                'ослаблению обрезания' % T_MeV if val == 0 else ''))))
+
+    # Coverage belongs to each source, not to a shared calendar boundary.
+    # A DONKI gap cannot erase actual GOES cells or valid NOAA forecast intervals.
+    event_cov = Coverage.FULL
+    if catalog_coverage and (win.start_utc < catalog_coverage[0] or end > catalog_coverage[1]):
+        event_cov = Coverage.NONE
+        note('DONKI: окно за границей архива уведомлений; полнота событий на непокрытом участке неизвестна', True)
+
+    goes_note, goes_val, goes_cov, goes_hz, goes_frac = 'нет данных GOES', None, Coverage.NONE, None, None
+    # Покрытие канала в ЛИНИИ отличается от покрытия величины только у объявленного общего
+    # канала (R14); во всех остальных ветках это одно и то же число.
+    goes_line_cov = None
+    goes_records = (goes.raw_record_id,) if goes else ()
+    goes_rule = 'NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)'
+    if goes_observations is not None:
+        # Retrospective observations only: intersect actual averaging cells.
+        # No forward fill, no extension by goes_max_age_min and no conversion to forecast.
+        from vkd.sources.goes_archive import interval_coverage
+        cells = [s for s in goes_observations if s.value is not None and
+                 s.valid_from_utc is not None and s.valid_to_utc is not None and
+                 s.valid_from_utc < end and s.valid_to_utc > win.start_utc]
+        report = interval_coverage(cells, win.start_utc, end)
+        fraction = goes_frac = report['coverage_fraction']
+        goes_cov = Coverage.FULL if fraction == 1 else (Coverage.PARTIAL if fraction > 0 else Coverage.NONE)
+        goes = max(cells, key=lambda s: s.value, default=None)
+        goes_val = goes.value if goes else None
+        goes_hz = goes.valid_to_utc if goes else None
+        goes_records = tuple(sorted({s.raw_record_id for s in cells}))
+        goes_rule = 'Архив GOES iSWA: максимум наблюдённых 5-минутных средних внутри окна; не прогноз'
+        goes_note = ('разбор: фактические ячейки GOES покрывают %.1f %% окна; '
+                     'пропуски не заполняются, качество инструмента в архиве неизвестно' % (100*fraction))
+        if fraction < 1:
+            note('GOES: архивные наблюдения покрывают %.1f %% окна' % (100*fraction), fraction <= 0)
+    elif goes is not None and goes.value is not None:
+        proton_state, age_min = proton_channel_state(goes, now_utc, th)
+        goes_val = goes.value
+        goes_hz = goes.t_utc + timedelta(minutes=th.goes_max_age_min)
+        # покрытие — доля окна внутри горизонта наблюдения [t_obs, t_obs + goes_max_age_min]:
+        # наблюдение сейчас не распространяется молча на будущие участки окна (CONTRACT §4 п. 2)
+        lo, hi = max(win.start_utc, goes.t_utc), min(end, goes_hz)
+        frac = max(0.0, (hi - lo).total_seconds()) / (end - win.start_utc).total_seconds()
+        goes_frac = frac
+        # R14 (решение владельца 19.09, ТЗ круга 11 раздел 2). Канал протонных событий перестаёт
+        # ОБНУЛЯТЬ обязательную линию, пока последнее наблюдение получено и не устарело сверх
+        # предела: прогноза потока с разрешением по окну не существует ни у одного источника,
+        # поэтому канал одинаков для всех сравниваемых окон и различить их не может. Покрытие
+        # при этом остаётся ЧАСТИЧНЫМ, а не становится полным: наличие события внутри окна
+        # по-прежнему неизвестно, и это написано в объявленной области вывода.
+        # Устаревшее наблюдение — по-прежнему полный отказ: текущее состояние среды неизвестно.
+        common_channel = proton_state in ('background', 'above_background')
+        # Покрытие САМОЙ ВЕЛИЧИНЫ остаётся честным: наблюдение, горизонт которого кончился до
+        # начала окна, не покрывает его ни на минуту, и в карточке фактора стоит именно это.
+        goes_cov = (Coverage.NONE if proton_state in ('stale', 'ahead') else
+                    (Coverage.FULL if frac == 1 else (Coverage.PARTIAL if frac > 0 else Coverage.NONE)))
+        # А вот покрытие ЛИНИИ (то, что берётся минимумом по каналам и решает, есть ли вывод)
+        # объявленным общим каналом не обнуляется: см. R14 выше.
+        goes_line_cov = Coverage.PARTIAL if (common_channel and goes_cov == Coverage.NONE) else goes_cov
+        # ЯВНАЯ ЦЕПОЧКА (разбор Codex п. 7): срок действия данных → покрываемая часть окна →
+        # допустимый вывод. Наблюдение сейчас и прогноз на всё окно — разные сущности, и решает
+        # это не читатель: три звена печатаются подряд, каждое со своим числом, и последнее
+        # звено НАЗЫВАЕТ допустимый вывод, а не оставляет его домыслить.
+        # Уровень подставляется БЕЗ внешних скобок: s_level_ru сам печатает «фон (ниже S1)»,
+        # и в шаблоне «наблюдение %s (%s)» получалась скобка в скобке (пятый круг).
+        unc_min = (1 - frac) * win.duration_min
+        # Звено 2 обязано содержать оборот «горизонт наблюдения … покрывает N % окна» ДОСЛОВНО:
+        # по нему `app.ui.obs_share_pct` узнаёт долю и ставит прочерк вместо числа у окна, которое
+        # наблюдение не покрывает. Связь проверяется `tests/test_goes_chain.py`, иначе переписанная
+        # фраза молча вернула бы прошлое измерение в качестве величины будущего окна.
+        goes_note = ('наблюдение %s, %s, давность %.0f мин; '
+                     'срок действия данных — %.0f мин после измерения (настройка команды, не норма): '
+                     'горизонт наблюдения до %s покрывает %.0f %% окна, это %s мин из %d' % (
+                         goes.t_utc.strftime('%Y-%m-%d %H:%MZ'), s_level_ru(goes_val), age_min,
+                         th.goes_max_age_min, goes_hz.strftime('%H:%MZ'),
+                         100 * frac, _min_ru(frac * win.duration_min), win.duration_min))
+        if frac >= 1:
+            goes_note += '; допустимый вывод: уровень потока известен по наблюдению на всё окно'
+        else:
+            goes_note += ('; допустимый вывод: на остальные %s мин окна наблюдение не распространяется — '
+                          'оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов '
+                          'на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается'
+                          % _min_ru(unc_min))
+            note('GOES: наблюдение %s покрывает %.0f %% окна (%s мин из %d без данных), '
+                 'прогноза потока протонов на окно нет'
+                 % (goes.t_utc.strftime('%H:%MZ'), 100 * frac, _min_ru(unc_min), win.duration_min),
+                 frac <= 0 and not common_channel)
+        if frac <= 0.0:
+            # горизонт наблюдения кончился до начала окна: наличие протонного события В ОКНЕ неизвестно.
+            # Покрытие остаётся частичным (уровень и время наблюдения объявлены), но «не выявлено» писать нельзя.
+            gap_h = (win.start_utc - goes.t_utc).total_seconds() / 3600.0
+            # уровень назван в начале заметки и второй раз не повторяется (бриф §9.7):
+            # здесь важно не какой он, а к чему относится
+            goes_note += ('; на само окно наблюдения нет — наличие протонного события в окне неизвестно, '
+                          'названный уровень относится к моменту наблюдения, а не к окну')
+            # Блокирует вывод только тогда, когда канал НЕ объявлен общим (R14): при свежем
+            # наблюдении отсутствие покрытия окна — свойство природы канала, а не пробел данных,
+            # и оно уходит в объявленную область вывода, а не в причину отказа.
+            note('наблюдение GOES не покрывает окно (до его начала %.0f ч)' % gap_h, not common_channel)
+        if proton_state in ('stale', 'ahead'):
+            # Случай 2 полного отказа (ТЗ круга 11, раздел 2): наблюдение есть, но устарело сверх
+            # предела — текущее состояние среды неизвестно, значит и сказать о нём нечего.
+            # Причина называется ЧИСЛОМ, а не словом «устарело».
+            stale_ru = ('наблюдение GOES устарело, давность %.0f мин при пределе %.0f мин' % (age_min, th.goes_max_age_min)
+                        if proton_state == 'stale' else
+                        'время наблюдения GOES впереди момента расчёта на %.0f мин — времена рассогласованы' % abs(age_min))
+            goes_note += '; ' + stale_ru
+            note('GOES: ' + stale_ru, True)
+        elif common_channel:
+            # Канал объявлен ОБЩИМ: фраза уходит в объявленную область вывода отдельным полем
+            # механизма, а не в «чего не хватает». Суточная вероятность NOAA дописывается как
+            # есть и в вероятность за окно не пересчитывается; её отсутствие правилу не мешает.
+            declared_common.append(proton_channel_common_ru(
+                goes, proton_state, proton_daily_ru(forecasts, win, cutoff_utc)))
+    elif any(e.kind_of_event == 'SEP' and e.published_utc is not None for e in events):
+        # архива GOES нет, но есть датированные уведомления о протонных событиях: частичное покрытие канала
+        goes_cov = Coverage.PARTIAL
+        goes_note = goes_absent_ru + '; канал частично покрыт датированными уведомлениями DONKI о протонных событиях'
+        # Два разных канала — две разные строки. Пока причина отсутствия наблюдений GOES
+        # («исключён пользователем», «исключён строгим режимом») стояла в одной строке с
+        # уведомлениями DONKI, исключение читалось как относящееся и к ним (девятый круг, М3).
+        notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+        notes.append('уведомления DONKI: канал протонных событий покрыт только ими — это другой источник')
+    elif catalog_coverage:
+        c0, c1 = catalog_coverage[0], catalog_coverage[1]
+        if cutoff_utc is not None:
+            # строгий режим: важно, что архив содержит все публикации до отсечки и период действия событий до окна
+            ok = c0 <= win.start_utc - timedelta(hours=th.sep_valid_hours) and c1 >= cutoff_utc
+            if ok:
+                goes_cov = Coverage.PARTIAL
+                goes_note = ('%s; в уведомлениях DONKI, опубликованных до отсечки %s, протонных '
+                             'событий с действием в окне не объявлено; после отсечки сведения не использованы; каталог в '
+                             'репозитории охватывает %s — %s' % (goes_absent_ru, cutoff_utc.strftime('%Y-%m-%d %H:%MZ'), c0.strftime('%d.%m.%Y'),
+                                                                  (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
+                notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+                notes.append('уведомления DONKI: протонных событий с действием в окне до отсечки %s не объявлено'
+                             % cutoff_utc.strftime('%Y-%m-%d %H:%MZ'))
+            else:
+                goes_note = ('архив уведомлений DONKI %s — %s не покрывает публикации до отсечки %s'
+                             % (c0.strftime('%d.%m.%Y'), c1.strftime('%d.%m.%Y'), cutoff_utc.strftime('%Y-%m-%d %H:%MZ')))
+                note('GOES/DONKI: ' + goes_note, True)
+        elif c0 <= win.start_utc and end <= c1:
+            # пустой каталог за период — это результат «событий не объявлено», а не отсутствие данных
+            # (CONTRACT v3.1, правило 9); покрытие частичное, потому что самого наблюдения GOES нет
+            goes_cov = Coverage.PARTIAL
+            goes_note = ('%s; в уведомлениях DONKI за %s — %s протонных событий с действием '
+                         'в окне не объявлено' % (goes_absent_ru, c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
+            notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+            notes.append('уведомления DONKI: за %s — %s протонных событий с действием в окне не объявлено'
+                         % (c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
+        else:
+            goes_note = ('уведомления DONKI: архив до %s, окно %s — %s за его пределами — сократите период поиска или сдвиг'
+                         % (c1.strftime('%Y-%m-%d %H:%MZ'), win.start_utc.strftime('%d.%m %H:%MZ'), end.strftime('%d.%m %H:%MZ')))
+            note('GOES/DONKI: ' + goes_note, True)
+    else:
+        # тот же разбор, что у Kp ниже: слой сравнения знает только, что значения нет; исключил ли
+        # источник пользователь и что именно случилось с запросом, называет блок состояния источников.
+        # Круг 11: если вызывающий ВСЁ ЖЕ назвал причину отсутствия (goes_absent_ru), она ставится
+        # в причину отказа — читателю отказа не приходится искать её в другом блоке экрана.
+        note('GOES: наблюдения нет — %s' % (goes_absent_ru if goes_absent_ru != _GOES_ABSENT_DEFAULT_RU else
+                                            'источник значения не дал, кеша нет; причина — в состоянии источников'), True)
+
+    # --- наблюдение Kp: отдельный фактор с давностью; условие — только при свежем наблюдении ---
+    kp_factor, kp_cov = None, Coverage.PARTIAL
+    kp_age_min, kp_fresh = kp_observation_age(kp, now_utc, th)    # тем же правилом, что и условие
+    if kp is not None and kp.value is not None:
+        ref = kp.valid_to_utc or kp.t_utc
+        sim = kp.source_id == 'scenario'
+        kp_note = 'интервал %s — %s, давность %.0f мин (предел %.0f мин)' % (
+            (kp.valid_from_utc or kp.t_utc).strftime('%d.%m %H:%MZ'), ref.strftime('%H:%MZ'), kp_age_min, th.kp_max_age_min)
+        if sim:
+            kp_note = 'МОДЕЛИРУЕМОЕ значение сценария «что если»; ' + kp_note
+        if not kp_fresh:
+            kp_note += ' — устарело: условие проверки по нему не ставится; на окно наблюдение не распространяется'
+            note('Kp: последнее наблюдение %s устарело (давность %.0f мин)' % (ref.strftime('%d.%m %H:%MZ'), kp_age_min), False)
+        kp_cov = Coverage.FULL if kp_fresh else Coverage.PARTIAL
+        kp_factor = FactorValue('Kp, последнее наблюдение' + (' (сценарий)' if sim else ''), kp.value, KP_UNIT, kp.kind,
+                                Presence.DETECTED if kp.value >= th.kp_check else Presence.NOT_DETECTED,
+                                kp_cov, (kp.raw_record_id,),
+                                'порог проверки Kp ≥ %.0f (G3 по шкале NOAA); %s' % (th.kp_check, TEAM_RULE_RU), kp_note,
+                                horizon_utc=ref + timedelta(minutes=th.kp_max_age_min))
+    else:
+        # канал Kp без наблюдения: у величины покрытия нет (NONE), но у МЕХАНИЗМА это объявленное
+        # частичное покрытие — как у GOES без архива. Отсутствие Kp не должно молча исчезать
+        # из покрытия и делать вердикт благоприятнее, чем с наблюдением Kp.
+        kp_cov = Coverage.PARTIAL
+        # Слой сравнения знает только то, что значения нет; исключил ли источник пользователь —
+        # знает блок состояния источников (признак state == 'off'), и он это и печатает. Пока
+        # здесь стояло «источник исключён ИЛИ …», отчёт утверждал исключение источника там, где
+        # тремя строками выше стояло «источники, отключённые пользователем: нет» (пятый круг).
+        note('Kp: наблюдения нет — %s'
+             % ('записей с доказанной публикацией до отсечки нет' if cutoff_utc else 'источник значения не дал'), False)
+        kp_factor = FactorValue('Kp, последнее наблюдение', None, KP_UNIT, Kind.OBSERVATION, Presence.UNKNOWN, Coverage.NONE, (),
+                                'порог проверки Kp ≥ %.0f (G3 по шкале NOAA); %s' % (th.kp_check, TEAM_RULE_RU),
+                                'наблюдения Kp нет' + (' (в строгом режиме — только с доказанной публикацией до отсечки)' if cutoff_utc else ''))
+
+    # --- прогнозы NOAA, выпущенные до отсечки (история): факторы-прогнозы, не наблюдения ---
+    # Исходное разрешение источника сохраняется: суточная вероятность остаётся суточной
+    # (vkd/history/README.md), прогноз Kp — по 3-часовым интервалам. Покрытие окна
+    # ячейками объявляется; отсутствие прогноза не ухудшает покрытие механизма.
+    # Сигналы о буре из этих же выпусков собирает `window_conditions` — здесь только ВЕЛИЧИНЫ.
+    # Пока условие и фактор считались в одном цикле, вынести условия в общий код было нельзя.
+    fc_factors = []
+    if forecasts:
+        from vkd.integration.noaa_forecast import covered_fraction, in_window
+        for cid, name, unit, rule in (
+                ('kp_forecast', 'прогноз Kp NOAA, максимум в окне', KP_UNIT, 'NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации'),
+                ('s1_prob_daily', 'вероятность S1 и выше за сутки, прогноз NOAA', '%', 'NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации'),
+                ('proton_prob_daily', 'вероятность протонного события за сутки, прогноз NOAA', '%', 'NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации')):
+            ss = [s for s in forecasts if s.channel_id == cid]
+            hit = in_window(ss, win.start_utc, win.duration_min)
+            frac = covered_fraction(ss, win.start_utc, win.duration_min)
+            cov = Coverage.FULL if frac >= 0.95 else (Coverage.PARTIAL if frac >= 0.5 else Coverage.NONE)
+            val = max((s.value for s in hit), default=None)
+            pub = max((s.published_utc for s in hit if s.published_utc), default=None)
+            hz = max((s.valid_to_utc for s in ss if s.valid_to_utc), default=None)
+            fc_factors.append(FactorValue(
+                name, val, unit, Kind.EXTERNAL_FORECAST, Presence.UNKNOWN if val is None else Presence.DETECTED, cov,
+                tuple(sorted({s.raw_record_id for s in hit})), rule + (' %s' % pub.strftime('%m-%d %H:%MZ') if pub else ''),
+                ('суточная вероятность источника, не вероятность за окно; ' if unit == '%' else 'прогноз, не наблюдение; ')
+                + 'покрытие окна ячейками %.0f %%' % (100 * frac)
+                + ('' if hit else ('; выпуска до отсечки с ячейками на окно нет' if cutoff_utc
+                                   else '; выпуска с ячейками на это окно нет')),
+                horizon_utc=hz))
+
+    factors_m1 = (
+        FactorValue('минут в аномалии', minutes_saa, 'мин', Kind.OWN_CALCULATION,
+                    _presence(minutes_saa), cov_saa, traj_ids, 'время по линейным пересечениям |B| ниже порога %.0f нТл (настройка, варьируется в чувствительности)' % th.saa_B_threshold_nT,
+                    'дипольная L — исследовательское приближение' if any(p.mag_status != 'ok' for p in pts) else ''),
+        FactorValue('флюенс захваченных протонов ≥%g МэВ' % th.e_min_MeV, fluence, 'част./см²',
+                    Kind.OWN_CALCULATION, _presence(fluence), cov_fl, traj_ids + (belts.raw_record_id,),
+                    # «всенаправленный поток (%s)» с полной единицей давало «всенаправленный
+                    # (…, всенаправленный (ОСТ …))»: слово дважды подряд, скобка в скобке и
+                    # стандарт дважды в одном предложении (пятый круг). Стандарт назван один раз
+                    # в belts.source, поэтому единица подставляется короткой формой.
+                    belts.source + '; единицы потока: %s; интерполяция: %s; L и B/B0 — эксцентричный диполь (R11)'
+                    % (belts.flux_unit_short_ru, belts.interpolation_ru),
+                    '; '.join(fl_note)),
+    ) + tuple(cut_factors) + (
+        FactorValue('поток протонов GOES ≥10 МэВ', goes_val, 'pfu', Kind.OBSERVATION,
+                    (Presence.UNKNOWN if goes_val is None or (goes_frac is not None and goes_frac <= 0.0) else
+                     (Presence.DETECTED if goes_val >= th.goes_p10_warning_pfu else Presence.NOT_DETECTED)),
+                    goes_cov, goes_records, goes_rule,
+                    goes_note, horizon_utc=goes_hz),
+        kp_factor,
+    ) + tuple(fc_factors)
+
+    # --- механизм 2: статистика метеороидов ECSS по высоте трассы (B2 по A5) --------
+    mm_cov = Coverage.NONE if mmod_hits is None else (
+        Coverage.PARTIAL if mmod_cov_fraction > 0 else Coverage.NONE)
+    showers = active_showers(win.start_utc)
+    m2 = MechanismAssessment(
+        mechanism_id='mmod_stat', mandatory=True,
+        factors=(FactorValue('ожидаемое число попаданий, пластина 1 м²', mmod_hits, 'шт', Kind.OWN_CALCULATION,
+                             Presence.UNKNOWN if mmod_hits is None else Presence.DETECTED,
+                             mm_cov, () if mmod_hits is None else ('ecss_grun:grun-ecss-2020-v1',) + traj_ids,
+                             mmod_rule,
+                             'расчёт невозможен: нет трассы окна' if mmod_hits is None
+                             else 'природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 '
+                                  '(ECSS J.2.3.2); техногенные частицы и потоки даты не включены; ' + MMOD_ROLE_RU
+                                  + ('; ЧАСТИЧНО: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction) if mmod_cov_fraction < 0.95 else '')),
+                 FactorValue('активных метеорных потоков на дату (календарь IMO)', float(len(showers)), 'шт', Kind.OWN_CALCULATION,
+                             Presence.DETECTED if showers else Presence.NOT_DETECTED, Coverage.FULL, ('imo_calendar',),
+                             SHOWERS_SOURCE_RU + '; признак активности потока на дату — в число попаданий не входит '
+                             '(формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, '
+                             'вклад в N не рассчитан',
+                             ('активны: ' + '; '.join('%s (пик %s, ZHR до %d, активность %s)' % (s['name'], s['peak'], s['zhr_peak'], s['active'])
+                                                     for s in showers) + ' — поток активен, вклад в число попаданий не рассчитан'
+                              if showers else 'главных потоков по календарю нет; спорадический фон учтён моделью Grün')
+                             + '; ZHR — визуальная величина, не поток на пластину; даты календаря смещаются на ±1 сут по годам')),
+        coverage=mm_cov, needs_check=False,
+        # Трасса покрывает окно целиком или частично; сезонный вклад не рассчитан НИГДЕ,
+        # поэтому он объявляется отдельным пропуском на ВСЮ длительность окна, а не долей
+        # времени (разбор Codex п. 5: совпадение с контрольным числом подтверждает формулу,
+        # а не полноту модели). Ноль вместо него не подставляется.
+        coverage_fraction=(None if mmod_hits is None else mmod_cov_fraction),
+        coverage_gaps=((CoverageGap('сезонный вклад метеорных потоков не рассчитан (средний фон ECSS/Grün)',
+                                    float(win.duration_min)),)
+                       + ((CoverageGap('трасса окна известна не полностью',
+                                       float(win.duration_min) * (1 - mmod_cov_fraction)),)
+                          if mmod_hits is not None and mmod_cov_fraction < 1 else ())),
+        coverage_notes=('метеороиды: сезонный вклад не рассчитан; средний Grün не полный охват короткой ВКД',) + (('метеороиды: трасса покрывает %.0f %% окна' % (100 * mmod_cov_fraction),) if mmod_hits is not None and mmod_cov_fraction < 1
+                        else (('метеороиды: расчёт невозможен — нет трассы окна',) if mmod_hits is None else ())),
+        # Блокирует только ОТСУТСТВИЕ расчёта. Незакрытый сезонный вклад — объявленное
+        # ограничение модели (разбор Codex п. 5), а не пустой канал: число попаданий посчитано.
+        blocking_notes=(('метеороиды: расчёт невозможен — нет трассы окна',) if mmod_hits is None else ()),
+    )
+
+    if mmod_seasonal is not None:
+        from vkd.assess.seasonal import CATALOGUE_ID, METHOD_ID, LIMITS_RU
+        available = bool(mmod_seasonal.get('streams_included')) and mmod_hits is not None
+        model_records = ('ecss_grun:grun-ecss-2020-v1', CATALOGUE_ID, METHOD_ID) + traj_ids
+        issue = mmod_seasonal.get('error') or LIMITS_RU
+        def mm_factor(name, value, explanation):
+            return FactorValue(name, value, 'шт', Kind.OWN_CALCULATION,
+                               Presence.UNKNOWN if value is None else Presence.DETECTED,
+                               Coverage.PARTIAL if available else Coverage.NONE,
+                               model_records, mmod_rule, explanation)
+        mm_factors = [mm_factor('ожидаемое число попаданий, пластина 1 м²', mmod_hits, issue)]
+        if available:
+            mm_factors += [
+                mm_factor('спорадическая составляющая после исключения среднего вклада потоков',
+                          mmod_seasonal['N_sporadic_adjusted'], 'Фон и потоки приведены к одной геометрии и массе ≥0,001 г.'),
+                mm_factor('сезонная составляющая метеорных потоков', mmod_seasonal['N_streams'],
+                          'Сумма 49 профилей с тенью Земли и относительной скоростью; входит в итоговое число.'),
+                mm_factor('средняя модель Grün без сезонного перераспределения (для сравнения)',
+                          mmod_seasonal['N_mean_background'], 'Контрольная величина; к итогу повторно не прибавляется.')]
+        m2 = MechanismAssessment(
+            mechanism_id='mmod_stat', mandatory=True, factors=tuple(mm_factors),
+            coverage=Coverage.PARTIAL if available else Coverage.NONE, needs_check=False,
+            coverage_fraction=mmod_cov_fraction if available else 0.0,
+            coverage_gaps=(CoverageGap(
+                'неопределённость нормировки и эпохи каталога; модель инженерная' if available else issue,
+                float(win.duration_min)),),
+            coverage_notes=(('метеороиды: сезонный вклад рассчитан; нормировка каталога и эпоха радиантов '
+                             'остаются гипотезами, годовые всплески не предсказываются') if available else issue,),
+            blocking_notes=() if available else (issue,))
+
+    # --- линия 3: сближения, необязательная ----------------------------------
+    in_win = [c for c in conj if win.start_utc <= c.tca_utc < end]
+    conj_conds = tuple(Condition('CONJ', 'limiting',
+                                 'сообщение о сближении %s, промах %.1f км, TCA %s в окне: требует ручной оценки' % (
+                                     c.other_object, c.miss_distance_km, c.tca_utc.strftime('%m-%d %H:%MZ')),
+                                 (c.raw_record_id,), (c.tca_utc, c.tca_utc), 'промах %.1f км' % c.miss_distance_km,
+                                 ('CelesTrak SOCRATES, прогон %s, публикация %s' % (
+                                     c.run_utc.strftime('%m-%d %H:%MZ') if c.run_utc else '?',
+                                     c.published_utc.strftime('%m-%d %H:%MZ') if c.published_utc else 'неизвестна'),))
+                       for c in in_win)
+    m3 = MechanismAssessment(
+        mechanism_id='conjunctions', mandatory=False,
+        factors=(FactorValue('сближений с TCA в окне', float(len(in_win)) if conj else None, 'шт',
+                             Kind.EXTERNAL_FORECAST, Presence.DETECTED if in_win else (Presence.NOT_DETECTED if conj else Presence.UNKNOWN),
+                             Coverage.FULL if conj else Coverage.NONE, tuple(c.raw_record_id for c in in_win),
+                             'CelesTrak SOCRATES, TCA внутри окна', 'усечённая выдача не означает отсутствия других'
+                             + ('' if conj else '; источник не подключён (SOCRATES): данных нет')),),
+        coverage=Coverage.FULL if conj else Coverage.NONE, needs_check=bool(in_win),
+        needs_check_reasons=tuple(c.text for c in conj_conds), conditions=conj_conds,
+    )
+
+    # --- условия: приоритетное / предупреждение -------------------------------
+    # Считает их ОДНА функция модуля (`window_conditions`), которую зовёт и перебор начал:
+    # правило «кандидат с условием не может стоять выше кандидата без условий» обязано
+    # опираться ровно на те условия, что стоят в карточке окна. Здесь к ним добавляются
+    # условия необязательной линии сближений — они относятся к своему механизму.
+    conds = list(window_conditions(win, th, now_utc, goes=goes_in, goes_observations=goes_observations,
+                                   kp=kp, events=events, forecasts=forecasts, event_facts=event_facts))
     conds += list(conj_conds)
     order = {'critical': 0, 'limiting': 1}
     conds.sort(key=lambda c: order[c.severity])
     m1 = MechanismAssessment(
         mechanism_id='spaceweather', mandatory=True, factors=factors_m1,
-        coverage=_min_cov(cov_traj, cov_saa, cov_fl, goes_cov, kp_cov, event_cov),
+        coverage=_min_cov(cov_traj, cov_saa, cov_fl,
+                          goes_cov if goes_line_cov is None else goes_line_cov, kp_cov, event_cov),
         needs_check=bool(conds), needs_check_reasons=tuple(c.text for c in conds),
         priority=any(c.severity == 'critical' for c in conds), conditions=tuple(conds),
         coverage_notes=tuple(notes), blocking_notes=tuple(blocking),
+        declared_common_ru=tuple(declared_common),
         # Целевая величина механизма — флюенс: её покрытие по ВРЕМЕНИ и есть та доля окна,
         # о которой говорит объявленная область вывода. Пропуски — в минутах, с причинами.
         coverage_fraction=fl_int.coverage_fraction, coverage_gaps=fl_gaps)
@@ -775,6 +1030,30 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                             ('вклад метеорных потоков даты в число попаданий — не рассчитан',))
                          + ('техногенный мусор статистически — не включён',),
     )
+
+
+def pair_not_worse(m_a: Optional[float], f_a: Optional[float], m_b: Optional[float], f_b: Optional[float],
+                   tol_m: float, tol_r: float) -> bool:
+    """«A не хуже B» правила (8) методики: по ОБЕИМ величинам космопогоды, каждая со своим допуском.
+
+    m — минуты в аномалии, Φ — флюенс за окно. Невычисленная величина не делает окно ни хуже,
+    ни лучше: сравнение идёт по тем величинам, которые есть, а отсутствие не заменяется нулём.
+
+    Функция вынесена в модуль, чтобы её применяли ОБА места, где выбирается окно: сравнение
+    двух-трёх окон (`recommend`) и перебор начал (`vkd/windows/scan.py`). Два правила выбора
+    на одном экране — первое, что заметит читатель.
+    """
+    m_ok = m_a is None or m_b is None or m_a <= m_b + tol_m
+    f_ok = f_a is None or f_b is None or f_a <= f_b * tol_r
+    return m_ok and f_ok
+
+
+def pair_better(m_a: Optional[float], f_a: Optional[float], m_b: Optional[float], f_b: Optional[float],
+                tol_m: float, tol_r: float) -> bool:
+    """«A лучше B» правила (8): не хуже по обеим и строго лучше хотя бы по одной, сверх допуска."""
+    m_win = m_a is not None and m_b is not None and m_a < m_b - tol_m
+    f_win = f_a is not None and f_b is not None and f_a * tol_r < f_b
+    return pair_not_worse(m_a, f_a, m_b, f_b, tol_m, tol_r) and (m_win or f_win)
 
 
 def recommend(assessments: Sequence[WindowAssessment], th: Thresholds,
@@ -817,6 +1096,12 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds,
             if m.coverage == Coverage.NONE and not any(b for _, b in texts):
                 missing.setdefault('%s: покрытие отсутствует' % name, []).append(idx[id(a)])
     n_all = len(assessments)
+    # ОБЩИЕ КАНАЛЫ (R14). Одинаковая для всех окон фраза собирается один раз и идёт в
+    # объявленную область вывода — не в «чего не хватает» и не в «что повлияло»: канал,
+    # который окна не различает, не может быть причиной выбора и не может быть пробелом,
+    # который кто-то закроет следующим выпуском источника (пробел здесь структурный).
+    common_ru = tuple(dict.fromkeys(n for a in assessments for m in a.mechanisms
+                                    if m.mandatory for n in m.declared_common_ru))
 
     def _fold(d):
         out = []
@@ -885,15 +1170,13 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds,
     if len(candidates) >= 2:
         # 3. сравнение по каждому механизму отдельно; космопогода — по двум величинам
 
+        # Правило (8) методики целиком живёт в pair_not_worse/pair_better — там же, откуда его
+        # берёт перебор начал. Здесь остаётся только подстановка величин окон.
         def not_worse(a, b):
-            m_ok = mins[id(a)] is None or mins[id(b)] is None or mins[id(a)] <= mins[id(b)] + tol_m
-            f_ok = fls[id(a)] is None or fls[id(b)] is None or fls[id(a)] <= fls[id(b)] * tol_r
-            return m_ok and f_ok
+            return pair_not_worse(mins[id(a)], fls[id(a)], mins[id(b)], fls[id(b)], tol_m, tol_r)
 
         def better(a, b):
-            m_b = mins[id(a)] is not None and mins[id(b)] is not None and mins[id(a)] < mins[id(b)] - tol_m
-            f_b = fls[id(a)] is not None and fls[id(b)] is not None and fls[id(a)] * tol_r < fls[id(b)]
-            return not_worse(a, b) and (m_b or f_b)
+            return pair_better(mins[id(a)], fls[id(a)], mins[id(b)], fls[id(b)], tol_m, tol_r)
 
         def vtxt(a):
             return '%s: %s мин в аномалии, флюенс %s' % (lab(a), fmt_ru(mins[id(a)]), fmt_ru(fls[id(a)], 'част./см²'))
@@ -971,7 +1254,7 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds,
         и кладётся рядом с ним — в вердикт, а не в комментарий к нему. Пропустить её, добавив
         шестой исход, теперь нельзя: другого конструктора Recommendation в recommend() нет."""
         scope, detail, scope_facts = declared_scope(assessments, kw['verdict'], candidates,
-                                                   kw.get('missing') or ())
+                                                   kw.get('missing') or (), common_ru)
         # Исход может принести свой состав сравнения по механизмам (отказ, «все под условием»,
         # единственный кандидат добавляют в него справочную строку) — тогда он идёт в kw.
         kw.setdefault('per_mechanism_comparison', per)
@@ -1101,7 +1384,8 @@ SCOPE_NOT_LIST_RU = 'вероятность разгерметизации, до
 SCOPE_REFUSAL_TAIL_RU = 'это отказ от вывода, а не оценка риска'
 
 
-def _refusal_scope(assessments: Sequence[WindowAssessment], blocking: Sequence[str]) -> tuple[str, str]:
+def _refusal_scope(assessments: Sequence[WindowAssessment], blocking: Sequence[str],
+                   common_tail: str = '') -> tuple[str, str]:
     blocked = [i for i, a in enumerate(assessments, 1)
                if any(m.mandatory and (m.coverage == Coverage.NONE
                                        or (set(m.blocking_notes) & set(m.coverage_notes)))
@@ -1115,13 +1399,17 @@ def _refusal_scope(assessments: Sequence[WindowAssessment], blocking: Sequence[s
     else:
         where = ''
     short = ('обязательная линия не покрыта совсем%s, поэтому факторы окон не сопоставляются; %s'
-             % (where, SCOPE_REFUSAL_TAIL_RU))
-    detail = short + (': ' + '; '.join(dict.fromkeys(blocking)) if blocking else '')
+             % (where, SCOPE_REFUSAL_TAIL_RU)) + common_tail
+    # Причины отделяются словом, а не двоеточием: между заголовком отказа и их перечнем теперь
+    # может стоять фраза об общем канале (R14), и «…неизвестно: GOES: наблюдения нет» читалось бы
+    # как продолжение этой фразы. Короткая форма при этом остаётся НАЧАЛОМ подробной.
+    detail = short + (' — причины: ' + '; '.join(dict.fromkeys(blocking)) if blocking else '')
     return short, detail
 
 
 def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
-                   compared, blocking: Sequence[str] = ()) -> tuple[str, str, tuple[tuple[str, str], ...]]:
+                   compared, blocking: Sequence[str] = (),
+                   common_ru: Sequence[str] = ()) -> tuple[str, str, tuple[tuple[str, str], ...]]:
     """ОБЪЯВЛЕННАЯ ОБЛАСТЬ ВЫВОДА (разбор Codex п. 1, решение владельца 19.09).
 
     Собирается ИЗ ВЫЧИСЛЕННОГО, а не из заготовленной фразы: доля окна берётся из того же
@@ -1139,6 +1427,10 @@ def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
 
     `compared` — окна, которые действительно сравнивались (кандидаты без условий); пусто,
     если до сравнения не дошло.
+
+    `common_ru` — ОБЩИЕ каналы (R14): то, что по природе канала не различает окна. Эта часть
+    области печатается и при отказе тоже: отказ по другому каналу не отменяет того, что про
+    протонные события мы всё равно не можем сказать ничего с разрешением по окну.
     """
     facts: list[tuple[str, str]] = []
     names: list[str] = []
@@ -1159,9 +1451,12 @@ def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
                 for g in m.coverage_gaps:
                     gaps.setdefault(g.reason_ru, []).append(g.minutes)
 
+    common_tail = ('; ' + '; '.join(common_ru)) if common_ru else ''
     if verdict == 'insufficient':
-        short, detail = _refusal_scope(assessments, blocking)
+        short, detail = _refusal_scope(assessments, blocking, common_tail)
         facts.append(('вывод не сделан', detail))
+        if common_ru:
+            facts.append(('общие каналы, окна не различающие', '; '.join(common_ru)))
         return short, detail, tuple(facts)
 
     if names:
@@ -1176,6 +1471,8 @@ def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
                         for r, v in sorted(gaps.items(), key=lambda kv: -max(kv[1])))
     if gap_txt:
         facts.append(('пропуски модели', gap_txt))
+    if common_ru:
+        facts.append(('общие каналы, окна не различающие', '; '.join(common_ru)))
     facts.append(('вывод не означает', SCOPE_NOT_RU + ': ' + SCOPE_NOT_LIST_RU))
 
     short = 'по учтённым факторам'
@@ -1184,8 +1481,8 @@ def declared_scope(assessments: Sequence[WindowAssessment], verdict: str,
     detail = short + (' (%s)' % ', '.join(names) if names else '')
     if gap_txt:
         detail += '; без модели ' + gap_txt
-    return (short + '; ' + SCOPE_NOT_RU,
-            detail + '; ' + SCOPE_NOT_RU + ': ' + SCOPE_NOT_LIST_RU,
+    return (short + '; ' + SCOPE_NOT_RU + common_tail,
+            detail + '; ' + SCOPE_NOT_RU + ': ' + SCOPE_NOT_LIST_RU + common_tail,
             tuple(facts))
 
 

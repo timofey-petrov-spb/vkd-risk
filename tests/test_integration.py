@@ -69,10 +69,17 @@ def test_live_orbit_through_bridge_with_pinned_tle():
     assert r.S['trajectory_meta']['strictness'] == 'strict'
     assert r.S['sources']['orbit']['source_id'] == 'celestrak_gp'
     assert 'celestrak_gp:25544:' in ''.join(r.S['trajectory_meta']['provenance']['records'])
-    # Живой режим на закреплённом TLE: наблюдение GOES не покрывает окно 2 совсем (Coverage.NONE),
-    # и это ОТСУТСТВИЕ покрытия — оно и даёт отказ. Частичные линии отказа не дают.
-    assert r.rec.verdict == 'insufficient', r.rec.missing
-    assert any('GOES' in m for m in r.rec.missing), r.rec.missing
+    # ИЗМЕНЕНО в круге 11 (R14). Было: наблюдение GOES не покрывает окно 2 совсем, пустой канал
+    # обнуляет обязательную линию, вердикт — отказ. Так текущий режим отказывал ВСЕГДА, при любых
+    # данных: окно, начинающееся позже чем через час после измерения, в горизонт наблюдения не
+    # попадает по построению. Стало: канал протонных событий объявлен ОБЩИМ для всех окон
+    # (наблюдение получено, не устарело и фоновое), линию он не обнуляет, и вывод делается по тем
+    # факторам, которые окна различают. Проверка не потеряна, а переставлена: вместо «отказ»
+    # проверяется, что отказа нет и что фраза об общем канале стоит в самом вердикте.
+    assert r.rec.verdict != 'insufficient', r.rec.rule_applied
+    assert not r.rec.missing, r.rec.missing
+    assert 'прогноза потока с разрешением по окну не существует' in r.rec.scope_ru
+    assert 'наличие события внутри окна неизвестно' in r.rec.scope_ru
     # метеороиды по трассе: N порядка контрольного 5,6e-7 на 6 ч, покрытие полное
     m2 = [m for m in r.assessments[0].mechanisms if m.mechanism_id == 'mmod_stat'][0]
     assert m2.coverage.value == 'partial' and 4e-7 < m2.factors[0].value < 8e-7

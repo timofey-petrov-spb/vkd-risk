@@ -3,8 +3,8 @@
 
 Архив содержит: report.md (читаемо, самостоятельный документ для руководителя работ),
 request.json, trajectory_meta.json, factors.json, recommendation.json, cards.json
-(карточки по окнам), sources.json, verification.json (прогноз из прошлого: что
-наблюдалось после отсечки), manifest.json и raw/<record_id>.json — сырые записи,
+(карточки по окнам), sources.json, scan.json (перебор начал выхода, если он делался),
+verification.json (прогноз из прошлого: что наблюдалось после отсечки), manifest.json и raw/<record_id>.json — сырые записи,
 из которых восстанавливается расчёт. Сведения в выгрузке совпадают с интерфейсом:
 и то и другое строится из одного словаря-снимка, собранного один раз за расчёт.
 """
@@ -230,6 +230,71 @@ def _min_md(x: float) -> str:
     return ('%.0f' % x) if x >= 1 or x == 0 else ('%.1f' % x).replace('.', ',')
 
 
+SCAN_VERDICT_RU = {
+    'recommended': 'Есть рекомендованное начало выхода',
+    'equivalent': 'Лучшие начала равнозначны между собой',
+    'all_need_check': 'Все перебранные начала под условием проверки',
+    'insufficient': 'Ранжировать перебранные начала не по чему',
+}
+# Строк таблицы лучших в отчёте столько же, сколько на экране: это одна и та же таблица.
+SCAN_TABLE_ROWS = 5
+
+
+def _scan_answer_md(sc: dict) -> str:
+    """Вид ответа словами. Отчёт читают отдельно от экрана, и «когда выходить» должно стоять
+    в нём прямой строкой, а не выводиться читателем из таблицы лучших."""
+    kind, span = sc.get('answer_kind'), sc.get('answer_span')
+    if kind == 'point' and span:
+        return '**Когда выходить:** начало %s UTC.' % _dt(span[0])
+    if kind == 'interval' and span:
+        return '**Когда выходить:** любое начало в промежутке %s — %s UTC.' % (_dt(span[0]), _span_end(span[0], span[1]))
+    if kind == 'tradeoff':
+        return ('**Когда выходить:** единого ответа нет — минуты в аномалии и флюенс указывают на '
+                'разные начала сверх допуска, выбор за аналитиком.')
+    return '**Когда выходить:** сервис не называет начало — см. вердикт и условия выше.'
+
+
+def _scan_md(S: dict) -> list:
+    """Перебор начал выхода в отчёте (ТЗ круга 11, раздел 1a: ключ `scan` попадает в выгрузку).
+
+    Если перебора не было, ключа в снимке нет вовсе — и в отчёте раздела тоже нет. Пустой
+    раздел с прочерками означал бы «перебрали и ничего не нашли», а это другое утверждение.
+    """
+    sc = S.get('scan')
+    if not sc:
+        return []
+    L = ['', '## Перебор начал выхода', '',
+         '**%s.**' % SCAN_VERDICT_RU.get(sc['verdict'], sc['verdict']), '',
+         'Перебрано начал: %s, шаг %s мин; срок поиска %s — %s UTC, длительность выхода %s мин '
+         '(последнее начало — конец срока минус длительность).'
+         % (fmt(sc['n_candidates']), fmt(sc['step_min']), _dt(sc['search_from_utc']),
+            _dt(sc['search_to_utc']), fmt(sc['requested_duration_min'])),
+         # точка не удваивается: текст «почему» — законченные предложения и свою уже несёт
+         '', _scan_answer_md(sc),
+         '', 'Почему: %s' % phrase_ru(sc['why']).rstrip('.') + '.',
+         '', 'Правило ранжирования: %s' % phrase_ru(sc['rule']),
+         # Заголовок строки отличается от строки допуска у сравнения окон намеренно: величины в
+         # них одни и те же, но относятся к разным перечням, и путать их в отчёте нельзя.
+         '', 'Допуск при переборе: %s.' % phrase_ru(sc['tolerance_note']),
+         '', 'Область вывода перебора: %s.' % phrase_ru(sc['scope']), '']
+    rows = [sc['candidates'][i] for i in sc['best'][:SCAN_TABLE_ROWS]]
+    if rows:
+        L += ['Лучшие начала (та же таблица, что на экране):', '',
+              '| ранг | начало UTC | минут в аномалии | флюенс, част./см² | попаданий на 1 м² | покрытие | условия |',
+              '|---|---|---|---|---|---|---|']
+        for c in rows:
+            L.append('| %s | %s | %s | %s | %s | %s | %s |' % (
+                fmt(c['rank']) if c['rank'] is not None else '—', _dt(c['start_utc']),
+                fmt(c['saa_min']) if c['saa_min'] is not None else 'не посчитано',
+                fmt(c['fluence']) if c['fluence'] is not None else 'не посчитан',
+                fmt(c['mmod_hits']) if c['mmod_hits'] is not None else 'не посчитано',
+                COV_RU.get(c['coverage'], c['coverage']),
+                '; '.join(phrase_ru(x) for x in c['conditions']) or 'нет'))
+        L.append('')
+    L += ['Полный перечень перебранных начал с их величинами — в `scan.json`.', '']
+    return L
+
+
 def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
     """Отчёт для человека. Говорит теми же словами, что экран: идентификаторы источников и
     состояний переведены, вердикт по-русски (машинный код остаётся в recommendation.json),
@@ -255,6 +320,7 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
         L += ['', '**Область вывода:** %s.' % phrase_ru(r.get('scope_detail') or r['scope'])]
         for k, v in (r.get('scope_facts') or []):
             L.append('- %s: %s' % (k, phrase_ru(v)))
+    L += _scan_md(S)
     if r['reasons']:
         L += ['', 'Что повлияло:'] + ['- ' + phrase_ru(x) for x in r['reasons']]
     if r['missing']:
@@ -381,6 +447,8 @@ def report_md(S: dict, raw_records: dict[str, Any] | None = None) -> str:
               'Масса ≥0,001 г, односторонняя случайно ориентированная пластина 1 м². '
               'Результат — ожидаемое число попаданий, не повреждение скафандра.', '']
         for start, model in S['meteoroids'].items():
+            if start not in {w['start_utc'] for w in S['windows']}:
+                continue
             L.append('### Окно с %s' % _dt(start))
             if not model.get('streams_included'):
                 L.append(model.get('error', 'Расчёт недоступен.'))
@@ -486,6 +554,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
             z.writestr('meteoroids.json', _j(S['meteoroids']))
         if S.get('numerical_integration'):
             z.writestr('numerical_integration.json', _j(S['numerical_integration']))
+        if S.get('scan'):
+            # Перебор начал целиком: все кандидаты с величинами, рангами и условиями.
+            # Файла нет ровно тогда, когда перебора не было (ключа `scan` в снимке нет).
+            z.writestr('scan.json', _j(S['scan']))
         if S.get('verification') is not None:
             z.writestr('verification.json', _j(S['verification']))
         if S.get('observations'):        # ряды наблюдений с единицей, источником и записью (C3)

@@ -85,7 +85,7 @@ def test_history_and_simulated_delay_keep_orbit_and_meteor_times_together(mode):
         scenario=Scenario("test", work_delay_min=90) if mode == "history_review" else None,
         fetched=fetch_none(),
     )
-    assert len(result.S["meteoroids"]) == 2
+    assert len(result.S["meteoroids"]) >= 2  # Manual windows and every scanned start.
     for window in result.S["windows"]:
         m = result.S["meteoroids"][window["start_utc"]]
         assert m["streams_included"] and m["N"] > 0
@@ -97,6 +97,7 @@ def test_model_failure_is_missing_not_zero_or_baseline_fallback(monkeypatch):
         raise ValueError("test invalid orbital states")
 
     monkeypatch.setattr("app.compute.seasonal_hits_track", reject)
+    monkeypatch.setattr("app.compute.prepare_seasonal_track", reject)
     result = run(
         "history_forecast", datetime(2024, 6, 7, 12, tzinfo=UTC), 360, 720, [0, 240], fetched=fetch_none()
     )
@@ -159,3 +160,36 @@ def test_current_mode_uses_same_seasonal_model_with_pinned_sgp4():
     assert result.meta.method == "sgp4"
     assert all(m["streams_included"] for m in result.S["meteoroids"].values())
     assert all(not m["provenance"]["is_reconstruction"] for m in result.S["meteoroids"].values())
+
+
+def test_automatic_scan_and_manual_windows_share_seasonal_values(actual):
+    assert actual.scan is not None
+    for candidate in actual.scan.candidates:
+        model = actual.S["meteoroids"][candidate.start_utc.isoformat()]
+        assert candidate.mmod_hits == model["N"]
+    for a in actual.assessments:
+        candidate = next(c for c in actual.scan.candidates if c.start_utc == a.window.start_utc)
+        mechanism = next(m for m in a.mechanisms if m.mechanism_id == "mmod_stat")
+        assert candidate.mmod_hits == mechanism.factors[0].value
+    assert "Сезонные метеороиды" in actual.scan.rule
+
+
+def test_scan_uses_both_mechanisms_and_preserves_rank_uncertainty():
+    from datetime import timedelta
+    from vkd.windows.scan import Candidate, _rank_candidates
+
+    t0 = datetime(2024, 6, 7, 12, tzinfo=UTC)
+    cands = [
+        Candidate(t0, t0 + timedelta(hours=6), 30, 1e6, 1e-6, "partial", ()),
+        Candidate(t0 + timedelta(hours=1), t0 + timedelta(hours=7), 30, 1e6, 2e-6, "partial", ()),
+    ]
+
+    def model(base, alt):
+        return {"sensitivity": {"hypotheses_N": {"base": base, "alternate": alt}, "invalid_hypotheses": {}}}
+
+    models = {cands[0].start_utc: model(1e-6, 2e-6), cands[1].start_utc: model(2e-6, 4e-6)}
+    _, best, selected, verdict = _rank_candidates(cands, 5, 1.5, models, 5)
+    assert verdict == "recommended" and selected == 0 and best == (0,)
+    models[cands[0].start_utc] = model(1e-6, 5e-6)
+    _, best, selected, verdict = _rank_candidates(cands, 5, 1.5, models, 5)
+    assert verdict == "equivalent" and selected is None and len(best) == 2

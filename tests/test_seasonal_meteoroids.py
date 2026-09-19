@@ -219,3 +219,21 @@ def test_paired_hypotheses_can_revoke_an_apparent_preference():
     assert not comparison_sensitivity([row(1, 3), row(2, 2)], 5)["stable"]
     assert not comparison_sensitivity([row(1, 1), row(1.01, 2)], 5)["stable"]
     assert not comparison_sensitivity([{}, row(1, 1)], 5)["stable"]
+
+
+def test_prepared_horizon_matches_standalone_window_and_rejects_extrapolation():
+    from vkd.assess.seasonal import prepare_seasonal_track
+
+    times, alts, states = circle(minutes=180)
+    prepared = prepare_seasonal_track(times, alts, states)
+    for left, right in [(0, 90), (20, 80), (90, 180)]:
+        a = prepared(times[left], times[right])
+        b = seasonal_hits_track(times[left : right + 1], alts[left : right + 1], states)
+        assert a.N == pytest.approx(b.N, rel=1e-12, abs=0)
+        assert a.N_streams == pytest.approx(b.N_streams, rel=1e-12, abs=0)
+        for key, value in a.sensitivity["hypotheses_N"].items():
+            assert value == pytest.approx(b.sensitivity["hypotheses_N"][key], rel=1e-12, abs=0)
+    with pytest.raises(ValueError):
+        prepared(times[0] - timedelta(seconds=1), times[2])
+    with pytest.raises(ValueError):
+        prepared(times[0] + timedelta(seconds=1), times[2])

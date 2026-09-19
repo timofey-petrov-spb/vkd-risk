@@ -64,10 +64,19 @@ def test_snapshot_and_zip_agree_and_manifest_is_versioned(path):
     assert rec == S['recommendation']
     if S['mode_id'] == 'live':
         # текущий режим воспроизводим только с сырыми записями источников: точные байты ответа
-        assert goes is not None and 'raw/iss.tle.json' in names
-        assert goes['content_base64'] and goes['metadata'].get('url')
-        assert goes['metadata'].get('sha256') and goes['metadata'].get('fetched_utc')
+        assert 'raw/iss.tle.json' in names
         assert any(n.startswith('raw/celestrak_gp-') for n in names)      # байты ответа TLE, не только текст
+        off = {k for k, v in (S['request'].get('disabled') or {}).items() if v == 'off'}
+        if 'goes' in off:
+            # ИЗМЕНЕНО в круге 11: появился сохранённый пример с ОТКАЗОМ (`refusal_goes_off`), где
+            # пользователь исключил источник протонов. Сырой записи GOES в таком архиве быть не
+            # может — и её ОТСУТСТВИЕ здесь и есть проверка: исключённый источник не должен
+            # оставить в выгрузке ни байта данных, иначе повтор шёл бы не по тому запросу.
+            assert goes is None, 'источник исключён, а сырая запись GOES в архиве осталась'
+        else:
+            assert goes is not None
+            assert goes['content_base64'] and goes['metadata'].get('url')
+            assert goes['metadata'].get('sha256') and goes['metadata'].get('fetched_utc')
 
 
 def test_index_names_t5_pair_and_lists_every_example():
