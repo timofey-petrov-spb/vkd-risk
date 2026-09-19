@@ -1,7 +1,7 @@
 {
  "schema_version": "2.2",
  "algorithm_version": "0.7.0",
- "computed_utc": "2026-09-19T08:55:00+00:00",
+ "computed_utc": "2026-09-19T09:18:00+00:00",
  "mode": "Прогноз из прошлого",
  "mode_id": "history_forecast",
  "request": {
@@ -101,7 +101,7 @@
    ],
    "auto_refresh_min": 5
   },
-  "settings_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt8\\merge\\config\\settings.toml",
+  "settings_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\config\\settings.toml",
   "mmod": {
    "area_m2": 1.0,
    "m_min_g": 0.001,
@@ -31449,5 +31449,5 @@
    "26000 nT / 50 MeV": null
   }
  },
- "git_commit": "42222441bb32232d2b9d4a2082adae836819647e"
+ "git_commit": "8d57f06f5bac36bd6a2a9e7fe9b4c0ddced49e22"
 }
