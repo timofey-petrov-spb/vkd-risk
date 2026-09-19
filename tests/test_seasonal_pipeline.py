@@ -195,9 +195,15 @@ def test_scan_uses_both_mechanisms_and_preserves_rank_uncertainty():
     assert verdict == "equivalent" and selected is None and len(best) == 2
 
 
-def test_incomplete_request_status_is_readable_on_screen_and_in_export():
-    from app.ui import status_ru, screen_text
+def test_incomplete_request_status_is_readable_on_screen_and_in_export(actual):
+    from app.ui import status_ru, phrase_ru
     text = 'пауза запросов; request_incomplete'
     assert 'request_incomplete' not in status_ru(text)
     assert 'не завершён' in status_ru(text)
-    assert 'request_incomplete' not in screen_text(text)
+    assert 'request_incomplete' not in phrase_ru(text)
+    snapshot = deepcopy(actual.S)
+    source = next(k for k in snapshot['sources'] if not k.startswith('_'))
+    snapshot['sources'][source]['status'] = text
+    report = report_md(snapshot, actual.raw_records)
+    assert 'request_incomplete' not in report
+    assert 'предыдущий запрос не завершён' in report
