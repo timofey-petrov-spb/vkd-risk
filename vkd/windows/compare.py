@@ -49,6 +49,15 @@ MAG_STATUS_RU = {'ok': 'в сетке таблицы', 'no_model_L': 'L вне �
                  'beyond_mirror': 'выше точки отражения — поток 0', 'inconsistent_BB0': 'B/B0 < 1, помечено',
                  'approximation': 'эксцентричный диполь (объявленное приближение)', 'outside_model': 'вне модели координат'}
 TEAM_RULE_RU = 'правило команды, не норма'
+# Пометки к сравнению величин там, где правило выбирать не имеет права. Текст должен быть честным
+# сам по себе, в любом месте, куда попадёт (экран, отчёт выгрузки, JSON-снимок), а не потому,
+# что экран отрежет у него хвост.
+ADVISORY_NO_DATA_RU = ('это сравнение факторов, а не рекомендация: обязательная линия осталась без данных, '
+                       'и окно по этому сравнению не выбирается')
+ADVISORY_ALL_FLAGGED_RU = ('это справка для решения руководителя работ, а не рекомендация сервиса: правило команды '
+                           'окна с условием не выбирает')
+ADVISORY_SINGLE_RU = ('сравнение факторов приведено для проверки: окно выбрано правилом условий, '
+                      'а не этими величинами')
 
 
 def _min_ru(x: float) -> str:
@@ -374,7 +383,11 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
         # архива GOES нет, но есть датированные уведомления о протонных событиях: частичное покрытие канала
         goes_cov = Coverage.PARTIAL
         goes_note = goes_absent_ru + '; канал частично покрыт датированными уведомлениями DONKI о протонных событиях'
-        note('GOES: ' + goes_absent_ru + ', канал покрыт только уведомлениями DONKI', False)
+        # Два разных канала — две разные строки. Пока причина отсутствия наблюдений GOES
+        # («исключён пользователем», «исключён строгим режимом») стояла в одной строке с
+        # уведомлениями DONKI, исключение читалось как относящееся и к ним (девятый круг, М3).
+        notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+        notes.append('уведомления DONKI: канал протонных событий покрыт только ими — это другой источник')
     elif catalog_coverage:
         c0, c1 = catalog_coverage[0], catalog_coverage[1]
         if cutoff_utc is not None:
@@ -386,7 +399,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
                              'событий с действием в окне не объявлено; после отсечки сведения не использованы; каталог в '
                              'репозитории охватывает %s — %s' % (goes_absent_ru, cutoff_utc.strftime('%Y-%m-%d %H:%MZ'), c0.strftime('%d.%m.%Y'),
                                                                   (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
-                note('GOES: ' + goes_absent_ru + '; уведомлений DONKI о протонных событиях до отсечки нет', False)
+                notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+                notes.append('уведомления DONKI: протонных событий с действием в окне до отсечки %s не объявлено'
+                             % cutoff_utc.strftime('%Y-%m-%d %H:%MZ'))
             else:
                 goes_note = ('архив уведомлений DONKI %s — %s не покрывает публикации до отсечки %s'
                              % (c0.strftime('%d.%m.%Y'), c1.strftime('%d.%m.%Y'), cutoff_utc.strftime('%Y-%m-%d %H:%MZ')))
@@ -397,7 +412,9 @@ def assess_window(win: Window, traj: Sequence[TrajectoryPoint], belts: BeltTable
             goes_cov = Coverage.PARTIAL
             goes_note = ('%s; в уведомлениях DONKI за %s — %s протонных событий с действием '
                          'в окне не объявлено' % (goes_absent_ru, c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
-            note('GOES: ' + goes_absent_ru + '; уведомлений DONKI о протонных событиях в окне нет', False)
+            notes.append('GOES (численные наблюдения): ' + goes_absent_ru)
+            notes.append('уведомления DONKI: за %s — %s протонных событий с действием в окне не объявлено'
+                         % (c0.strftime('%d.%m.%Y'), (c1 - timedelta(minutes=1)).strftime('%d.%m.%Y')))
         else:
             goes_note = ('уведомления DONKI: архив до %s, окно %s — %s за его пределами — сократите период поиска или сдвиг'
                          % (c1.strftime('%Y-%m-%d %H:%MZ'), win.start_utc.strftime('%d.%m %H:%MZ'), end.strftime('%d.%m %H:%MZ')))
@@ -784,11 +801,53 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
                          for t, w in cond_groups.items())
 
     per, best, conflict, sw_conflict, equiv_set = {}, None, False, None, []
+    # Величины окон считаются по ВСЕМ окнам, а не только по кандидатам без условий.
+    # Пока расчёт стоял под `if len(candidates) >= 2`, при единственном кандидате и при
+    # всех окнах под условием блок вердикта оставался без единого числа, а правило могло
+    # назвать предпочтительным окно, ХУДШЕЕ по целевой величине, и промолчать об этом
+    # (девятый круг: 10.05.2024 06:00, период 1440, сдвиги 0/240 — выбрано окно с флюенсом
+    # 2,22·10^6 част./см² при 2,06·10^6 у окна под условием).
+    mins = {id(a): _sw_vals(a)[0] for a in assessments}
+    fls = {id(a): _sw_vals(a)[1] for a in assessments}
+    tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
+
+    def lab_f(a):
+        """Метка окна вместе с пометкой условия: в справочном списке по всем окнам без неё
+        помеченное окно выглядит равноправным кандидатом."""
+        return lab(a) + (' под условием' if flagged[id(a)] else '')
+
+    def vtxt_all(a):
+        return '%s: %s мин в аномалии, флюенс %s' % (lab_f(a), fmt_ru(mins[id(a)]), fmt_ru(fls[id(a)], 'част./см²'))
+
+    def _rank(seq):
+        return sorted(seq, key=lambda a: (fls[id(a)] if fls[id(a)] is not None else float('inf'),
+                                          mins[id(a)] if mins[id(a)] is not None else float('inf')))
+
+    def _spread(seq):
+        """Куда расходятся окна по двум величинам космопогоды. Справка, а не вывод: её печатают
+        там, где правило выбирать не имеет права (все окна под условием, единственный кандидат)."""
+        ms = [a for a in seq if mins[id(a)] is not None]
+        fs = [a for a in seq if fls[id(a)] is not None]
+        if len(seq) < 2 or not ms or not fs:
+            return ''
+        by_min, worst_m = min(ms, key=lambda a: mins[id(a)]), max(ms, key=lambda a: mins[id(a)])
+        by_fl, worst_f = min(fs, key=lambda a: fls[id(a)]), max(fs, key=lambda a: fls[id(a)])
+        if by_min.window.start_utc == by_fl.window.start_utc:
+            return 'обе величины ниже у %s' % lab(by_min)
+        return ('по минутам в аномалии ниже %s (%s против %s мин), по флюенсу — %s (%s против %s част./см², отношение ×%s)'
+                % (lab(by_min), fmt_ru(mins[id(by_min)]), fmt_ru(mins[id(worst_m)]),
+                   lab(by_fl), fmt_ru(fls[id(by_fl)]), fmt_ru(fls[id(worst_f)]),
+                   ('%.2f' % (fls[id(worst_f)] / max(fls[id(by_fl)], 1e-30))).replace('.', ',')))
+
+    # Справочный список — по НОМЕРАМ окон, а не по возрастанию флюенса: это не ранжирование,
+    # и порядок «окно 2; окно 1» читается как скрытый выбор.
+    all_listing = '; '.join(vtxt_all(a) for a in assessments)
+    # Хвост сравнения в двух видах: рабочий (его печатает вердикт с рекомендацией) и справочный
+    # (его печатает отказ). При отказе утвердительное «лучше окно 2» стояло ПЕРВОЙ строкой под
+    # заголовком «Оснований для рекомендации недостаточно» — самоопровержение (девятый круг).
+    sw_listing, sw_tail, sw_tail_info = None, None, None
     if len(candidates) >= 2:
         # 3. сравнение по каждому механизму отдельно; космопогода — по двум величинам
-        mins = {id(a): _sw_vals(a)[0] for a in candidates}
-        fls = {id(a): _sw_vals(a)[1] for a in candidates}
-        tol_m, tol_r = th.equiv_tol_min, max(1.0, th.fluence_equiv_ratio)
 
         def not_worse(a, b):
             m_ok = mins[id(a)] is None or mins[id(b)] is None or mins[id(a)] <= mins[id(b)] + tol_m
@@ -802,26 +861,31 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
 
         def vtxt(a):
             return '%s: %s мин в аномалии, флюенс %s' % (lab(a), fmt_ru(mins[id(a)]), fmt_ru(fls[id(a)], 'част./см²'))
-        ranked = sorted(candidates, key=lambda a: (fls[id(a)] if fls[id(a)] is not None else float('inf'),
-                                                   mins[id(a)] if mins[id(a)] is not None else float('inf')))
+        ranked = _rank(candidates)
         dominators = [a for a in candidates if all(not_worse(a, b) for b in candidates if b is not a)]
         listing = '; '.join(vtxt(a) for a in ranked)
+        sw_listing = listing
         if not dominators:
             by_min = min(candidates, key=lambda a: mins[id(a)] if mins[id(a)] is not None else float('inf'))
             by_fl = ranked[0]
             sw_conflict = 'по минутам лучше %s, по флюенсу — %s' % (lab(by_min), lab(by_fl))
-            per['spaceweather'] = listing + ' — ' + sw_conflict
+            sw_tail = sw_conflict
+            sw_tail_info = 'по минутам в аномалии ниже у %s, по флюенсу — у %s' % (lab(by_min), lab(by_fl))
         else:
             strict = [a for a in dominators if all(better(a, b) for b in candidates if b is not a)]
             if strict:
                 best = strict[0]
-                per['spaceweather'] = listing + ' — лучше %s' % lab(best)
+                sw_tail = 'лучше %s' % lab(best)
+                sw_tail_info = 'по нашему расчёту величины ниже у %s' % lab(best)
             else:
                 a0 = dominators[0]
                 equiv_set = [a0] + [b for b in candidates if b is not a0 and not_worse(a0, b) and not_worse(b, a0)]
                 worse = [b for b in candidates if b not in equiv_set]
-                per['spaceweather'] = listing + ' — равнозначны в допуске: %s' % ', '.join(lab(a) for a in equiv_set) + (
+                sw_tail = 'равнозначны в допуске: %s' % ', '.join(lab(a) for a in equiv_set) + (
                     '; хуже: %s' % ', '.join(lab(a) for a in worse) if worse else '')
+                sw_tail_info = 'в допуске величины окон не различаются: %s' % ', '.join(lab(a) for a in equiv_set) + (
+                    '; выше: %s' % ', '.join(lab(a) for a in worse) if worse else '')
+        per['spaceweather'] = listing + ' — ' + sw_tail
         mm_vals = {id(a): _mm_val(a) for a in candidates}
         if any(v is not None for v in mm_vals.values()):
             vals = [v for v in mm_vals.values() if v is not None]
@@ -847,12 +911,22 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
         шестой исход, теперь нельзя: другого конструктора Recommendation в recommend() нет."""
         scope, detail, scope_facts = declared_scope(assessments, kw['verdict'], candidates,
                                                    kw.get('missing') or ())
-        return Recommendation(per_mechanism_comparison=per, tolerance_basis=tol,
+        # Исход может принести свой состав сравнения по механизмам (отказ, «все под условием»,
+        # единственный кандидат добавляют в него справочную строку) — тогда он идёт в kw.
+        kw.setdefault('per_mechanism_comparison', per)
+        return Recommendation(tolerance_basis=tol,
                               scope_ru=scope, scope_detail_ru=detail, scope_facts=scope_facts, **kw)
     if missing_l:
+        # Хвост сравнения переписывается В САМОЙ ВЕТКЕ: источник текста обязан быть честным сам
+        # по себе, а не потому, что экран отрежет лишнее. «— лучше окно 2» под заголовком
+        # «Оснований для рекомендации недостаточно» — это ровно та рекомендация, в которой
+        # заголовок только что отказал (девятый круг, М1).
+        per_ins = dict(per)
+        if sw_listing is not None and sw_tail_info:
+            per_ins['spaceweather'] = '%s — %s; %s' % (sw_listing, sw_tail_info, ADVISORY_NO_DATA_RU)
         return out(preferred=None, verdict='insufficient',
-                   rule_applied='п.1: обязательная линия не покрыта совсем — ' + '; '.join(missing_l),
-                   reasons=tuple(per.values()) + tuple(missing_l) + note_partial + cond_reasons,
+                   rule_applied='п.1: отсутствует покрытие обязательной линии — ' + '; '.join(missing_l),
+                   per_mechanism_comparison=per_ins, reasons=tuple(per_ins.values()) + note_partial + cond_reasons,
                    missing=tuple(missing_l))
     if sw_conflict:
         return out(preferred=None, verdict='trade_off',
@@ -864,13 +938,38 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
                    rule_applied='п.4: механизмы указывают на разные окна — компромисс без победителя',
                    reasons=tuple(per.values()) + note_partial + cond_reasons)
     if not candidates:
+        # Все окна под условием: выбирать правило не имеет права, но числа у окон разные и
+        # расходятся в разные стороны, а расчёт их уже содержит. Справка печатается ОТДЕЛЬНЫМ
+        # ключом и прямо помечена как не-рекомендация (девятый круг; на Гэннон 10.05 12:00
+        # по флюенсу лучше окно 1, по минутам — окно 2).
+        per_all = dict(per)
+        spread = _spread(list(assessments))
+        ref = None
+        if len(assessments) >= 2:
+            # ключ — тот же 'spaceweather': имя механизма переводится MECH_RU, а собственный
+            # ключ вида 'spaceweather_reference' уходил в отчёт идентификатором кода (О5)
+            ref = '%s%s — %s' % (all_listing, ('. ' + spread) if spread else '', ADVISORY_ALL_FLAGGED_RU)
+            per_all['spaceweather'] = ref
         return out(preferred=None, verdict='all_need_check', rule_applied='п.2: все окна под условием',
-                   reasons=cond_reasons + note_partial)
+                   per_mechanism_comparison=per_all,
+                   reasons=cond_reasons + note_partial + ((ref,) if ref else ()))
     if len(candidates) == 1:
         c = candidates[0]
-        return out(preferred=c.window, verdict='preferred',
-                   rule_applied='п.2: %s — единственное без условий' % lab(c),
-                   reasons=tuple(per.values()) + cond_reasons + note_partial)
+        # Единственный кандидат: выбор сделан правилом условий, а не сравнением величин, и это
+        # говорится вслух. Раньше per оставался пустым — в блоке вердикта не было ни одного
+        # числа, и сервис мог рекомендовать окно, худшее по флюенсу, ничего об этом не сказав.
+        per_one = dict(per)
+        per_one['spaceweather'] = all_listing + ' — ' + ADVISORY_SINGLE_RU
+        rule = 'п.2: %s — единственное без условий; выбор сделан правилом условий, а не сравнением величин' % lab(c)
+        f_c = fls[id(c)]
+        worse_than = [b for b in assessments if b is not c and fls[id(b)] is not None and f_c is not None and fls[id(b)] < f_c]
+        if worse_than:
+            b0 = min(worse_than, key=lambda b: fls[id(b)])
+            rule += ('; выбранное окно хуже по флюенсу, чем %s (%s против %s част./см²), — это следствие правила условий, '
+                     'а не преимущество обстановки' % (lab_f(b0), fmt_ru(f_c), fmt_ru(fls[id(b0)])))
+        return out(preferred=c.window, verdict='preferred', rule_applied=rule,
+                   per_mechanism_comparison=per_one,
+                   reasons=tuple(per_one.values()) + cond_reasons + note_partial)
     if equiv_set:
         return out(preferred=None, verdict='equivalent',
                    rule_applied='п.5: %s равнозначны — разница минут и флюенса внутри допуска (%.0f мин, ×%.2f)' % (
@@ -892,17 +991,23 @@ def recommend(assessments: Sequence[WindowAssessment], th: Thresholds) -> Recomm
     elif m_best == m_ref:
         why.append('по минутам в аномалии одинаково (%s мин у обоих)' % fmt_ru(m_best))
     else:
-        why.append('не хуже по минутам в пределах допуска %s мин (%s против %s мин, разница %s мин)'
-                   % (fmt_ru(th.equiv_tol_min), fmt_ru(m_best), fmt_ru(m_ref), fmt_ru(m_best - m_ref)))
+        # «не хуже по минутам» при числах, показывающих обратное, читается как подгонка вывода
+        # под ответ (девятый круг). Проигрыш называется проигрышем, и рядом сказано, почему он
+        # не считается различием. Раз выбранное окно всё же строго лучшее, выигрыш — по флюенсу.
+        why.append('по минутам в аномалии выбранное окно хуже на %s мин (%s против %s мин) — в пределах допуска '
+                   '%s мин, различием не считается; выбор сделан по флюенсу'
+                   % (fmt_ru(m_best - m_ref), fmt_ru(m_best), fmt_ru(m_ref), fmt_ru(th.equiv_tol_min)))
     if f_best is None or f_ref is None or not f_ref:
         why.append('флюенс не вычислен — по нему окна не сравнивались')
     elif f_best <= f_ref:
         why.append('флюенс ниже (%s против %s част./см², отношение ×%s)'
                    % (fmt_ru(f_best), fmt_ru(f_ref), ('%.2f' % (f_best / f_ref)).replace('.', ',')))
     else:
-        why.append('не хуже по флюенсу в пределах допуска ×%s (%s против %s част./см², отношение ×%s)'
-                   % (('%.2f' % max(1.0, th.fluence_equiv_ratio)).replace('.', ','), fmt_ru(f_best), fmt_ru(f_ref),
-                      ('%.2f' % (f_best / f_ref)).replace('.', ',')))
+        why.append('по флюенсу выбранное окно выше на %s %% (%s против %s част./см², отношение ×%s) — внутри допуска '
+                   '×%s, различием не считается; выбор сделан по минутам в аномалии'
+                   % (('%.0f' % (100.0 * (f_best / f_ref - 1.0))).replace('.', ','), fmt_ru(f_best), fmt_ru(f_ref),
+                      ('%.2f' % (f_best / f_ref)).replace('.', ','),
+                      ('%.2f' % max(1.0, th.fluence_equiv_ratio)).replace('.', ',')))
     return out(preferred=best.window, verdict='preferred',
                rule_applied='п.3–4: %s лучше по космопогоде — %s; линия метеороидов не противоречит'
                             % (lab(best), '; '.join(why)) + ('; покрытие частичное — объявлено' if partial_l else ''),

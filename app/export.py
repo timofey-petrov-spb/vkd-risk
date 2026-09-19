@@ -19,9 +19,20 @@ from typing import Any
 
 from types import SimpleNamespace
 
-from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, fmt, frac_ru, phrase_ru, raw_record,
-                    record_url, robustness_line_ru, rule_ru, screen_text, source_name_ru, status_ru, verification_ru)
-from vkd.explain.format import record_ru
+from app.ui import (EVENT_KIND_RU, STRICT_RU, dates_ru, factor_value_ru, frac_ru, phrase_ru, raw_record,
+                    record_url, robustness_line_ru, rule_ru, screen_text, source_name_ru, status_ru, sup, verification_ru)
+from vkd.explain.format import fmt_ru, record_ru
+
+
+def fmt(v, unit: str = '') -> str:
+    """Число в отчёте — ЕДИНЫМ правилом ядра (vkd.explain.format.fmt_ru, порог степенной
+    записи SCI_MIN), степень надстрочными цифрами (app.ui.sup).
+
+    Отчёт брал форматирование у экрана, а тексты правила и карточек приходили в него уже
+    отформатированными ядром. Пока пороги в двух функциях стояли числами по месту, одна и
+    та же величина печаталась в одном документе двумя видами: строка правила «флюенс ниже
+    (88701 …)» и таблица факторов «1,65·10^6». Теперь правило одно и живёт в ядре."""
+    return sup(fmt_ru(v, unit))
 
 VERDICT_TITLE = {
     'preferred': 'Есть предпочтительное окно',
@@ -102,8 +113,8 @@ _OBS_TIME_RE = re.compile(r'наблюдение\s+([\d.:\s]+)')
 
 
 def _value(f: dict) -> str:
-    """Число в отчёте — тем же форматом, что на экране (app.ui.fmt): запятая и надстрочная степень.
-    Прежний fmt_ru печатал «1,34·10^6», и одна и та же величина получала два вида в двух
+    """Число в отчёте — единым правилом ядра (fmt выше): запятая и надстрочная степень.
+    Пока правил было два (ядро и экран), одна и та же величина получала два вида в двух
     артефактах одного расчёта.
 
     Правило «значения нет» — тоже общее с экраном, а не своё: наблюдение, горизонт которого не
