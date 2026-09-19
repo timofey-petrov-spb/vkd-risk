@@ -190,15 +190,35 @@ def test_gap_forecast_line_does_not_call_stale_bulletin_a_release():
 
 
 def test_review_window_beyond_archive_end_names_the_reason():
+    """M11: окно за концом архива — покрытие линии событий и прогнозов отсутствует В ЛЮБОМ
+    историческом режиме. Прежде строгий режим оценивал такое окно (смотрел только на публикации
+    до отсечки) и выдавал «предпочтительное окно», тогда как экран сверху обещал «рекомендации
+    не будет»; теперь обещание и вердикт согласованы."""
     t0 = datetime(2024, 6, 30, 12, 0, tzinfo=UTC)
     r = run('history_review', t0, 360, 1440, [0, 480], fetched=_fetched(), now=t0)
     assert r.rec.verdict == 'insufficient'
     assert any('архив до' in m and 'сократите' in m for m in r.rec.missing)
-    # в строгом режиме то же окно оценивается: важны публикации до отсечки, а не конец архива
     s = run('history_forecast', t0, 360, 1440, [0, 480], fetched=_fetched(), now=t0)
-    assert s.rec.verdict != 'insufficient'
-    g = next(f for f in s.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
+    assert s.rec.verdict == 'insufficient'
+    assert any('за границей архива' in m for m in s.rec.missing)
+    # окно, целиком лежащее в архиве, по-прежнему оценивается и объявляет отсечку
+    ok = run('history_forecast', datetime(2024, 6, 25, 12, 0, tzinfo=UTC), 360, 720, [0, 240], fetched=_fetched(),
+             now=datetime(2024, 6, 25, 12, 0, tzinfo=UTC))
+    g = next(f for f in ok.assessments[1].mechanisms[0].factors if f.name.startswith('поток протонов GOES'))
     assert 'до отсечки' in g.limits_note and 'после отсечки сведения не использованы' in g.limits_note
+
+
+def test_window_past_archive_end_is_insufficient_not_preferred():
+    """M11, случай постановки: 30.06.2024 20:00 — оба окна выходят за 01.07.2024."""
+    t0 = datetime(2024, 6, 30, 20, 0, tzinfo=UTC)
+    for mode in ('history_review', 'history_forecast'):
+        r = run(mode, t0, 360, 720, [0, 240], fetched=_fetched(), now=t0)
+        assert r.rec.verdict == 'insufficient' and r.rec.preferred is None, mode
+        assert any('за границей архива' in m for m in r.rec.missing), mode
+        for a in r.assessments:
+            m1 = next(m for m in a.mechanisms if m.mechanism_id == 'spaceweather')
+            assert m1.coverage.value == 'none'
+            assert any('за границей архива' in n for n in m1.coverage_notes)
 
 
 # ----------------------------------------------------------------------------- О2/Т3: уровень SEP из тела уведомления, буря как одно условие
