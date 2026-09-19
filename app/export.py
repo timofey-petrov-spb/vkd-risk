@@ -565,8 +565,10 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('report.md', report_md(S, raw_records))
         # Отчёт PDF по канонам (ТЗ круга 12, пункт 8): шесть разделов в строгом порядке.
-        # Не собрался — в архиве лежит причина, а не тишина.
-        z.writestr(*build_pdf_entry(S))
+        # Не собрался — в архиве лежит причина, а не тишина; имя файла попадает в манифест,
+        # чтобы по одному манифесту было видно, полон архив или нет.
+        pdf_name, pdf_body = build_pdf_entry(S)
+        z.writestr(pdf_name, pdf_body)
         z.writestr('request.json', _j(S['request']))
         z.writestr('trajectory_meta.json', _j(S['trajectory_meta']))
         z.writestr('factors.json', _j(S['windows']))
@@ -604,6 +606,7 @@ def build_zip(S: dict, raw_records: dict[str, Any]) -> bytes:
                                        'source_versions', 'event_facts', 'provider')},
             'numerical_integration': S.get('numerical_integration'),
             'robustness': S.get('robustness'), 'git_commit': _git_sha(),
+            'report_pdf': pdf_name,
         }))
         for rid, rec in raw_records.items():
             z.writestr(raw_files[rid], _j(rec))

@@ -69,7 +69,7 @@ def built(name: str) -> tuple[dict, bytes, str]:
 def _plain(text: str) -> str:
     """Текст без узких и неразрывных пробелов и без переносов: в PDF строка рвётся по ширине
     колонки, и число «2,45·10⁶» может оказаться разорванным переносом ячейки."""
-    return text.replace(' ', '').replace(' ', '').replace('\n', ' ')
+    return text.replace('\u202f', '').replace('\u00a0', '').replace('\n', ' ')
 
 
 # ----------------------------------------------------------------- 1. файл собирается и читается
@@ -170,7 +170,7 @@ def test_te_zhe_chisla_stoyat_i_v_otchyote_razmetkoy(name):
     означало бы, что одна из двух дорог печати завела число не туда."""
     S, _pdf, _text = built(name)
     md = _plain(report_md(S))
-    missing = {k: v for k, v in R.numbers_from_snapshot(S).items() if v.replace(' ', '') not in md}
+    missing = {k: v for k, v in R.numbers_from_snapshot(S).items() if v.replace('\u202f', '') not in md}
     assert missing == {}, 'числа PDF не нашлись в отчёте разметкой: %s' % missing
 
 
@@ -306,6 +306,7 @@ def test_bez_shrifta_s_kirillicey_vygruzka_vsyo_ravno_sobiraetsya(monkeypatch):
         names = z.namelist()
         assert 'report.pdf' not in names
         assert 'report_pdf_ne_sobran.txt' in names
+        assert json.loads(z.read('manifest.json').decode('utf-8'))['report_pdf'] == 'report_pdf_ne_sobran.txt'
         note = z.read('report_pdf_ne_sobran.txt').decode('utf-8')
         assert 'Отчёт PDF не собран' in note and 'шрифт' in note
         for required in ('report.md', 'request.json', 'recommendation.json', 'sources.json', 'manifest.json'):
@@ -334,6 +335,14 @@ def test_pdf_lezhit_v_arhive_vygruzki_i_otkryvaetsya():
     pages, text = _pdf_text(blob)
     assert pages >= 3 and 'Рекомендация' in text
     assert R.missing_numbers(S, text) == {}
+
+
+def test_manifest_nazyvaet_otchyot_pdf():
+    """По одному манифесту видно, полон ли архив: имя файла отчёта записано в нём.
+    Не собрался PDF — в манифесте стоит имя файла с причиной, а не пустое место."""
+    S = _snapshot('quiet_2024-05-03_12Z')
+    with zipfile.ZipFile(io.BytesIO(build_zip(S, {}))) as z:
+        assert json.loads(z.read('manifest.json').decode('utf-8'))['report_pdf'] == 'report.pdf'
 
 
 def test_tablicy_ne_shire_polosy_nabora():
