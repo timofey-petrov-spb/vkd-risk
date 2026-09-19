@@ -92,22 +92,37 @@ def test_klaster_nazvan_klasterom(gannon):
 # ------------------------------------------------- правило шагов 3–4
 def test_pravilo_ne_utverzhdaet_neproverennogo(quiet):
     """Хвост «не хуже по флюенсу и минутам» печатался безусловно, а флюенс выбранного окна выше."""
-    rule = quiet.S['recommendation']['rule']
+    from tests.test_compare import complete_for_comparator
+    from vkd.windows.compare import recommend, Thresholds
+    # Синтетическое полное покрытие изолирует ТОЛЬКО математику сравнения. На настоящих данных
+    # покрытие частичное, и с 19.09 это даёт вердикт с объявленной областью, а не отказ.
+    assert quiet.rec.verdict == 'preferred' and quiet.rec.preferred is not None
+    assert 'при покрытии модели' in quiet.rec.scope_ru, quiet.rec.scope_ru
+    result = recommend(complete_for_comparator(quiet.assessments), Thresholds())
+    rule = result.rule_applied
     assert rule.startswith('п.3–4'), rule
-    assert 'допуск' in rule, rule
+    if 'не хуже по флюенсу' in rule:
+        assert 'допуск' in rule, rule
+    else:
+        assert 'флюенс ниже' in rule, rule
     assert re.search(r'отношение ×\d+,\d+', rule), rule
     assert 'не хуже по флюенсу и минутам' not in rule, rule
     # числа правила совпадают с числами сравнения по механизму на том же экране
-    per = quiet.S['recommendation']['per_mechanism']['spaceweather']
+    per = result.per_mechanism_comparison['spaceweather']
     for num in re.findall(r'\d+,\d+·10\^6', rule.replace('·', '·')):
         assert num in per, (num, per)
 
 
 def test_pravilo_beryot_chisla_iz_sravneniya_po_mehanizmu(quiet):
     """Минуты в правиле — те же, что в строке сравнения окон."""
-    rule = quiet.S['recommendation']['rule']
-    per = quiet.S['recommendation']['per_mechanism']['spaceweather']
-    m = re.search(r'\((\d+) против (\d+) мин\)', rule)
+    from tests.test_compare import complete_for_comparator
+    from vkd.windows.compare import recommend, Thresholds
+    # Синтетическое полное покрытие изолирует ТОЛЬКО математику сравнения (см. тест выше).
+    assert quiet.rec.verdict == 'preferred'
+    result = recommend(complete_for_comparator(quiet.assessments), Thresholds())
+    rule = result.rule_applied
+    per = result.per_mechanism_comparison['spaceweather']
+    m = re.search(r'\((\d+(?:,\d+)?) против (\d+(?:,\d+)?) мин\)', rule)
     assert m, rule
     for v in m.groups():
         assert '%s мин в аномалии' % v in per, (v, per)

@@ -73,7 +73,7 @@ def test_inconsistent_BB0_flagged_not_clamped_silently():
     t = BeltTable('min')
     r_low, r_eq = t.integral_flux(1.3, 0.9, 30.0), t.integral_flux(1.3, 1.0, 30.0)
     assert r_low.status == 'inconsistent_BB0' and r_eq.status == 'ok'
-    assert r_low.value_per_cm2_s == pytest.approx(r_eq.value_per_cm2_s)
+    assert r_low.value_per_cm2_s is None and r_eq.value_per_cm2_s > 0
 
 
 def test_flux_decreases_with_BB0_and_L_interpolation_is_between_rows():
