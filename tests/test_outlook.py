@@ -315,6 +315,17 @@ def test_missing_sources_do_not_become_zeros(tmp_path):
     assert any('27-суточный обзор NOAA не передан' in s for s in result.limitations)
 
 
+def test_stale_release_is_not_used_and_is_named_in_the_limits(tmp_path):
+    """Устаревший выпуск обзора не подставляется вместо свежего: сутки остаются без погоды."""
+    stale, _ = get_27day(tmp_path, now=NOW + timedelta(days=30))
+    result = build_outlook(START, 5, three_day_samples=three_day_samples(), outlook27=stale,
+                           tle_path=TLE, include_meteoroids=False, now_utc=NOW)
+    assert all(r.kp_max is None for r in result.rows[3:])
+    assert [r.tier_id for r in result.rows[3:]] == [TIER_SEASONAL, TIER_SEASONAL]
+    assert result.boundaries['outlook27_last_day'] is None
+    assert any('27-суточный обзор не применён' in s for s in result.limitations)
+
+
 def test_requested_days_are_validated():
     with pytest.raises(ValueError):
         build_outlook(START, 0, tle_path=TLE, include_meteoroids=False, now_utc=NOW)
