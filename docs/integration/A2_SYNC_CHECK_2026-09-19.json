@@ -1,0 +1,66 @@
+{
+  "checked_utc": "2026-09-19T00:47:46.434804+00:00",
+  "branch": "codex/a2-integration-hardening",
+  "teammate_main": "d674dba",
+  "prior_A": "66a2470",
+  "integration_base": "2666899b080ec3c20150d8b6a5a2b8e2edabe2f4",
+  "changes": "local diff before delivery commit",
+  "python": "Python 3.14.3",
+  "A_checks": {
+    "command": "python -m pytest tests/sources tests/history tests/orbit -q",
+    "passed": 148,
+    "subtests_passed": 691
+  },
+  "full_suite": {
+    "command": "python tests/sources/run_pinned_suite.py",
+    "passed": 283,
+    "failed": 7,
+    "subtests_passed": 691,
+    "failures": [
+      "tests/test_models_findings.py::test_history_sources_never_claim_live_requests",
+      "tests/test_models_findings.py::test_review_kp_age_is_measured_from_t0_not_now",
+      "tests/test_models_findings.py::test_sep_level_from_donki_body_and_storm_signals_grouped",
+      "tests/test_models_findings.py::test_report_is_a_readable_document",
+      "tests/test_replay.py::test_history_forecast_is_deterministic_with_pinned_tle",
+      "tests/test_replay.py::test_robustness_spread_independent_of_saved_tolerance",
+      "tests/test_replay.py::test_future_archive_records_do_not_change_strict_snapshot"
+    ]
+  },
+  "proposed_B_Fetch_import_probe": {
+    "method": "in-process assignment only, app files unchanged",
+    "passed": 2
+  },
+  "smoke": [
+    {
+      "mode": "history_review",
+      "kp_value": 4.0,
+      "kp_source": "gfz_kp_archive",
+      "kp_published": null,
+      "GFZ_raw_records_in_export": [
+        "gfz_kp_archive:2024-05_06:2cb26056e449"
+      ],
+      "zip_files": 22,
+      "verdict": "all_need_check",
+      "manifest_version": "2.2",
+      "source_layers": {
+        "role": "слои",
+        "status": "орбита: vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; IGRF-13 для 2024 и IGRF-14 сейчас; L, B/B0 и жёсткость — центральный наклонённый диполь (приближение); источники: vkd.sources; история: vkd.history"
+      }
+    },
+    {
+      "mode": "history_forecast",
+      "kp_value": 9.0,
+      "kp_source": "nasa_donki_notification",
+      "kp_published": "2024-05-11T15:14:04+00:00",
+      "GFZ_raw_records_in_export": [],
+      "zip_files": 17,
+      "verdict": "all_need_check",
+      "manifest_version": "2.2",
+      "source_layers": {
+        "role": "слои",
+        "status": "орбита: vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; IGRF-13 для 2024 и IGRF-14 сейчас; L, B/B0 и жёсткость — центральный наклонённый диполь (приближение); источники: vkd.sources; история: vkd.history"
+      }
+    }
+  ],
+  "acceptance": "not_complete; B integration corrections required"
+}

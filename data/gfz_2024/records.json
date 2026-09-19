@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "source_id": "gfz_kp_archive",
+      "raw_record_id": "gfz_kp_archive:2024-05_06:2cb26056e449",
+      "release_id": "2024-05_06_repository_extract",
+      "version": "sha256:2cb26056e449762ec828425f666bf1017a02ad47d747ffbe58ed4f21af771dd7",
+      "sha256": "2cb26056e449762ec828425f666bf1017a02ad47d747ffbe58ed4f21af771dd7",
+      "bytes": 13291,
+      "raw_path": "data/gfz_2024/kp_2024_05_06.txt",
+      "url": "https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt",
+      "fetched_utc": "2026-09-19T00:39:22.100834+00:00",
+      "fetched_time_semantics": "local_import_time; provider_download_time_unknown",
+      "published_utc": null,
+      "available_utc": null,
+      "created_utc": null,
+      "valid_from_utc": "2024-05-01T00:00:00Z",
+      "valid_to_utc": "2024-07-01T00:00:00Z",
+      "channels": [
+        {
+          "channel_id": "kp",
+          "unit": "1"
+        }
+      ],
+      "strict_replay_eligibility": "review_only_unknown_historical_publication",
+      "availability_evidence": null,
+      "provider_download_date_reported": "2026-09-17; data/spaceweather/README.md; time of day unknown",
+      "extraction": {
+        "parent_git_commit": "e846a441e0c152b9787fde55cdc5ff5362395bc6",
+        "parent_path": "data/spaceweather/kp_ap_sn_f107.txt",
+        "parent_git_blob_sha256": "11fa4ea731f5f7b9a331294b160edfd461eff754a983173219903f21b444a3a0",
+        "rule": "original header and May-June 2024 lines, unchanged bytes and order"
+      },
+      "citation": "Matzka et al. 2021, https://doi.org/10.5880/Kp.0001",
+      "license": "Kp: CC BY 4.0; unused sunspot columns retained as source bytes: CC BY-NC 4.0"
+    }
+  ]
+}

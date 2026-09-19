@@ -1,0 +1,2271 @@
+{
+  "schema_version": 1,
+  "parser_version": "iswa-p5m-v1",
+  "source_id": "nasa_iswa_goes_primary_p5m",
+  "daily_releases": 65,
+  "accepted_samples": 18400,
+  "rejected_rows_by_reason": {
+    "fill_or_missing": 12
+  },
+  "padded_interval": {
+    "status": "partial",
+    "coverage_fraction": 0.9829059829059829,
+    "covered_seconds": 5520000.0,
+    "valid_from_utc": "2024-04-29T00:00:00Z",
+    "valid_to_utc": "2024-07-03T00:00:00Z",
+    "gaps": [
+      {
+        "valid_from_utc": "2024-04-30T19:15:00Z",
+        "valid_to_utc": "2024-04-30T21:25:00Z"
+      },
+      {
+        "valid_from_utc": "2024-05-01T08:20:00Z",
+        "valid_to_utc": "2024-05-01T08:40:00Z"
+      },
+      {
+        "valid_from_utc": "2024-05-01T08:50:00Z",
+        "valid_to_utc": "2024-05-01T08:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-05-01T09:00:00Z",
+        "valid_to_utc": "2024-05-01T09:05:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-11T15:05:00Z",
+        "valid_to_utc": "2024-06-11T18:10:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-16T06:00:00Z",
+        "valid_to_utc": "2024-06-16T10:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-24T21:25:00Z",
+        "valid_to_utc": "2024-06-25T12:00:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T16:45:00Z",
+        "valid_to_utc": "2024-06-25T16:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T17:00:00Z",
+        "valid_to_utc": "2024-06-25T17:05:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T17:10:00Z",
+        "valid_to_utc": "2024-06-25T17:40:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-26T10:15:00Z",
+        "valid_to_utc": "2024-06-26T10:40:00Z"
+      },
+      {
+        "valid_from_utc": "2024-07-01T05:40:00Z",
+        "valid_to_utc": "2024-07-01T05:45:00Z"
+      },
+      {
+        "valid_from_utc": "2024-07-01T20:25:00Z",
+        "valid_to_utc": "2024-07-01T20:30:00Z"
+      },
+      {
+        "valid_from_utc": "2024-07-01T21:25:00Z",
+        "valid_to_utc": "2024-07-01T21:30:00Z"
+      }
+    ],
+    "kind": "observation",
+    "cadence_seconds": 300,
+    "coverage_basis": "valid five-minute averaging cells; no interpolation",
+    "quality": "unknown",
+    "quality_flags_present": false,
+    "strict_replay_eligible": false,
+    "limitations": [
+      "iSWA archive omits per-value quality flags and historic publication receipts.",
+      "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+    ]
+  },
+  "may_june": {
+    "status": "partial",
+    "coverage_fraction": 0.9834357923497268,
+    "covered_seconds": 5183100.0,
+    "valid_from_utc": "2024-05-01T00:00:00Z",
+    "valid_to_utc": "2024-07-01T00:00:00Z",
+    "gaps": [
+      {
+        "valid_from_utc": "2024-05-01T08:20:00Z",
+        "valid_to_utc": "2024-05-01T08:40:00Z"
+      },
+      {
+        "valid_from_utc": "2024-05-01T08:50:00Z",
+        "valid_to_utc": "2024-05-01T08:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-05-01T09:00:00Z",
+        "valid_to_utc": "2024-05-01T09:05:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-11T15:05:00Z",
+        "valid_to_utc": "2024-06-11T18:10:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-16T06:00:00Z",
+        "valid_to_utc": "2024-06-16T10:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-24T21:25:00Z",
+        "valid_to_utc": "2024-06-25T12:00:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T16:45:00Z",
+        "valid_to_utc": "2024-06-25T16:55:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T17:00:00Z",
+        "valid_to_utc": "2024-06-25T17:05:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-25T17:10:00Z",
+        "valid_to_utc": "2024-06-25T17:40:00Z"
+      },
+      {
+        "valid_from_utc": "2024-06-26T10:15:00Z",
+        "valid_to_utc": "2024-06-26T10:40:00Z"
+      }
+    ],
+    "kind": "observation",
+    "cadence_seconds": 300,
+    "coverage_basis": "valid five-minute averaging cells; no interpolation",
+    "quality": "unknown",
+    "quality_flags_present": false,
+    "strict_replay_eligible": false,
+    "limitations": [
+      "iSWA archive omits per-value quality flags and historic publication receipts.",
+      "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+    ]
+  },
+  "controls_32_hours": [
+    {
+      "status": "partial",
+      "coverage_fraction": 0.984375,
+      "covered_seconds": 113400.0,
+      "valid_from_utc": "2024-05-01T00:00:00Z",
+      "valid_to_utc": "2024-05-02T08:00:00Z",
+      "gaps": [
+        {
+          "valid_from_utc": "2024-05-01T08:20:00Z",
+          "valid_to_utc": "2024-05-01T08:40:00Z"
+        },
+        {
+          "valid_from_utc": "2024-05-01T08:50:00Z",
+          "valid_to_utc": "2024-05-01T08:55:00Z"
+        },
+        {
+          "valid_from_utc": "2024-05-01T09:00:00Z",
+          "valid_to_utc": "2024-05-01T09:05:00Z"
+        }
+      ],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "full",
+      "coverage_fraction": 1.0,
+      "covered_seconds": 115200.0,
+      "valid_from_utc": "2024-05-03T12:00:00Z",
+      "valid_to_utc": "2024-05-04T20:00:00Z",
+      "gaps": [],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "full",
+      "coverage_fraction": 1.0,
+      "covered_seconds": 115200.0,
+      "valid_from_utc": "2024-05-10T19:00:00Z",
+      "valid_to_utc": "2024-05-12T03:00:00Z",
+      "gaps": [],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "full",
+      "coverage_fraction": 1.0,
+      "covered_seconds": 115200.0,
+      "valid_from_utc": "2024-05-20T12:00:00Z",
+      "valid_to_utc": "2024-05-21T20:00:00Z",
+      "gaps": [],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "full",
+      "coverage_fraction": 1.0,
+      "covered_seconds": 115200.0,
+      "valid_from_utc": "2024-06-01T12:00:00Z",
+      "valid_to_utc": "2024-06-02T20:00:00Z",
+      "gaps": [],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "partial",
+      "coverage_fraction": 0.6015625,
+      "covered_seconds": 69300.0,
+      "valid_from_utc": "2024-06-25T00:00:00Z",
+      "valid_to_utc": "2024-06-26T08:00:00Z",
+      "gaps": [
+        {
+          "valid_from_utc": "2024-06-25T00:00:00Z",
+          "valid_to_utc": "2024-06-25T12:00:00Z"
+        },
+        {
+          "valid_from_utc": "2024-06-25T16:45:00Z",
+          "valid_to_utc": "2024-06-25T16:55:00Z"
+        },
+        {
+          "valid_from_utc": "2024-06-25T17:00:00Z",
+          "valid_to_utc": "2024-06-25T17:05:00Z"
+        },
+        {
+          "valid_from_utc": "2024-06-25T17:10:00Z",
+          "valid_to_utc": "2024-06-25T17:40:00Z"
+        }
+      ],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    },
+    {
+      "status": "partial",
+      "coverage_fraction": 0.9921875,
+      "covered_seconds": 114300.0,
+      "valid_from_utc": "2024-06-30T23:59:00Z",
+      "valid_to_utc": "2024-07-02T07:59:00Z",
+      "gaps": [
+        {
+          "valid_from_utc": "2024-07-01T05:40:00Z",
+          "valid_to_utc": "2024-07-01T05:45:00Z"
+        },
+        {
+          "valid_from_utc": "2024-07-01T20:25:00Z",
+          "valid_to_utc": "2024-07-01T20:30:00Z"
+        },
+        {
+          "valid_from_utc": "2024-07-01T21:25:00Z",
+          "valid_to_utc": "2024-07-01T21:30:00Z"
+        }
+      ],
+      "kind": "observation",
+      "cadence_seconds": 300,
+      "coverage_basis": "valid five-minute averaging cells; no interpolation",
+      "quality": "unknown",
+      "quality_flags_present": false,
+      "strict_replay_eligible": false,
+      "limitations": [
+        "iSWA archive omits per-value quality flags and historic publication receipts.",
+        "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+      ]
+    }
+  ],
+  "daily": [
+    {
+      "date": "2024-04-29",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-04-29:9f86bb00d7ae43de6f8551825679b6796355aae2df9ecec1d9168c9af145cebc",
+      "sha256": "9f86bb00d7ae43de6f8551825679b6796355aae2df9ecec1d9168c9af145cebc",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-04-29T00:00:00Z",
+        "valid_to_utc": "2024-04-30T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3570079505443573,
+      "maximum_time_utc": "2024-04-29T03:15:00Z"
+    },
+    {
+      "date": "2024-04-30",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-04-30:1f283ae121c3e5cdc056b27a8de87ee96101c59c7e545db4e64c7140a9020c94",
+      "sha256": "1f283ae121c3e5cdc056b27a8de87ee96101c59c7e545db4e64c7140a9020c94",
+      "accepted_samples": 262,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.9097222222222222,
+        "covered_seconds": 78600.0,
+        "valid_from_utc": "2024-04-30T00:00:00Z",
+        "valid_to_utc": "2024-05-01T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-04-30T19:15:00Z",
+            "valid_to_utc": "2024-04-30T21:25:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 262
+      },
+      "maximum_p10_pfu": 0.3816778361797333,
+      "maximum_time_utc": "2024-04-30T01:15:00Z"
+    },
+    {
+      "date": "2024-05-01",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-01:d4dc1f53de84a5fe9e1a2b53beac101d9f551b6be50e1aa560fc971bf2f075b5",
+      "sha256": "d4dc1f53de84a5fe9e1a2b53beac101d9f551b6be50e1aa560fc971bf2f075b5",
+      "accepted_samples": 282,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.9791666666666666,
+        "covered_seconds": 84600.0,
+        "valid_from_utc": "2024-05-01T00:00:00Z",
+        "valid_to_utc": "2024-05-02T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-05-01T08:20:00Z",
+            "valid_to_utc": "2024-05-01T08:40:00Z"
+          },
+          {
+            "valid_from_utc": "2024-05-01T08:50:00Z",
+            "valid_to_utc": "2024-05-01T08:55:00Z"
+          },
+          {
+            "valid_from_utc": "2024-05-01T09:00:00Z",
+            "valid_to_utc": "2024-05-01T09:05:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 282
+      },
+      "maximum_p10_pfu": 0.3243389129638672,
+      "maximum_time_utc": "2024-05-01T17:00:00Z"
+    },
+    {
+      "date": "2024-05-02",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-02:a480952e1d5c2fc8a16c302cffda57cbdd2be48eeb399537f88f6d548a56e42e",
+      "sha256": "a480952e1d5c2fc8a16c302cffda57cbdd2be48eeb399537f88f6d548a56e42e",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-02T00:00:00Z",
+        "valid_to_utc": "2024-05-03T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.30567172169685364,
+      "maximum_time_utc": "2024-05-02T17:30:00Z"
+    },
+    {
+      "date": "2024-05-03",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-03:9febe15487652f1482eb05c0a84e0c7d1aa7766721cf6cf20f28244342212788",
+      "sha256": "9febe15487652f1482eb05c0a84e0c7d1aa7766721cf6cf20f28244342212788",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-03T00:00:00Z",
+        "valid_to_utc": "2024-05-04T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3313433527946472,
+      "maximum_time_utc": "2024-05-03T21:45:00Z"
+    },
+    {
+      "date": "2024-05-04",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-04:380b33a39b5b94d4590b99607dbf09326fdde8d50695fcf7054b2fcc16658fd4",
+      "sha256": "380b33a39b5b94d4590b99607dbf09326fdde8d50695fcf7054b2fcc16658fd4",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-04T00:00:00Z",
+        "valid_to_utc": "2024-05-05T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3250076174736023,
+      "maximum_time_utc": "2024-05-04T06:35:00Z"
+    },
+    {
+      "date": "2024-05-05",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-05:373df9721208c0b925d7e2ebdcb5c78a328671e8a6c1df9d525443b21f8a0fd7",
+      "sha256": "373df9721208c0b925d7e2ebdcb5c78a328671e8a6c1df9d525443b21f8a0fd7",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-05T00:00:00Z",
+        "valid_to_utc": "2024-05-06T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.31333982944488525,
+      "maximum_time_utc": "2024-05-05T02:35:00Z"
+    },
+    {
+      "date": "2024-05-06",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-06:025d613d63650fb4580475507b901faede9b2788a5928485f0bfba2bb64e204a",
+      "sha256": "025d613d63650fb4580475507b901faede9b2788a5928485f0bfba2bb64e204a",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-06T00:00:00Z",
+        "valid_to_utc": "2024-05-07T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.30733948945999146,
+      "maximum_time_utc": "2024-05-06T10:30:00Z"
+    },
+    {
+      "date": "2024-05-07",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-07:126efd0fdc2d59d00b629ade63d66c48ff4b586ec2dd0a14467d30b000baa8a4",
+      "sha256": "126efd0fdc2d59d00b629ade63d66c48ff4b586ec2dd0a14467d30b000baa8a4",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-07T00:00:00Z",
+        "valid_to_utc": "2024-05-08T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3020099997520447,
+      "maximum_time_utc": "2024-05-07T22:25:00Z"
+    },
+    {
+      "date": "2024-05-08",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-08:3ed3f130317f9b7441629bf5ce4dbb4c481be1701f974d09d35751d43837121f",
+      "sha256": "3ed3f130317f9b7441629bf5ce4dbb4c481be1701f974d09d35751d43837121f",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-08T00:00:00Z",
+        "valid_to_utc": "2024-05-09T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3670078217983246,
+      "maximum_time_utc": "2024-05-08T20:15:00Z"
+    },
+    {
+      "date": "2024-05-09",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-09:d901e83ebd55221280eeba550dd63ec6b3233d07eb50421475d77825be41a092",
+      "sha256": "d901e83ebd55221280eeba550dd63ec6b3233d07eb50421475d77825be41a092",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-09T00:00:00Z",
+        "valid_to_utc": "2024-05-10T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 1.355342984199524,
+      "maximum_time_utc": "2024-05-09T23:05:00Z"
+    },
+    {
+      "date": "2024-05-10",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-10:c21feefc28c4d6cde0e7838b6846668abaa8a250b4e22cc7d3f58e7779653412",
+      "sha256": "c21feefc28c4d6cde0e7838b6846668abaa8a250b4e22cc7d3f58e7779653412",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-10T00:00:00Z",
+        "valid_to_utc": "2024-05-11T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 206.91934204101562,
+      "maximum_time_utc": "2024-05-10T17:45:00Z"
+    },
+    {
+      "date": "2024-05-11",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-11:339eac9ea0bfc3e45a819c63ff415bcbd77f10bd3fa3726683674226aabed667",
+      "sha256": "339eac9ea0bfc3e45a819c63ff415bcbd77f10bd3fa3726683674226aabed667",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-11T00:00:00Z",
+        "valid_to_utc": "2024-05-12T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 116.38946533203125,
+      "maximum_time_utc": "2024-05-11T09:10:00Z"
+    },
+    {
+      "date": "2024-05-12",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-12:2e1b66ff0ca3059af3d2b6a08f6908e54628f90a996942583bc867449ac417f0",
+      "sha256": "2e1b66ff0ca3059af3d2b6a08f6908e54628f90a996942583bc867449ac417f0",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-12T00:00:00Z",
+        "valid_to_utc": "2024-05-13T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 43.622684478759766,
+      "maximum_time_utc": "2024-05-12T00:10:00Z"
+    },
+    {
+      "date": "2024-05-13",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-13:a1b4b783a860cedd83ef84280f29264ab9043d2c58382cfe1590347062658a86",
+      "sha256": "a1b4b783a860cedd83ef84280f29264ab9043d2c58382cfe1590347062658a86",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-13T00:00:00Z",
+        "valid_to_utc": "2024-05-14T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 79.67768096923828,
+      "maximum_time_utc": "2024-05-13T23:55:00Z"
+    },
+    {
+      "date": "2024-05-14",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-14:cf5ab31b3ce5e270cf908f7ff795647680da57b5d4165437a2325eae87f7896a",
+      "sha256": "cf5ab31b3ce5e270cf908f7ff795647680da57b5d4165437a2325eae87f7896a",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-14T00:00:00Z",
+        "valid_to_utc": "2024-05-15T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 120.91368103027344,
+      "maximum_time_utc": "2024-05-14T05:20:00Z"
+    },
+    {
+      "date": "2024-05-15",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-15:8ca3bfb6582613336a79a36e539bc578b58b481abd4efd321fcbddf33812db4a",
+      "sha256": "8ca3bfb6582613336a79a36e539bc578b58b481abd4efd321fcbddf33812db4a",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-15T00:00:00Z",
+        "valid_to_utc": "2024-05-16T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 31.75768280029297,
+      "maximum_time_utc": "2024-05-15T05:30:00Z"
+    },
+    {
+      "date": "2024-05-16",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-16:1708717519aa8c3f0800246e7ff3296ac5ded4539c567db314e84d9fc8fa03c1",
+      "sha256": "1708717519aa8c3f0800246e7ff3296ac5ded4539c567db314e84d9fc8fa03c1",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-16T00:00:00Z",
+        "valid_to_utc": "2024-05-17T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 22.313671112060547,
+      "maximum_time_utc": "2024-05-16T11:15:00Z"
+    },
+    {
+      "date": "2024-05-17",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-17:4e3e7b0d43ca72975d549d5619e394b1ccfbd157e54b0b3fd255def22222abff",
+      "sha256": "4e3e7b0d43ca72975d549d5619e394b1ccfbd157e54b0b3fd255def22222abff",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-17T00:00:00Z",
+        "valid_to_utc": "2024-05-18T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 7.2310051918029785,
+      "maximum_time_utc": "2024-05-17T02:50:00Z"
+    },
+    {
+      "date": "2024-05-18",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-18:897d72e6be6d7ad7983f41674415107fe46178cb8f5f09ee492324c82a98fb45",
+      "sha256": "897d72e6be6d7ad7983f41674415107fe46178cb8f5f09ee492324c82a98fb45",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-18T00:00:00Z",
+        "valid_to_utc": "2024-05-19T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 1.139339804649353,
+      "maximum_time_utc": "2024-05-18T05:50:00Z"
+    },
+    {
+      "date": "2024-05-19",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-19:f00e0724b70919973d3816d51265233eb82fb248685befa60ffb96276ff24869",
+      "sha256": "f00e0724b70919973d3816d51265233eb82fb248685befa60ffb96276ff24869",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-19T00:00:00Z",
+        "valid_to_utc": "2024-05-20T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.946672260761261,
+      "maximum_time_utc": "2024-05-19T04:40:00Z"
+    },
+    {
+      "date": "2024-05-20",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-20:b32f56606d06c865c4e4a84d8e73ef5d0e59f181ac94404373caf3feff094da9",
+      "sha256": "b32f56606d06c865c4e4a84d8e73ef5d0e59f181ac94404373caf3feff094da9",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-20T00:00:00Z",
+        "valid_to_utc": "2024-05-21T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.7093439102172852,
+      "maximum_time_utc": "2024-05-20T10:00:00Z"
+    },
+    {
+      "date": "2024-05-21",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-21:6652520978c433dfa18d4a1d68a374011d7dff6f62f19e96aaa739a57c67b03a",
+      "sha256": "6652520978c433dfa18d4a1d68a374011d7dff6f62f19e96aaa739a57c67b03a",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-21T00:00:00Z",
+        "valid_to_utc": "2024-05-22T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.4996817409992218,
+      "maximum_time_utc": "2024-05-21T00:30:00Z"
+    },
+    {
+      "date": "2024-05-22",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-22:770904f36b1f1810f4b1147bb9ac705d2bb8e79a855f4e981b862cf43e1997b5",
+      "sha256": "770904f36b1f1810f4b1147bb9ac705d2bb8e79a855f4e981b862cf43e1997b5",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-22T00:00:00Z",
+        "valid_to_utc": "2024-05-23T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.4163427948951721,
+      "maximum_time_utc": "2024-05-22T14:55:00Z"
+    },
+    {
+      "date": "2024-05-23",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-23:000d6847d76b2510d31007fc3e303073577b88931cf72378c02c56cc275f9270",
+      "sha256": "000d6847d76b2510d31007fc3e303073577b88931cf72378c02c56cc275f9270",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-23T00:00:00Z",
+        "valid_to_utc": "2024-05-24T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.356346070766449,
+      "maximum_time_utc": "2024-05-23T18:05:00Z"
+    },
+    {
+      "date": "2024-05-24",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-24:e1f82e60d2e3fa9eb3b7bc3370c286efdaa364355de09a0b66e5523d31be0323",
+      "sha256": "e1f82e60d2e3fa9eb3b7bc3370c286efdaa364355de09a0b66e5523d31be0323",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-24T00:00:00Z",
+        "valid_to_utc": "2024-05-25T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3436729311943054,
+      "maximum_time_utc": "2024-05-24T14:20:00Z"
+    },
+    {
+      "date": "2024-05-25",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-25:dbd71f7bb4d2758d688313f40ac667d4c682dbed64ce7496bbe2348b64b842f2",
+      "sha256": "dbd71f7bb4d2758d688313f40ac667d4c682dbed64ce7496bbe2348b64b842f2",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-25T00:00:00Z",
+        "valid_to_utc": "2024-05-26T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3870096206665039,
+      "maximum_time_utc": "2024-05-25T22:45:00Z"
+    },
+    {
+      "date": "2024-05-26",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-26:865d61801b67260ab08b30bbaadf9c0b33a53e2345fc646fb56b4efb88652168",
+      "sha256": "865d61801b67260ab08b30bbaadf9c0b33a53e2345fc646fb56b4efb88652168",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-26T00:00:00Z",
+        "valid_to_utc": "2024-05-27T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2636791169643402,
+      "maximum_time_utc": "2024-05-26T17:50:00Z"
+    },
+    {
+      "date": "2024-05-27",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-27:2730dba5af28d8ea375b934ddb595206493ffa08990cb65622914a5ce3dcf77f",
+      "sha256": "2730dba5af28d8ea375b934ddb595206493ffa08990cb65622914a5ce3dcf77f",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-27T00:00:00Z",
+        "valid_to_utc": "2024-05-28T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.24334220588207245,
+      "maximum_time_utc": "2024-05-27T05:30:00Z"
+    },
+    {
+      "date": "2024-05-28",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-28:402af4d0a9aab2d757dedc058145c4b335f0298cba413397e7876157ae324dd3",
+      "sha256": "402af4d0a9aab2d757dedc058145c4b335f0298cba413397e7876157ae324dd3",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-28T00:00:00Z",
+        "valid_to_utc": "2024-05-29T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.30300670862197876,
+      "maximum_time_utc": "2024-05-28T14:30:00Z"
+    },
+    {
+      "date": "2024-05-29",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-29:5a47dc6d9ffe6b614307153ee50f1ace3a1ddba3504943eb286069657579f3cd",
+      "sha256": "5a47dc6d9ffe6b614307153ee50f1ace3a1ddba3504943eb286069657579f3cd",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-29T00:00:00Z",
+        "valid_to_utc": "2024-05-30T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2893393337726593,
+      "maximum_time_utc": "2024-05-29T10:00:00Z"
+    },
+    {
+      "date": "2024-05-30",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-30:d59ccf9b9287c3e437cbc67e254720b079a830da4114a803f962a50c162b90c2",
+      "sha256": "d59ccf9b9287c3e437cbc67e254720b079a830da4114a803f962a50c162b90c2",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-30T00:00:00Z",
+        "valid_to_utc": "2024-05-31T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3396730124950409,
+      "maximum_time_utc": "2024-05-30T15:00:00Z"
+    },
+    {
+      "date": "2024-05-31",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-31:275643c2521ccff55aedfe860d5c3fbbdbcf726b3651a62315347c9bad59a56e",
+      "sha256": "275643c2521ccff55aedfe860d5c3fbbdbcf726b3651a62315347c9bad59a56e",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-05-31T00:00:00Z",
+        "valid_to_utc": "2024-06-01T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.302339106798172,
+      "maximum_time_utc": "2024-05-31T08:00:00Z"
+    },
+    {
+      "date": "2024-06-01",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-01:1d13477c238c6084013af81d595184c8a6d259df428f64b00c712889b8aad684",
+      "sha256": "1d13477c238c6084013af81d595184c8a6d259df428f64b00c712889b8aad684",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-01T00:00:00Z",
+        "valid_to_utc": "2024-06-02T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.25834181904792786,
+      "maximum_time_utc": "2024-06-01T16:05:00Z"
+    },
+    {
+      "date": "2024-06-02",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-02:f0aa6e246ca232ce98f1656d0aae7cb79a32a2b82dee26952b7b752a709fda3e",
+      "sha256": "f0aa6e246ca232ce98f1656d0aae7cb79a32a2b82dee26952b7b752a709fda3e",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-02T00:00:00Z",
+        "valid_to_utc": "2024-06-03T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2590084373950958,
+      "maximum_time_utc": "2024-06-02T16:20:00Z"
+    },
+    {
+      "date": "2024-06-03",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-03:7b36448de7aea87d5cd5e1764a7a638aa913e4603efb4a1eb2e03e7456e298d6",
+      "sha256": "7b36448de7aea87d5cd5e1764a7a638aa913e4603efb4a1eb2e03e7456e298d6",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-03T00:00:00Z",
+        "valid_to_utc": "2024-06-04T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2433384507894516,
+      "maximum_time_utc": "2024-06-03T09:20:00Z"
+    },
+    {
+      "date": "2024-06-04",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-04:2ec3d2390a360dfbc82fed9b76ae5dfc1782f09442ec0ea958da5b6bfe68609e",
+      "sha256": "2ec3d2390a360dfbc82fed9b76ae5dfc1782f09442ec0ea958da5b6bfe68609e",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-04T00:00:00Z",
+        "valid_to_utc": "2024-06-05T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.25533947348594666,
+      "maximum_time_utc": "2024-06-04T15:45:00Z"
+    },
+    {
+      "date": "2024-06-05",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-05:32204c75d56678d09e5cd3d94b6226d3136966d3f34d68f456f6819a72802691",
+      "sha256": "32204c75d56678d09e5cd3d94b6226d3136966d3f34d68f456f6819a72802691",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-05T00:00:00Z",
+        "valid_to_utc": "2024-06-06T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.22467251121997833,
+      "maximum_time_utc": "2024-06-05T12:50:00Z"
+    },
+    {
+      "date": "2024-06-06",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-06:8bf944df8711f74548a5c8c7c4d2026b5657fd81e66c1f85c19b5b6bb7a85c40",
+      "sha256": "8bf944df8711f74548a5c8c7c4d2026b5657fd81e66c1f85c19b5b6bb7a85c40",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-06T00:00:00Z",
+        "valid_to_utc": "2024-06-07T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.22634053230285645,
+      "maximum_time_utc": "2024-06-06T18:30:00Z"
+    },
+    {
+      "date": "2024-06-07",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-07:7537ea7a510494d95d638f57b0eedeae18478a260b0d5126c61bc5a1bcffef0c",
+      "sha256": "7537ea7a510494d95d638f57b0eedeae18478a260b0d5126c61bc5a1bcffef0c",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-07T00:00:00Z",
+        "valid_to_utc": "2024-06-08T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.21500714123249054,
+      "maximum_time_utc": "2024-06-07T18:05:00Z"
+    },
+    {
+      "date": "2024-06-08",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-08:4f1c7d3b2cd0b9143fd43e1ab33e5a27444f7b0c2bd142bd135bcd5140fbe5d8",
+      "sha256": "4f1c7d3b2cd0b9143fd43e1ab33e5a27444f7b0c2bd142bd135bcd5140fbe5d8",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-08T00:00:00Z",
+        "valid_to_utc": "2024-06-09T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 1028.5311279296875,
+      "maximum_time_utc": "2024-06-08T08:00:00Z"
+    },
+    {
+      "date": "2024-06-09",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-09:43e395df597d3b9dc3a18410289df6c622ecd6736bdf6926a8f20fb201e1bfde",
+      "sha256": "43e395df597d3b9dc3a18410289df6c622ecd6736bdf6926a8f20fb201e1bfde",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-09T00:00:00Z",
+        "valid_to_utc": "2024-06-10T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 83.47467803955078,
+      "maximum_time_utc": "2024-06-09T00:30:00Z"
+    },
+    {
+      "date": "2024-06-10",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-10:bb4ab3908280773b82060bb717a5f08244b997d290576b34a9fa8eacb6dbcaa4",
+      "sha256": "bb4ab3908280773b82060bb717a5f08244b997d290576b34a9fa8eacb6dbcaa4",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-10T00:00:00Z",
+        "valid_to_utc": "2024-06-11T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 9.228340148925781,
+      "maximum_time_utc": "2024-06-10T00:00:00Z"
+    },
+    {
+      "date": "2024-06-11",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-11:72138ea9fdc85cd0ed1416e0f516c094044147c7928834ede467543f19ffd2ed",
+      "sha256": "72138ea9fdc85cd0ed1416e0f516c094044147c7928834ede467543f19ffd2ed",
+      "accepted_samples": 251,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.8715277777777778,
+        "covered_seconds": 75300.0,
+        "valid_from_utc": "2024-06-11T00:00:00Z",
+        "valid_to_utc": "2024-06-12T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-06-11T15:05:00Z",
+            "valid_to_utc": "2024-06-11T18:10:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 251
+      },
+      "maximum_p10_pfu": 2.068337917327881,
+      "maximum_time_utc": "2024-06-11T10:55:00Z"
+    },
+    {
+      "date": "2024-06-12",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-12:ec72a2d4a2ecb60aeb2920532e90329f6bd2e51fed68e3f3fa986f2b910aa741",
+      "sha256": "ec72a2d4a2ecb60aeb2920532e90329f6bd2e51fed68e3f3fa986f2b910aa741",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-12T00:00:00Z",
+        "valid_to_utc": "2024-06-13T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 9.69300651550293,
+      "maximum_time_utc": "2024-06-12T05:20:00Z"
+    },
+    {
+      "date": "2024-06-13",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-13:8df13d9935c938a180cac700bb2b531341bf885e2e4935a0f61e10314f6d4c77",
+      "sha256": "8df13d9935c938a180cac700bb2b531341bf885e2e4935a0f61e10314f6d4c77",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-13T00:00:00Z",
+        "valid_to_utc": "2024-06-14T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 8.77534008026123,
+      "maximum_time_utc": "2024-06-13T06:15:00Z"
+    },
+    {
+      "date": "2024-06-14",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-14:391b16cec4dbb6e244c9cb40b5ef3fb9eec25ab727a04228d3ca6be7a010f7af",
+      "sha256": "391b16cec4dbb6e244c9cb40b5ef3fb9eec25ab727a04228d3ca6be7a010f7af",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-14T00:00:00Z",
+        "valid_to_utc": "2024-06-15T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 3.2236711978912354,
+      "maximum_time_utc": "2024-06-14T06:50:00Z"
+    },
+    {
+      "date": "2024-06-15",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-15:767c154a4d8e38b3b02cac245e6722cb4e68dff24827dc7ee62ab36afa27960e",
+      "sha256": "767c154a4d8e38b3b02cac245e6722cb4e68dff24827dc7ee62ab36afa27960e",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-15T00:00:00Z",
+        "valid_to_utc": "2024-06-16T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.6123380064964294,
+      "maximum_time_utc": "2024-06-15T02:55:00Z"
+    },
+    {
+      "date": "2024-06-16",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-16:5c468bac93df5d9685a9b3d779f7cdccd6c314e5d680e68d89d22a380a8781cb",
+      "sha256": "5c468bac93df5d9685a9b3d779f7cdccd6c314e5d680e68d89d22a380a8781cb",
+      "accepted_samples": 229,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.7951388888888888,
+        "covered_seconds": 68700.0,
+        "valid_from_utc": "2024-06-16T00:00:00Z",
+        "valid_to_utc": "2024-06-17T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-06-16T06:00:00Z",
+            "valid_to_utc": "2024-06-16T10:55:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 229
+      },
+      "maximum_p10_pfu": 0.2523387372493744,
+      "maximum_time_utc": "2024-06-16T02:20:00Z"
+    },
+    {
+      "date": "2024-06-17",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-17:e2c560ffc38f23ee881d8118cd37201ffec9194672a93df7d722b4b25e257147",
+      "sha256": "e2c560ffc38f23ee881d8118cd37201ffec9194672a93df7d722b4b25e257147",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-17T00:00:00Z",
+        "valid_to_utc": "2024-06-18T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.25233981013298035,
+      "maximum_time_utc": "2024-06-17T22:10:00Z"
+    },
+    {
+      "date": "2024-06-18",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-18:95d1d20865a1808d2af5d101fdc88735eeac69bd99ab283cf74ec7d83ac21166",
+      "sha256": "95d1d20865a1808d2af5d101fdc88735eeac69bd99ab283cf74ec7d83ac21166",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-18T00:00:00Z",
+        "valid_to_utc": "2024-06-19T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3176725506782532,
+      "maximum_time_utc": "2024-06-18T06:15:00Z"
+    },
+    {
+      "date": "2024-06-19",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-19:d7c9a4434586697b3af859de9394e40dc01accfc65a38a6c632776c1753cbcad",
+      "sha256": "d7c9a4434586697b3af859de9394e40dc01accfc65a38a6c632776c1753cbcad",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-19T00:00:00Z",
+        "valid_to_utc": "2024-06-20T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2823464870452881,
+      "maximum_time_utc": "2024-06-19T16:10:00Z"
+    },
+    {
+      "date": "2024-06-20",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-20:f00c37f5048746c95b44f4554e79c228754f7bfab086e149c27d9ee86bd66174",
+      "sha256": "f00c37f5048746c95b44f4554e79c228754f7bfab086e149c27d9ee86bd66174",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-20T00:00:00Z",
+        "valid_to_utc": "2024-06-21T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2733592391014099,
+      "maximum_time_utc": "2024-06-20T18:00:00Z"
+    },
+    {
+      "date": "2024-06-21",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-21:c8fd6c48d5cb67df1c54fdc7415b549e6ff5621e86f59eb64ce4b027e1a22cba",
+      "sha256": "c8fd6c48d5cb67df1c54fdc7415b549e6ff5621e86f59eb64ce4b027e1a22cba",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-21T00:00:00Z",
+        "valid_to_utc": "2024-06-22T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3096858561038971,
+      "maximum_time_utc": "2024-06-21T02:45:00Z"
+    },
+    {
+      "date": "2024-06-22",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-22:58eccddffd6d2ae45a52f763ebf942fed80e611632b72e186b6d4ec74fd78512",
+      "sha256": "58eccddffd6d2ae45a52f763ebf942fed80e611632b72e186b6d4ec74fd78512",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-22T00:00:00Z",
+        "valid_to_utc": "2024-06-23T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.2953423261642456,
+      "maximum_time_utc": "2024-06-22T19:25:00Z"
+    },
+    {
+      "date": "2024-06-23",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-23:b62b5eb9db536baceb39c36e54956d0b7b9d0dccedec3165b18716b1fa5b7d8a",
+      "sha256": "b62b5eb9db536baceb39c36e54956d0b7b9d0dccedec3165b18716b1fa5b7d8a",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-23T00:00:00Z",
+        "valid_to_utc": "2024-06-24T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.36967477202415466,
+      "maximum_time_utc": "2024-06-23T21:20:00Z"
+    },
+    {
+      "date": "2024-06-24",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-24:6cf03e80d1063adf05d318e4b94eab0453e0889dbad06696c9cacedf5a769a56",
+      "sha256": "6cf03e80d1063adf05d318e4b94eab0453e0889dbad06696c9cacedf5a769a56",
+      "accepted_samples": 257,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.8923611111111112,
+        "covered_seconds": 77100.0,
+        "valid_from_utc": "2024-06-24T00:00:00Z",
+        "valid_to_utc": "2024-06-25T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-06-24T21:25:00Z",
+            "valid_to_utc": "2024-06-25T00:00:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 257
+      },
+      "maximum_p10_pfu": 0.44934311509132385,
+      "maximum_time_utc": "2024-06-24T20:30:00Z"
+    },
+    {
+      "date": "2024-06-25",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-25:bac95acd103b78c669015a43a8115cd45714f684361c7c2173928535efbef220",
+      "sha256": "bac95acd103b78c669015a43a8115cd45714f684361c7c2173928535efbef220",
+      "accepted_samples": 135,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.46875,
+        "covered_seconds": 40500.0,
+        "valid_from_utc": "2024-06-25T00:00:00Z",
+        "valid_to_utc": "2024-06-26T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-06-25T00:00:00Z",
+            "valid_to_utc": "2024-06-25T12:00:00Z"
+          },
+          {
+            "valid_from_utc": "2024-06-25T16:45:00Z",
+            "valid_to_utc": "2024-06-25T16:55:00Z"
+          },
+          {
+            "valid_from_utc": "2024-06-25T17:00:00Z",
+            "valid_to_utc": "2024-06-25T17:05:00Z"
+          },
+          {
+            "valid_from_utc": "2024-06-25T17:10:00Z",
+            "valid_to_utc": "2024-06-25T17:40:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 135
+      },
+      "maximum_p10_pfu": 0.3033398985862732,
+      "maximum_time_utc": "2024-06-25T16:25:00Z"
+    },
+    {
+      "date": "2024-06-26",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-26:e69a2880c14d00ec25710990955d39bd6699e285c4e1d89ddc1bd360edff71a0",
+      "sha256": "e69a2880c14d00ec25710990955d39bd6699e285c4e1d89ddc1bd360edff71a0",
+      "accepted_samples": 283,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.9826388888888888,
+        "covered_seconds": 84900.0,
+        "valid_from_utc": "2024-06-26T00:00:00Z",
+        "valid_to_utc": "2024-06-27T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-06-26T10:15:00Z",
+            "valid_to_utc": "2024-06-26T10:40:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 283
+      },
+      "maximum_p10_pfu": 0.3023383319377899,
+      "maximum_time_utc": "2024-06-26T17:50:00Z"
+    },
+    {
+      "date": "2024-06-27",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-27:c8aa25c57d6881baf505761f89be46ac9ff14184d77c4999e0d356ab386640f3",
+      "sha256": "c8aa25c57d6881baf505761f89be46ac9ff14184d77c4999e0d356ab386640f3",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-27T00:00:00Z",
+        "valid_to_utc": "2024-06-28T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.3193395435810089,
+      "maximum_time_utc": "2024-06-27T22:40:00Z"
+    },
+    {
+      "date": "2024-06-28",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-28:e41968c864a0f2973719c4eaf6937b8d8a4f7032f5842637167cbcd593334138",
+      "sha256": "e41968c864a0f2973719c4eaf6937b8d8a4f7032f5842637167cbcd593334138",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-28T00:00:00Z",
+        "valid_to_utc": "2024-06-29T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.28367170691490173,
+      "maximum_time_utc": "2024-06-28T03:40:00Z"
+    },
+    {
+      "date": "2024-06-29",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-29:bb4e80be3bbc668fee9ee5dddbe50129b5c9e04f77f445a5d13531459f9d4541",
+      "sha256": "bb4e80be3bbc668fee9ee5dddbe50129b5c9e04f77f445a5d13531459f9d4541",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-29T00:00:00Z",
+        "valid_to_utc": "2024-06-30T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.31934046745300293,
+      "maximum_time_utc": "2024-06-29T19:25:00Z"
+    },
+    {
+      "date": "2024-06-30",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-30:4f3eedc7836d8cc23debd886e52f04a6c7d065ee9b3fc12174495e0bdc21177b",
+      "sha256": "4f3eedc7836d8cc23debd886e52f04a6c7d065ee9b3fc12174495e0bdc21177b",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-06-30T00:00:00Z",
+        "valid_to_utc": "2024-07-01T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.36934325098991394,
+      "maximum_time_utc": "2024-06-30T18:10:00Z"
+    },
+    {
+      "date": "2024-07-01",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-07-01:412b765edfe6891f8f8d12184c4dd69a4f8ea23e474a4c79772678c3ed9521ac",
+      "sha256": "412b765edfe6891f8f8d12184c4dd69a4f8ea23e474a4c79772678c3ed9521ac",
+      "accepted_samples": 285,
+      "coverage": {
+        "status": "partial",
+        "coverage_fraction": 0.9895833333333334,
+        "covered_seconds": 85500.0,
+        "valid_from_utc": "2024-07-01T00:00:00Z",
+        "valid_to_utc": "2024-07-02T00:00:00Z",
+        "gaps": [
+          {
+            "valid_from_utc": "2024-07-01T05:40:00Z",
+            "valid_to_utc": "2024-07-01T05:45:00Z"
+          },
+          {
+            "valid_from_utc": "2024-07-01T20:25:00Z",
+            "valid_to_utc": "2024-07-01T20:30:00Z"
+          },
+          {
+            "valid_from_utc": "2024-07-01T21:25:00Z",
+            "valid_to_utc": "2024-07-01T21:30:00Z"
+          }
+        ],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 285
+      },
+      "maximum_p10_pfu": 0.35800933837890625,
+      "maximum_time_utc": "2024-07-01T10:55:00Z"
+    },
+    {
+      "date": "2024-07-02",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-07-02:59ea93cd216a0f5c18230d34dbb6e7562e3a28b50bd029d8e94564adbe10cd97",
+      "sha256": "59ea93cd216a0f5c18230d34dbb6e7562e3a28b50bd029d8e94564adbe10cd97",
+      "accepted_samples": 288,
+      "coverage": {
+        "status": "full",
+        "coverage_fraction": 1.0,
+        "covered_seconds": 86400.0,
+        "valid_from_utc": "2024-07-02T00:00:00Z",
+        "valid_to_utc": "2024-07-03T00:00:00Z",
+        "gaps": [],
+        "kind": "observation",
+        "cadence_seconds": 300,
+        "coverage_basis": "valid five-minute averaging cells; no interpolation",
+        "quality": "unknown",
+        "quality_flags_present": false,
+        "strict_replay_eligible": false,
+        "limitations": [
+          "iSWA archive omits per-value quality flags and historic publication receipts.",
+          "Full temporal coverage does not establish instrument quality or an EVA recommendation."
+        ]
+      },
+      "spacecraft_counts": {
+        "GOES-18": 288
+      },
+      "maximum_p10_pfu": 0.36736881732940674,
+      "maximum_time_utc": "2024-07-02T19:45:00Z"
+    }
+  ],
+  "interpretation": "Temporal availability of archived numerical P10 only; quality unknown; historical forecast ineligible."
+}

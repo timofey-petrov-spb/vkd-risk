@@ -1,0 +1,48 @@
+{
+  "schema_version": "orbit-inertial-states-1",
+  "comparison": "independent ERFA frame transformation, same pinned DUT1 and SGP4; not absolute ephemeris accuracy",
+  "cases": [
+    {
+      "t_utc": "2026-09-18T03:25:38.782288Z",
+      "position_error_m": 9.672471617287056e-05,
+      "velocity_error_mm_s": 0.00021064261060241917
+    },
+    {
+      "t_utc": "2026-09-18T03:26:38.782288Z",
+      "position_error_m": 0.0001041339798458341,
+      "velocity_error_mm_s": 0.00020612992843595888
+    },
+    {
+      "t_utc": "2026-09-18T03:55:38.782288Z",
+      "position_error_m": 0.00014753673842932865,
+      "velocity_error_mm_s": 0.0001689909854043098
+    },
+    {
+      "t_utc": "2026-09-18T04:25:38.782288Z",
+      "position_error_m": 0.0001881723835799858,
+      "velocity_error_mm_s": 0.00010633982447080161
+    },
+    {
+      "t_utc": "2026-09-19T03:25:38.782288Z",
+      "position_error_m": 8.347726881260705e-05,
+      "velocity_error_mm_s": 0.00021308228432629497
+    },
+    {
+      "t_utc": "2026-09-19T11:25:38.782288Z",
+      "position_error_m": 0.00019086650944746968,
+      "velocity_error_mm_s": 8.618383649799174e-05
+    }
+  ],
+  "max_position_error_m": 0.00019086650944746968,
+  "max_velocity_error_mm_s": 0.00021308228432629497,
+  "source_hashes": {
+    "celestrak_gp:25544:9135d19ca3b6": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533"
+  },
+  "software": {
+    "skyfield": "1.55",
+    "sgp4": "2.27",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0"
+  },
+  "timescale_tables_sha256": "7a8b271b210691c4741d5af774375c702ac03f3cd9cba78cd817f10297a1cba5"
+}

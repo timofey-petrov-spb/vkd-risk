@@ -1,0 +1,3221 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m_schema",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "release_id": "hapi-info",
+      "version": "sha256:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "sha256": "1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "raw_path": "data/goes_2024/raw/hapi-info.json",
+      "bytes": 1560,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/info?id=goesp_part_flux_P5M",
+      "fetched_utc": "2026-09-18T23:29:54.654898Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": null,
+      "valid_to_utc": null,
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:54 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "application/json"
+      },
+      "channels": [],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ]
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-04-29:9f86bb00d7ae43de6f8551825679b6796355aae2df9ecec1d9168c9af145cebc",
+      "release_id": "2024-04-29",
+      "version": "sha256:9f86bb00d7ae43de6f8551825679b6796355aae2df9ecec1d9168c9af145cebc",
+      "sha256": "9f86bb00d7ae43de6f8551825679b6796355aae2df9ecec1d9168c9af145cebc",
+      "raw_path": "data/goes_2024/raw/2024-04-29.csv",
+      "bytes": 64962,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-04-29T00:00:00Z&time.max=2024-04-30T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:55.536830Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-04-29T00:00:00Z",
+      "valid_to_utc": "2024-04-30T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:55 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-04-30:1f283ae121c3e5cdc056b27a8de87ee96101c59c7e545db4e64c7140a9020c94",
+      "release_id": "2024-04-30",
+      "version": "sha256:1f283ae121c3e5cdc056b27a8de87ee96101c59c7e545db4e64c7140a9020c94",
+      "sha256": "1f283ae121c3e5cdc056b27a8de87ee96101c59c7e545db4e64c7140a9020c94",
+      "raw_path": "data/goes_2024/raw/2024-04-30.csv",
+      "bytes": 59075,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-04-30T00:00:00Z&time.max=2024-05-01T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:55.585808Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-04-30T00:00:00Z",
+      "valid_to_utc": "2024-05-01T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:55 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 262,
+      "rejected_sample_count": 1,
+      "spacecraft_counts": {
+        "GOES-18": 262
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-01:d4dc1f53de84a5fe9e1a2b53beac101d9f551b6be50e1aa560fc971bf2f075b5",
+      "release_id": "2024-05-01",
+      "version": "sha256:d4dc1f53de84a5fe9e1a2b53beac101d9f551b6be50e1aa560fc971bf2f075b5",
+      "sha256": "d4dc1f53de84a5fe9e1a2b53beac101d9f551b6be50e1aa560fc971bf2f075b5",
+      "raw_path": "data/goes_2024/raw/2024-05-01.csv",
+      "bytes": 61276,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-01T00:00:00Z&time.max=2024-05-02T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:56.309906Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-01T00:00:00Z",
+      "valid_to_utc": "2024-05-02T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:56 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 282,
+      "rejected_sample_count": 2,
+      "spacecraft_counts": {
+        "GOES-18": 282
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-02:a480952e1d5c2fc8a16c302cffda57cbdd2be48eeb399537f88f6d548a56e42e",
+      "release_id": "2024-05-02",
+      "version": "sha256:a480952e1d5c2fc8a16c302cffda57cbdd2be48eeb399537f88f6d548a56e42e",
+      "sha256": "a480952e1d5c2fc8a16c302cffda57cbdd2be48eeb399537f88f6d548a56e42e",
+      "raw_path": "data/goes_2024/raw/2024-05-02.csv",
+      "bytes": 62292,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-02T00:00:00Z&time.max=2024-05-03T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:56.547523Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-02T00:00:00Z",
+      "valid_to_utc": "2024-05-03T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:56 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-03:9febe15487652f1482eb05c0a84e0c7d1aa7766721cf6cf20f28244342212788",
+      "release_id": "2024-05-03",
+      "version": "sha256:9febe15487652f1482eb05c0a84e0c7d1aa7766721cf6cf20f28244342212788",
+      "sha256": "9febe15487652f1482eb05c0a84e0c7d1aa7766721cf6cf20f28244342212788",
+      "raw_path": "data/goes_2024/raw/2024-05-03.csv",
+      "bytes": 62007,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-03T00:00:00Z&time.max=2024-05-04T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:57.089373Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-03T00:00:00Z",
+      "valid_to_utc": "2024-05-04T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:56 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-04:380b33a39b5b94d4590b99607dbf09326fdde8d50695fcf7054b2fcc16658fd4",
+      "release_id": "2024-05-04",
+      "version": "sha256:380b33a39b5b94d4590b99607dbf09326fdde8d50695fcf7054b2fcc16658fd4",
+      "sha256": "380b33a39b5b94d4590b99607dbf09326fdde8d50695fcf7054b2fcc16658fd4",
+      "raw_path": "data/goes_2024/raw/2024-05-04.csv",
+      "bytes": 62585,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-04T00:00:00Z&time.max=2024-05-05T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:57.360520Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-04T00:00:00Z",
+      "valid_to_utc": "2024-05-05T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:57 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-05:373df9721208c0b925d7e2ebdcb5c78a328671e8a6c1df9d525443b21f8a0fd7",
+      "release_id": "2024-05-05",
+      "version": "sha256:373df9721208c0b925d7e2ebdcb5c78a328671e8a6c1df9d525443b21f8a0fd7",
+      "sha256": "373df9721208c0b925d7e2ebdcb5c78a328671e8a6c1df9d525443b21f8a0fd7",
+      "raw_path": "data/goes_2024/raw/2024-05-05.csv",
+      "bytes": 62938,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-05T00:00:00Z&time.max=2024-05-06T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:57.833009Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-05T00:00:00Z",
+      "valid_to_utc": "2024-05-06T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:57 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-06:025d613d63650fb4580475507b901faede9b2788a5928485f0bfba2bb64e204a",
+      "release_id": "2024-05-06",
+      "version": "sha256:025d613d63650fb4580475507b901faede9b2788a5928485f0bfba2bb64e204a",
+      "sha256": "025d613d63650fb4580475507b901faede9b2788a5928485f0bfba2bb64e204a",
+      "raw_path": "data/goes_2024/raw/2024-05-06.csv",
+      "bytes": 62768,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-06T00:00:00Z&time.max=2024-05-07T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:58.230011Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-06T00:00:00Z",
+      "valid_to_utc": "2024-05-07T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:58 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-07:126efd0fdc2d59d00b629ade63d66c48ff4b586ec2dd0a14467d30b000baa8a4",
+      "release_id": "2024-05-07",
+      "version": "sha256:126efd0fdc2d59d00b629ade63d66c48ff4b586ec2dd0a14467d30b000baa8a4",
+      "sha256": "126efd0fdc2d59d00b629ade63d66c48ff4b586ec2dd0a14467d30b000baa8a4",
+      "raw_path": "data/goes_2024/raw/2024-05-07.csv",
+      "bytes": 63005,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-07T00:00:00Z&time.max=2024-05-08T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:58.580130Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-07T00:00:00Z",
+      "valid_to_utc": "2024-05-08T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:58 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-08:3ed3f130317f9b7441629bf5ce4dbb4c481be1701f974d09d35751d43837121f",
+      "release_id": "2024-05-08",
+      "version": "sha256:3ed3f130317f9b7441629bf5ce4dbb4c481be1701f974d09d35751d43837121f",
+      "sha256": "3ed3f130317f9b7441629bf5ce4dbb4c481be1701f974d09d35751d43837121f",
+      "raw_path": "data/goes_2024/raw/2024-05-08.csv",
+      "bytes": 63769,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-08T00:00:00Z&time.max=2024-05-09T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:59.192225Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-08T00:00:00Z",
+      "valid_to_utc": "2024-05-09T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:58 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-09:d901e83ebd55221280eeba550dd63ec6b3233d07eb50421475d77825be41a092",
+      "release_id": "2024-05-09",
+      "version": "sha256:d901e83ebd55221280eeba550dd63ec6b3233d07eb50421475d77825be41a092",
+      "sha256": "d901e83ebd55221280eeba550dd63ec6b3233d07eb50421475d77825be41a092",
+      "raw_path": "data/goes_2024/raw/2024-05-09.csv",
+      "bytes": 64179,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-09T00:00:00Z&time.max=2024-05-10T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:29:59.584239Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-09T00:00:00Z",
+      "valid_to_utc": "2024-05-10T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:59 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-10:c21feefc28c4d6cde0e7838b6846668abaa8a250b4e22cc7d3f58e7779653412",
+      "release_id": "2024-05-10",
+      "version": "sha256:c21feefc28c4d6cde0e7838b6846668abaa8a250b4e22cc7d3f58e7779653412",
+      "sha256": "c21feefc28c4d6cde0e7838b6846668abaa8a250b4e22cc7d3f58e7779653412",
+      "raw_path": "data/goes_2024/raw/2024-05-10.csv",
+      "bytes": 61647,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-10T00:00:00Z&time.max=2024-05-11T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:00.051907Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-10T00:00:00Z",
+      "valid_to_utc": "2024-05-11T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:29:59 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-11:339eac9ea0bfc3e45a819c63ff415bcbd77f10bd3fa3726683674226aabed667",
+      "release_id": "2024-05-11",
+      "version": "sha256:339eac9ea0bfc3e45a819c63ff415bcbd77f10bd3fa3726683674226aabed667",
+      "sha256": "339eac9ea0bfc3e45a819c63ff415bcbd77f10bd3fa3726683674226aabed667",
+      "raw_path": "data/goes_2024/raw/2024-05-11.csv",
+      "bytes": 60083,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-11T00:00:00Z&time.max=2024-05-12T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:00.405781Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-11T00:00:00Z",
+      "valid_to_utc": "2024-05-12T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:00 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-12:2e1b66ff0ca3059af3d2b6a08f6908e54628f90a996942583bc867449ac417f0",
+      "release_id": "2024-05-12",
+      "version": "sha256:2e1b66ff0ca3059af3d2b6a08f6908e54628f90a996942583bc867449ac417f0",
+      "sha256": "2e1b66ff0ca3059af3d2b6a08f6908e54628f90a996942583bc867449ac417f0",
+      "raw_path": "data/goes_2024/raw/2024-05-12.csv",
+      "bytes": 62426,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-12T00:00:00Z&time.max=2024-05-13T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:00.902803Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-12T00:00:00Z",
+      "valid_to_utc": "2024-05-13T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:00 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-13:a1b4b783a860cedd83ef84280f29264ab9043d2c58382cfe1590347062658a86",
+      "release_id": "2024-05-13",
+      "version": "sha256:a1b4b783a860cedd83ef84280f29264ab9043d2c58382cfe1590347062658a86",
+      "sha256": "a1b4b783a860cedd83ef84280f29264ab9043d2c58382cfe1590347062658a86",
+      "raw_path": "data/goes_2024/raw/2024-05-13.csv",
+      "bytes": 63396,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-13T00:00:00Z&time.max=2024-05-14T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:01.157512Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-13T00:00:00Z",
+      "valid_to_utc": "2024-05-14T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:00 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-14:cf5ab31b3ce5e270cf908f7ff795647680da57b5d4165437a2325eae87f7896a",
+      "release_id": "2024-05-14",
+      "version": "sha256:cf5ab31b3ce5e270cf908f7ff795647680da57b5d4165437a2325eae87f7896a",
+      "sha256": "cf5ab31b3ce5e270cf908f7ff795647680da57b5d4165437a2325eae87f7896a",
+      "raw_path": "data/goes_2024/raw/2024-05-14.csv",
+      "bytes": 63718,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-14T00:00:00Z&time.max=2024-05-15T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:01.688507Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-14T00:00:00Z",
+      "valid_to_utc": "2024-05-15T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:01 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-15:8ca3bfb6582613336a79a36e539bc578b58b481abd4efd321fcbddf33812db4a",
+      "release_id": "2024-05-15",
+      "version": "sha256:8ca3bfb6582613336a79a36e539bc578b58b481abd4efd321fcbddf33812db4a",
+      "sha256": "8ca3bfb6582613336a79a36e539bc578b58b481abd4efd321fcbddf33812db4a",
+      "raw_path": "data/goes_2024/raw/2024-05-15.csv",
+      "bytes": 64020,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-15T00:00:00Z&time.max=2024-05-16T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:01.900327Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-15T00:00:00Z",
+      "valid_to_utc": "2024-05-16T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:01 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-16:1708717519aa8c3f0800246e7ff3296ac5ded4539c567db314e84d9fc8fa03c1",
+      "release_id": "2024-05-16",
+      "version": "sha256:1708717519aa8c3f0800246e7ff3296ac5ded4539c567db314e84d9fc8fa03c1",
+      "sha256": "1708717519aa8c3f0800246e7ff3296ac5ded4539c567db314e84d9fc8fa03c1",
+      "raw_path": "data/goes_2024/raw/2024-05-16.csv",
+      "bytes": 62197,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-16T00:00:00Z&time.max=2024-05-17T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:02.440446Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-16T00:00:00Z",
+      "valid_to_utc": "2024-05-17T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:02 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-17:4e3e7b0d43ca72975d549d5619e394b1ccfbd157e54b0b3fd255def22222abff",
+      "release_id": "2024-05-17",
+      "version": "sha256:4e3e7b0d43ca72975d549d5619e394b1ccfbd157e54b0b3fd255def22222abff",
+      "sha256": "4e3e7b0d43ca72975d549d5619e394b1ccfbd157e54b0b3fd255def22222abff",
+      "raw_path": "data/goes_2024/raw/2024-05-17.csv",
+      "bytes": 62699,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-17T00:00:00Z&time.max=2024-05-18T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:02.663150Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-17T00:00:00Z",
+      "valid_to_utc": "2024-05-18T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:02 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-18:897d72e6be6d7ad7983f41674415107fe46178cb8f5f09ee492324c82a98fb45",
+      "release_id": "2024-05-18",
+      "version": "sha256:897d72e6be6d7ad7983f41674415107fe46178cb8f5f09ee492324c82a98fb45",
+      "sha256": "897d72e6be6d7ad7983f41674415107fe46178cb8f5f09ee492324c82a98fb45",
+      "raw_path": "data/goes_2024/raw/2024-05-18.csv",
+      "bytes": 62795,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-18T00:00:00Z&time.max=2024-05-19T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:03.309666Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-18T00:00:00Z",
+      "valid_to_utc": "2024-05-19T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:03 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-19:f00e0724b70919973d3816d51265233eb82fb248685befa60ffb96276ff24869",
+      "release_id": "2024-05-19",
+      "version": "sha256:f00e0724b70919973d3816d51265233eb82fb248685befa60ffb96276ff24869",
+      "sha256": "f00e0724b70919973d3816d51265233eb82fb248685befa60ffb96276ff24869",
+      "raw_path": "data/goes_2024/raw/2024-05-19.csv",
+      "bytes": 64045,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-19T00:00:00Z&time.max=2024-05-20T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:03.416311Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-19T00:00:00Z",
+      "valid_to_utc": "2024-05-20T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:03 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-20:b32f56606d06c865c4e4a84d8e73ef5d0e59f181ac94404373caf3feff094da9",
+      "release_id": "2024-05-20",
+      "version": "sha256:b32f56606d06c865c4e4a84d8e73ef5d0e59f181ac94404373caf3feff094da9",
+      "sha256": "b32f56606d06c865c4e4a84d8e73ef5d0e59f181ac94404373caf3feff094da9",
+      "raw_path": "data/goes_2024/raw/2024-05-20.csv",
+      "bytes": 64493,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-20T00:00:00Z&time.max=2024-05-21T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:04.207613Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-20T00:00:00Z",
+      "valid_to_utc": "2024-05-21T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:03 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-21:6652520978c433dfa18d4a1d68a374011d7dff6f62f19e96aaa739a57c67b03a",
+      "release_id": "2024-05-21",
+      "version": "sha256:6652520978c433dfa18d4a1d68a374011d7dff6f62f19e96aaa739a57c67b03a",
+      "sha256": "6652520978c433dfa18d4a1d68a374011d7dff6f62f19e96aaa739a57c67b03a",
+      "raw_path": "data/goes_2024/raw/2024-05-21.csv",
+      "bytes": 65327,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-21T00:00:00Z&time.max=2024-05-22T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:04.226325Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-21T00:00:00Z",
+      "valid_to_utc": "2024-05-22T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:03 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-22:770904f36b1f1810f4b1147bb9ac705d2bb8e79a855f4e981b862cf43e1997b5",
+      "release_id": "2024-05-22",
+      "version": "sha256:770904f36b1f1810f4b1147bb9ac705d2bb8e79a855f4e981b862cf43e1997b5",
+      "sha256": "770904f36b1f1810f4b1147bb9ac705d2bb8e79a855f4e981b862cf43e1997b5",
+      "raw_path": "data/goes_2024/raw/2024-05-22.csv",
+      "bytes": 64918,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-22T00:00:00Z&time.max=2024-05-23T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:05.255199Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-22T00:00:00Z",
+      "valid_to_utc": "2024-05-23T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:04 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-23:000d6847d76b2510d31007fc3e303073577b88931cf72378c02c56cc275f9270",
+      "release_id": "2024-05-23",
+      "version": "sha256:000d6847d76b2510d31007fc3e303073577b88931cf72378c02c56cc275f9270",
+      "sha256": "000d6847d76b2510d31007fc3e303073577b88931cf72378c02c56cc275f9270",
+      "raw_path": "data/goes_2024/raw/2024-05-23.csv",
+      "bytes": 64939,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-23T00:00:00Z&time.max=2024-05-24T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:05.177025Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-23T00:00:00Z",
+      "valid_to_utc": "2024-05-24T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:04 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-24:e1f82e60d2e3fa9eb3b7bc3370c286efdaa364355de09a0b66e5523d31be0323",
+      "release_id": "2024-05-24",
+      "version": "sha256:e1f82e60d2e3fa9eb3b7bc3370c286efdaa364355de09a0b66e5523d31be0323",
+      "sha256": "e1f82e60d2e3fa9eb3b7bc3370c286efdaa364355de09a0b66e5523d31be0323",
+      "raw_path": "data/goes_2024/raw/2024-05-24.csv",
+      "bytes": 64035,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-24T00:00:00Z&time.max=2024-05-25T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:06.223373Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-24T00:00:00Z",
+      "valid_to_utc": "2024-05-25T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:05 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-25:dbd71f7bb4d2758d688313f40ac667d4c682dbed64ce7496bbe2348b64b842f2",
+      "release_id": "2024-05-25",
+      "version": "sha256:dbd71f7bb4d2758d688313f40ac667d4c682dbed64ce7496bbe2348b64b842f2",
+      "sha256": "dbd71f7bb4d2758d688313f40ac667d4c682dbed64ce7496bbe2348b64b842f2",
+      "raw_path": "data/goes_2024/raw/2024-05-25.csv",
+      "bytes": 63828,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-25T00:00:00Z&time.max=2024-05-26T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:06.185956Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-25T00:00:00Z",
+      "valid_to_utc": "2024-05-26T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:05 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-26:865d61801b67260ab08b30bbaadf9c0b33a53e2345fc646fb56b4efb88652168",
+      "release_id": "2024-05-26",
+      "version": "sha256:865d61801b67260ab08b30bbaadf9c0b33a53e2345fc646fb56b4efb88652168",
+      "sha256": "865d61801b67260ab08b30bbaadf9c0b33a53e2345fc646fb56b4efb88652168",
+      "raw_path": "data/goes_2024/raw/2024-05-26.csv",
+      "bytes": 64674,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-26T00:00:00Z&time.max=2024-05-27T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:07.166138Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-26T00:00:00Z",
+      "valid_to_utc": "2024-05-27T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:06 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-27:2730dba5af28d8ea375b934ddb595206493ffa08990cb65622914a5ce3dcf77f",
+      "release_id": "2024-05-27",
+      "version": "sha256:2730dba5af28d8ea375b934ddb595206493ffa08990cb65622914a5ce3dcf77f",
+      "sha256": "2730dba5af28d8ea375b934ddb595206493ffa08990cb65622914a5ce3dcf77f",
+      "raw_path": "data/goes_2024/raw/2024-05-27.csv",
+      "bytes": 64619,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-27T00:00:00Z&time.max=2024-05-28T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:07.184822Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-27T00:00:00Z",
+      "valid_to_utc": "2024-05-28T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:06 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-28:402af4d0a9aab2d757dedc058145c4b335f0298cba413397e7876157ae324dd3",
+      "release_id": "2024-05-28",
+      "version": "sha256:402af4d0a9aab2d757dedc058145c4b335f0298cba413397e7876157ae324dd3",
+      "sha256": "402af4d0a9aab2d757dedc058145c4b335f0298cba413397e7876157ae324dd3",
+      "raw_path": "data/goes_2024/raw/2024-05-28.csv",
+      "bytes": 64617,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-28T00:00:00Z&time.max=2024-05-29T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:08.220736Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-28T00:00:00Z",
+      "valid_to_utc": "2024-05-29T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:07 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-29:5a47dc6d9ffe6b614307153ee50f1ace3a1ddba3504943eb286069657579f3cd",
+      "release_id": "2024-05-29",
+      "version": "sha256:5a47dc6d9ffe6b614307153ee50f1ace3a1ddba3504943eb286069657579f3cd",
+      "sha256": "5a47dc6d9ffe6b614307153ee50f1ace3a1ddba3504943eb286069657579f3cd",
+      "raw_path": "data/goes_2024/raw/2024-05-29.csv",
+      "bytes": 64862,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-29T00:00:00Z&time.max=2024-05-30T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:08.977853Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-29T00:00:00Z",
+      "valid_to_utc": "2024-05-30T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:08 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-30:d59ccf9b9287c3e437cbc67e254720b079a830da4114a803f962a50c162b90c2",
+      "release_id": "2024-05-30",
+      "version": "sha256:d59ccf9b9287c3e437cbc67e254720b079a830da4114a803f962a50c162b90c2",
+      "sha256": "d59ccf9b9287c3e437cbc67e254720b079a830da4114a803f962a50c162b90c2",
+      "raw_path": "data/goes_2024/raw/2024-05-30.csv",
+      "bytes": 64307,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-30T00:00:00Z&time.max=2024-05-31T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:09.222921Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-30T00:00:00Z",
+      "valid_to_utc": "2024-05-31T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:08 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-05-31:275643c2521ccff55aedfe860d5c3fbbdbcf726b3651a62315347c9bad59a56e",
+      "release_id": "2024-05-31",
+      "version": "sha256:275643c2521ccff55aedfe860d5c3fbbdbcf726b3651a62315347c9bad59a56e",
+      "sha256": "275643c2521ccff55aedfe860d5c3fbbdbcf726b3651a62315347c9bad59a56e",
+      "raw_path": "data/goes_2024/raw/2024-05-31.csv",
+      "bytes": 62909,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-05-31T00:00:00Z&time.max=2024-06-01T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:10.056070Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-05-31T00:00:00Z",
+      "valid_to_utc": "2024-06-01T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:09 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-01:1d13477c238c6084013af81d595184c8a6d259df428f64b00c712889b8aad684",
+      "release_id": "2024-06-01",
+      "version": "sha256:1d13477c238c6084013af81d595184c8a6d259df428f64b00c712889b8aad684",
+      "sha256": "1d13477c238c6084013af81d595184c8a6d259df428f64b00c712889b8aad684",
+      "raw_path": "data/goes_2024/raw/2024-06-01.csv",
+      "bytes": 63568,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-01T00:00:00Z&time.max=2024-06-02T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:10.299057Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-01T00:00:00Z",
+      "valid_to_utc": "2024-06-02T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:09 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-02:f0aa6e246ca232ce98f1656d0aae7cb79a32a2b82dee26952b7b752a709fda3e",
+      "release_id": "2024-06-02",
+      "version": "sha256:f0aa6e246ca232ce98f1656d0aae7cb79a32a2b82dee26952b7b752a709fda3e",
+      "sha256": "f0aa6e246ca232ce98f1656d0aae7cb79a32a2b82dee26952b7b752a709fda3e",
+      "raw_path": "data/goes_2024/raw/2024-06-02.csv",
+      "bytes": 64186,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-02T00:00:00Z&time.max=2024-06-03T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:11.026891Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-02T00:00:00Z",
+      "valid_to_utc": "2024-06-03T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:10 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-03:7b36448de7aea87d5cd5e1764a7a638aa913e4603efb4a1eb2e03e7456e298d6",
+      "release_id": "2024-06-03",
+      "version": "sha256:7b36448de7aea87d5cd5e1764a7a638aa913e4603efb4a1eb2e03e7456e298d6",
+      "sha256": "7b36448de7aea87d5cd5e1764a7a638aa913e4603efb4a1eb2e03e7456e298d6",
+      "raw_path": "data/goes_2024/raw/2024-06-03.csv",
+      "bytes": 62549,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-03T00:00:00Z&time.max=2024-06-04T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:11.336473Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-03T00:00:00Z",
+      "valid_to_utc": "2024-06-04T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:10 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-04:2ec3d2390a360dfbc82fed9b76ae5dfc1782f09442ec0ea958da5b6bfe68609e",
+      "release_id": "2024-06-04",
+      "version": "sha256:2ec3d2390a360dfbc82fed9b76ae5dfc1782f09442ec0ea958da5b6bfe68609e",
+      "sha256": "2ec3d2390a360dfbc82fed9b76ae5dfc1782f09442ec0ea958da5b6bfe68609e",
+      "raw_path": "data/goes_2024/raw/2024-06-04.csv",
+      "bytes": 62115,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-04T00:00:00Z&time.max=2024-06-05T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:11.999691Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-04T00:00:00Z",
+      "valid_to_utc": "2024-06-05T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:11 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-05:32204c75d56678d09e5cd3d94b6226d3136966d3f34d68f456f6819a72802691",
+      "release_id": "2024-06-05",
+      "version": "sha256:32204c75d56678d09e5cd3d94b6226d3136966d3f34d68f456f6819a72802691",
+      "sha256": "32204c75d56678d09e5cd3d94b6226d3136966d3f34d68f456f6819a72802691",
+      "raw_path": "data/goes_2024/raw/2024-06-05.csv",
+      "bytes": 62780,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-05T00:00:00Z&time.max=2024-06-06T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:12.292987Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-05T00:00:00Z",
+      "valid_to_utc": "2024-06-06T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:12 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-06:8bf944df8711f74548a5c8c7c4d2026b5657fd81e66c1f85c19b5b6bb7a85c40",
+      "release_id": "2024-06-06",
+      "version": "sha256:8bf944df8711f74548a5c8c7c4d2026b5657fd81e66c1f85c19b5b6bb7a85c40",
+      "sha256": "8bf944df8711f74548a5c8c7c4d2026b5657fd81e66c1f85c19b5b6bb7a85c40",
+      "raw_path": "data/goes_2024/raw/2024-06-06.csv",
+      "bytes": 62791,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-06T00:00:00Z&time.max=2024-06-07T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:12.935251Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-06T00:00:00Z",
+      "valid_to_utc": "2024-06-07T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:12 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-07:7537ea7a510494d95d638f57b0eedeae18478a260b0d5126c61bc5a1bcffef0c",
+      "release_id": "2024-06-07",
+      "version": "sha256:7537ea7a510494d95d638f57b0eedeae18478a260b0d5126c61bc5a1bcffef0c",
+      "sha256": "7537ea7a510494d95d638f57b0eedeae18478a260b0d5126c61bc5a1bcffef0c",
+      "raw_path": "data/goes_2024/raw/2024-06-07.csv",
+      "bytes": 62553,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-07T00:00:00Z&time.max=2024-06-08T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:13.223304Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-07T00:00:00Z",
+      "valid_to_utc": "2024-06-08T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:12 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-08:4f1c7d3b2cd0b9143fd43e1ab33e5a27444f7b0c2bd142bd135bcd5140fbe5d8",
+      "release_id": "2024-06-08",
+      "version": "sha256:4f1c7d3b2cd0b9143fd43e1ab33e5a27444f7b0c2bd142bd135bcd5140fbe5d8",
+      "sha256": "4f1c7d3b2cd0b9143fd43e1ab33e5a27444f7b0c2bd142bd135bcd5140fbe5d8",
+      "raw_path": "data/goes_2024/raw/2024-06-08.csv",
+      "bytes": 60676,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-08T00:00:00Z&time.max=2024-06-09T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:13.960903Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-08T00:00:00Z",
+      "valid_to_utc": "2024-06-09T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:13 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-09:43e395df597d3b9dc3a18410289df6c622ecd6736bdf6926a8f20fb201e1bfde",
+      "release_id": "2024-06-09",
+      "version": "sha256:43e395df597d3b9dc3a18410289df6c622ecd6736bdf6926a8f20fb201e1bfde",
+      "sha256": "43e395df597d3b9dc3a18410289df6c622ecd6736bdf6926a8f20fb201e1bfde",
+      "raw_path": "data/goes_2024/raw/2024-06-09.csv",
+      "bytes": 60582,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-09T00:00:00Z&time.max=2024-06-10T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:14.146149Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-09T00:00:00Z",
+      "valid_to_utc": "2024-06-10T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:13 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-10:bb4ab3908280773b82060bb717a5f08244b997d290576b34a9fa8eacb6dbcaa4",
+      "release_id": "2024-06-10",
+      "version": "sha256:bb4ab3908280773b82060bb717a5f08244b997d290576b34a9fa8eacb6dbcaa4",
+      "sha256": "bb4ab3908280773b82060bb717a5f08244b997d290576b34a9fa8eacb6dbcaa4",
+      "raw_path": "data/goes_2024/raw/2024-06-10.csv",
+      "bytes": 61227,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-10T00:00:00Z&time.max=2024-06-11T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:15.051351Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-10T00:00:00Z",
+      "valid_to_utc": "2024-06-11T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:14 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-11:72138ea9fdc85cd0ed1416e0f516c094044147c7928834ede467543f19ffd2ed",
+      "release_id": "2024-06-11",
+      "version": "sha256:72138ea9fdc85cd0ed1416e0f516c094044147c7928834ede467543f19ffd2ed",
+      "sha256": "72138ea9fdc85cd0ed1416e0f516c094044147c7928834ede467543f19ffd2ed",
+      "raw_path": "data/goes_2024/raw/2024-06-11.csv",
+      "bytes": 53487,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-11T00:00:00Z&time.max=2024-06-12T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:15.084985Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-11T00:00:00Z",
+      "valid_to_utc": "2024-06-12T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:14 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 251,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 251
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-12:ec72a2d4a2ecb60aeb2920532e90329f6bd2e51fed68e3f3fa986f2b910aa741",
+      "release_id": "2024-06-12",
+      "version": "sha256:ec72a2d4a2ecb60aeb2920532e90329f6bd2e51fed68e3f3fa986f2b910aa741",
+      "sha256": "ec72a2d4a2ecb60aeb2920532e90329f6bd2e51fed68e3f3fa986f2b910aa741",
+      "raw_path": "data/goes_2024/raw/2024-06-12.csv",
+      "bytes": 61213,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-12T00:00:00Z&time.max=2024-06-13T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:16.082082Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-12T00:00:00Z",
+      "valid_to_utc": "2024-06-13T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:15 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-13:8df13d9935c938a180cac700bb2b531341bf885e2e4935a0f61e10314f6d4c77",
+      "release_id": "2024-06-13",
+      "version": "sha256:8df13d9935c938a180cac700bb2b531341bf885e2e4935a0f61e10314f6d4c77",
+      "sha256": "8df13d9935c938a180cac700bb2b531341bf885e2e4935a0f61e10314f6d4c77",
+      "raw_path": "data/goes_2024/raw/2024-06-13.csv",
+      "bytes": 61303,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-13T00:00:00Z&time.max=2024-06-14T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:16.018043Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-13T00:00:00Z",
+      "valid_to_utc": "2024-06-14T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:15 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-14:391b16cec4dbb6e244c9cb40b5ef3fb9eec25ab727a04228d3ca6be7a010f7af",
+      "release_id": "2024-06-14",
+      "version": "sha256:391b16cec4dbb6e244c9cb40b5ef3fb9eec25ab727a04228d3ca6be7a010f7af",
+      "sha256": "391b16cec4dbb6e244c9cb40b5ef3fb9eec25ab727a04228d3ca6be7a010f7af",
+      "raw_path": "data/goes_2024/raw/2024-06-14.csv",
+      "bytes": 61858,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-14T00:00:00Z&time.max=2024-06-15T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:17.243347Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-14T00:00:00Z",
+      "valid_to_utc": "2024-06-15T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:16 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-15:767c154a4d8e38b3b02cac245e6722cb4e68dff24827dc7ee62ab36afa27960e",
+      "release_id": "2024-06-15",
+      "version": "sha256:767c154a4d8e38b3b02cac245e6722cb4e68dff24827dc7ee62ab36afa27960e",
+      "sha256": "767c154a4d8e38b3b02cac245e6722cb4e68dff24827dc7ee62ab36afa27960e",
+      "raw_path": "data/goes_2024/raw/2024-06-15.csv",
+      "bytes": 62015,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-15T00:00:00Z&time.max=2024-06-16T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:17.251111Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-15T00:00:00Z",
+      "valid_to_utc": "2024-06-16T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:16 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-16:5c468bac93df5d9685a9b3d779f7cdccd6c314e5d680e68d89d22a380a8781cb",
+      "release_id": "2024-06-16",
+      "version": "sha256:5c468bac93df5d9685a9b3d779f7cdccd6c314e5d680e68d89d22a380a8781cb",
+      "sha256": "5c468bac93df5d9685a9b3d779f7cdccd6c314e5d680e68d89d22a380a8781cb",
+      "raw_path": "data/goes_2024/raw/2024-06-16.csv",
+      "bytes": 49527,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-16T00:00:00Z&time.max=2024-06-17T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:18.258963Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-16T00:00:00Z",
+      "valid_to_utc": "2024-06-17T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:17 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 229,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 229
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-17:e2c560ffc38f23ee881d8118cd37201ffec9194672a93df7d722b4b25e257147",
+      "release_id": "2024-06-17",
+      "version": "sha256:e2c560ffc38f23ee881d8118cd37201ffec9194672a93df7d722b4b25e257147",
+      "sha256": "e2c560ffc38f23ee881d8118cd37201ffec9194672a93df7d722b4b25e257147",
+      "raw_path": "data/goes_2024/raw/2024-06-17.csv",
+      "bytes": 62124,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-17T00:00:00Z&time.max=2024-06-18T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:18.166175Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-17T00:00:00Z",
+      "valid_to_utc": "2024-06-18T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:17 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-18:95d1d20865a1808d2af5d101fdc88735eeac69bd99ab283cf74ec7d83ac21166",
+      "release_id": "2024-06-18",
+      "version": "sha256:95d1d20865a1808d2af5d101fdc88735eeac69bd99ab283cf74ec7d83ac21166",
+      "sha256": "95d1d20865a1808d2af5d101fdc88735eeac69bd99ab283cf74ec7d83ac21166",
+      "raw_path": "data/goes_2024/raw/2024-06-18.csv",
+      "bytes": 62913,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-18T00:00:00Z&time.max=2024-06-19T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:18.982239Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-18T00:00:00Z",
+      "valid_to_utc": "2024-06-19T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:18 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-19:d7c9a4434586697b3af859de9394e40dc01accfc65a38a6c632776c1753cbcad",
+      "release_id": "2024-06-19",
+      "version": "sha256:d7c9a4434586697b3af859de9394e40dc01accfc65a38a6c632776c1753cbcad",
+      "sha256": "d7c9a4434586697b3af859de9394e40dc01accfc65a38a6c632776c1753cbcad",
+      "raw_path": "data/goes_2024/raw/2024-06-19.csv",
+      "bytes": 64295,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-19T00:00:00Z&time.max=2024-06-20T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:19.194823Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-19T00:00:00Z",
+      "valid_to_utc": "2024-06-20T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:18 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-20:f00c37f5048746c95b44f4554e79c228754f7bfab086e149c27d9ee86bd66174",
+      "release_id": "2024-06-20",
+      "version": "sha256:f00c37f5048746c95b44f4554e79c228754f7bfab086e149c27d9ee86bd66174",
+      "sha256": "f00c37f5048746c95b44f4554e79c228754f7bfab086e149c27d9ee86bd66174",
+      "raw_path": "data/goes_2024/raw/2024-06-20.csv",
+      "bytes": 65639,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-20T00:00:00Z&time.max=2024-06-21T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:19.969174Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-20T00:00:00Z",
+      "valid_to_utc": "2024-06-21T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:19 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-21:c8fd6c48d5cb67df1c54fdc7415b549e6ff5621e86f59eb64ce4b027e1a22cba",
+      "release_id": "2024-06-21",
+      "version": "sha256:c8fd6c48d5cb67df1c54fdc7415b549e6ff5621e86f59eb64ce4b027e1a22cba",
+      "sha256": "c8fd6c48d5cb67df1c54fdc7415b549e6ff5621e86f59eb64ce4b027e1a22cba",
+      "raw_path": "data/goes_2024/raw/2024-06-21.csv",
+      "bytes": 65631,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-21T00:00:00Z&time.max=2024-06-22T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:20.162542Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-21T00:00:00Z",
+      "valid_to_utc": "2024-06-22T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:19 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-22:58eccddffd6d2ae45a52f763ebf942fed80e611632b72e186b6d4ec74fd78512",
+      "release_id": "2024-06-22",
+      "version": "sha256:58eccddffd6d2ae45a52f763ebf942fed80e611632b72e186b6d4ec74fd78512",
+      "sha256": "58eccddffd6d2ae45a52f763ebf942fed80e611632b72e186b6d4ec74fd78512",
+      "raw_path": "data/goes_2024/raw/2024-06-22.csv",
+      "bytes": 65554,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-22T00:00:00Z&time.max=2024-06-23T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:20.988937Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-22T00:00:00Z",
+      "valid_to_utc": "2024-06-23T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:20 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-23:b62b5eb9db536baceb39c36e54956d0b7b9d0dccedec3165b18716b1fa5b7d8a",
+      "release_id": "2024-06-23",
+      "version": "sha256:b62b5eb9db536baceb39c36e54956d0b7b9d0dccedec3165b18716b1fa5b7d8a",
+      "sha256": "b62b5eb9db536baceb39c36e54956d0b7b9d0dccedec3165b18716b1fa5b7d8a",
+      "raw_path": "data/goes_2024/raw/2024-06-23.csv",
+      "bytes": 63470,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-23T00:00:00Z&time.max=2024-06-24T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:21.126201Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-23T00:00:00Z",
+      "valid_to_utc": "2024-06-24T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:20 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-24:6cf03e80d1063adf05d318e4b94eab0453e0889dbad06696c9cacedf5a769a56",
+      "release_id": "2024-06-24",
+      "version": "sha256:6cf03e80d1063adf05d318e4b94eab0453e0889dbad06696c9cacedf5a769a56",
+      "sha256": "6cf03e80d1063adf05d318e4b94eab0453e0889dbad06696c9cacedf5a769a56",
+      "raw_path": "data/goes_2024/raw/2024-06-24.csv",
+      "bytes": 55863,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-24T00:00:00Z&time.max=2024-06-25T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:21.878400Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-24T00:00:00Z",
+      "valid_to_utc": "2024-06-25T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:21 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 257,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 257
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-25:bac95acd103b78c669015a43a8115cd45714f684361c7c2173928535efbef220",
+      "release_id": "2024-06-25",
+      "version": "sha256:bac95acd103b78c669015a43a8115cd45714f684361c7c2173928535efbef220",
+      "sha256": "bac95acd103b78c669015a43a8115cd45714f684361c7c2173928535efbef220",
+      "raw_path": "data/goes_2024/raw/2024-06-25.csv",
+      "bytes": 29471,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-25T00:00:00Z&time.max=2024-06-26T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:21.989483Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-25T00:00:00Z",
+      "valid_to_utc": "2024-06-26T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:21 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 135,
+      "rejected_sample_count": 2,
+      "spacecraft_counts": {
+        "GOES-18": 135
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-26:e69a2880c14d00ec25710990955d39bd6699e285c4e1d89ddc1bd360edff71a0",
+      "release_id": "2024-06-26",
+      "version": "sha256:e69a2880c14d00ec25710990955d39bd6699e285c4e1d89ddc1bd360edff71a0",
+      "sha256": "e69a2880c14d00ec25710990955d39bd6699e285c4e1d89ddc1bd360edff71a0",
+      "raw_path": "data/goes_2024/raw/2024-06-26.csv",
+      "bytes": 61862,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-26T00:00:00Z&time.max=2024-06-27T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:22.855931Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-26T00:00:00Z",
+      "valid_to_utc": "2024-06-27T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:22 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 283,
+      "rejected_sample_count": 5,
+      "spacecraft_counts": {
+        "GOES-18": 283
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-27:c8aa25c57d6881baf505761f89be46ac9ff14184d77c4999e0d356ab386640f3",
+      "release_id": "2024-06-27",
+      "version": "sha256:c8aa25c57d6881baf505761f89be46ac9ff14184d77c4999e0d356ab386640f3",
+      "sha256": "c8aa25c57d6881baf505761f89be46ac9ff14184d77c4999e0d356ab386640f3",
+      "raw_path": "data/goes_2024/raw/2024-06-27.csv",
+      "bytes": 62218,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-27T00:00:00Z&time.max=2024-06-28T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:22.971682Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-27T00:00:00Z",
+      "valid_to_utc": "2024-06-28T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:22 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-28:e41968c864a0f2973719c4eaf6937b8d8a4f7032f5842637167cbcd593334138",
+      "release_id": "2024-06-28",
+      "version": "sha256:e41968c864a0f2973719c4eaf6937b8d8a4f7032f5842637167cbcd593334138",
+      "sha256": "e41968c864a0f2973719c4eaf6937b8d8a4f7032f5842637167cbcd593334138",
+      "raw_path": "data/goes_2024/raw/2024-06-28.csv",
+      "bytes": 62008,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-28T00:00:00Z&time.max=2024-06-29T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:23.848189Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-28T00:00:00Z",
+      "valid_to_utc": "2024-06-29T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:23 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-29:bb4e80be3bbc668fee9ee5dddbe50129b5c9e04f77f445a5d13531459f9d4541",
+      "release_id": "2024-06-29",
+      "version": "sha256:bb4e80be3bbc668fee9ee5dddbe50129b5c9e04f77f445a5d13531459f9d4541",
+      "sha256": "bb4e80be3bbc668fee9ee5dddbe50129b5c9e04f77f445a5d13531459f9d4541",
+      "raw_path": "data/goes_2024/raw/2024-06-29.csv",
+      "bytes": 62144,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-29T00:00:00Z&time.max=2024-06-30T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:23.844020Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-29T00:00:00Z",
+      "valid_to_utc": "2024-06-30T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:23 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-06-30:4f3eedc7836d8cc23debd886e52f04a6c7d065ee9b3fc12174495e0bdc21177b",
+      "release_id": "2024-06-30",
+      "version": "sha256:4f3eedc7836d8cc23debd886e52f04a6c7d065ee9b3fc12174495e0bdc21177b",
+      "sha256": "4f3eedc7836d8cc23debd886e52f04a6c7d065ee9b3fc12174495e0bdc21177b",
+      "raw_path": "data/goes_2024/raw/2024-06-30.csv",
+      "bytes": 62212,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-06-30T00:00:00Z&time.max=2024-07-01T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:24.691296Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-06-30T00:00:00Z",
+      "valid_to_utc": "2024-07-01T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:24 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-07-01:412b765edfe6891f8f8d12184c4dd69a4f8ea23e474a4c79772678c3ed9521ac",
+      "release_id": "2024-07-01",
+      "version": "sha256:412b765edfe6891f8f8d12184c4dd69a4f8ea23e474a4c79772678c3ed9521ac",
+      "sha256": "412b765edfe6891f8f8d12184c4dd69a4f8ea23e474a4c79772678c3ed9521ac",
+      "raw_path": "data/goes_2024/raw/2024-07-01.csv",
+      "bytes": 63425,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-07-01T00:00:00Z&time.max=2024-07-02T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:24.798176Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-07-01T00:00:00Z",
+      "valid_to_utc": "2024-07-02T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:24 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 285,
+      "rejected_sample_count": 2,
+      "spacecraft_counts": {
+        "GOES-18": 285
+      }
+    },
+    {
+      "source_id": "nasa_iswa_goes_primary_p5m",
+      "raw_record_id": "nasa_iswa_goes_primary_p5m:2024-07-02:59ea93cd216a0f5c18230d34dbb6e7562e3a28b50bd029d8e94564adbe10cd97",
+      "release_id": "2024-07-02",
+      "version": "sha256:59ea93cd216a0f5c18230d34dbb6e7562e3a28b50bd029d8e94564adbe10cd97",
+      "sha256": "59ea93cd216a0f5c18230d34dbb6e7562e3a28b50bd029d8e94564adbe10cd97",
+      "raw_path": "data/goes_2024/raw/2024-07-02.csv",
+      "bytes": 65486,
+      "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=goesp_part_flux_P5M&time.min=2024-07-02T00:00:00Z&time.max=2024-07-03T00:00:00Z&format=csv",
+      "fetched_utc": "2026-09-18T23:30:25.589447Z",
+      "created_utc": null,
+      "published_utc": null,
+      "available_utc": null,
+      "valid_from_utc": "2024-07-02T00:00:00Z",
+      "valid_to_utc": "2024-07-03T00:00:00Z",
+      "strict_replay_eligibility": "excluded_unknown_historical_publication_and_version_availability",
+      "availability_evidence": null,
+      "http_headers": {
+        "Date": "Fri, 18 Sep 2026 23:30:25 GMT",
+        "Last-Modified": null,
+        "ETag": null,
+        "Content-Type": "text/csv"
+      },
+      "channels": [
+        {
+          "channel_id": "goes_p_ge10MeV",
+          "unit": "pfu",
+          "parameter": "P10",
+          "energy_threshold_MeV": 10,
+          "kind": "observation"
+        }
+      ],
+      "quality": "unknown",
+      "provider_dataset": "goesp_part_flux_P5M",
+      "limitations": [
+        "Archive retrieval is not a historical delivery receipt.",
+        "No instrument quality flags are supplied by this HAPI dataset."
+      ],
+      "schema_record_id": "nasa_iswa_goes_primary_p5m_schema:hapi-info:1111bb7c83a1254615c686e49dbdc6eb959d2438f34c6d87f0f903e094dc373e",
+      "parser_version": "iswa-p5m-v1",
+      "averaging_interval_seconds": 300,
+      "timestamp_semantics": "start_of_averaging_period",
+      "timestamp_reference": "https://www.ngdc.noaa.gov/stp/space-weather/online-publications/stp_sii/spades/algorithm-theoretic-basis-documents/atbds_seiss/atbd_seiss18_integral-flux_v1-0.pdf (Table 7, page 37)",
+      "accepted_sample_count": 288,
+      "rejected_sample_count": 0,
+      "spacecraft_counts": {
+        "GOES-18": 288
+      }
+    }
+  ]
+}

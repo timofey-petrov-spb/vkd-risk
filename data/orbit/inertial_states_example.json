@@ -1,0 +1,289 @@
+{
+  "request": {
+    "start_utc": "2024-05-03T12:00:00Z",
+    "minutes": 1,
+    "saa_B_threshold_nT": 24000,
+    "step_seconds": 40,
+    "include_inertial_states": true
+  },
+  "meta": {
+    "source_id": "nasa_jsc_oem",
+    "method": "oem_interp",
+    "frame": "EME2000",
+    "epoch_utc": null,
+    "coverage_from_utc": "2024-05-03T12:00:00Z",
+    "coverage_to_utc": "2024-05-03T12:01:00Z",
+    "created_utc": "2024-05-02T13:10:49.055000Z",
+    "available_utc": null,
+    "fetched_utc": "2026-09-18T20:39:25Z",
+    "is_reconstruction": true,
+    "field_model": "IGRF-13"
+  },
+  "points": [
+    {
+      "t_utc": "2024-05-03T12:00:00Z",
+      "lat_deg": 47.622858575178235,
+      "lon_deg": -104.52661272633793,
+      "alt_km": 417.13154061178784,
+      "B_nT": 44934.461227641914,
+      "L": 3.232682147753897,
+      "B_over_B0": 48.57184617267924,
+      "cutoff_GV": 1.359960499273176,
+      "mag_method": "dipole",
+      "mag_status": "approximation",
+      "in_saa": false
+    },
+    {
+      "t_utc": "2024-05-03T12:00:40Z",
+      "lat_deg": 46.54332959751902,
+      "lon_deg": -101.24679124893663,
+      "alt_km": 416.8122242938618,
+      "B_nT": 44743.45740345825,
+      "L": 3.114547896059008,
+      "B_over_B0": 43.16630024319794,
+      "cutoff_GV": 1.4650831582291155,
+      "mag_method": "dipole",
+      "mag_status": "approximation",
+      "in_saa": false
+    },
+    {
+      "t_utc": "2024-05-03T12:01:00Z",
+      "lat_deg": 45.96563872135208,
+      "lon_deg": -99.65923520874522,
+      "alt_km": 416.63664086922773,
+      "B_nT": 44612.71815195371,
+      "L": 3.050365984214023,
+      "B_over_B0": 40.40418861791706,
+      "cutoff_GV": 1.5273845916499678,
+      "mag_method": "dipole",
+      "mag_status": "approximation",
+      "in_saa": false
+    }
+  ],
+  "provenance": {
+    "algorithm_version": "orbit-a3-v2",
+    "mode": "history_review",
+    "step_seconds": 40,
+    "cutoff_utc": null,
+    "records": {
+      "nasa_jsc_oem:2024-05-02:9337242c0562": {
+        "source_id": "nasa_jsc_oem",
+        "release_id": "2024-05-02",
+        "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+        "url": "https://nasa-public-data.s3.amazonaws.com/iss-coords/2024-05-02/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+        "raw_path": "data/source_registry_2024/nasa_oem/raw/2024-05-02_ISS.OEM_J2K_EPH.txt",
+        "sha256": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+        "bytes": 718831,
+        "fetched_utc": "2026-09-18T20:39:25Z",
+        "created_utc": "2024-05-02T13:10:49.055Z",
+        "published_utc": null,
+        "available_utc": null,
+        "version": "sha256:9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+        "valid_from_utc": "2024-05-01T12:00:00.000Z",
+        "valid_to_utc": "2024-05-16T12:00:00.000Z",
+        "coverage_end_inclusive": true,
+        "frame": "EME2000",
+        "time_system": "UTC",
+        "originator": "NASA/JSC/FOD/TOPO",
+        "channels": [
+          {
+            "channel_id": "position",
+            "components": [
+              "x",
+              "y",
+              "z"
+            ],
+            "unit": "km"
+          },
+          {
+            "channel_id": "velocity",
+            "components": [
+              "vx",
+              "vy",
+              "vz"
+            ],
+            "unit": "km/s"
+          }
+        ],
+        "http_last_modified": "Fri, 03 May 2024 03:05:37 GMT",
+        "etag": "\"6dcd5edf4cffc3b592c9922972adedd3\"",
+        "s3_metadata": {
+          "Key": "iss-coords/2024-05-02/ISS_OEM/ISS.OEM_J2K_EPH.txt",
+          "LastModified": "2024-05-03T03:05:37.000Z",
+          "ETag": "\"6dcd5edf4cffc3b592c9922972adedd3\"",
+          "Size": "718831",
+          "Owner": null,
+          "StorageClass": "STANDARD",
+          "listing_raw_path": "data/source_registry_2024/nasa_oem/listings/2024-05.xml"
+        },
+        "oem_headers": {
+          "CCSDS_OEM_VERS": "2.0",
+          "CREATION_DATE": "2024-05-02T13:10:49.055",
+          "ORIGINATOR": "NASA/JSC/FOD/TOPO"
+        },
+        "segments": [
+          {
+            "metadata": {
+              "OBJECT_NAME": "ISS",
+              "OBJECT_ID": "1998-067-A",
+              "CENTER_NAME": "Earth",
+              "REF_FRAME": "EME2000",
+              "TIME_SYSTEM": "UTC",
+              "START_TIME": "2024-05-01T12:00:00.000",
+              "USEABLE_START_TIME": "2024-05-01T12:00:00.000",
+              "USEABLE_STOP_TIME": "2024-05-16T12:00:00.000",
+              "STOP_TIME": "2024-05-16T12:00:00.000"
+            },
+            "valid_from_utc": "2024-05-01T12:00:00.000Z",
+            "valid_to_utc": "2024-05-16T12:00:00.000Z",
+            "coverage_end_inclusive": true,
+            "data_checks": {
+              "point_count": 5404,
+              "data_start_utc": "2024-05-01T12:00:00.000Z",
+              "data_end_utc": "2024-05-16T12:00:00.000Z",
+              "strictly_increasing_timestamps": true,
+              "all_values_finite": true,
+              "data_within_declared_start_stop": true,
+              "data_brackets_usable_interval": true,
+              "step_seconds_min": 11.0,
+              "step_seconds_max": 240.0
+            }
+          }
+        ],
+        "strict_replay_eligibility": "historical_reconstruction_only",
+        "evidence_note": "OEM CREATION_DATE documents file generation. S3 listing LastModified and HTTP Last-Modified are object modification metadata, not independently proved public release times. No claim that this exact version was accessible at a historical cutoff. Raw bytes and all segment headers are retained; positions/velocities follow CCSDS OEM km and km/s conventions. EME2000 inertial coordinates are not Earth-fixed latitude/longitude. Segment coverage does not prove interpolation accuracy or maneuver handling."
+      },
+      "igrf13:357536152bb6": {
+        "file": "IGRF13.shc",
+        "sha256": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522",
+        "bytes": 40160,
+        "source": "https://github.com/IAGA-VMOD/ppigrf",
+        "distribution": "ppigrf 2.1.0",
+        "model": "IGRF13",
+        "raw_path": "data/orbit/IGRF13.shc",
+        "source_id": "igrf13",
+        "raw_record_id": "igrf13:357536152bb6",
+        "release_id": "ppigrf 2.1.0"
+      }
+    },
+    "segments": [
+      {
+        "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+        "from_utc": "2024-05-03T12:00:00Z",
+        "to_utc": "2024-05-03T12:01:00Z",
+        "frame": "EME2000",
+        "interpolation": "piecewise cubic Hermite, position and velocity"
+      }
+    ],
+    "limitations": [
+      "OEM timestamps of creation/modification do not prove historical public availability.",
+      "IGRF is the internal main field; no storm-time external field is modelled.",
+      "L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.",
+      "Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.",
+      "SAA flag is the configured |B| threshold proxy, not an official region boundary."
+    ],
+    "output_frame": "ITRS / WGS84 geodetic latitude, longitude, altitude",
+    "earth_orientation": "Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy",
+    "field_model": {
+      "file": "IGRF13.shc",
+      "sha256": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522",
+      "bytes": 40160,
+      "source": "https://github.com/IAGA-VMOD/ppigrf",
+      "distribution": "ppigrf 2.1.0",
+      "model": "IGRF13",
+      "raw_path": "data/orbit/IGRF13.shc",
+      "source_id": "igrf13",
+      "raw_record_id": "igrf13:357536152bb6",
+      "release_id": "ppigrf 2.1.0"
+    },
+    "inertial_states": {
+      "schema_version": "orbit-inertial-states-1",
+      "frame": "EME2000",
+      "axes": "mean equator and equinox J2000",
+      "center": "EARTH",
+      "time_system": "UTC",
+      "position_unit": "km",
+      "velocity_unit": "km/s",
+      "method": "oem_interp",
+      "is_reconstruction": true,
+      "source_hashes": {
+        "nasa_jsc_oem:2024-05-02:9337242c0562": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce"
+      },
+      "coverage_from_utc": "2024-05-03T12:00:00Z",
+      "coverage_to_utc": "2024-05-03T12:01:00Z",
+      "endpoint_policy": "both endpoints included; last step may be shorter",
+      "software": {
+        "skyfield": "1.55",
+        "sgp4": "2.27",
+        "numpy": "2.5.1",
+        "scipy": "1.18.0"
+      },
+      "timescale_tables_sha256": "7a8b271b210691c4741d5af774375c702ac03f3cd9cba78cd817f10297a1cba5",
+      "segments": [
+        {
+          "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562",
+          "from_utc": "2024-05-03T12:00:00Z",
+          "to_utc": "2024-05-03T12:01:00Z",
+          "interpolation": "piecewise cubic Hermite, position and velocity",
+          "input_frame": "EME2000",
+          "output_frame": "EME2000",
+          "support_kind": "extent of assigned output samples"
+        }
+      ],
+      "samples": [
+        {
+          "t_utc": "2024-05-03T12:00:00Z",
+          "position_km": [
+            2097.60611850404,
+            -4086.18519387783,
+            4992.08612539409
+          ],
+          "velocity_km_s": [
+            7.28398676736159,
+            1.20318615322762,
+            -2.07234664249037
+          ],
+          "segment_index": 0,
+          "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562"
+        },
+        {
+          "t_utc": "2024-05-03T12:00:40Z",
+          "position_km": [
+            2386.717254288656,
+            -4033.8939500626857,
+            4904.099066077936
+          ],
+          "velocity_km_s": [
+            7.16922873050167,
+            1.410763499407205,
+            -2.3260520102329
+          ],
+          "segment_index": 0,
+          "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562"
+        },
+        {
+          "t_utc": "2024-05-03T12:01:00Z",
+          "position_km": [
+            2529.4812128870385,
+            -4004.653044106092,
+            4856.3285852962545
+          ],
+          "velocity_km_s": [
+            7.106581806494753,
+            1.5131739617216604,
+            -2.4507574896642796
+          ],
+          "segment_index": 0,
+          "raw_record_id": "nasa_jsc_oem:2024-05-02:9337242c0562"
+        }
+      ],
+      "limitations": [
+        "States preserve the orbit source eligibility; reconstruction is not a strict historical forecast.",
+        "Radiants and states must share axes and geocentric velocity convention before subtraction.",
+        "These state vectors do not resolve uncertainty of the seasonal flux catalogue."
+      ],
+      "transform": "OEM EME2000 position and analytic derivative of piecewise cubic Hermite interpolation",
+      "content_sha256": "bed08a2ec5368710c05e0a1b6c937628d5004f4f2bd23cfaf9e3932726af907d"
+    }
+  }
+}

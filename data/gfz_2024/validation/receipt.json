@@ -1,0 +1,7 @@
+{
+  "url": "https://kp.gfz.de/app/json/?start=2024-05-10T00:00:00Z&end=2024-05-12T23:59:59Z&index=Kp&status=def",
+  "fetched_utc": "2026-09-19T00:42:33.520513+00:00",
+  "sha256": "e245a9235c7b629cb838c8c092d30583efc77cd2ba51b855de3f7941e5a4c4af",
+  "bytes": 913,
+  "purpose": "independent format cross-check; same GFZ data lineage; review-only"
+}
