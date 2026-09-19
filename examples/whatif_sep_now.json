@@ -1,16 +1,16 @@
 {
  "schema_version": "2.2",
  "algorithm_version": "0.8.0",
- "computed_utc": "2026-09-19T09:22:00+00:00",
+ "computed_utc": "2026-09-19T09:30:00+00:00",
  "mode": "Текущая обстановка",
  "mode_id": "live",
  "request": {
-  "t0_utc": "2026-09-19T09:22:00+00:00",
+  "t0_utc": "2026-09-19T09:30:00+00:00",
   "duration_min": 360,
   "search_min": 720,
   "windows": [
-   "2026-09-19T09:22:00+00:00",
-   "2026-09-19T13:22:00+00:00"
+   "2026-09-19T09:30:00+00:00",
+   "2026-09-19T13:30:00+00:00"
   ],
   "window_offsets_min": [
    0,
@@ -108,7 +108,7 @@
    ],
    "auto_refresh_min": 5
   },
-  "settings_path": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\config\\settings.toml",
+  "settings_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\config\\settings.toml",
   "mmod": {
    "area_m2": 1.0,
    "m_min_g": 0.001,
@@ -137,12 +137,12 @@
     "sha256": "fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa",
     "bytes": 1889,
     "published_utc": "2026-09-19T00:30:00Z",
-    "available_utc": "2026-09-19T08:59:59.426695Z",
-    "fetched_utc": "2026-09-19T08:59:59.426695Z",
+    "available_utc": "2026-09-19T09:12:16.908160Z",
+    "fetched_utc": "2026-09-19T09:12:16.908160Z",
     "data_utc": "2026-09-19T00:30:00Z",
     "quality": "model",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\cache\\sources\\noaa_swpc_3day_forecast\\endpoints\\41ca806bf0d0bb6d39fcea89\\raw\\fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\data\\cache\\sources\\noaa_swpc_3day_forecast\\endpoints\\41ca806bf0d0bb6d39fcea89\\raw\\fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 2160.0,
@@ -153,9 +153,9 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "ETag": "\"761-65bd23667ba1b-gzip\"",
-     "Last-Modified": "Sat, 19 Sep 2026 08:57:54 GMT",
-     "Date": "Sat, 19 Sep 2026 08:59:59 GMT"
+     "ETag": "\"761-65bd260e53624-gzip\"",
+     "Last-Modified": "Sat, 19 Sep 2026 09:09:47 GMT",
+     "Date": "Sat, 19 Sep 2026 09:12:17 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -163,7 +163,7 @@
     ],
     "admissibility": {
      "max_age_min": 2160.0,
-     "data_age_min": 532.4832043499999,
+     "data_age_min": 540.6311149,
      "usable": true
     },
     "parser_audit": {},
@@ -173,20 +173,20 @@
    }
   },
   "noaa_swpc_goes": {
-   "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6": {
+   "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed": {
     "source_id": "noaa_swpc_goes",
-    "raw_record_id": "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6",
+    "raw_record_id": "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed",
     "url": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json",
-    "version": "5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6",
-    "sha256": "5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6",
-    "bytes": 725032,
+    "version": "14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed",
+    "sha256": "14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed",
+    "bytes": 725041,
     "published_utc": null,
-    "available_utc": "2026-09-19T09:18:15.616796Z",
-    "fetched_utc": "2026-09-19T09:18:15.616796Z",
-    "data_utc": "2026-09-19T09:05:00Z",
+    "available_utc": "2026-09-19T09:30:28.030185Z",
+    "fetched_utc": "2026-09-19T09:30:28.030185Z",
+    "data_utc": "2026-09-19T09:20:00Z",
     "quality": "preliminary",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\cache\\sources\\noaa_swpc_goes\\endpoints\\6b9c1f8684dc2539b3e21a00\\raw\\5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\data\\cache\\sources\\noaa_swpc_goes\\endpoints\\6b9c1f8684dc2539b3e21a00\\raw\\14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 60.0,
@@ -197,9 +197,9 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "ETag": "W/\"b1028-65bd26e5008ff\"",
-     "Last-Modified": "Sat, 19 Sep 2026 09:13:32 GMT",
-     "Date": "Sat, 19 Sep 2026 09:18:09 GMT"
+     "ETag": "W/\"b1031-65bd2a4445ae6\"",
+     "Last-Modified": "Sat, 19 Sep 2026 09:28:37 GMT",
+     "Date": "Sat, 19 Sep 2026 09:30:19 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -207,7 +207,7 @@
     ],
     "admissibility": {
      "max_age_min": 60.0,
-     "data_age_min": 17.482847616666668,
+     "data_age_min": 10.630575966666667,
      "usable": true
     },
     "parser_audit": {
@@ -215,9 +215,9 @@
      "sampling_note": "5-minute averaged flux; timestamp convention is not used to invent interval bounds"
     },
     "selected": {
-     "time_tag": "2026-09-19T09:05:00Z",
+     "time_tag": "2026-09-19T09:20:00Z",
      "satellite": 18,
-     "flux": 0.23322103917598724,
+     "flux": 0.23373687267303467,
      "energy": ">=10 MeV"
     }
    }
@@ -226,17 +226,17 @@
    "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04": {
     "source_id": "gfz_kp",
     "raw_record_id": "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04",
-    "url": "https://kp.gfz.de/app/json/?start=2026-09-17T09:20:19Z&end=2026-09-19T09:20:19Z&index=Kp",
+    "url": "https://kp.gfz.de/app/json/?start=2026-09-17T09:27:17Z&end=2026-09-19T09:27:17Z&index=Kp",
     "version": "ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04",
     "sha256": "ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04",
     "bytes": 606,
     "published_utc": null,
-    "available_utc": "2026-09-19T09:20:20.032339Z",
-    "fetched_utc": "2026-09-19T09:20:20.032339Z",
+    "available_utc": "2026-09-19T09:27:17.861307Z",
+    "fetched_utc": "2026-09-19T09:27:17.861307Z",
     "data_utc": "2026-09-19T09:00:00Z",
     "quality": "preliminary",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\cache\\sources\\gfz_kp\\endpoints\\238444c724520be43859c316\\raw\\ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\data\\cache\\sources\\gfz_kp\\endpoints\\238444c724520be43859c316\\raw\\ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 360.0,
@@ -247,7 +247,7 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "Date": "Sat, 19 Sep 2026 09:20:19 GMT"
+     "Date": "Sat, 19 Sep 2026 09:27:16 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -255,7 +255,7 @@
     ],
     "admissibility": {
      "max_age_min": 360.0,
-     "data_age_min": 22.48310766666667,
+     "data_age_min": 30.631017466666666,
      "usable": true
     },
     "parser_audit": {
@@ -274,12 +274,12 @@
    }
   },
   "celestrak_gp": {
-   "celestrak_gp:fa183a18662b6476069b0bb6cdc6aabad84b5960893f58012d186cce5f4d3c0a": {
+   "celestrak_gp:3f2738bbdcb5090219ce060ed45d26dc0710cb39776fc9d91e0e57384c4a3384": {
     "source_id": "celestrak_gp",
-    "raw_record_id": "celestrak_gp:fa183a18662b6476069b0bb6cdc6aabad84b5960893f58012d186cce5f4d3c0a",
+    "raw_record_id": "celestrak_gp:3f2738bbdcb5090219ce060ed45d26dc0710cb39776fc9d91e0e57384c4a3384",
     "url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
-    "version": "fa183a18662b6476069b0bb6cdc6aabad84b5960893f58012d186cce5f4d3c0a",
-    "sha256": "fa183a18662b6476069b0bb6cdc6aabad84b5960893f58012d186cce5f4d3c0a",
+    "version": "3f2738bbdcb5090219ce060ed45d26dc0710cb39776fc9d91e0e57384c4a3384",
+    "sha256": "3f2738bbdcb5090219ce060ed45d26dc0710cb39776fc9d91e0e57384c4a3384",
     "bytes": 270,
     "derived_tle": {
      "sha256": "aedc1743d259e7b7c4f933646548bb260cb573ec45afcb2c4e04fbba207e736a",
@@ -288,12 +288,12 @@
      "derivation": "validated ISS element set extracted from the exact HTTP entity"
     },
     "published_utc": null,
-    "available_utc": "2026-09-19T08:11:09.357400Z",
-    "fetched_utc": "2026-09-19T08:11:09.357400Z",
+    "available_utc": "2026-09-19T09:03:54.209160Z",
+    "fetched_utc": "2026-09-19T09:03:54.209160Z",
     "data_utc": "2026-09-17T21:14:04.657623Z",
     "quality": "model",
     "availability_proof": "Direct HTTP receipt of the exact stored entity bytes; not historical publication evidence",
-    "raw_path": "C:\\ScienceintheDepartmentofPhysicsandMechanics\\vkd-risk\\data\\cache\\sources\\celestrak_gp\\endpoints\\1a3bc9dbf53ec920eeed024a\\raw\\fa183a18662b6476069b0bb6cdc6aabad84b5960893f58012d186cce5f4d3c0a.bin",
+    "raw_path": "C:\\Users\\Sasha\\AppData\\Local\\Temp\\claude\\C--Program-Files\\1a4de475-355a-4aff-8359-e2b2eaf404c8\\scratchpad\\wt10\\data\\data\\cache\\sources\\celestrak_gp\\endpoints\\1a3bc9dbf53ec920eeed024a\\raw\\3f2738bbdcb5090219ce060ed45d26dc0710cb39776fc9d91e0e57384c4a3384.bin",
     "parser_version": "live-a4-v2",
     "effective_config": {
      "max_age_min": 4320.0,
@@ -304,7 +304,7 @@
      "max_response_bytes": 4194304
     },
     "http_headers": {
-     "Date": "Sat, 19 Sep 2026 08:11:09 GMT"
+     "Date": "Sat, 19 Sep 2026 09:03:54 GMT"
     },
     "limitations": [
      "Observation/epoch time is not publication time.",
@@ -312,7 +312,7 @@
     ],
     "admissibility": {
      "max_age_min": 4320.0,
-     "data_age_min": 2168.4055048,
+     "data_age_min": 2176.5534105833335,
      "usable": true
     },
     "parser_audit": {},
@@ -342,9 +342,9 @@
     "sha256": "aedc1743d259e7b7c4f933646548bb260cb573ec45afcb2c4e04fbba207e736a",
     "bytes": 152,
     "url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
-    "fetched_utc": "2026-09-19T08:11:09.357400Z",
-    "available_utc": "2026-09-19T08:11:09.357400Z",
-    "evidence": "проверенный кеш, давность данных 2168.4 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout",
+    "fetched_utc": "2026-09-19T09:03:54.209160Z",
+    "available_utc": "2026-09-19T09:03:54.209160Z",
+    "evidence": "проверенный кеш, давность данных 2176.6 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout",
     "raw_path": "data/orbit/iss.tle",
     "source_id": "celestrak_gp",
     "raw_record_id": "celestrak_gp:25544:aedc1743d259",
@@ -359,8 +359,8 @@
    "sim_sep#example": {
     "source_id": "scenario",
     "raw_record_id": "sim_sep#example",
-    "sha256": "49eb38b9eafc55ddcab387f9d80ccbbdd49521c6d066bde751dc3a131f631b44",
-    "version": "sha256:49eb38b9eafc55ddcab387f9d80ccbbdd49521c6d066bde751dc3a131f631b44",
+    "sha256": "df4a5597f8098d73e2719b376230d49833bbe519ea5a71c6e11ab6c0aa02716e",
+    "version": "sha256:df4a5597f8098d73e2719b376230d49833bbe519ea5a71c6e11ab6c0aa02716e",
     "bytes": 569,
     "is_simulated": true,
     "quality": "model",
@@ -386,15 +386,15 @@
    }
   },
   "ost1044_belts": {
-   "ost1044_A_А_2_1:3e5ad548b66b": {
+   "ost1044_A_А_2_1:59e573afafa8": {
     "source_id": "ost1044_belts",
     "raw_path": "data/ost1044_belts/A_2_1.csv",
-    "sha256": "3e5ad548b66b1c327dffe6907b21808f1bae89c2818e0e17317ff3a1f63085d6",
+    "sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
     "citation": "ОСТ 134-1044-2007, прил. А, табл. А.2.1",
     "quality": "model",
-    "raw_record_id": "ost1044_A_А_2_1:3e5ad548b66b",
-    "bytes": 22662,
-    "version": "sha256:3e5ad548b66b1c327dffe6907b21808f1bae89c2818e0e17317ff3a1f63085d6",
+    "raw_record_id": "ost1044_A_А_2_1:59e573afafa8",
+    "bytes": 22225,
+    "version": "sha256:59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
     "published_utc": null,
     "availability_proof": null
    }
@@ -429,50 +429,50 @@
   }
  },
  "numerical_integration": {
-  "2026-09-19T09:22:00+00:00": {
+  "2026-09-19T09:30:00+00:00": {
    "method": "piecewise_linear_actual_dt_v1",
    "max_gap_seconds": 60.0,
    "fluence": {
     "duration_seconds": 21600.0,
     "covered_seconds": 17040.0,
-    "known_integral": 2798132.8891633675,
+    "known_integral": 2798131.924804078,
     "below_threshold_seconds": null,
     "grid_compared_seconds": 16800.0,
-    "grid_absolute_delta": 1147276.1820987323,
-    "grid_relative_delta": 0.41001490191617174
+    "grid_absolute_delta": 1147275.8531055346,
+    "grid_relative_delta": 0.4100149256493207
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
-    "known_integral": 675050416.3482395,
-    "below_threshold_seconds": 4385.7645837803175,
+    "known_integral": 680943612.9501888,
+    "below_threshold_seconds": 4385.764583780321,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 542951.3579478762,
-    "grid_relative_delta": 0.0008043123073459196
+    "grid_absolute_delta": 550385.3482628195,
+    "grid_relative_delta": 0.000808268611079667
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
   },
-  "2026-09-19T13:22:00+00:00": {
+  "2026-09-19T13:30:00+00:00": {
    "method": "piecewise_linear_actual_dt_v1",
    "max_gap_seconds": 60.0,
    "fluence": {
     "duration_seconds": 21600.0,
     "covered_seconds": 18120.0,
-    "known_integral": 1671567.3490189314,
+    "known_integral": 1551648.8444366464,
     "below_threshold_seconds": null,
     "grid_compared_seconds": 17760.0,
-    "grid_absolute_delta": 771783.0803670754,
-    "grid_relative_delta": 0.4617122252477872
+    "grid_absolute_delta": 741609.5037525671,
+    "grid_relative_delta": 0.4779493159238755
    },
    "saa": {
     "duration_seconds": 21600.0,
     "covered_seconds": 21600.0,
-    "known_integral": 775740990.6260711,
-    "below_threshold_seconds": 3026.69708029961,
+    "known_integral": 782478237.4876215,
+    "below_threshold_seconds": 2662.7367978668703,
     "grid_compared_seconds": 21600.0,
-    "grid_absolute_delta": 638230.2790785846,
-    "grid_relative_delta": 0.0008227363086273076
+    "grid_absolute_delta": 638918.641905264,
+    "grid_relative_delta": 0.0008165321555225635
    },
    "fluence_unit": "particles/cm2",
    "limitations": "partial integral is not total; grid delta is not a physical error bound"
@@ -484,11 +484,11 @@
   "method": "sgp4",
   "frame": "TEME",
   "epoch_utc": "2026-09-17T21:14:04.657623+00:00",
-  "coverage_from_utc": "2026-09-19T09:22:00+00:00",
-  "coverage_to_utc": "2026-09-20T03:22:00+00:00",
+  "coverage_from_utc": "2026-09-19T09:30:00+00:00",
+  "coverage_to_utc": "2026-09-20T03:30:00+00:00",
   "created_utc": null,
-  "available_utc": "2026-09-19T08:11:09.357400+00:00",
-  "fetched_utc": "2026-09-19T08:11:09.357400+00:00",
+  "available_utc": "2026-09-19T09:03:54.209160+00:00",
+  "fetched_utc": "2026-09-19T09:03:54.209160+00:00",
   "is_reconstruction": false,
   "field_model": "IGRF-14",
   "orbit_module": "vkd.orbit (A3): SGP4/WGS72 по TLE в текущем режиме, NASA/JSC OEM 2024 в истории; IGRF-13 для 2024 и IGRF-14 сейчас; |B| — полный IGRF; L и B/B0 для таблиц ОСТ — эксцентричный диполь (Fraser-Smith 1987, vkd.assess.magcoords); вертикальная жёсткость обрезания — центральный наклонённый диполь (A3), метод подписан отдельно",
@@ -502,9 +502,9 @@
    "cutoff_utc": null,
    "step_seconds": 60,
    "requested_mode": "live",
-   "selection_cutoff_utc": "2026-09-19T09:22:00Z",
+   "selection_cutoff_utc": "2026-09-19T09:30:00Z",
    "selection_rule": null,
-   "staged_root": "data/cache/orbit_root/100c2f7c2da2b6c99e0e5737",
+   "staged_root": "data/cache/orbit_root/0e39a4b96e7ea81ab1a01ea5",
    "records": {
     "celestrak_gp:25544:aedc1743d259": {
      "source_id": "celestrak_gp",
@@ -512,8 +512,8 @@
      "sha256": "aedc1743d259e7b7c4f933646548bb260cb573ec45afcb2c4e04fbba207e736a",
      "bytes": 152,
      "url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
-     "available_utc": "2026-09-19T08:11:09.357400Z",
-     "fetched_utc": "2026-09-19T08:11:09.357400Z",
+     "available_utc": "2026-09-19T09:03:54.209160Z",
+     "fetched_utc": "2026-09-19T09:03:54.209160Z",
      "epoch_utc": "2026-09-17T21:14:04.657623Z"
     },
     "igrf14:717f6dce821a": {
@@ -532,7 +532,7 @@
     "L, B/B0 and vertical cutoff use a centred tilted dipole; not traced McIlwain L or directional storm-time rigidity.",
     "Full IGRF |B| is separate from dipole B/B0; they must not be mixed to infer an IGRF equatorial field.",
     "SAA flag is the configured |B| threshold proxy, not an official region boundary.",
-    "Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; 23 из 1081 точек с B/B0 < 1 помечены. Положение точки переводится WGS84 → ECEF (NIMA TR8350.2), сферическая формула не применяется. Вертикальная жёсткость обрезания cutoff_GV остаётся методом A3 (центральный наклонённый диполь) — это ДРУГАЯ модель, чем L и B/B0, и за одну систему координат они не выдаются."
+    "Для входа в таблицы ОСТ прил. А использованы L и B/B0 эксцентричного диполя (Б, magcoords), не значения A3: центральный диполь даёт L < 1,14 в ядре аномалии; 27 из 1081 точек с B/B0 < 1 помечены. Положение точки переводится WGS84 → ECEF (NIMA TR8350.2), сферическая формула не применяется. Вертикальная жёсткость обрезания cutoff_GV остаётся методом A3 (центральный наклонённый диполь) — это ДРУГАЯ модель, чем L и B/B0, и за одну систему координат они не выдаются."
    ],
    "earth_orientation": "Skyfield bundled UT1/leap seconds, no external polar-motion table; not centimetre-level geodesy",
    "max_tle_age_days": 3.0,
@@ -549,8 +549,8 @@
     "source_hashes": {
      "celestrak_gp:25544:aedc1743d259": "aedc1743d259e7b7c4f933646548bb260cb573ec45afcb2c4e04fbba207e736a"
     },
-    "coverage_from_utc": "2026-09-19T09:22:00Z",
-    "coverage_to_utc": "2026-09-20T03:22:00Z",
+    "coverage_from_utc": "2026-09-19T09:30:00Z",
+    "coverage_to_utc": "2026-09-20T03:30:00Z",
     "endpoint_policy": "both endpoints included; last step may be shorter",
     "software": {
      "skyfield": "1.55",
@@ -562,8 +562,8 @@
     "segments": [
      {
       "raw_record_id": "celestrak_gp:25544:aedc1743d259",
-      "from_utc": "2026-09-19T09:22:00Z",
-      "to_utc": "2026-09-20T03:22:00Z",
+      "from_utc": "2026-09-19T09:30:00Z",
+      "to_utc": "2026-09-20T03:30:00Z",
       "interpolation": "none; SGP4 at each requested time",
       "input_frame": "TEME",
       "output_frame": "EME2000",
@@ -571,126 +571,6 @@
      }
     ],
     "samples": [
-     {
-      "t_utc": "2026-09-19T09:22:00Z",
-      "position_km": [
-       4334.89182365602,
-       -2642.5168983313847,
-       4507.24617095495
-      ],
-      "velocity_km_s": [
-       5.735850699485604,
-       3.9626422685477505,
-       -3.188191244408959
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:23:00Z",
-      "position_km": [
-       4668.860670651197,
-       -2398.89304610837,
-       4305.758292087921
-      ],
-      "velocity_km_s": [
-       5.392187933949216,
-       4.155064924475817,
-       -3.525536656810352
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:24:00Z",
-      "position_km": [
-       4981.459441098174,
-       -2144.2891572891035,
-       4084.505876000745
-      ],
-      "velocity_km_s": [
-       5.023782610183593,
-       4.328501135171882,
-       -3.8467564174662323
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:25:00Z",
-      "position_km": [
-       5271.253434911236,
-       -1879.8689078855346,
-       3844.5013067636964
-      ],
-      "velocity_km_s": [
-       4.63231559332656,
-       4.482149154400284,
-       -4.150367892162074
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:26:00Z",
-      "position_km": [
-       5536.912096938323,
-       -1606.8413974640869,
-       3586.8435832827918
-      ],
-      "velocity_km_s": [
-       4.219576329805685,
-       4.615297339458892,
-       -4.434967811663947
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:27:00Z",
-      "position_km": [
-       5777.215299083898,
-       -1326.4556305131573,
-       3312.713349696577
-      ],
-      "velocity_km_s": [
-       3.7874549528637917,
-       4.727327836954261,
-       -4.6992391542088745
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:28:00Z",
-      "position_km": [
-       5991.059131003326,
-       -1039.9947885361578,
-       3023.3675222157685
-      ],
-      "velocity_km_s": [
-       3.337933798503722,
-       4.817719862329828,
-       -4.9419576979788
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
-     {
-      "t_utc": "2026-09-19T09:29:00Z",
-      "position_km": [
-       6177.461164648426,
-       -748.7703182804141,
-       2720.133533724391
-      ],
-      "velocity_km_s": [
-       2.8730783579930175,
-       4.886052538963028,
-       -5.1619981935367605
-      ],
-      "segment_index": 0,
-      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
-     },
      {
       "t_utc": "2026-09-19T09:30:00Z",
       "position_km": [
@@ -16785,6 +16665,126 @@
       ],
       "segment_index": 0,
       "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:23:00Z",
+      "position_km": [
+       -6735.918692726713,
+       -506.61670651266286,
+       -798.9726691729286
+      ],
+      "velocity_km_s": [
+       -0.33447791604160404,
+       -4.824486088257329,
+       5.9350523335425605
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:24:00Z",
+      "position_km": [
+       -6740.5995321350965,
+       -794.7087351546834,
+       -441.31292201039616
+      ],
+      "velocity_km_s": [
+       0.17852288082261467,
+       -4.7749490705243955,
+       5.982403724473848
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:25:00Z",
+      "position_km": [
+       -6714.509353628395,
+       -1079.1728991383977,
+       -81.63265390428036
+      ],
+      "velocity_km_s": [
+       0.6908318011082187,
+       -4.703599901994022,
+       6.002375448631243
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:26:00Z",
+      "position_km": [
+       -6657.760270439241,
+       -1358.709496960905,
+       278.4215894850496
+      ],
+      "velocity_km_s": [
+       1.2000962713752605,
+       -4.610756228351017,
+       5.99486304497532
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:27:00Z",
+      "position_km": [
+       -6570.605244593777,
+       -1632.0408950007393,
+       637.2008288468556
+      ],
+      "velocity_km_s": [
+       1.7039757759148901,
+       -4.496835806600776,
+       5.959889961563517
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:28:00Z",
+      "position_km": [
+       -6453.4370230236145,
+       -1897.9174808238267,
+       993.061331105543
+      ],
+      "velocity_km_s": [
+       2.2001532152554844,
+       -4.362354632053999,
+       5.897607634530112
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:29:00Z",
+      "position_km": [
+       -6306.7863950099445,
+       -2155.1234880831616,
+       1344.372273355933
+      ],
+      "velocity_km_s": [
+       2.686346158953473,
+       -4.207924529061859,
+       5.808294872077607
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
+     },
+     {
+      "t_utc": "2026-09-20T03:30:00Z",
+      "position_km": [
+       -6131.31977964099,
+       -2402.48266130677,
+       1689.5233492881573
+      ],
+      "velocity_km_s": [
+       3.160317913028935,
+       -4.034250222644004,
+       5.692356547917401
+      ],
+      "segment_index": 0,
+      "raw_record_id": "celestrak_gp:25544:aedc1743d259"
      }
     ],
     "limitations": [
@@ -16794,7 +16794,7 @@
      "Skyfield rotates the SGP4 velocity without the small TEME precession/nutation frame-rate term; no sub-mm/s claim."
     ],
     "transform": "SGP4 TEME -> Skyfield GCRS -> fixed IERS-2003 frame bias -> EME2000",
-    "content_sha256": "6679312379a716454473b5701e75f4055163d2dc8458b7aeda9dfc3d139d820b"
+    "content_sha256": "30eb0cb28ec76dd90d922add16b9e69b3f71e63cfd65c83491f1433c75f962a7"
    },
    "strict_attempt_error": null,
    "errors": null
@@ -16802,16 +16802,16 @@
   "belt_coordinates": {
    "method": "eccentric_dipole",
    "coefficients": "data/orbit/IGRF14.shc",
-   "epoch_utc": "2026-09-19T18:22:00+00:00",
+   "epoch_utc": "2026-09-19T18:30:00+00:00",
    "position_conversion": "WGS84 geodetic to ECEF",
    "offset_km": [
-    -395.8492077853718,
-    398.6871383689842,
-    236.04197686667635
+    -395.8492020101809,
+    398.6871982985939,
+    236.04199654748777
    ],
-   "B_eq_nT": 29705.58753428871,
+   "B_eq_nT": 29705.587288271752,
    "n": 1081,
-   "n_inconsistent_BB0": 23,
+   "n_inconsistent_BB0": 27,
    "n_outside_model": 0,
    "position_frame": "WGS84 geodetic (lat, lon, h) → ECEF, NIMA TR8350.2; a = 6378.137 км, 1/f = 298.257223563",
    "L_B0_method": "эксцентричный диполь (Fraser-Smith 1987) по квадрупольным членам IGRF; B — полный IGRF точки (A3)",
@@ -16827,12 +16827,12 @@
   "tle_text": "ISS (ZARYA)\n1 25544U 98067A   26260.88477613  .00006282  00000+0  12142-3 0  9990\n2 25544  51.6307 201.3132 0004813 151.3549 208.7705 15.49157682586129\n",
   "tle_url": "https://api.wheretheiss.at/v1/satellites/25544/tles",
   "tle_url_primary_failed": "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
-  "tle_fetch_status": "проверенный кеш, давность данных 2168.4 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout"
+  "tle_fetch_status": "проверенный кеш, давность данных 2176.6 мин; проверка адресов: https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE: timeout"
  },
  "windows": [
   {
    "index": 1,
-   "start_utc": "2026-09-19T09:22:00+00:00",
+   "start_utc": "2026-09-19T09:30:00+00:00",
    "duration_min": 360,
    "mechanisms": [
     {
@@ -16840,11 +16840,11 @@
      "mandatory": true,
      "coverage": "partial",
      "needs_check": [
-      "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:22Z — 09-20 11:22Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example"
+      "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:30Z — 09-20 11:30Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example"
      ],
      "coverage_notes": [
       "флюенс: модель ОСТ покрывает 78.9 % времени окна (76 мин из 360 без модели: 76 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-      "GOES: наблюдение 09:05Z покрывает 12 % окна (317 мин из 360 без данных), прогноза потока протонов на окно нет"
+      "GOES: наблюдение 09:20Z покрывает 14 % окна (310 мин из 360 без данных), прогноза потока протонов на окно нет"
      ],
      "coverage_fraction": 0.7888888888888889,
      "coverage_gaps": [
@@ -16857,13 +16857,13 @@
       {
        "kind": "SEP",
        "severity": "limiting",
-       "text": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:22Z — 09-20 11:22Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example",
+       "text": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:30Z — 09-20 11:30Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example",
        "event_ids": [
         "sim_sep#example"
        ],
        "interval_utc": [
-        "2026-09-19T11:22:00+00:00",
-        "2026-09-20T11:22:00+00:00"
+        "2026-09-19T11:30:00+00:00",
+        "2026-09-20T11:30:00+00:00"
        ],
        "level": "S2",
        "sources": [
@@ -16875,7 +16875,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 73.09607639633863,
+       "value": 73.09607639633869,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -16890,7 +16890,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 2798132.8891633675,
+       "value": 2798131.924804078,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -16898,7 +16898,7 @@
        "records": [
         "celestrak_gp:25544:aedc1743d259",
         "igrf14:717f6dce821a",
-        "ost1044_A_А_2_1:3e5ad548b66b"
+        "ost1044_A_А_2_1:59e573afafa8"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
        "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 78.9 % (17040.0 из 21600.0 с); без модели 76 мин из 360 мин окна: 76 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 205, L вне сетки 1,14…9 (сильное поле вне аномалии) — 70, в сетке таблицы — 86; точки аномалии со значением потока по таблице ОСТ: 74 из 74 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 41.00 % на 77.8 % времени окна; не граница физической погрешности",
@@ -16936,17 +16936,17 @@
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
-       "value": 0.23322103917598724,
+       "value": 0.23373687267303467,
        "unit": "pfu",
        "kind": "observation",
        "presence": "not_detected",
        "coverage": "partial",
        "records": [
-        "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6"
+        "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed"
        ],
        "rule": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-       "limits": "наблюдение 2026-09-19 09:05Z, фон (ниже S1), давность 17 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:05Z покрывает 12 % окна, это 43 мин из 360; допустимый вывод: на остальные 317 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
-       "horizon_utc": "2026-09-19T10:05:00+00:00"
+       "limits": "наблюдение 2026-09-19 09:20Z, фон (ниже S1), давность 10 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:20Z покрывает 14 % окна, это 50 мин из 360; допустимый вывод: на остальные 310 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
+       "horizon_utc": "2026-09-19T10:20:00+00:00"
       },
       {
        "name": "Kp, последнее наблюдение",
@@ -16959,7 +16959,7 @@
         "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04"
        ],
        "rule": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 22 мин (предел 180 мин)",
+       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 30 мин (предел 180 мин)",
        "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
@@ -17023,7 +17023,7 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.635403163058411e-07,
+       "value": 5.635526812134367e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17081,7 +17081,7 @@
   },
   {
    "index": 2,
-   "start_utc": "2026-09-19T13:22:00+00:00",
+   "start_utc": "2026-09-19T13:30:00+00:00",
    "duration_min": 360,
    "mechanisms": [
     {
@@ -17089,11 +17089,11 @@
      "mandatory": true,
      "coverage": "none",
      "needs_check": [
-      "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:22Z — 09-20 11:22Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example"
+      "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:30Z — 09-20 11:30Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example"
      ],
      "coverage_notes": [
       "флюенс: модель ОСТ покрывает 83.9 % времени окна (58 мин из 360 без модели: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-      "GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
+      "GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
       "наблюдение GOES не покрывает окно (до его начала 4 ч)"
      ],
      "coverage_fraction": 0.8388888888888889,
@@ -17107,13 +17107,13 @@
       {
        "kind": "SEP",
        "severity": "limiting",
-       "text": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:22Z — 09-20 11:22Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example",
+       "text": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); действие 09-19 11:30Z — 09-20 11:30Z (конец не объявлен — принято 24 ч, настройка sep_valid_hours); 1 запись DONKI — запись sim_sep#example",
        "event_ids": [
         "sim_sep#example"
        ],
        "interval_utc": [
-        "2026-09-19T11:22:00+00:00",
-        "2026-09-20T11:22:00+00:00"
+        "2026-09-19T11:30:00+00:00",
+        "2026-09-20T11:30:00+00:00"
        ],
        "level": "S2",
        "sources": [
@@ -17125,7 +17125,7 @@
      "factors": [
       {
        "name": "минут в аномалии",
-       "value": 50.44495133832684,
+       "value": 44.37894663111451,
        "unit": "мин",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17140,7 +17140,7 @@
       },
       {
        "name": "флюенс захваченных протонов ≥30 МэВ",
-       "value": 1671567.3490189314,
+       "value": 1551648.8444366464,
        "unit": "част./см²",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17148,10 +17148,10 @@
        "records": [
         "celestrak_gp:25544:aedc1743d259",
         "igrf14:717f6dce821a",
-        "ost1044_A_А_2_1:3e5ad548b66b"
+        "ost1044_A_А_2_1:59e573afafa8"
        ],
        "rule": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.9 % (18120.0 из 21600.0 с); без модели 58 мин из 360 мин окна: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 262, L вне сетки 1,14…9 (сильное поле вне аномалии) — 54, в сетке таблицы — 45; точки аномалии со значением потока по таблице ОСТ: 51 из 51 (диагностика узлов, не покрытие времени); у 14 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 46.17 % на 82.2 % времени окна; не граница физической погрешности",
+       "limits": "известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.9 % (18120.0 из 21600.0 с); без модели 58 мин из 360 мин окна: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 264, L вне сетки 1,14…9 (сильное поле вне аномалии) — 54, в сетке таблицы — 43; точки аномалии со значением потока по таблице ОСТ: 44 из 44 (диагностика узлов, не покрытие времени); у 9 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 47.79 % на 82.2 % времени окна; не граница физической погрешности",
        "horizon_utc": null
       },
       {
@@ -17186,17 +17186,17 @@
       },
       {
        "name": "поток протонов GOES ≥10 МэВ",
-       "value": 0.23322103917598724,
+       "value": 0.23373687267303467,
        "unit": "pfu",
        "kind": "observation",
        "presence": "unknown",
        "coverage": "none",
        "records": [
-        "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6"
+        "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed"
        ],
        "rule": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-       "limits": "наблюдение 2026-09-19 09:05Z, фон (ниже S1), давность 17 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:05Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
-       "horizon_utc": "2026-09-19T10:05:00+00:00"
+       "limits": "наблюдение 2026-09-19 09:20Z, фон (ниже S1), давность 10 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:20Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
+       "horizon_utc": "2026-09-19T10:20:00+00:00"
       },
       {
        "name": "Kp, последнее наблюдение",
@@ -17209,7 +17209,7 @@
         "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04"
        ],
        "rule": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 22 мин (предел 180 мин)",
+       "limits": "интервал 19.09 06:00Z — 09:00Z, давность 30 мин (предел 180 мин)",
        "horizon_utc": "2026-09-19T12:00:00+00:00"
       },
       {
@@ -17273,7 +17273,7 @@
      "factors": [
       {
        "name": "ожидаемое число попаданий, пластина 1 м²",
-       "value": 5.635048654445201e-07,
+       "value": 5.635272426544435e-07,
        "unit": "шт",
        "kind": "own_calculation",
        "presence": "detected",
@@ -17332,18 +17332,18 @@
  ],
  "recommendation": {
   "verdict": "insufficient",
-  "rule": "п.1: обязательная линия не покрыта совсем — окно 2: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)",
+  "rule": "п.1: обязательная линия не покрыта совсем — окно 2: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)",
   "reasons": [
-   "окно 2: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
+   "окно 2: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
    "окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)",
    "окно 1: космопогода на траектории: флюенс: модель ОСТ покрывает 78.9 % времени окна (76 мин из 360 без модели: 76 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-   "окно 1: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 12 % окна (317 мин из 360 без данных), прогноза потока протонов на окно нет",
+   "окно 1: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 14 % окна (310 мин из 360 без данных), прогноза потока протонов на окно нет",
    "статистика метеороидов: метеороиды: сезонный вклад не рассчитан; средний Grün не полный охват короткой ВКД",
    "окно 2: космопогода на траектории: флюенс: модель ОСТ покрывает 83.9 % времени окна (58 мин из 360 без модели: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии)); полный флюенс неизвестен, вне модели не ноль",
-   "окна 1, 2: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2)"
+   "окна 1, 2: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2)"
   ],
   "missing": [
-   "окно 2: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
+   "окно 2: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет",
    "окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)"
   ],
   "preferred": null,
@@ -17351,11 +17351,11 @@
   "per_mechanism": {},
   "tolerance_basis": "допуск равнозначности по минутам не вычисляется: на сетке порогов 22000/24000/26000 нТл разность минут между двумя лучшими окнами не определена (меньше двух окон без условий либо минуты не вычислены); допуск равнозначности по флюенсу не вычисляется: отношение флюенсов двух лучших окон по каналу 12.5/30/50 МэВ не определено (меньше двух окон без условий либо флюенс не вычислен); порядок окон при нулевом допуске не определён: ни в одной ячейке сетки правило не называет лучшее окно; предпочтительного окна нет ни в одной ячейке сетки — сравнивать нечего, и вердикт на сетке один и тот же",
   "scope": "обязательная линия не покрыта совсем у окна 2, поэтому факторы окон не сопоставляются; это отказ от вывода, а не оценка риска",
-  "scope_detail": "обязательная линия не покрыта совсем у окна 2, поэтому факторы окон не сопоставляются; это отказ от вывода, а не оценка риска: окно 2: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)",
+  "scope_detail": "обязательная линия не покрыта совсем у окна 2, поэтому факторы окон не сопоставляются; это отказ от вывода, а не оценка риска: окно 2: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)",
   "scope_facts": [
    [
     "вывод не сделан",
-    "обязательная линия не покрыта совсем у окна 2, поэтому факторы окон не сопоставляются; это отказ от вывода, а не оценка риска: окно 2: космопогода на траектории: GOES: наблюдение 09:05Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)"
+    "обязательная линия не покрыта совсем у окна 2, поэтому факторы окон не сопоставляются; это отказ от вывода, а не оценка риска: окно 2: космопогода на траектории: GOES: наблюдение 09:20Z покрывает 0 % окна (360 мин из 360 без данных), прогноза потока протонов на окно нет; окно 2: космопогода на траектории: наблюдение GOES не покрывает окно (до его начала 4 ч)"
    ]
   ]
  },
@@ -17364,9 +17364,9 @@
    "title": "Окно 1 · минут в аномалии",
    "kind": "own_calculation",
    "impact_ru": "Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше экспозиция при прочих равных. Это условие на траектории, не доза человека.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "73,1 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям |B| ниже порога 24000 нТл (настройка, варьируется в чувствительности)",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; дипольная L — исследовательское приближение; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17375,33 +17375,33 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · флюенс захваченных протонов ≥30 МэВ",
    "kind": "own_calculation",
    "impact_ru": "Интеграл всенаправленного потока захваченных протонов вдоль пути за окно — целевая величина сравнения окон по космопогоде (минуты в аномалии — её объяснение). В дозу не переводится без модели защиты и ткани.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "2,80·10^6 част./см²",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:3e5ad548b66b",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:59e573afafa8",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
    "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 78.9 % (17040.0 из 21600.0 с); без модели 76 мин из 360 мин окна: 76 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 205, L вне сетки 1,14…9 (сильное поле вне аномалии) — 70, в сетке таблицы — 86; точки аномалии со значением потока по таблице ОСТ: 74 из 74 (диагностика узлов, не покрытие времени); у 11 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 41.00 % на 77.8 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
     "igrf14:717f6dce821a",
-    "ost1044_A_А_2_1:3e5ad548b66b"
+    "ost1044_A_А_2_1:59e573afafa8"
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · минут доступности протонов ≥10 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "0 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.14 ГВ — жёсткости протона 10 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
    "limits_ru": "покрытие полное; наличие воздействия: не выявлено; жёсткость обрезания считает A3 по ЦЕНТРАЛЬНОМУ наклонённому диполю; L и B/B0 для таблиц ОСТ считает vkd.assess.magcoords по ЭКСЦЕНТРИЧНОМУ диполю (R11) — это две разные модели, не одна система координат, и складывать их точность нельзя; дипольное вертикальное обрезание A3 в спокойных условиях; при буре Kp ≥ 7 обрезание снижается — не моделируется; по дипольному обрезанию протоны 10 МэВ на трассе окна недоступны — условие GOES относится к штормовому ослаблению обрезания; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17410,15 +17410,15 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · минут доступности протонов ≥100 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "0 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.44 ГВ — жёсткости протона 100 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
    "limits_ru": "покрытие полное; наличие воздействия: не выявлено; жёсткость обрезания считает A3 по ЦЕНТРАЛЬНОМУ наклонённому диполю; L и B/B0 для таблиц ОСТ считает vkd.assess.magcoords по ЭКСЦЕНТРИЧНОМУ диполю (R11) — это две разные модели, не одна система координат, и складывать их точность нельзя; дипольное вертикальное обрезание A3 в спокойных условиях; при буре Kp ≥ 7 обрезание снижается — не моделируется; по дипольному обрезанию протоны 100 МэВ на трассе окна недоступны — условие GOES относится к штормовому ослаблению обрезания; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17427,47 +17427,47 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · поток протонов GOES ≥10 МэВ",
    "kind": "observation",
    "impact_ru": "Наблюдаемый поток на геостационарной орбите — индикатор солнечного протонного события. У станции на 51,6° большая часть таких протонов отсекается геомагнитным обрезанием; переносится не напрямую — см. фактор «минут доступности протонов ≥10 МэВ по обрезанию».",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "0,23 pfu",
-   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6, момент 2026-09-19 09:05Z, публикация время публикации неизвестно, получено 2026-09-19 09:18Z, предварительное",
+   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed, момент 2026-09-19 09:20Z, публикация время публикации неизвестно, получено 2026-09-19 09:30Z, предварительное",
    "rule_ru": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-   "limits_ru": "покрытие частичное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 10:05Z; наблюдение 2026-09-19 09:05Z, фон (ниже S1), давность 17 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:05Z покрывает 12 % окна, это 43 мин из 360; допустимый вывод: на остальные 317 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
+   "limits_ru": "покрытие частичное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 10:20Z; наблюдение 2026-09-19 09:20Z, фон (ниже S1), давность 10 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:20Z покрывает 14 % окна, это 50 мин из 360; допустимый вывод: на остальные 310 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается",
    "record_ids": [
-    "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6"
+    "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed"
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · Kp, последнее наблюдение",
    "kind": "observation",
    "impact_ru": "Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "Kp 1,33",
-   "source_ru": "Kp (GFZ), Kp (GFZ) ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 09:20Z, предварительное",
+   "source_ru": "Kp (GFZ), Kp (GFZ) ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 09:27Z, предварительное",
    "rule_ru": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 22 мин (предел 180 мин)",
+   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 30 мин (предел 180 мин)",
    "record_ids": [
     "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04"
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · прогноз Kp NOAA, максимум в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам; у выпуска указано время публикации. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "Kp 1,67",
-   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 08:59Z, модель",
+   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 09:12Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации 09-19 00:30Z",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; горизонт данных до 2026-09-22 00:00Z; прогноз, не наблюдение; покрытие окна ячейками 100 %",
    "record_ids": [
@@ -17475,15 +17475,15 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · вероятность S1 и выше за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "1 %",
-   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 08:59Z, модель",
+   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 09:12Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации 09-19 00:30Z",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; горизонт данных до 2026-09-22 00:00Z; суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %",
    "record_ids": [
@@ -17491,13 +17491,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · вероятность протонного события за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события по прогнозу NOAA daypre. Относится к суткам целиком; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: суточная вероятность источника, не вероятность за окно",
    "rule_ru": "NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации",
@@ -17505,15 +17505,15 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
-   "title": "Окно 1 · Сценарий: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно",
+   "title": "Окно 1 · Сценарий: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно",
    "kind": "own_calculation",
    "impact_ru": "Предупреждение: окно не выбирается автоматически и требует проверки аналитиком. Это правило команды, не эксплуатационная норма; шкалы NOAA сами по себе не запрещают и не разрешают ВКД.",
-   "period_ru": "событие/действие 19.09 11:22Z — 20.09 11:22Z; пересекает окно 11:22Z — 15:22Z (240 мин); окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
-   "data_ru": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); уровень: S2",
-   "source_ru": "сценарий «что если»: моделируемое событие 100 pfu; записи: sim_sep#example: значение задано пользователем в сценарии «что если», не наблюдение; моделируемое протонное событие 100 pfu с 11:22Z; значение задано пользователем в сценарии «что если», не наблюдение и не публикация источника",
+   "period_ru": "событие/действие 19.09 11:30Z — 20.09 11:30Z; пересекает окно 11:30Z — 15:30Z (240 мин); окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
+   "data_ru": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); уровень: S2",
+   "source_ru": "сценарий «что если»: моделируемое событие 100 pfu; записи: sim_sep#example: значение задано пользователем в сценарии «что если», не наблюдение; моделируемое протонное событие 100 pfu с 11:30Z; значение задано пользователем в сценарии «что если», не наблюдение и не публикация источника",
    "rule_ru": "CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки; Пороги S1/S3 и G3 — шкалы NOAA SWPC; отнесение к условиям проверки — правило команды, меняется в config/settings.toml.",
    "limits_ru": "Уверенность: конец действия не объявлен — принятая длительность действия задана настройкой sep_valid_hours. Сценарий «что если»: значение задано пользователем в сценарии, не наблюдение; в живой кеш не попадают; в выгрузке и повторе сохраняются как синтетические входы.",
    "record_ids": [
@@ -17521,15 +17521,15 @@
    ],
    "severity": "limiting",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · ожидаемое число попаданий, пластина 1 м²",
    "kind": "own_calculation",
    "impact_ru": "Статистика природных метеороидов на опорную площадь за окно. Не вероятность повреждения скафандра и не попадание в космонавта. Эта линия даёт АБСОЛЮТНУЮ оценку и охват механизма; выбор между окнами она не определяет — при равной длительности окна различаются по ней меньше порога различимости, и окно выбирается по космопогоде.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "5,64·10^-7 шт",
-   "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 416…438 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
    "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 (ECSS J.2.3.2); техногенные частицы и потоки даты не включены; линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна; 5,64·10^-7 за окно ≈ одно попадание частицы ≥1 мг на 1 м² за ~1215 лет непрерывной экспозиции; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17539,13 +17539,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · активных метеорных потоков на дату (календарь IMO)",
    "kind": "own_calculation",
    "impact_ru": "Признак активности главного метеорного потока на дату окна. Поток добавляет частицы к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "1 шт",
    "source_ru": "календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR",
    "rule_ru": "календарь главных метеорных потоков IMO (даты и пиковый ZHR округлены); признак активности, не поток; признак активности потока на дату — в число попаданий не входит (формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, вклад в N не рассчитан",
@@ -17555,13 +17555,13 @@
    ],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 1 · сближений с TCA в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; вероятность попадания фрагмента в космонавта отсюда не следует.",
-   "period_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: усечённая выдача не означает отсутствия других",
    "rule_ru": "CelesTrak SOCRATES, TCA внутри окна",
@@ -17569,15 +17569,15 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 1,
-   "window_ru": "окно 2026-09-19 09:22 — 15:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 09:30 — 15:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут в аномалии",
    "kind": "own_calculation",
    "impact_ru": "Пролёт Южно-Атлантической аномалии — участок с наибольшим потоком захваченных протонов на орбите МКС. Чем больше минут окна приходится на аномалию, тем выше экспозиция при прочих равных. Это условие на траектории, не доза человека.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
-   "data_ru": "50,44 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
+   "data_ru": "44,38 мин",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям |B| ниже порога 24000 нТл (настройка, варьируется в чувствительности)",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; дипольная L — исследовательское приближение; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17586,33 +17586,33 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · флюенс захваченных протонов ≥30 МэВ",
    "kind": "own_calculation",
    "impact_ru": "Интеграл всенаправленного потока захваченных протонов вдоль пути за окно — целевая величина сравнения окон по космопогоде (минуты в аномалии — её объяснение). В дозу не переводится без модели защиты и ткани.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
-   "data_ru": "1,67·10^6 част./см²",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:3e5ad548b66b",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
+   "data_ru": "1,55·10^6 част./см²",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a); ОСТ 134-1044-2007, прил. А (таблица AP-8 в дифференциальной форме), файл data/ost1044_belts, запись ost1044_A_А_2_1:59e573afafa8",
    "rule_ru": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; единицы потока: см⁻²·с⁻¹, всенаправленный (прил. А, вводный текст); интерполяция: по L и B/B0 — в логарифме потока между узлами таблицы (линейно только при нулевом узле); по энергии — степенной закон между узлами, хвост выше 300 МэВ отброшен; L и B/B0 — эксцентричный диполь (R11)",
-   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.9 % (18120.0 из 21600.0 с); без модели 58 мин из 360 мин окна: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 262, L вне сетки 1,14…9 (сильное поле вне аномалии) — 54, в сетке таблицы — 45; точки аномалии со значением потока по таблице ОСТ: 51 из 51 (диагностика узлов, не покрытие времени); у 14 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 46.17 % на 82.2 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
+   "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; известный вклад: интеграл трапециями по фактическим интервалам времени; оба конца интервала должны иметь модель; разрывы свыше 60 с не заполняются; покрытие по времени 83.9 % (18120.0 из 21600.0 с); без модели 58 мин из 360 мин окна: 58 мин — L вне сетки таблицы ОСТ 1,14…9 (сильное поле вне аномалии); статусы узлов: выше точки отражения — поток 0 — 264, L вне сетки 1,14…9 (сильное поле вне аномалии) — 54, в сетке таблицы — 43; точки аномалии со значением потока по таблице ОСТ: 44 из 44 (диагностика узлов, не покрытие времени); у 9 точек значение известно и равно нулю — выше точки отражения; полный флюенс окна неизвестен; показан только известный вклад; чувствительность к объединению соседних интервалов 47.79 % на 82.2 % времени окна; не граница физической погрешности; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
     "igrf14:717f6dce821a",
-    "ost1044_A_А_2_1:3e5ad548b66b"
+    "ost1044_A_А_2_1:59e573afafa8"
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут доступности протонов ≥10 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "0 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.14 ГВ — жёсткости протона 10 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
    "limits_ru": "покрытие полное; наличие воздействия: не выявлено; жёсткость обрезания считает A3 по ЦЕНТРАЛЬНОМУ наклонённому диполю; L и B/B0 для таблиц ОСТ считает vkd.assess.magcoords по ЭКСЦЕНТРИЧНОМУ диполю (R11) — это две разные модели, не одна система координат, и складывать их точность нельзя; дипольное вертикальное обрезание A3 в спокойных условиях; при буре Kp ≥ 7 обрезание снижается — не моделируется; по дипольному обрезанию протоны 10 МэВ на трассе окна недоступны — условие GOES относится к штормовому ослаблению обрезания; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17621,15 +17621,15 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · минут доступности протонов ≥100 МэВ по обрезанию",
    "kind": "own_calculation",
    "impact_ru": "Сколько минут окна трасса проходит там, где вертикальное геомагнитное обрезание ниже жёсткости протонов канала: только на этих участках наблюдаемый на GOES поток может достигать станции. Связывает измерение на геостационарной орбите с траекторией.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "0 мин",
-   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "время по линейным пересечениям порога вертикальной жёсткости обрезания (A3, центральный диполь) ниже 0.44 ГВ — жёсткости протона 100 МэВ; предположение о спектре: порог по жёсткости канала, без формы спектра",
    "limits_ru": "покрытие полное; наличие воздействия: не выявлено; жёсткость обрезания считает A3 по ЦЕНТРАЛЬНОМУ наклонённому диполю; L и B/B0 для таблиц ОСТ считает vkd.assess.magcoords по ЭКСЦЕНТРИЧНОМУ диполю (R11) — это две разные модели, не одна система координат, и складывать их точность нельзя; дипольное вертикальное обрезание A3 в спокойных условиях; при буре Kp ≥ 7 обрезание снижается — не моделируется; по дипольному обрезанию протоны 100 МэВ на трассе окна недоступны — условие GOES относится к штормовому ослаблению обрезания; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17638,47 +17638,47 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · поток протонов GOES ≥10 МэВ",
    "kind": "observation",
    "impact_ru": "Наблюдаемый поток на геостационарной орбите — индикатор солнечного протонного события. У станции на 51,6° большая часть таких протонов отсекается геомагнитным обрезанием; переносится не напрямую — см. фактор «минут доступности протонов ≥10 МэВ по обрезанию».",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "0,23 pfu",
-   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6, момент 2026-09-19 09:05Z, публикация время публикации неизвестно, получено 2026-09-19 09:18Z, предварительное",
+   "source_ru": "GOES ≥10 МэВ (NOAA SWPC), GOES ≥10 МэВ (NOAA SWPC) 14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed, момент 2026-09-19 09:20Z, публикация время публикации неизвестно, получено 2026-09-19 09:30Z, предварительное",
    "rule_ru": "NOAA SWPC, последнее наблюдение; уровень по шкале S NOAA (S1 = 10 pfu)",
-   "limits_ru": "покрытие отсутствует; наличие воздействия: неизвестно (данных нет); горизонт данных до 2026-09-19 10:05Z; наблюдение 2026-09-19 09:05Z, фон (ниже S1), давность 17 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:05Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
+   "limits_ru": "покрытие отсутствует; наличие воздействия: неизвестно (данных нет); горизонт данных до 2026-09-19 10:20Z; наблюдение 2026-09-19 09:20Z, фон (ниже S1), давность 10 мин; срок действия данных — 60 мин после измерения (настройка команды, не норма): горизонт наблюдения до 10:20Z покрывает 0 % окна, это 0 мин из 360; допустимый вывод: на остальные 360 мин окна наблюдение не распространяется — оно не говорит ни «событие есть», ни «события нет»; прогноза потока протонов на окно нет, суточная вероятность NOAA в вероятность за окно не пересчитывается; на само окно наблюдения нет — наличие протонного события в окне неизвестно, названный уровень относится к моменту наблюдения, а не к окну",
    "record_ids": [
-    "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6"
+    "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed"
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · Kp, последнее наблюдение",
    "kind": "observation",
    "impact_ru": "Последнее наблюдение планетарного индекса Kp. Kp ≥ 7 (G3) — триггер проверки условий модели, орбиты и связи; сам по себе не рост дозы и не запрет ВКД.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "Kp 1,33",
-   "source_ru": "Kp (GFZ), Kp (GFZ) ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 09:20Z, предварительное",
+   "source_ru": "Kp (GFZ), Kp (GFZ) ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04, момент 2026-09-19 09:00Z, публикация время публикации неизвестно, получено 2026-09-19 09:27Z, предварительное",
    "rule_ru": "порог проверки Kp ≥ 7 (G3 по шкале NOAA); правило команды, не норма",
-   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 22 мин (предел 180 мин)",
+   "limits_ru": "покрытие полное; наличие воздействия: не выявлено; горизонт данных до 2026-09-19 12:00Z; интервал 19.09 06:00Z — 09:00Z, давность 30 мин (предел 180 мин)",
    "record_ids": [
     "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04"
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · прогноз Kp NOAA, максимум в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз планетарного индекса Kp службой NOAA SWPC по 3-часовым интервалам; у выпуска указано время публикации. При Kp ≥ 7 (G3) геомагнитное обрезание снижается, и если одновременно идёт протонное событие, солнечные протоны достигают более низких широт орбиты станции; сама по себе буря — триггер проверки условий модели, орбиты и связи, не рост дозы. Это внешний прогноз, не наблюдение.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "Kp 1,67",
-   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 08:59Z, модель",
+   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 09:12Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, 3-часовые интервалы; выпуск с указанием времени публикации 09-19 00:30Z",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; горизонт данных до 2026-09-22 00:00Z; прогноз, не наблюдение; покрытие окна ячейками 100 %",
    "record_ids": [
@@ -17686,15 +17686,15 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · вероятность S1 и выше за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события S1 и выше по прогнозу NOAA. Относится к суткам целиком, а не к окну ВКД; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "1 %",
-   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 08:59Z, модель",
+   "source_ru": "трёхсуточный прогноз NOAA SWPC (живой бюллетень), трёхсуточный прогноз NOAA SWPC (живой бюллетень) fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa, момент 2026-09-21 00:00Z, публикация 2026-09-19 00:30Z, получено 2026-09-19 09:12Z, модель",
    "rule_ru": "NOAA SWPC 3-day forecast, суточная вероятность; выпуск с указанием времени публикации 09-19 00:30Z",
    "limits_ru": "покрытие полное; наличие воздействия: воздействие есть; горизонт данных до 2026-09-22 00:00Z; суточная вероятность источника, не вероятность за окно; покрытие окна ячейками 100 %",
    "record_ids": [
@@ -17702,13 +17702,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · вероятность протонного события за сутки, прогноз NOAA",
    "kind": "external_forecast",
    "impact_ru": "Суточная вероятность протонного события по прогнозу NOAA daypre. Относится к суткам целиком; в вероятность за окно не пересчитывается.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: суточная вероятность источника, не вероятность за окно",
    "rule_ru": "NOAA SWPC daypre, суточная вероятность; выпуск с указанием времени публикации",
@@ -17716,15 +17716,15 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
-   "title": "Окно 2 · Сценарий: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно",
+   "title": "Окно 2 · Сценарий: МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно",
    "kind": "own_calculation",
    "impact_ru": "Предупреждение: окно не выбирается автоматически и требует проверки аналитиком. Это правило команды, не эксплуатационная норма; шкалы NOAA сами по себе не запрещают и не разрешают ВКД.",
-   "period_ru": "событие/действие 19.09 11:22Z — 20.09 11:22Z; пересекает окно 13:22Z — 19:22Z (360 мин); окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
-   "data_ru": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:22Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); уровень: S2",
-   "source_ru": "сценарий «что если»: моделируемое событие 100 pfu; записи: sim_sep#example: значение задано пользователем в сценарии «что если», не наблюдение; моделируемое протонное событие 100 pfu с 11:22Z; значение задано пользователем в сценарии «что если», не наблюдение и не публикация источника",
+   "period_ru": "событие/действие 19.09 11:30Z — 20.09 11:30Z; пересекает окно 13:30Z — 19:30Z (360 мин); окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
+   "data_ru": "МОДЕЛИРУЕМОЕ протонное событие с 09-19 11:30Z пересекает окно: S2 (100 pfu, нижняя граница по тексту уведомления) — окно не выбирается автоматически (правило команды: S1–S2); уровень: S2",
+   "source_ru": "сценарий «что если»: моделируемое событие 100 pfu; записи: sim_sep#example: значение задано пользователем в сценарии «что если», не наблюдение; моделируемое протонное событие 100 pfu с 11:30Z; значение задано пользователем в сценарии «что если», не наблюдение и не публикация источника",
    "rule_ru": "CONTRACT.md v3.1 раздел 4, пункт 2: условия дополнительной проверки; Пороги S1/S3 и G3 — шкалы NOAA SWPC; отнесение к условиям проверки — правило команды, меняется в config/settings.toml.",
    "limits_ru": "Уверенность: конец действия не объявлен — принятая длительность действия задана настройкой sep_valid_hours. Сценарий «что если»: значение задано пользователем в сценарии, не наблюдение; в живой кеш не попадают; в выгрузке и повторе сохраняются как синтетические входы.",
    "record_ids": [
@@ -17732,15 +17732,15 @@
    ],
    "severity": "limiting",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · ожидаемое число попаданий, пластина 1 м²",
    "kind": "own_calculation",
    "impact_ru": "Статистика природных метеороидов на опорную площадь за окно. Не вероятность повреждения скафандра и не попадание в космонавта. Эта линия даёт АБСОЛЮТНУЮ оценку и охват механизма; выбор между окнами она не определяет — при равной длительности окна различаются по ней меньше порога различимости, и окно выбирается по космопогоде.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "5,64·10^-7 шт",
-   "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 08:11Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
+   "source_ru": "ECSS-E-ST-10-04C Rev.1 (15.06.2020), раздел 10 и прил. J (Table J-5, J-6); спецификация A5 grun-ecss-2020-v1 (docs/methods/METEOROIDS_GRUN_SPEC.md); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись celestrak_gp:25544:aedc1743d259); траектория: SGP4 по TLE (celestrak_gp), эпоха 2026-09-17 21:14Z, получен 2026-09-19 09:03Z; поле IGRF-14 (запись igrf14:717f6dce821a)",
    "rule_ru": "ECSS-E-ST-10-04C Rev.1: Grün (10-1) × Table J-6 по высоте трассы 416…438 км (средние G=2.00, s_f=0.63, K=1.09), интеграл по фактическим dt, концы окна включены; односторонняя случайно кувыркающаяся пластина 1 м²; метеорные потоки даты не включены (10.2.2.2c); техногенный мусор не включён",
    "limits_ru": "покрытие частичное; наличие воздействия: воздействие есть; природные метеороиды, случайно ориентированная пластина; неопределённость потока ×0,33…3 (ECSS J.2.3.2); техногенные частицы и потоки даты не включены; линия метеороидов различает окна только по высоте и длительности; при равной длительности на орбите МКС различие меньше 0,01 % — её роль здесь абсолютная оценка и охват, не выбор окна; 5,64·10^-7 за окно ≈ одно попадание частицы ≥1 мг на 1 м² за ~1215 лет непрерывной экспозиции; уверенность зависит от точности траектории и границ модели, не от статистики",
    "record_ids": [
@@ -17750,13 +17750,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · активных метеорных потоков на дату (календарь IMO)",
    "kind": "own_calculation",
    "impact_ru": "Признак активности главного метеорного потока на дату окна. Поток добавляет частицы к спорадическому фону, но его вклад в число попаданий не рассчитан (ECSS 10.2.2.2c).",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "1 шт",
    "source_ru": "календарь главных метеорных потоков IMO (Rendtel, ежегодные выпуски); справочные даты и ZHR",
    "rule_ru": "календарь главных метеорных потоков IMO (даты и пиковый ZHR округлены); признак активности, не поток; признак активности потока на дату — в число попаданий не входит (формула Grün, ECSS 10-1): ECSS 10.2.2.2c требует учёта потоков для миссий короче 3 недель, вклад в N не рассчитан",
@@ -17766,13 +17766,13 @@
    ],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   },
   {
    "title": "Окно 2 · сближений с TCA в окне",
    "kind": "external_forecast",
    "impact_ru": "Прогноз сближений станции с отслеживаемыми объектами. Относится к станции; вероятность попадания фрагмента в космонавта отсюда не следует.",
-   "period_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин",
+   "period_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин",
    "data_ru": "нет значения",
    "source_ru": "выпуска прогноза нет: усечённая выдача не означает отсутствия других",
    "rule_ru": "CelesTrak SOCRATES, TCA внутри окна",
@@ -17780,7 +17780,7 @@
    "record_ids": [],
    "severity": "info",
    "window_index": 2,
-   "window_ru": "окно 2026-09-19 13:22 — 19:22 UTC, 360 мин"
+   "window_ru": "окно 2026-09-19 13:30 — 19:30 UTC, 360 мин"
   }
  ],
  "sources": {
@@ -17792,9 +17792,9 @@
    "origin": "кеш/снимок TLE",
    "live_ok": false,
    "from_cache": true,
-   "fetched_utc": "2026-09-19T08:11:09.357400+00:00",
+   "fetched_utc": "2026-09-19T09:03:54.209160+00:00",
    "epoch_utc": "2026-09-17T21:14:04.657623+00:00",
-   "age_h": 36.1,
+   "age_h": 36.3,
    "source_id": "celestrak_gp",
    "record_ids": [
     "celestrak_gp:25544:aedc1743d259",
@@ -17805,42 +17805,42 @@
   },
   "noaa_swpc_goes": {
    "role": "протоны ≥10 МэВ",
-   "status": "проверенный кеш, давность данных 17.5 мин",
+   "status": "проверенный кеш, давность данных 10.6 мин",
    "live_ok": false,
    "from_cache": true,
    "state": "cache",
    "origin": "кеш или снимок репозитория",
-   "fetched_utc": "2026-09-19T09:18:15.616796+00:00",
-   "data_utc": "2026-09-19T09:05:00+00:00",
-   "age_min": 17,
+   "fetched_utc": "2026-09-19T09:30:28.030185+00:00",
+   "data_utc": "2026-09-19T09:20:00+00:00",
+   "age_min": 10,
    "record_ids": [
-    "noaa_swpc_goes:5197886341ea4b82e93749ec0eb590d321c37f3e2584cfea2b16bead7d86d2f6"
+    "noaa_swpc_goes:14e4e66a8cd5cc4d0e57c40c4e8262f67cb90563806e3e8888884c0fe1dcc0ed"
    ]
   },
   "gfz_kp": {
    "role": "Kp",
-   "status": "проверенный кеш, давность данных 22.5 мин",
+   "status": "проверенный кеш, давность данных 30.6 мин",
    "live_ok": false,
    "from_cache": true,
    "state": "cache",
    "origin": "кеш или снимок репозитория",
-   "fetched_utc": "2026-09-19T09:20:20.032339+00:00",
+   "fetched_utc": "2026-09-19T09:27:17.861307+00:00",
    "data_utc": "2026-09-19T09:00:00+00:00",
-   "age_min": 22,
+   "age_min": 30,
    "record_ids": [
     "gfz_kp:ebf9aac813c696001b6e587571a3a8725b39bdba9d18d66f2bd42cfd2ee58d04"
    ]
   },
   "noaa_swpc_3day_forecast": {
    "role": "прогноз Kp и вероятности NOAA (3 суток)",
-   "status": "проверенный кеш, давность данных 532.5 мин",
+   "status": "проверенный кеш, давность данных 540.6 мин",
    "live_ok": false,
    "from_cache": true,
    "state": "cache",
    "origin": "кеш или снимок репозитория",
-   "fetched_utc": "2026-09-19T08:59:59.426695+00:00",
+   "fetched_utc": "2026-09-19T09:12:16.908160+00:00",
    "data_utc": "2026-09-19T00:30:00+00:00",
-   "age_min": 532.4832043499999,
+   "age_min": 540.6311149,
    "cells": 27,
    "record_ids": [
     "noaa_swpc_3day_forecast:fa0f21a1e5d45fbd715c5959927dc83394cc75dda3f9050c7a2ab62a170d9cfa"
@@ -17848,13 +17848,13 @@
   },
   "ost1044_belts": {
    "role": "захваченные протоны",
-   "status": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; файл data/ost1044_belts/A_2_1.csv, sha256 3e5ad548b66b…; запись ost1044_A_А_2_1:3e5ad548b66b",
+   "status": "ОСТ 134-1044-2007, прил. А, табл. А.2.1; файл data/ost1044_belts/A_2_1.csv, sha256 59e573afafa8…; запись ost1044_A_А_2_1:59e573afafa8",
    "live_ok": null,
    "from_cache": null,
    "state": "builtin",
    "origin": "таблица стандарта в репозитории",
    "record_ids": [
-    "ost1044_A_А_2_1:3e5ad548b66b"
+    "ost1044_A_А_2_1:59e573afafa8"
    ]
   },
   "ecss_grun": {
@@ -17877,7 +17877,7 @@
    "live_ok": false,
    "from_cache": true,
    "origin": "живой бюллетень NOAA SWPC",
-   "fetched_utc": "2026-09-19T08:59:59.426695+00:00",
+   "fetched_utc": "2026-09-19T09:12:16.908160+00:00",
    "data_utc": "2026-09-19T00:30:00+00:00",
    "coverage_fraction": 1.0,
    "record_ids": [
@@ -17892,7 +17892,7 @@
    "live_ok": false,
    "from_cache": true,
    "origin": "живой бюллетень NOAA SWPC",
-   "fetched_utc": "2026-09-19T08:59:59.426695+00:00",
+   "fetched_utc": "2026-09-19T09:12:16.908160+00:00",
    "data_utc": "2026-09-19T00:30:00+00:00",
    "coverage_fraction": 1.0,
    "record_ids": [
@@ -17907,7 +17907,7 @@
    "live_ok": false,
    "from_cache": true,
    "origin": "живой бюллетень NOAA SWPC",
-   "fetched_utc": "2026-09-19T08:59:59.426695+00:00",
+   "fetched_utc": "2026-09-19T09:12:16.908160+00:00",
    "data_utc": null,
    "coverage_fraction": 0.0,
    "record_ids": [],
@@ -18095,8 +18095,8 @@
    "reason": "живой бюллетень NOAA 3-day не содержит этого канала: суточная вероятность протонного события публикуется отдельным выпуском NGDC daypre, которого в текущем режиме нет",
    "gaps": [
     [
-     "2026-09-19T09:22:00+00:00",
-     "2026-09-20T03:22:00+00:00"
+     "2026-09-19T09:30:00+00:00",
+     "2026-09-20T03:30:00+00:00"
     ]
    ],
    "last_release_before_cutoff": null,
@@ -18126,7 +18126,7 @@
     "id": "sim_sep#example",
     "kind": "SEP",
     "published_utc": null,
-    "start_utc": "2026-09-19T11:22:00+00:00",
+    "start_utc": "2026-09-19T11:30:00+00:00",
     "simulated": true
    }
   ],
@@ -18195,5 +18195,5 @@
    "26000 nT / 50 MeV": null
   }
  },
- "git_commit": "2e98799a0f470e075c138cb805e150d8a212d0c4"
+ "git_commit": "743830635cef763c1a85aec0ca54985a6144aa9f"
 }
