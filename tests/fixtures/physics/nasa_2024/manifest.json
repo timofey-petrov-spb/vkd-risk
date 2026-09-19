@@ -1,0 +1,23 @@
+{
+  "usage": "validation only; no application ingestion",
+  "forecast_issued_utc": "2023-11-02T00:00:00Z",
+  "publication_time_precision": "date; midnight is not proven issue time",
+  "files": {
+    "flux_data.txt": {
+      "sha256": "c7b1abc031c04f04255f9c7f40ec2f1612ce2f921e06c5d34be5b39149700a1f",
+      "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/flux_data.txt"
+    },
+    "method_2019.pdf": {
+      "sha256": "23314bb105e700ee826c80d0e57e2454607d313834839b0b7c3adcf6ff7f70d1",
+      "url": "https://ntrs.nasa.gov/api/citations/20190030373/downloads/20190030373.pdf"
+    },
+    "fluence_data.txt": {
+      "sha256": "6c270827e479107d1be1a7b554afb5d3e54866c78829a7eeefbdcc0382b93a78",
+      "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/fluence_data.txt"
+    },
+    "LEO_Forecast_2024.pdf": {
+      "sha256": "66d06b1760da3b73b3282e3251d8e1c2e5bd9ec9f960e5e702c8173693e8eb43",
+      "url": "https://ntrs.nasa.gov/api/citations/20230015158/downloads/LEO_Forecast_2024.pdf"
+    }
+  }
+}

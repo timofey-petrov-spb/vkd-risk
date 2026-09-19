@@ -45,7 +45,11 @@ def circle(start=None, minutes=90, phase=0):
         rows.append(
             {
                 "t_utc": t.isoformat(),
-                "position_km": [6778 * c, 6778 * s * math.cos(inc), 6778 * s * math.sin(inc)],
+                "position_km": [
+                    6778 * c,
+                    6778 * s * math.cos(inc),
+                    6778 * s * math.sin(inc),
+                ],
                 "velocity_km_s": [
                     -6778 * omega * s,
                     6778 * omega * c * math.cos(inc),
@@ -68,25 +72,42 @@ def circle(start=None, minutes=90, phase=0):
 
 
 def test_catalogue_matches_frozen_literal_source():
-    assert hashlib.sha256(CATALOGUE.read_bytes()).hexdigest() == CONTROLS["source_c2_sha256"]
+    assert (
+        hashlib.sha256(CATALOGUE.read_bytes()).hexdigest()
+        == CONTROLS["source_c2_sha256"]
+    )
     assert len(catalogue()) == 49
     for row, control in zip(catalogue(), CONTROLS["stream_controls"]):
         assert row["name"] == control["name"]
         peak = row["k_per_m2_s_kg_alpha"] * (0.001 / 1000) ** (-row["alpha"])
         assert peak == pytest.approx(control["raw_peak_per_m2_s"], rel=1e-12, abs=0)
-        for shift, key in [(-1, "q_at_minus_1_deg"), (0, "q_at_peak"), (1, "q_at_plus_1_deg")]:
+        for shift, key in [
+            (-1, "q_at_minus_1_deg"),
+            (0, "q_at_peak"),
+            (1, "q_at_plus_1_deg"),
+        ]:
             q = profiles(row["lambda_max_deg"] + shift, [row])[0]
             assert q == pytest.approx(control[key], rel=1e-12)
         assert profiles(row["lambda_max_deg"] + 360, [row])[0] == pytest.approx(1)
 
 
 def test_solar_coordinates_against_archived_de421():
-    controls = json.loads((ROOT / "data/meteoroids/seasonal_solar_controls.json").read_text())
+    controls = json.loads(
+        (ROOT / "data/meteoroids/seasonal_solar_controls.json").read_text()
+    )
     for row in controls["controls"]:
         t = datetime.fromisoformat(row["time_utc"].replace("Z", "+00:00")).timestamp()
-        assert abs(float(solar_longitude_deg(t)) - row["solar_apparent_ecliptic_J2000_deg"]) < 0.004
         assert (
-            abs(float(solar_longitude_deg(t, of_date=True)) - row["solar_apparent_ecliptic_of_date_deg"])
+            abs(
+                float(solar_longitude_deg(t)) - row["solar_apparent_ecliptic_J2000_deg"]
+            )
+            < 0.004
+        )
+        assert (
+            abs(
+                float(solar_longitude_deg(t, of_date=True))
+                - row["solar_apparent_ecliptic_of_date_deg"]
+            )
             < 0.006
         )
 
@@ -94,7 +115,9 @@ def test_solar_coordinates_against_archived_de421():
 def test_one_sided_projection_is_quarter_not_sphere_area():
     # Uniform normals: cos(theta) is uniform on [-1, 1]. One face only.
     cos_theta = np.linspace(-1, 1, 20001)
-    assert np.trapezoid(np.maximum(0, cos_theta), x=cos_theta) / 2 == pytest.approx(0.25)
+    assert np.trapezoid(np.maximum(0, cos_theta), x=cos_theta) / 2 == pytest.approx(
+        0.25
+    )
 
 
 def test_speed_and_shadow_against_separate_controls():
@@ -102,7 +125,9 @@ def test_speed_and_shadow_against_separate_controls():
         speed = float(local_speed(control["entry_speed_km_s"], 6378 + control["h_km"]))
         assert speed == pytest.approx(control["local_speed_km_s"], rel=1e-12)
         station = control["satellite_speed_km_s"]
-        assert (speed - station) / speed == pytest.approx(control["motion_factor_same_velocity_direction"])
+        assert (speed - station) / speed == pytest.approx(
+            control["motion_factor_same_velocity_direction"]
+        )
         assert (speed + station) / speed == pytest.approx(
             control["motion_factor_opposite_velocity_direction"]
         )
@@ -111,7 +136,12 @@ def test_speed_and_shadow_against_separate_controls():
     assert math.degrees(half_angle) == pytest.approx(72.88950838326849)
     angles = np.array([0, half_angle - 1e-8, half_angle + 1e-8, math.pi])
     rays = np.column_stack((-np.cos(angles), np.sin(angles), np.zeros(4)))
-    assert visible_rays(np.array([radius, 0, 0]), rays).tolist() == [False, False, True, True]
+    assert visible_rays(np.array([radius, 0, 0]), rays).tolist() == [
+        False,
+        False,
+        True,
+        True,
+    ]
     with pytest.raises(ValueError):
         local_speed(8, radius)
 
@@ -133,7 +163,9 @@ def test_annual_time_mean_conserves_reference_without_double_counting():
     sporadic = grun - removed
     assert sporadic + removed == pytest.approx(grun, rel=1e-14, abs=0)
     # Time weights matter: using equal solar-longitude bins is a different reference.
-    uniform = CONTROLS["conditional_reference_mean"]["stream_plate_infty_uniform_longitude_per_m2_s"]
+    uniform = CONTROLS["conditional_reference_mean"][
+        "stream_plate_infty_uniform_longitude_per_m2_s"
+    ]
     assert not math.isclose(removed, uniform, rel_tol=1e-4, abs_tol=0)
 
 
@@ -144,13 +176,19 @@ def summer_result():
 
 def test_sum_units_area_and_geometry(summer_result):
     result = summer_result
-    assert result.N == pytest.approx(result.N_sporadic_adjusted + result.N_streams, rel=1e-14, abs=0)
+    assert result.N == pytest.approx(
+        result.N_sporadic_adjusted + result.N_streams, rel=1e-14, abs=0
+    )
     assert result.N_streams == pytest.approx(
         sum(x["expected_hits"] for x in result.contributions), rel=1e-14, abs=0
     )
     assert result.N_sporadic_adjusted < result.N_mean_background
-    assert result.N_mean_background == pytest.approx(5.609728448e-7 / 4, rel=1e-9, abs=0)
-    assert result.method_status == "engineering_approximation" and result.streams_included
+    assert result.N_mean_background == pytest.approx(
+        5.609728448e-7 / 4, rel=1e-9, abs=0
+    )
+    assert (
+        result.method_status == "engineering_approximation" and result.streams_included
+    )
     assert len(result.contributions) == 49
     twice = seasonal_hits_track(*circle(), area_m2=2)
     assert twice.N == pytest.approx(2 * result.N, rel=1e-12, abs=0)
@@ -160,8 +198,41 @@ def test_sum_units_area_and_geometry(summer_result):
     assert not result.sensitivity["invalid_hypotheses"]
 
 
+def test_background_uncertainty_changes_balance_not_all_fluxes(summer_result):
+    r = summer_result
+    variants = r.sensitivity["hypotheses_N"]
+    assert variants["grun_low_0_33"] == pytest.approx(
+        r.N - 0.67 * r.N_mean_background, rel=1e-11
+    )
+    assert variants["grun_high_3"] == pytest.approx(
+        r.N + 2 * r.N_mean_background, rel=1e-11
+    )
+    assert variants["grun_low_plate"] == pytest.approx(
+        variants["catalogue_already_plate"] - 0.67 * r.N_mean_background, rel=1e-11
+    )
+    assert variants["grun_high_plate"] == pytest.approx(
+        variants["catalogue_already_plate"] + 2 * r.N_mean_background, rel=1e-11
+    )
+    assert r.sensitivity["streams_half_step_relative_change"] is not None
+
+    # Equal in the nominal case but distinguishable under a lower common background.
+    def row(streams):
+        return {
+            "sensitivity": {
+                "hypotheses_N": {
+                    "base": 0.9 + streams,
+                    "grun_low_0_33": 0.297 + streams,
+                },
+                "invalid_hypotheses": {},
+            }
+        }
+
+    assert not comparison_sensitivity([row(0.1), row(0.14)], 5)["stable"]
+
+
 @pytest.mark.parametrize(
-    "start", [datetime(2024, 6, 7, 12, tzinfo=UTC), datetime(2024, 12, 31, 23, 30, tzinfo=UTC)]
+    "start",
+    [datetime(2024, 6, 7, 12, tzinfo=UTC), datetime(2024, 12, 31, 23, 30, tzinfo=UTC)],
 )
 def test_integral_additive_even_across_new_year(start):
     times, alts, states = circle(start)
@@ -169,7 +240,9 @@ def test_integral_additive_even_across_new_year(start):
     a = seasonal_hits_track(times[:46], alts[:46], states)
     b = seasonal_hits_track(times[45:], alts[45:], states)
     for key in ("N", "N_streams", "N_sporadic_adjusted"):
-        assert getattr(full, key) == pytest.approx(getattr(a, key) + getattr(b, key), rel=1e-12, abs=0)
+        assert getattr(full, key) == pytest.approx(
+            getattr(a, key) + getattr(b, key), rel=1e-12, abs=0
+        )
 
 
 def test_actual_date_and_orbit_direction_change_stream_contribution(summer_result):
@@ -181,7 +254,19 @@ def test_actual_date_and_orbit_direction_change_stream_contribution(summer_resul
 
 
 @pytest.mark.parametrize(
-    "bad", ["frame", "units", "missing", "duplicate", "gap", "altitude", "nan", "naive", "mass", "step"]
+    "bad",
+    [
+        "frame",
+        "units",
+        "missing",
+        "duplicate",
+        "gap",
+        "altitude",
+        "nan",
+        "naive",
+        "mass",
+        "step",
+    ],
 )
 def test_missing_or_invalid_physics_never_becomes_zero(bad):
     ts, hs, state = circle(minutes=5)
@@ -213,7 +298,12 @@ def test_missing_or_invalid_physics_never_becomes_zero(bad):
 
 def test_paired_hypotheses_can_revoke_an_apparent_preference():
     def row(base, other):
-        return {"sensitivity": {"hypotheses_N": {"base": base, "other": other}, "invalid_hypotheses": {}}}
+        return {
+            "sensitivity": {
+                "hypotheses_N": {"base": base, "other": other},
+                "invalid_hypotheses": {},
+            }
+        }
 
     assert comparison_sensitivity([row(1, 2), row(2, 4)], 5)["stable"]
     assert not comparison_sensitivity([row(1, 3), row(2, 2)], 5)["stable"]
@@ -232,7 +322,9 @@ def test_prepared_horizon_matches_standalone_window_and_rejects_extrapolation():
         assert a.N == pytest.approx(b.N, rel=1e-12, abs=0)
         assert a.N_streams == pytest.approx(b.N_streams, rel=1e-12, abs=0)
         for key, value in a.sensitivity["hypotheses_N"].items():
-            assert value == pytest.approx(b.sensitivity["hypotheses_N"][key], rel=1e-12, abs=0)
+            assert value == pytest.approx(
+                b.sensitivity["hypotheses_N"][key], rel=1e-12, abs=0
+            )
     with pytest.raises(ValueError):
         prepared(times[0] - timedelta(seconds=1), times[2])
     with pytest.raises(ValueError):

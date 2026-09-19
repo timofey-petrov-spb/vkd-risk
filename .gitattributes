@@ -7,3 +7,4 @@
 
 # Hashed seasonal catalogue and controls must be identical on Windows and macOS.
 data/meteoroids/*.json text eol=lf
+tests/fixtures/physics/nasa_2024/* -text

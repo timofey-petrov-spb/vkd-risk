@@ -19,7 +19,7 @@ import numpy as np
 from scipy.optimize import brentq
 from .meteoroids import grun_flux_1au, factors_table_j6, SEC_PER_YEAR
 
-MODEL_ID = "ecss-seasonal-engineering-v1"
+MODEL_ID = "ecss-seasonal-engineering-v2"
 ROOT = Path(__file__).resolve().parents[2]
 CATALOGUE = ROOT / "data/meteoroids/ecss_c2_streams.json"
 CATALOGUE_SHA256 = "3b0a7a7cbee0c704c083d71603059eff58c5569846d00446fa31bd54f1d8bc6b"
@@ -31,10 +31,14 @@ ABSORBING_KM = EARTH_KM + 100.0
 LIMITS_RU = (
     "Сезонная инженерная оценка ECSS C-2: 49 климатологических потоков; "
     "всплески конкретного года не предсказываются. Нормировка k на перпендикулярную площадь "
-    "и эпоха радиантов J2000 — допущения, проверены альтернативные варианты. "
+    "и календарные максимумы для конкретного года не откалиброваны по наблюдениям; "
+    "эпоха радиантов J2000 — допущение, проверены альтернативные варианты. "
     "Средняя гравитационная поправка и прямолинейная тень не описывают локальную "
     "гравитационную фокусировку. Пластина не моделирует скафандр; техногенный мусор не учтён. "
     "Средний фон имеет неопределённость ×0,33…3 (ECSS J.2.3.2); "
+    "её влияние на сравнение проверено отдельно от нормировки потоков. "
+    "Дополнительно проверен перевод ZHR в поток по Moorhead 2019 при тех же параметрах каталога; "
+    "это альтернативная эмпирическая зависимость, не прогноз NASA и не калибровка. "
     "разброс гипотез — не доверительный интервал и не вероятность повреждения."
 )
 RULE_RU = (
@@ -48,7 +52,9 @@ RULE_RU = (
 def catalogue():
     raw = CATALOGUE.read_bytes()
     if hashlib.sha256(raw).hexdigest() != CATALOGUE_SHA256:
-        raise ValueError("ECSS C-2 catalogue changed: review source, model version and controls")
+        raise ValueError(
+            "ECSS C-2 catalogue changed: review source, model version and controls"
+        )
     data = json.loads(raw)
     rows = data["streams"]
     if len(rows) != 49:
@@ -83,7 +89,9 @@ def profiles(lam, rows=None, *, truncate=False, peak_only=False, bootids110=Fals
         terms = []
         for prefix, z in [("peak", zp), ("background", zb)]:
             slope = np.where(
-                d < 0, row["b_" + prefix + "_before_per_deg"], row["b_" + prefix + "_after_per_deg"]
+                d < 0,
+                row["b_" + prefix + "_before_per_deg"],
+                row["b_" + prefix + "_after_per_deg"],
             )
             q = 10.0 ** (-slope * np.abs(d))
             if truncate:
@@ -94,14 +102,23 @@ def profiles(lam, rows=None, *, truncate=False, peak_only=False, bootids110=Fals
 
 
 @lru_cache(maxsize=32)
-def annual_profiles(year, truncate=False, peak_only=False, bootids110=False, of_date=False, shift_deg=0.0):
+def annual_profiles(
+    year,
+    truncate=False,
+    peak_only=False,
+    bootids110=False,
+    of_date=False,
+    shift_deg=0.0,
+):
     """Time-weighted full solar cycle, independent of the requested EVA windows."""
     t0 = datetime(year, 1, 1, tzinfo=timezone.utc).timestamp()
     l0 = float(solar_longitude_deg(t0, of_date=of_date))
 
     def crossing(days):
         # Root lies at the *next* passage through the start longitude.
-        return (float(solar_longitude_deg(t0 + days * 86400, of_date=of_date)) - l0 + 180) % 360 - 180
+        return (
+            float(solar_longitude_deg(t0 + days * 86400, of_date=of_date)) - l0 + 180
+        ) % 360 - 180
 
     days = brentq(crossing, 364.0, 367.0, xtol=1e-10)
     means = []
@@ -180,15 +197,24 @@ def seasonal_hits_track(
     if (
         len(ts) < 2
         or len(alts_km) != len(ts)
-        or not all(t.tzinfo is not None and t.utcoffset() is not None for t in times_utc)
+        or not all(
+            t.tzinfo is not None and t.utcoffset() is not None for t in times_utc
+        )
     ):
-        raise ValueError("Seasonal model requires at least two UTC-aware trajectory points")
+        raise ValueError(
+            "Seasonal model requires at least two UTC-aware trajectory points"
+        )
     if any(not 2000 <= t.year <= 2050 for t in times_utc):
         raise ValueError("Solar approximation supported only for 2000–2050")
-    if not all(math.isfinite(x) and x > 0 for x in (area_m2, mass_g, max_step_s, integration_step_s)):
+    if not all(
+        math.isfinite(x) and x > 0
+        for x in (area_m2, mass_g, max_step_s, integration_step_s)
+    ):
         raise ValueError("Area, mass and integration steps must be finite and positive")
     if integration_step_s > 10 or max_step_s > 60:
-        raise ValueError("Seasonal geometry requires <=60 s source states and <=10 s integration")
+        raise ValueError(
+            "Seasonal geometry requires <=60 s source states and <=10 s integration"
+        )
     if np.any(np.diff(ts) <= 0) or np.any(np.diff(ts) > max_step_s + 1e-6):
         raise ValueError("Seasonal states are unordered or have gaps larger than 60 s")
     alt = np.asarray(alts_km, dtype=float)
@@ -201,10 +227,14 @@ def seasonal_hits_track(
         or states.get("position_unit") != "km"
         or states.get("velocity_unit") != "km/s"
     ):
-        raise ValueError("Seasonal model requires geocentric EME2000 positions km and velocities km/s")
+        raise ValueError(
+            "Seasonal model requires geocentric EME2000 positions km and velocities km/s"
+        )
     if states.get("content_sha256"):
         content = {k: v for k, v in states.items() if k != "content_sha256"}
-        encoded = json.dumps(content, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        encoded = json.dumps(
+            content, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
         if hashlib.sha256(encoded).hexdigest() != states["content_sha256"]:
             raise ValueError("Inertial state payload hash mismatch")
     raw = states.get("samples", [])
@@ -229,14 +259,33 @@ def seasonal_hits_track(
     ):
         raise ValueError("Invalid seasonal inertial vectors")
     radius = np.linalg.norm(pos, axis=1)
-    if np.any(np.abs(radius - (EARTH_KM + alt)) > 35) or np.any(np.linalg.norm(vel, axis=1) > 12):
+    if np.any(np.abs(radius - (EARTH_KM + alt)) > 35) or np.any(
+        np.linalg.norm(vel, axis=1) > 12
+    ):
         raise ValueError("Inertial states inconsistent with LEO geographic trajectory")
     from scipy.interpolate import CubicHermiteSpline
 
     spline = CubicHermiteSpline(ts - ts[0], pos, vel)
     rows = catalogue()
-    peaks = np.array([r["k_per_m2_s_kg_alpha"] * (mass_g / 1000.0) ** (-r["alpha"]) for r in rows])
+    peaks = np.array(
+        [r["k_per_m2_s_kg_alpha"] * (mass_g / 1000.0) ** (-r["alpha"]) for r in rows]
+    )
     entries = np.array([r["entry_speed_km_s"] for r in rows])
+    # Independent empirical normalization hypothesis, Moorhead et al. 2019,
+    # Eqs 2, 3, 6: https://ntrs.nasa.gov/citations/20190030373 .
+    # Keep ECSS catalogue/profile/annual subtraction; this is NOT NASA's full model.
+    alpha = np.array([r["alpha"] for r in rows])
+    population = 10 ** (alpha / 2.3)
+    zhr = np.array([r["zhr_peak"] + r["zhr_background"] for r in rows])
+    alternate_peaks = (
+        zhr
+        * (13.1 * population - 16.5)
+        * (population - 1.3) ** 0.748
+        / 37200
+        * population ** (9.775 * np.log10(29 / entries))
+        * (mass_g / 0.001) ** (-alpha)
+        / (1e6 * 3600)
+    )
     toa_to_infty = (entries**2 - 2 * MU / ABSORBING_KM) / entries**2
     grun = grun_flux_1au(mass_g) / SEC_PER_YEAR
 
@@ -251,12 +300,23 @@ def seasonal_hits_track(
         x, c_stream, c_visible, c_bg, c_mean, audit, removed = grid
         lo, hi = np.searchsorted(x, [left_s, right_s])
         if hi >= len(x) or abs(x[lo] - left_s) > 1e-6 or abs(x[hi] - right_s) > 1e-6:
-            raise ValueError("Seasonal window boundaries must coincide with supplied trajectory times")
+            raise ValueError(
+                "Seasonal window boundaries must coincide with supplied trajectory times"
+            )
         parts = (c_stream[:, hi] - c_stream[:, lo]).tolist()
         visible = (c_visible[:, hi] - c_visible[:, lo]).tolist()
         ns = float(sum(parts))
         nb = float(c_bg[hi] - c_bg[lo])
-        return nb + ns, nb, ns, parts, visible, audit, removed, float(c_mean[hi] - c_mean[lo])
+        return (
+            nb + ns,
+            nb,
+            ns,
+            parts,
+            visible,
+            audit,
+            removed,
+            float(c_mean[hi] - c_mean[lo]),
+        )
 
     def calculate(
         step,
@@ -268,15 +328,30 @@ def seasonal_hits_track(
         of_date=False,
         shift_deg=0.0,
         shadow=True,
+        grun_scale=1.0,
+        zhr_conversion=False,
     ):
-        key = (step, projection, truncate, peak_only, bootids110, of_date, shift_deg, shadow)
+        key = (
+            step,
+            projection,
+            truncate,
+            peak_only,
+            bootids110,
+            of_date,
+            shift_deg,
+            shadow,
+            grun_scale,
+            zhr_conversion,
+        )
         if key in grid_cache:
             return summarize_grid(grid_cache[key])
         x = np.unique(
             np.concatenate(
                 [
                     np.linspace(
-                        ts[i] - ts[0], ts[i + 1] - ts[0], int(math.ceil((ts[i + 1] - ts[i]) / step)) + 1
+                        ts[i] - ts[0],
+                        ts[i + 1] - ts[0],
+                        int(math.ceil((ts[i + 1] - ts[i]) / step)) + 1,
                     )
                     for i in range(len(ts) - 1)
                 ]
@@ -286,7 +361,9 @@ def seasonal_hits_track(
         v = spline(x, 1)
         h = np.interp(x, ts - ts[0], alt)
         rnorm = np.linalg.norm(p, axis=1)
-        if np.any(np.linalg.norm(v, axis=1) > 12) or np.any(np.abs(rnorm - (EARTH_KM + h)) > 35):
+        if np.any(np.linalg.norm(v, axis=1) > 12) or np.any(
+            np.abs(rnorm - (EARTH_KM + h)) > 35
+        ):
             raise ValueError(
                 "Interpolated states inconsistent with LEO: possible orbit segment discontinuity"
             )
@@ -296,12 +373,19 @@ def seasonal_hits_track(
         # Fixed climatological reference cycle: splitting an EVA at New Year must
         # not change the sporadic baseline. Solar coordinates are deterministic,
         # not observations from the future, including in historical forecast mode.
-        mean, audit = annual_profiles(2024, truncate, peak_only, bootids110, of_date, shift_deg)
-        removed = float(np.sum(peaks * mean * toa_to_infty * projection))
-        if removed >= grun:
-            raise ValueError("Annual stream subtraction exceeds Grun: inconsistent mass/normalization")
+        mean, audit = annual_profiles(
+            2024, truncate, peak_only, bootids110, of_date, shift_deg
+        )
+        selected_peaks = alternate_peaks if zhr_conversion else peaks
+        removed = float(np.sum(selected_peaks * mean * toa_to_infty * projection))
+        if removed >= grun * grun_scale:
+            raise ValueError(
+                "Annual stream subtraction exceeds Grun: inconsistent mass/normalization"
+            )
         j6 = np.array([math.prod(factors_table_j6(float(hh))) for hh in h])
-        bg = (grun - removed) * j6
+        # ECSS uncertainty applies to the mean Grun flux BEFORE subtraction.
+        # Scaling the final N would hide its effect on background/stream balance.
+        bg = (grun * grun_scale - removed) * j6
         parts = []
         visible_times = []
         rotation = None
@@ -320,15 +404,26 @@ def seasonal_hits_track(
             drift = d
             ra = np.deg2rad(row["ra_max_deg"] + row["delta_ra_deg_per_deg"] * drift)
             dec = np.deg2rad(row["dec_max_deg"] + row["delta_dec_deg_per_deg"] * drift)
-            u = np.column_stack((np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)))
+            u = np.column_stack(
+                (np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec))
+            )
             if rotation is not None:
                 u = np.einsum("ijn,nj->ni", rotation, u)
             speed = local_speed(entries[i], rnorm)
             moving = np.linalg.norm(-speed[:, None] * u - v, axis=1) / speed
             vis = visible_rays(p, u) if shadow else np.ones(len(x), dtype=bool)
-            flux = peaks[i] * q[i] * (speed / entries[i]) ** 2 * moving * projection * vis
+            flux = (
+                selected_peaks[i]
+                * q[i]
+                * (speed / entries[i]) ** 2
+                * moving
+                * projection
+                * vis
+            )
             parts.append(area_m2 * cumulative_trapezoid(flux, x=x, initial=0))
-            visible_times.append(cumulative_trapezoid(vis.astype(float), x=x, initial=0))
+            visible_times.append(
+                cumulative_trapezoid(vis.astype(float), x=x, initial=0)
+            )
         grid_cache[key] = (
             x,
             np.asarray(parts),
@@ -361,6 +456,13 @@ def seasonal_hits_track(
             "solar_plus_0_02deg": {"shift_deg": 0.02},
             "catalogue_of_date": {"of_date": True},
             "no_earth_shadow": {"shadow": False},
+            "grun_low_0_33": {"grun_scale": 0.33},
+            "grun_high_3": {"grun_scale": 3.0},
+            "grun_low_plate": {"grun_scale": 0.33, "projection": 1.0},
+            "grun_high_plate": {"grun_scale": 3.0, "projection": 1.0},
+            "zhr_transfer_2019": {"zhr_conversion": True},
+            "zhr_transfer_2019_low_bg": {"zhr_conversion": True, "grun_scale": 0.33},
+            "zhr_transfer_2019_high_bg": {"zhr_conversion": True, "grun_scale": 3.0},
         }
         invalid = {}
         for name, kw in variants.items():
@@ -370,7 +472,9 @@ def seasonal_hits_track(
                 invalid[name] = str(e)
         contributions = tuple(
             {"name": row["name"], "expected_hits": n, "unblocked_duration_s": vis}
-            for row, n, vis in sorted(zip(rows, base[3], base[4]), key=lambda x: x[1], reverse=True)
+            for row, n, vis in sorted(
+                zip(rows, base[3], base[4]), key=lambda x: x[1], reverse=True
+            )
         )
         return SeasonalResult(
             base[0],
@@ -389,6 +493,9 @@ def seasonal_hits_track(
                 "min_N": min(scenarios.values()),
                 "max_N": max(scenarios.values()),
                 "half_step_relative_change": abs(fine[0] - base[0]) / base[0],
+                "streams_half_step_relative_change": (
+                    abs(fine[2] - base[2]) / base[2] if base[2] else None
+                ),
                 "interpretation": "alternative hypotheses, not a confidence interval",
             },
             {
@@ -403,7 +510,11 @@ def seasonal_hits_track(
                 "result_unit": "expected count",
                 "source_records": [CATALOGUE_ID, METHOD_ID],
                 "solar_method": "USNO approximate apparent longitude minus general precession to J2000; 2000–2050",
-                "solar_control_max_error_deg": 0.004,
+                "solar_control_max_error_deg": 0.0081,
+                "solar_control_scope": "8791 hourly published NASA 2024 solar coordinates, rounded to 0.001 deg; measured agreement, not guaranteed accuracy",
+                "background_sensitivity": "ECSS J.2.3.2: 0.33 and 3 times mean Grun BEFORE annual subtraction; paired across windows, including projection alternatives",
+                "transfer_law_sensitivity": "Moorhead 2019 Eqs 2,3,6; same ECSS activity/mass index/profile, ECSS annual subtraction retained. Alternative transfer law only, not the NASA full forecast model.",
+                "transfer_law_source_url": "https://ntrs.nasa.gov/citations/20190030373",
                 "annual_cycle": base[5],
                 "annual_stream_plate_infty_per_m2_s": base[6],
                 "integration_step_s": integration_step_s,
@@ -454,7 +565,9 @@ def comparison_sensitivity(results, equal_pct):
             signs = []
             for i, v in enumerate(values):
                 for other in values[i + 1 :]:
-                    equal = abs(v - other) <= equal_pct / 100 * max(min(v, other), 1e-30)
+                    equal = abs(v - other) <= equal_pct / 100 * max(
+                        min(v, other), 1e-30
+                    )
                     signs.append(0 if equal else (-1 if v < other else 1))
             signatures[key] = tuple(signs)
     stable = complete and not invalid and len(set(signatures.values())) == 1

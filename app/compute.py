@@ -67,7 +67,7 @@ HIST_SRC = 'vkd.history'        # A2: уведомления DONKI, архивы
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 0.9.0 (перебор, общий канал R14) + направленная сезонная модель метеороидов.
-ALGO_VERSION = '0.10.0'
+ALGO_VERSION = '0.10.1'
 MODES = ('live', 'history_review', 'history_forecast')
 MODE_RU = {'live': 'Текущая обстановка', 'history_review': 'Исторический разбор', 'history_forecast': 'Прогноз из прошлого'}
 DONKI_ARCHIVE_DEFAULT = (datetime(2024, 5, 1, tzinfo=timezone.utc), datetime(2024, 7, 1, tzinfo=timezone.utc))
