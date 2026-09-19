@@ -172,6 +172,14 @@ div[data-testid="stDataFrame"], div[data-testid="stTable"] { font-variant-numeri
                background:var(--calc-bg); color:var(--ink); font-size:0.88rem; }
 .reco .scope b { color:var(--calc); font-weight:600; }
 .reco .policy { margin:8px 0 0 0; font-size:0.84rem; color:var(--muted); }
+/* «на один клик глубже» внутри блока рекомендации — тот же приём, что в блоке вердикта */
+.reco details.vmore { margin:6px 0 0 0; }
+.reco details.vmore > summary { cursor:pointer; color:var(--muted); font-size:0.84rem; list-style:none;
+                                user-select:none; }
+.reco details.vmore > summary::-webkit-details-marker { display:none; }
+.reco details.vmore > summary::before { content:"\25B8\00A0"; }
+.reco details.vmore[open] > summary::before { content:"\25BE\00A0"; }
+.reco details.vmore .vm { margin:6px 0 0 0; font-size:0.86rem; color:var(--muted); }
 /* Вид рамки и заголовка — по ВИДУ ОТВЕТА, а не по имени исхода: промежуток равнозначных начал
    такой же ответ, как и точка, и красить его как отказ нельзя. Отказ — только «нет оснований». */
 .r-none { border-left-color:var(--none); } .r-none h2 { color:var(--ink); }
@@ -2545,6 +2553,11 @@ SCAN_VERDICT_TITLE = {
 # «Ниже — лучше» стоит у обоих графиков ленты: это единственная подсказка о направлении, и без неё
 # член жюри читает падающую линию как ухудшение.
 LOWER_IS_BETTER_RU = 'ниже — лучше'
+# Сколько знаков «почему» движка блок рекомендации держит на поверхности на оперативном уровне.
+# Остальное — раскрытием в том же блоке: на буре Гэннон движок перечисляет условие каждого из
+# семидесяти трёх проверенных начал, и первым экраном это не читается.
+WHY_BUDGET = 320
+WHY_MORE_RU = 'Почему целиком: все проверенные начала и их условия'
 
 
 def scan_of(S: dict):
@@ -3075,7 +3088,26 @@ def recommendation_panel(scan: dict, S: dict, pro: bool = False, mode: str = 'li
         # Числа «почему» пишет движок — и при промежутке, и при споре величин он уже говорит
         # словами промежутка. Свой текст поверх не сочиняем, но переводим слова слоёв так же,
         # как переводятся все готовые строки экрана: на оперативном уровне жаргона быть не должно.
-        lines.append('<div class="why">%s</div>' % esc(sentence_ru(screen_text(status_ru(why, pro)))))
+        #
+        # Длина этого текста не ограничена движком: на буре Гэннон он перечисляет условие КАЖДОГО
+        # проверенного начала и выходит за две тысячи знаков — первый экран таким не читается.
+        # Поэтому на оперативном уровне на поверхности остаётся начало (там движок и ставит главное
+        # с числами), а полный текст стоит раскрытием в том же блоке — ровно тем же приёмом, каким
+        # сокращён блок вердикта. Ничего не выброшено: перечень условий доступен одним кликом.
+        why_txt = sentence_ru(screen_text(status_ru(why, pro)))
+        # На профессиональном уровне бюджет вдвое шире: аналитик читает подряд. Но и там текст не
+        # остаётся бесконечным — замечание владельца о загруженности главной страницы уровня не
+        # выделяет, а перечень условий всех начал одинаково нечитаем на обоих.
+        budget = WHY_BUDGET * 2 if pro else WHY_BUDGET
+        if len(why_txt) > budget:
+            cut = max(why_txt.rfind('; ', 0, budget), why_txt.rfind('. ', 0, budget))
+            cut = cut if cut > budget // 3 else budget
+            head_ru = close_cut_parens(why_txt[:cut].rstrip(' ;,.')) + '…'
+            lines.append('<div class="why">%s</div>' % esc(head_ru))
+            lines.append('<details class="vmore"><summary>%s</summary><div class="vm">%s</div></details>'
+                         % (esc(WHY_MORE_RU), esc(why_txt)))
+        else:
+            lines.append('<div class="why">%s</div>' % esc(why_txt))
     lines.append('<div class="searched">%s</div>' % esc(screen_text(scan_searched_ru(scan))))
     if kind == 'none':
         # Отказ — только здесь. Ни промежуток равнозначных начал, ни условия у всех начал
