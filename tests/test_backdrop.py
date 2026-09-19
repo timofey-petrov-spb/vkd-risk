@@ -51,24 +51,23 @@ def test_kontrast_kazhdoy_pary_ne_nizhe_poroga():
     failed = [(caption, ratio) for caption, _t, _bg, ratio in table if ratio < b.MIN_CONTRAST]
     assert not failed, failed
     worst = min(ratio for _c, _t, _bg, ratio in table)
-    # Наихудшая пара — «условие/отказ» #c17d68 на сердцевине самой яркой звезды: в новой
-    # палитре это самый ТЁМНЫЙ тон происхождения, и порог сторожит именно он. Число записано
+    # Наихудшая пара — «данных нет» #9aa5b5 на сердцевине самой яркой звезды. Число записано
     # в docstring модуля; если оно поехало, поехал и расчёт, на который ссылается отчёт.
-    assert round(worst, 2) == 4.69, worst
+    assert round(worst, 2) == 4.64, worst
 
 
 def test_yarkost_zvezdy_na_potolke_a_ne_vyshe():
     """Непрозрачность самой яркой звезды выбрана потолком расчёта, а не на глаз.
 
-    Проверяем обе стороны: при выбранном значении порог проходит, а при 0,14 — уже нет
-    (потолок равен 0,13, взято 0,12 с запасом). Так видно, что 0,12 не случайное число.
+    Проверяем обе стороны: при выбранном значении порог проходит, при следующем круглом
+    значении (0,20) — уже нет. Так видно, что 0,18 не случайное число.
     """
     alpha = b.MAGNITUDE_CLASSES[0][2]
-    assert alpha == 0.12, alpha
+    assert alpha == 0.18, alpha
     worst_now = min(b.contrast_ratio(tone, b.brightest_star_background())
                     for _n, tone in b.TEXT_TONES)
     assert worst_now >= b.MIN_CONTRAST, worst_now
-    louder = b.blend(b.INK, 0.14, b.BG)
+    louder = b.blend(b.INK, 0.20, b.BG)
     worst_louder = min(b.contrast_ratio(tone, louder) for _n, tone in b.TEXT_TONES)
     assert worst_louder < b.MIN_CONTRAST, worst_louder
 
@@ -80,8 +79,8 @@ def test_zapas_na_okruglenie_brauzera_uchtyon():
     правке, иначе расчёт контраста снова разойдётся с тем, что видно на экране.
     """
     computed = b.blend(b.INK, b.MAGNITUDE_CLASSES[0][2], b.BG)
-    assert computed == '#222426', computed
-    assert b.brightest_star_background() == '#232527', b.brightest_star_background()
+    assert computed == '#35383e', computed
+    assert b.brightest_star_background() == '#36393f', b.brightest_star_background()
 
 
 def test_palitra_sovpadaet_s_ui():
@@ -240,7 +239,7 @@ def test_adres_kartinki_ne_lomaet_css():
     """В адресе картинки закодированы знаки, которые иначе оборвали бы правило CSS.
 
     Решётка обязательна: в адресе она начинает часть после решётки, и незакодированный цвет
-    «#e4e7ea» обрезал бы картинку на первой же группе — небо просто не появилось бы.
+    «#e8ebf2» обрезал бы картинку на первой же группе — небо просто не появилось бы.
     """
     uri = b._data_uri(b.starfield_svg())
     assert uri.startswith('data:image/svg+xml,')
@@ -335,7 +334,7 @@ def test_ves_razmetki_v_predele():
     assert weight <= b.WEIGHT_LIMIT_BYTES, weight
     # Запас нужен: если разметка внезапно распухла втрое, это ошибка сборки, а не «ещё влезает».
     assert weight < b.WEIGHT_LIMIT_BYTES // 2, weight
-    # Основная часть веса — картинка неба (5 699 байт); на сами правила приходится 1 718.
+    # Основная часть веса — картинка неба (5 697 байт); на сами правила приходится 1 718.
     # Длинные пояснения держатся в исходнике на Python, а не в комментариях CSS: комментарий в
     # CSS уходит в браузер при каждой отрисовке. Предел 2,5 КБ сторожит, чтобы проза не
     # переехала обратно в разметку.
@@ -577,7 +576,7 @@ def test_chisla_v_opisanii_moduly_sovpadayut_s_raschyotom():
     doc = b.__doc__
     computed = {tone: round(b.contrast_ratio(tone, b.brightest_star_background()), 2)
                 for _n, tone in b.TEXT_TONES}
-    # Строки вида «основной текст  #e4e7ea — 12,39» из раздела про наихудший фон.
+    # Строки вида «основной текст  #e8ebf2 — 9,70» из раздела про наихудший фон.
     printed = dict(re.findall(r'(#[0-9a-f]{6}) — (\d+,\d\d)\n', doc))
     assert len(printed) == len(b.TEXT_TONES), printed
     for tone, text in printed.items():
