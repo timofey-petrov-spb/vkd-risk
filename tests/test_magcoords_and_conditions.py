@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Найдено 19.09 по сохранённым примерам: (1) координаты центрального диполя A3 дают
-нулевой флюенс на всей трассе; (2) одно протонное событие давало три условия.
+"""Найдено 19.09 по сохранённым примерам: (1) координаты центрального диполя A3
+не дают покрытого таблицей ненулевого потока; (2) одно событие давало три условия.
 Здесь закреплены исправления: эксцентричный диполь для таблиц ОСТ и сведение
 связанных записей в одно условие; плюс прогноз прихода выброса WSA-ENLIL как условие."""
 import os
@@ -36,7 +36,7 @@ def test_belt_coordinates_give_nonzero_flux_where_a3_dipole_gives_none():
     pts = _traj()
     belts = BeltTable('min')
     a3 = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s for p in pts]
-    assert not any(v for v in a3 if v)                          # центральный диполь: нуль/нет модели везде
+    assert all(v is None for v in a3)  # no table support, NOT measured physical zero
     ecc, info = belt_coordinates(pts, IGRF13)
     vals = [belts.integral_flux(p.L, p.B_over_B0, 30.0).value_per_cm2_s for p in ecc]
     nonzero = [v for v in vals if v]
@@ -44,7 +44,13 @@ def test_belt_coordinates_give_nonzero_flux_where_a3_dipole_gives_none():
     assert info['n_inconsistent_BB0'] < 0.3 * info['n']         # помечены, не обрезаны
     assert all(p.B_nT == q.B_nT and p.in_saa == q.in_saa for p, q in zip(pts, ecc))   # |B| и аномалия — от A3
     in_saa_flux = [v for p, v in zip(ecc, vals) if p.in_saa and v]
-    assert len(in_saa_flux) >= 0.5 * sum(1 for p in ecc if p.in_saa)   # поток есть именно в аномалии
+    # A magnetic-field threshold does not guarantee tabulated-spectrum coverage.
+    # The old >=50% assertion relied on replacing a missing neighbouring spectrum
+    # with zero and still reporting the weighted remaining spectrum as known.
+    # Here we require a real nonzero contribution AND explicit unmodelled samples,
+    # without treating an arbitrary fraction as a validation of magnetic coordinates.
+    assert 0 < len(in_saa_flux) < sum(1 for p in ecc if p.in_saa)
+    assert any(p.in_saa and v is None for p, v in zip(ecc, vals))
 
 
 def _ev(eid, kind, start, note='', pub=None, end=None):

@@ -244,7 +244,9 @@ def test_timeline_ekspozitsiya_schitaet_minuty_v_anomalii():
     в аномалии от начала окна. Окно без пролётов даёт ровный ноль, а не пустое место."""
     from app.viz import window_exposure
     t0 = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
-    traj = _traj(t0, n=360, saa=range(60, 120))            # 60 минут в аномалии, с 60-й по 119-ю
+    traj = _traj(t0, n=361, saa=range(60, 120))  # both window boundaries are sampled
+    for p in traj:
+        p.B_nT = 23000 if p.in_saa else 25000  # flags must agree with the tested field
     w_hit, w_miss = _win(t0, 0, 180), _win(t0, 180, 180)
     xs, ys, total = window_exposure(traj, w_hit)
     assert total == 60.0, total
@@ -461,6 +463,10 @@ def test_odinakovye_sdvigi_preduprezhdenie_bez_ostanovki():
     assert any('class="verdict' in m.value for m in at.markdown)
 
 
+def test_publication_evidence_survives_record_list_cleanup():
+    text = 'NASA DONKI, записи: публикация 05-09 13:54Z — 05-10 14:19Z'
+    assert 'публикация 09.05 13:54 — 10.05 14:19' in status_ru(text)
+    assert 'nasa_donki_notification' not in status_ru('NASA; записи: nasa_donki_notification:release:hash')
 # ================================================================= S1: мелкие правки экрана
 def test_verification_ru_bez_usloviy_ne_vryot():
     """S1: «условие поставлено в 12:00» печатается только там, где условия действительно были.
@@ -1024,9 +1030,17 @@ def test_gannon_kartochka_usloviya_vedyot_na_pervoistochnik():
     assert not any('записей без ссылки' in x for x in links), links
 
 
-def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik():
+def test_zhivoy_rezhim_imeet_ssylku_na_pervoistochnik(monkeypatch, request):
     """О4 в режиме «Сейчас»: хотя бы одна ссылка на первоисточник NOAA на экране есть."""
-    at = run_app(MODES[0])
+    import streamlit as st
+    from tests.test_integration import _fetched, TLE
+    from datetime import timezone
+    st.cache_data.clear()
+    request.addfinalizer(st.cache_data.clear)
+    pinned = _fetched(open(TLE, encoding='utf-8').read(), goes_at=datetime.now(timezone.utc))
+    pinned[0][1]['goes_test']['url'] = 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-1-day.json'
+    monkeypatch.setattr('app.fetch_guard.fetch_live_sources', lambda *a, **kw: (pinned, None))
+    at = run_app(MODES[0], pro=True)
     assert not at.exception, at.exception
     body = texts(at)
     assert 'https://' in body, 'в текущем режиме на экране не было ни одной ссылки'
@@ -1335,9 +1349,10 @@ def test_pod_verdiktom_skazano_otkuda_dopusk():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     line = _strip_tags(verdict_html(at))
-    assert 'Откуда допуск' in line, line
-    assert '24 000 нТл' in line.replace('\u202f', ' '), line            # рабочий порог сетки назван
-    assert 'размах по сетке' in line, line
+    # With incomplete mandatory coverage, the comparison tolerance cannot justify a choice.
+    assert 'Оснований для рекомендации недостаточно' in line
+    assert 'Откуда допуск' not in line
+    assert 'обязательной линии не хватает покрытия' in line
 
 
 def test_tolerance_origin_ru_schitaet_po_snimku():
@@ -1394,7 +1409,10 @@ def test_blok_verdikta_ne_splosnoy_abzac(mode):
     html_ = verdict_html(at)
     vis = verdict_visible(at)
     assert len(vis) <= 650, (len(vis), vis)
-    assert html_.count('<li') <= 5, html_
+    # The limit is for the surface. The evidence drawer now also uses a list;
+    # counting it would require hiding valid missing-coverage explanations.
+    visible_html = re.sub(r'<details class="vmore">.*?</details>', '', html_, flags=re.S)
+    assert visible_html.count('<li') <= 5, html_
     assert 'Охват:' not in vis and 'Не учтено:' not in vis, vis      # они во вкладке «Окна и факторы»
     assert len(re.findall(r'не покрывает окно', vis)) <= 1, vis
     # на поверхности нет ни происхождения допуска, ни разбора сетки порогов — они на клик глубже
@@ -1549,13 +1567,10 @@ def test_tihaya_data_pravilo_s_dopuskom_na_ekrane():
     at.sidebar.button('preset_quiet').click().run()
     assert not at.exception, at.exception
     rule = re.sub(r'\s+', ' ', _strip_tags(verdict_html(at)))
-    m = re.search(r'не хуже по флюенсу[^;]*', rule)
-    assert m, rule[:600]
-    claim = m.group(0)
-    assert 'в пределах допуска ×1,50' in claim, claim          # допуск — в той же фразе
-    assert '1,74·10⁶ против 1,65·10⁶ част./см²' in claim, claim  # оба числа, с единицей
-    assert 'отношение ×1,05' in claim, claim                   # и во сколько раз — тоже число, не слово
-    assert 'мин' in rule and 'флюенс' in rule, rule[:600]
+    assert 'Оснований для рекомендации недостаточно' in rule
+    assert 'известные вклады' in rule
+    assert 'не хуже по флюенсу' not in verdict_visible(at)
+    # Numerical tolerance formatting is tested separately on complete synthetic assessments.
 
 
 def test_tablica_posle_otsechki_nazyvaet_proishozhdenie_stroki():

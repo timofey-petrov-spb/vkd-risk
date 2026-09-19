@@ -1,0 +1,2084 @@
+{
+  "schema_version": "refinement-study-v1",
+  "git_commit": "56a9e44328c998840844b76b7fe1cd5aff3e5248",
+  "python": "3.14.3",
+  "platform": "Darwin",
+  "scope": "common-support numerical agreement of fixed-input models; NOT physical validation",
+  "cases": [
+    {
+      "case_id": "quiet",
+      "start_utc": "2024-05-03T12:00:00+00:00",
+      "cutoff_utc": "2024-05-03T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "elapsed_seconds": 1.9569538749929052,
+      "refinement": {
+        "schema_version": "orbit-refinement-v1",
+        "policy": {
+          "steps_seconds": [
+            60,
+            30,
+            15,
+            5
+          ],
+          "relative_tolerance": 0.02,
+          "absolute_fluence_tolerance_per_cm2": 1e-06,
+          "support_change_tolerance_seconds": 10.0,
+          "threshold_time_tolerance_seconds": 2.0,
+          "max_total_points": 40000,
+          "required_consecutive_passes": 2
+        },
+        "status": "resolution_limit_reached",
+        "selected_step_seconds": 5,
+        "evaluated_points": 15964,
+        "comparisons": [
+          {
+            "coarse_step_seconds": 60,
+            "fine_step_seconds": 30,
+            "windows": [
+              {
+                "start_utc": "2024-05-03T12:00:00+00:00",
+                "end_utc": "2024-05-03T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2340.0,
+                    "fine_covered_seconds": 2220.0,
+                    "common_seconds": 1740.0,
+                    "support_change_seconds": 1080.0,
+                    "coarse_common_integral": 527279.6312952556,
+                    "fine_common_integral": 534772.0427141394,
+                    "absolute_difference_integral": 34412.41000061376,
+                    "relative_difference": 0.06434968033474554,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2340.0,
+                    "fine_covered_seconds": 2220.0,
+                    "common_seconds": 1740.0,
+                    "support_change_seconds": 1080.0,
+                    "coarse_common_integral": 194966.98886441372,
+                    "fine_common_integral": 197867.06693112725,
+                    "absolute_difference_integral": 11944.809751477564,
+                    "relative_difference": 0.06036785169325456,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2340.0,
+                    "fine_covered_seconds": 2220.0,
+                    "common_seconds": 1740.0,
+                    "support_change_seconds": 1080.0,
+                    "coarse_common_integral": 89484.12846402927,
+                    "fine_common_integral": 90490.4431023574,
+                    "absolute_difference_integral": 5854.153145278538,
+                    "relative_difference": 0.06469360680062831,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 680402868.0395508,
+                  "fine_common_integral": 680400045.7560469,
+                  "absolute_difference_integral": 130352.04341080537,
+                  "relative_difference": 0.00019158147361080907,
+                  "threshold_duration_change_seconds": 2.441188562105708
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-03T20:00:00+00:00",
+                "end_utc": "2024-05-04T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 960.0,
+                    "common_seconds": 720.0,
+                    "support_change_seconds": 300.0,
+                    "coarse_common_integral": 274794.246532768,
+                    "fine_common_integral": 284098.89956980955,
+                    "absolute_difference_integral": 15542.484573557842,
+                    "relative_difference": 0.05470800695494669,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 960.0,
+                    "common_seconds": 720.0,
+                    "support_change_seconds": 300.0,
+                    "coarse_common_integral": 144074.48974580748,
+                    "fine_common_integral": 148578.9450685699,
+                    "absolute_difference_integral": 8074.103239310182,
+                    "relative_difference": 0.05434217638026669,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 960.0,
+                    "common_seconds": 720.0,
+                    "support_change_seconds": 300.0,
+                    "coarse_common_integral": 68144.68846643754,
+                    "fine_common_integral": 69712.17956461378,
+                    "absolute_difference_integral": 3789.054644408182,
+                    "relative_difference": 0.054352835732187084,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 732513019.8592533,
+                  "fine_common_integral": 732514908.6444949,
+                  "absolute_difference_integral": 156899.4220034546,
+                  "relative_difference": 0.0002141928036574628,
+                  "threshold_duration_change_seconds": 2.7373089052543946
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 30,
+            "fine_step_seconds": 15,
+            "windows": [
+              {
+                "start_utc": "2024-05-03T12:00:00+00:00",
+                "end_utc": "2024-05-03T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2220.0,
+                    "fine_covered_seconds": 2820.0,
+                    "common_seconds": 2190.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 780987.7176555146,
+                    "fine_common_integral": 778803.3208692049,
+                    "absolute_difference_integral": 18413.99063620681,
+                    "relative_difference": 0.023643954953421833,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2220.0,
+                    "fine_covered_seconds": 2820.0,
+                    "common_seconds": 2190.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 312395.42897432495,
+                    "fine_common_integral": 311271.39657052973,
+                    "absolute_difference_integral": 6856.056794647581,
+                    "relative_difference": 0.022025977555872517,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2220.0,
+                    "fine_covered_seconds": 2820.0,
+                    "common_seconds": 2190.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 146113.85491878606,
+                    "fine_common_integral": 145272.38919885215,
+                    "absolute_difference_integral": 4032.3131466002405,
+                    "relative_difference": 0.027756913539025773,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 680400045.7560469,
+                  "fine_common_integral": 680399330.2778565,
+                  "absolute_difference_integral": 32594.39339071141,
+                  "relative_difference": 4.790479934393932e-05,
+                  "threshold_duration_change_seconds": 0.18720247971941717
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-03T20:00:00+00:00",
+                "end_utc": "2024-05-04T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 960.0,
+                    "fine_covered_seconds": 1095.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 195.0,
+                    "coarse_common_integral": 431800.9994665095,
+                    "fine_common_integral": 430457.6255466776,
+                    "absolute_difference_integral": 4316.364080120629,
+                    "relative_difference": 0.010027384401981223,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 960.0,
+                    "fine_covered_seconds": 1095.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 195.0,
+                    "coarse_common_integral": 224417.42570636052,
+                    "fine_common_integral": 223649.19315688446,
+                    "absolute_difference_integral": 2235.690068598674,
+                    "relative_difference": 0.009996414639557371,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 960.0,
+                    "fine_covered_seconds": 1095.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 195.0,
+                    "coarse_common_integral": 103510.39398167588,
+                    "fine_common_integral": 103007.2590569118,
+                    "absolute_difference_integral": 1075.5490229733555,
+                    "relative_difference": 0.010441487646798869,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 732514908.6444949,
+                  "fine_common_integral": 732515369.3789747,
+                  "absolute_difference_integral": 39250.850458199115,
+                  "relative_difference": 5.358365448560611e-05,
+                  "threshold_duration_change_seconds": 0.579041719144243
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 15,
+            "fine_step_seconds": 5,
+            "windows": [
+              {
+                "start_utc": "2024-05-03T12:00:00+00:00",
+                "end_utc": "2024-05-03T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2820.0,
+                    "fine_covered_seconds": 3180.0,
+                    "common_seconds": 2805.0,
+                    "support_change_seconds": 390.0,
+                    "coarse_common_integral": 980354.8383739059,
+                    "fine_common_integral": 977720.3508891879,
+                    "absolute_difference_integral": 10869.49331049518,
+                    "relative_difference": 0.011117180184098569,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2820.0,
+                    "fine_covered_seconds": 3180.0,
+                    "common_seconds": 2805.0,
+                    "support_change_seconds": 390.0,
+                    "coarse_common_integral": 407388.9781343702,
+                    "fine_common_integral": 405936.04324516834,
+                    "absolute_difference_integral": 4847.285344669145,
+                    "relative_difference": 0.01194100751911204,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2820.0,
+                    "fine_covered_seconds": 3180.0,
+                    "common_seconds": 2805.0,
+                    "support_change_seconds": 390.0,
+                    "coarse_common_integral": 196935.49339753532,
+                    "fine_common_integral": 195963.40629928387,
+                    "absolute_difference_integral": 3141.353361995054,
+                    "relative_difference": 0.016030305970480233,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 680399330.2778565,
+                  "fine_common_integral": 680399117.5240185,
+                  "absolute_difference_integral": 9660.036318996239,
+                  "relative_difference": 1.4197602657318606e-05,
+                  "threshold_duration_change_seconds": 0.21899971526272566
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-03T20:00:00+00:00",
+                "end_utc": "2024-05-04T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1095.0,
+                    "fine_covered_seconds": 1225.0,
+                    "common_seconds": 1085.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 542885.8960554556,
+                    "fine_common_integral": 541763.4263965068,
+                    "absolute_difference_integral": 4482.874789426933,
+                    "relative_difference": 0.008274598415113386,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1095.0,
+                    "fine_covered_seconds": 1225.0,
+                    "common_seconds": 1085.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 281404.7327000713,
+                    "fine_common_integral": 280698.80872696236,
+                    "absolute_difference_integral": 2359.4482295113576,
+                    "relative_difference": 0.00840562252548214,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1095.0,
+                    "fine_covered_seconds": 1225.0,
+                    "common_seconds": 1085.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 128938.27966278106,
+                    "fine_common_integral": 128462.92218365868,
+                    "absolute_difference_integral": 1196.0705451099695,
+                    "relative_difference": 0.009310628504931499,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 732515369.3789747,
+                  "fine_common_integral": 732515505.0132728,
+                  "absolute_difference_integral": 11630.198642421043,
+                  "relative_difference": 1.587706821606501e-05,
+                  "threshold_duration_change_seconds": 0.21963616877974346
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          }
+        ],
+        "scope": "numerical agreement on common known support; NOT physical accuracy or full coverage",
+        "source_hashes": {
+          "nasa_jsc_oem:2024-05-02:9337242c0562": "9337242c056285c6c496ab7035777804508df301ac1498f16fe6d8c07c8786ce",
+          "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+        },
+        "magnetic_epoch_utc": "2024-05-03T19:00:00+00:00",
+        "belt_table_sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
+        "energy_channels_MeV": [
+          12.5,
+          30.0,
+          50.0
+        ]
+      }
+    },
+    {
+      "case_id": "gannon",
+      "start_utc": "2024-05-10T12:00:00+00:00",
+      "cutoff_utc": "2024-05-10T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "elapsed_seconds": 1.504174999994575,
+      "refinement": {
+        "schema_version": "orbit-refinement-v1",
+        "policy": {
+          "steps_seconds": [
+            60,
+            30,
+            15,
+            5
+          ],
+          "relative_tolerance": 0.02,
+          "absolute_fluence_tolerance_per_cm2": 1e-06,
+          "support_change_tolerance_seconds": 10.0,
+          "threshold_time_tolerance_seconds": 2.0,
+          "max_total_points": 40000,
+          "required_consecutive_passes": 2
+        },
+        "status": "resolution_limit_reached",
+        "selected_step_seconds": 5,
+        "evaluated_points": 15964,
+        "comparisons": [
+          {
+            "coarse_step_seconds": 60,
+            "fine_step_seconds": 30,
+            "windows": [
+              {
+                "start_utc": "2024-05-10T12:00:00+00:00",
+                "end_utc": "2024-05-10T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1380.0,
+                    "fine_covered_seconds": 1290.0,
+                    "common_seconds": 1020.0,
+                    "support_change_seconds": 630.0,
+                    "coarse_common_integral": 335251.0444041709,
+                    "fine_common_integral": 331777.2378190563,
+                    "absolute_difference_integral": 11684.337970629163,
+                    "relative_difference": 0.03521741891468014,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1380.0,
+                    "fine_covered_seconds": 1290.0,
+                    "common_seconds": 1020.0,
+                    "support_change_seconds": 630.0,
+                    "coarse_common_integral": 101811.7814477731,
+                    "fine_common_integral": 100409.28036087524,
+                    "absolute_difference_integral": 4556.200707496198,
+                    "relative_difference": 0.0453762908281089,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1380.0,
+                    "fine_covered_seconds": 1290.0,
+                    "common_seconds": 1020.0,
+                    "support_change_seconds": 630.0,
+                    "coarse_common_integral": 51927.27608900459,
+                    "fine_common_integral": 51048.021860753746,
+                    "absolute_difference_integral": 3399.5800748441943,
+                    "relative_difference": 0.06659572596402265,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 684550989.115458,
+                  "fine_common_integral": 684551207.2337483,
+                  "absolute_difference_integral": 121903.02165450007,
+                  "relative_difference": 0.00017807728679218414,
+                  "threshold_duration_change_seconds": 1.2483534962284466
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-10T20:00:00+00:00",
+                "end_utc": "2024-05-11T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 600.0,
+                    "fine_covered_seconds": 570.0,
+                    "common_seconds": 540.0,
+                    "support_change_seconds": 90.0,
+                    "coarse_common_integral": 213103.7555722365,
+                    "fine_common_integral": 214842.6953353161,
+                    "absolute_difference_integral": 4869.570754518554,
+                    "relative_difference": 0.02266574968685048,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 600.0,
+                    "fine_covered_seconds": 570.0,
+                    "common_seconds": 540.0,
+                    "support_change_seconds": 90.0,
+                    "coarse_common_integral": 109208.77288180415,
+                    "fine_common_integral": 110032.54203021243,
+                    "absolute_difference_integral": 2427.6504455943723,
+                    "relative_difference": 0.02206302245500967,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 600.0,
+                    "fine_covered_seconds": 570.0,
+                    "common_seconds": 540.0,
+                    "support_change_seconds": 90.0,
+                    "coarse_common_integral": 48355.421916850995,
+                    "fine_common_integral": 48636.23097216711,
+                    "absolute_difference_integral": 1065.6779406447358,
+                    "relative_difference": 0.021911194994829835,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 804999185.5052544,
+                  "fine_common_integral": 805002417.3472235,
+                  "absolute_difference_integral": 161699.31193695127,
+                  "relative_difference": 0.00020086810729067059,
+                  "threshold_duration_change_seconds": 5.470962631867906
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 30,
+            "fine_step_seconds": 15,
+            "windows": [
+              {
+                "start_utc": "2024-05-10T12:00:00+00:00",
+                "end_utc": "2024-05-10T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1290.0,
+                    "fine_covered_seconds": 1590.0,
+                    "common_seconds": 1260.0,
+                    "support_change_seconds": 360.0,
+                    "coarse_common_integral": 435512.8617805159,
+                    "fine_common_integral": 433933.4992785088,
+                    "absolute_difference_integral": 5031.967083027083,
+                    "relative_difference": 0.011596171052462228,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1290.0,
+                    "fine_covered_seconds": 1590.0,
+                    "common_seconds": 1260.0,
+                    "support_change_seconds": 360.0,
+                    "coarse_common_integral": 151663.99159640455,
+                    "fine_common_integral": 151090.3004406449,
+                    "absolute_difference_integral": 2722.5093041106743,
+                    "relative_difference": 0.018019087235717022,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1290.0,
+                    "fine_covered_seconds": 1590.0,
+                    "common_seconds": 1260.0,
+                    "support_change_seconds": 360.0,
+                    "coarse_common_integral": 78716.80184337783,
+                    "fine_common_integral": 78287.38605400972,
+                    "absolute_difference_integral": 2636.1722480931553,
+                    "relative_difference": 0.03367301401881633,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 684551207.2337483,
+                  "fine_common_integral": 684551252.3134167,
+                  "absolute_difference_integral": 30508.985783215303,
+                  "relative_difference": 4.456786205577927e-05,
+                  "threshold_duration_change_seconds": 0.7269959016994108
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-10T20:00:00+00:00",
+                "end_utc": "2024-05-11T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 570.0,
+                    "fine_covered_seconds": 645.0,
+                    "common_seconds": 570.0,
+                    "support_change_seconds": 75.0,
+                    "coarse_common_integral": 215156.11391091172,
+                    "fine_common_integral": 217323.42349594066,
+                    "absolute_difference_integral": 3772.4798310969413,
+                    "relative_difference": 0.017358827550254412,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 570.0,
+                    "fine_covered_seconds": 645.0,
+                    "common_seconds": 570.0,
+                    "support_change_seconds": 75.0,
+                    "coarse_common_integral": 110264.5748887524,
+                    "fine_common_integral": 111368.07931089985,
+                    "absolute_difference_integral": 1934.7189748443845,
+                    "relative_difference": 0.01737229363041578,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 570.0,
+                    "fine_covered_seconds": 645.0,
+                    "common_seconds": 570.0,
+                    "support_change_seconds": 75.0,
+                    "coarse_common_integral": 48816.86751554594,
+                    "fine_common_integral": 49289.35160071045,
+                    "absolute_difference_integral": 840.389349175305,
+                    "relative_difference": 0.017050119790238665,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 805002417.3472235,
+                  "fine_common_integral": 805003212.437913,
+                  "absolute_difference_integral": 40420.90741107626,
+                  "relative_difference": 5.021210696621137e-05,
+                  "threshold_duration_change_seconds": 1.298636630152032
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 15,
+            "fine_step_seconds": 5,
+            "windows": [
+              {
+                "start_utc": "2024-05-10T12:00:00+00:00",
+                "end_utc": "2024-05-10T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1590.0,
+                    "fine_covered_seconds": 1870.0,
+                    "common_seconds": 1590.0,
+                    "support_change_seconds": 280.0,
+                    "coarse_common_integral": 529034.2044250829,
+                    "fine_common_integral": 528066.6496102192,
+                    "absolute_difference_integral": 4617.488160661937,
+                    "relative_difference": 0.008744138953047376,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1590.0,
+                    "fine_covered_seconds": 1870.0,
+                    "common_seconds": 1590.0,
+                    "support_change_seconds": 280.0,
+                    "coarse_common_integral": 196245.74324212762,
+                    "fine_common_integral": 195936.37557421924,
+                    "absolute_difference_integral": 2514.995705384846,
+                    "relative_difference": 0.0128357774201666,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1590.0,
+                    "fine_covered_seconds": 1870.0,
+                    "common_seconds": 1590.0,
+                    "support_change_seconds": 280.0,
+                    "coarse_common_integral": 103975.9879370023,
+                    "fine_common_integral": 103917.9432662105,
+                    "absolute_difference_integral": 1972.4131575952595,
+                    "relative_difference": 0.018980486868783137,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 684551252.3134167,
+                  "fine_common_integral": 684551264.9451607,
+                  "absolute_difference_integral": 9040.55946344225,
+                  "relative_difference": 1.3206548474008718e-05,
+                  "threshold_duration_change_seconds": 0.1257480257518182
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-10T20:00:00+00:00",
+                "end_utc": "2024-05-11T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 645.0,
+                    "fine_covered_seconds": 690.0,
+                    "common_seconds": 645.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 240234.4435919126,
+                    "fine_common_integral": 239859.12459856868,
+                    "absolute_difference_integral": 780.4353413048269,
+                    "relative_difference": 0.0032537237956278445,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 645.0,
+                    "fine_covered_seconds": 690.0,
+                    "common_seconds": 645.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 123227.26352244649,
+                    "fine_common_integral": 123037.1898046458,
+                    "absolute_difference_integral": 395.88522566919033,
+                    "relative_difference": 0.0032176062075033023,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 645.0,
+                    "fine_covered_seconds": 690.0,
+                    "common_seconds": 645.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 54655.1690814881,
+                    "fine_common_integral": 54574.64877623393,
+                    "absolute_difference_integral": 173.3292801551213,
+                    "relative_difference": 0.003176003584847667,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 805003212.437913,
+                  "fine_common_integral": 805003447.0327847,
+                  "absolute_difference_integral": 11978.002360836974,
+                  "relative_difference": 1.487944232411362e-05,
+                  "threshold_duration_change_seconds": 0.42675813260916584
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          }
+        ],
+        "scope": "numerical agreement on common known support; NOT physical accuracy or full coverage",
+        "source_hashes": {
+          "nasa_jsc_oem:2024-05-08:a164f5909b9f": "a164f5909b9f64a9450f747740d0cfa2de8534e7d97d0c1a5eed0fb2e813b3ce",
+          "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+        },
+        "magnetic_epoch_utc": "2024-05-10T19:00:00+00:00",
+        "belt_table_sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
+        "energy_channels_MeV": [
+          12.5,
+          30.0,
+          50.0
+        ]
+      }
+    },
+    {
+      "case_id": "june",
+      "start_utc": "2024-06-25T12:00:00+00:00",
+      "cutoff_utc": "2024-06-25T12:00:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "elapsed_seconds": 1.5088847090082709,
+      "refinement": {
+        "schema_version": "orbit-refinement-v1",
+        "policy": {
+          "steps_seconds": [
+            60,
+            30,
+            15,
+            5
+          ],
+          "relative_tolerance": 0.02,
+          "absolute_fluence_tolerance_per_cm2": 1e-06,
+          "support_change_tolerance_seconds": 10.0,
+          "threshold_time_tolerance_seconds": 2.0,
+          "max_total_points": 40000,
+          "required_consecutive_passes": 2
+        },
+        "status": "resolution_limit_reached",
+        "selected_step_seconds": 5,
+        "evaluated_points": 15964,
+        "comparisons": [
+          {
+            "coarse_step_seconds": 60,
+            "fine_step_seconds": 30,
+            "windows": [
+              {
+                "start_utc": "2024-06-25T12:00:00+00:00",
+                "end_utc": "2024-06-25T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1260.0,
+                    "fine_covered_seconds": 1320.0,
+                    "common_seconds": 960.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 394604.2868491487,
+                    "fine_common_integral": 409484.0655332696,
+                    "absolute_difference_integral": 25726.7984052215,
+                    "relative_difference": 0.06282734926868909,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1260.0,
+                    "fine_covered_seconds": 1320.0,
+                    "common_seconds": 960.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 183254.63103853157,
+                    "fine_common_integral": 188194.14338752243,
+                    "absolute_difference_integral": 10586.172879932092,
+                    "relative_difference": 0.056251340713262446,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1260.0,
+                    "fine_covered_seconds": 1320.0,
+                    "common_seconds": 960.0,
+                    "support_change_seconds": 660.0,
+                    "coarse_common_integral": 85551.54578089566,
+                    "fine_common_integral": 87669.4502661241,
+                    "absolute_difference_integral": 5311.513220293219,
+                    "relative_difference": 0.060585679551655794,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 741627433.3461758,
+                  "fine_common_integral": 741635364.4340836,
+                  "absolute_difference_integral": 178870.17434358114,
+                  "relative_difference": 0.00024118344798736884,
+                  "threshold_duration_change_seconds": 7.625175353542545
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-06-25T20:00:00+00:00",
+                "end_utc": "2024-06-26T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 630.0,
+                    "common_seconds": 480.0,
+                    "support_change_seconds": 330.0,
+                    "coarse_common_integral": 214410.17642538372,
+                    "fine_common_integral": 204928.4714275089,
+                    "absolute_difference_integral": 9481.704997874802,
+                    "relative_difference": 0.046268363452995585,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 630.0,
+                    "common_seconds": 480.0,
+                    "support_change_seconds": 330.0,
+                    "coarse_common_integral": 84337.69433275962,
+                    "fine_common_integral": 80031.17243322247,
+                    "absolute_difference_integral": 4306.521899537151,
+                    "relative_difference": 0.05381055616960362,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 630.0,
+                    "common_seconds": 480.0,
+                    "support_change_seconds": 330.0,
+                    "coarse_common_integral": 44554.19349704397,
+                    "fine_common_integral": 41659.42045101221,
+                    "absolute_difference_integral": 3303.891147002094,
+                    "relative_difference": 0.07930717977431245,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 709389158.5447048,
+                  "fine_common_integral": 709397807.2316828,
+                  "absolute_difference_integral": 144297.81370548965,
+                  "relative_difference": 0.00020340888036937972,
+                  "threshold_duration_change_seconds": 0.15117749690944038
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 30,
+            "fine_step_seconds": 15,
+            "windows": [
+              {
+                "start_utc": "2024-06-25T12:00:00+00:00",
+                "end_utc": "2024-06-25T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1320.0,
+                    "fine_covered_seconds": 1455.0,
+                    "common_seconds": 1230.0,
+                    "support_change_seconds": 315.0,
+                    "coarse_common_integral": 551023.3703662725,
+                    "fine_common_integral": 551829.3617736377,
+                    "absolute_difference_integral": 13039.579134429865,
+                    "relative_difference": 0.023629730561127237,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1320.0,
+                    "fine_covered_seconds": 1455.0,
+                    "common_seconds": 1230.0,
+                    "support_change_seconds": 315.0,
+                    "coarse_common_integral": 260692.7133646923,
+                    "fine_common_integral": 260551.62363681284,
+                    "absolute_difference_integral": 5447.523942929188,
+                    "relative_difference": 0.020907656866197773,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1320.0,
+                    "fine_covered_seconds": 1455.0,
+                    "common_seconds": 1230.0,
+                    "support_change_seconds": 315.0,
+                    "coarse_common_integral": 123566.89625419841,
+                    "fine_common_integral": 123193.10917081893,
+                    "absolute_difference_integral": 3127.0931133961276,
+                    "relative_difference": 0.025383669057821377,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 741635364.4340836,
+                  "fine_common_integral": 741637335.3805965,
+                  "absolute_difference_integral": 44759.10363476247,
+                  "relative_difference": 6.035173999404009e-05,
+                  "threshold_duration_change_seconds": 1.3904770820663543
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-06-25T20:00:00+00:00",
+                "end_utc": "2024-06-26T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 630.0,
+                    "fine_covered_seconds": 780.0,
+                    "common_seconds": 630.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 337943.8913952268,
+                    "fine_common_integral": 334873.0065522842,
+                    "absolute_difference_integral": 4688.386593811036,
+                    "relative_difference": 0.014000491237202876,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 630.0,
+                    "fine_covered_seconds": 780.0,
+                    "common_seconds": 630.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 150570.1236620987,
+                    "fine_common_integral": 149517.91922762035,
+                    "absolute_difference_integral": 2016.1750357863366,
+                    "relative_difference": 0.0134845043738001,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 630.0,
+                    "fine_covered_seconds": 780.0,
+                    "common_seconds": 630.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 77852.77290890912,
+                    "fine_common_integral": 77396.72096287359,
+                    "absolute_difference_integral": 1398.2433649235873,
+                    "relative_difference": 0.018065925113213907,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 709397807.2316828,
+                  "fine_common_integral": 709399957.3911909,
+                  "absolute_difference_integral": 36120.1446828125,
+                  "relative_difference": 5.091647427728056e-05,
+                  "threshold_duration_change_seconds": 0.23941848489539552
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 15,
+            "fine_step_seconds": 5,
+            "windows": [
+              {
+                "start_utc": "2024-06-25T12:00:00+00:00",
+                "end_utc": "2024-06-25T18:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1455.0,
+                    "fine_covered_seconds": 1770.0,
+                    "common_seconds": 1445.0,
+                    "support_change_seconds": 335.0,
+                    "coarse_common_integral": 581174.4729356417,
+                    "fine_common_integral": 580493.4082036696,
+                    "absolute_difference_integral": 8515.050256207056,
+                    "relative_difference": 0.014668642461516978,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1455.0,
+                    "fine_covered_seconds": 1770.0,
+                    "common_seconds": 1445.0,
+                    "support_change_seconds": 335.0,
+                    "coarse_common_integral": 273481.3821828258,
+                    "fine_common_integral": 272676.69602211897,
+                    "absolute_difference_integral": 3599.914802154699,
+                    "relative_difference": 0.01320213591653128,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1455.0,
+                    "fine_covered_seconds": 1770.0,
+                    "common_seconds": 1445.0,
+                    "support_change_seconds": 335.0,
+                    "coarse_common_integral": 129646.01723721212,
+                    "fine_common_integral": 129106.57800087021,
+                    "absolute_difference_integral": 2079.808067455597,
+                    "relative_difference": 0.01610923393416545,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 741637335.3805965,
+                  "fine_common_integral": 741637918.4574379,
+                  "absolute_difference_integral": 13262.267298381932,
+                  "relative_difference": 1.7882401867971703e-05,
+                  "threshold_duration_change_seconds": 0.3770545209663396
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-06-25T20:00:00+00:00",
+                "end_utc": "2024-06-26T02:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 885.0,
+                    "common_seconds": 755.0,
+                    "support_change_seconds": 155.0,
+                    "coarse_common_integral": 376353.98726961814,
+                    "fine_common_integral": 375187.5545951984,
+                    "absolute_difference_integral": 3324.093385392407,
+                    "relative_difference": 0.008859817828922591,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 885.0,
+                    "common_seconds": 755.0,
+                    "support_change_seconds": 155.0,
+                    "coarse_common_integral": 172197.66803050524,
+                    "fine_common_integral": 171695.09993467093,
+                    "absolute_difference_integral": 1625.8077483582315,
+                    "relative_difference": 0.009469156364840014,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 780.0,
+                    "fine_covered_seconds": 885.0,
+                    "common_seconds": 755.0,
+                    "support_change_seconds": 155.0,
+                    "coarse_common_integral": 88997.68776403017,
+                    "fine_common_integral": 88718.90212159908,
+                    "absolute_difference_integral": 919.9285214676488,
+                    "relative_difference": 0.01036902508336707,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 709399957.3911909,
+                  "fine_common_integral": 709400593.553925,
+                  "absolute_difference_integral": 10703.254294983166,
+                  "relative_difference": 1.5087743641942073e-05,
+                  "threshold_duration_change_seconds": 0.03557389742536543
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          }
+        ],
+        "scope": "numerical agreement on common known support; NOT physical accuracy or full coverage",
+        "source_hashes": {
+          "nasa_jsc_oem:2024-06-24:e0785fd963f7": "e0785fd963f7ddd8d0de7555af4ff57b22034c9d063e2bba20826d789af68ff2",
+          "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+        },
+        "magnetic_epoch_utc": "2024-06-25T19:00:00+00:00",
+        "belt_table_sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
+        "energy_channels_MeV": [
+          12.5,
+          30.0,
+          50.0
+        ]
+      }
+    },
+    {
+      "case_id": "max_horizon_delay",
+      "start_utc": "2024-05-20T15:00:00+00:00",
+      "cutoff_utc": "2024-05-20T12:00:00+00:00",
+      "horizon_min": 1920,
+      "window_offsets_min": [
+        0,
+        1440
+      ],
+      "duration_min": 480,
+      "elapsed_seconds": 2.649794875003863,
+      "refinement": {
+        "schema_version": "orbit-refinement-v1",
+        "policy": {
+          "steps_seconds": [
+            60,
+            30,
+            15,
+            5
+          ],
+          "relative_tolerance": 0.02,
+          "absolute_fluence_tolerance_per_cm2": 1e-06,
+          "support_change_tolerance_seconds": 10.0,
+          "threshold_time_tolerance_seconds": 2.0,
+          "max_total_points": 40000,
+          "required_consecutive_passes": 2
+        },
+        "status": "resolution_limit_reached",
+        "selected_step_seconds": 5,
+        "evaluated_points": 36484,
+        "comparisons": [
+          {
+            "coarse_step_seconds": 60,
+            "fine_step_seconds": 30,
+            "windows": [
+              {
+                "start_utc": "2024-05-20T15:00:00+00:00",
+                "end_utc": "2024-05-20T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 750.0,
+                    "common_seconds": 600.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 225991.42881017612,
+                    "fine_common_integral": 224112.12370663034,
+                    "absolute_difference_integral": 5284.794130279085,
+                    "relative_difference": 0.023581027402145557,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 750.0,
+                    "common_seconds": 600.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 115675.7920340916,
+                    "fine_common_integral": 114631.72534206108,
+                    "absolute_difference_integral": 2748.6792438885036,
+                    "relative_difference": 0.02397834661989466,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 660.0,
+                    "fine_covered_seconds": 750.0,
+                    "common_seconds": 600.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 51083.59319949467,
+                    "fine_common_integral": 50537.36626451602,
+                    "absolute_difference_integral": 1248.8255608274633,
+                    "relative_difference": 0.024710934762429547,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1061950443.4068122,
+                  "fine_common_integral": 1061956924.7401475,
+                  "absolute_difference_integral": 217753.4634132161,
+                  "relative_difference": 0.00020504924290267108,
+                  "threshold_duration_change_seconds": 4.546076244826963
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-21T15:00:00+00:00",
+                "end_utc": "2024-05-21T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 840.0,
+                    "fine_covered_seconds": 900.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 249465.28831936477,
+                    "fine_common_integral": 259336.27214855005,
+                    "absolute_difference_integral": 14226.379725650997,
+                    "relative_difference": 0.05485688372007601,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 840.0,
+                    "fine_covered_seconds": 900.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 128569.60714133097,
+                    "fine_common_integral": 133406.67939100432,
+                    "absolute_difference_integral": 7163.944258607238,
+                    "relative_difference": 0.0537000417918378,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 840.0,
+                    "fine_covered_seconds": 900.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 57742.26581006945,
+                    "fine_common_integral": 59612.521978693294,
+                    "absolute_difference_integral": 3155.8071477580784,
+                    "relative_difference": 0.05293866192888177,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1057182641.3025736,
+                  "fine_common_integral": 1057188726.4574548,
+                  "absolute_difference_integral": 214125.4424625596,
+                  "relative_difference": 0.00020254230593252242,
+                  "threshold_duration_change_seconds": 4.202739712131461
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 30,
+            "fine_step_seconds": 15,
+            "windows": [
+              {
+                "start_utc": "2024-05-20T15:00:00+00:00",
+                "end_utc": "2024-05-20T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 750.0,
+                    "fine_covered_seconds": 810.0,
+                    "common_seconds": 750.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 427913.7349141111,
+                    "fine_common_integral": 427518.86841866665,
+                    "absolute_difference_integral": 3647.4740721382286,
+                    "relative_difference": 0.008531726530877415,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 750.0,
+                    "fine_covered_seconds": 810.0,
+                    "common_seconds": 750.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 219022.76101824443,
+                    "fine_common_integral": 218750.8067075722,
+                    "absolute_difference_integral": 1924.6733910100604,
+                    "relative_difference": 0.008798474483264325,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 750.0,
+                    "fine_covered_seconds": 810.0,
+                    "common_seconds": 750.0,
+                    "support_change_seconds": 60.0,
+                    "coarse_common_integral": 96481.97744815667,
+                    "fine_common_integral": 96286.98895232221,
+                    "absolute_difference_integral": 914.0024505318174,
+                    "relative_difference": 0.009492481387951574,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1061956924.7401475,
+                  "fine_common_integral": 1061958573.0363342,
+                  "absolute_difference_integral": 54453.247789960624,
+                  "relative_difference": 5.127624482965358e-05,
+                  "threshold_duration_change_seconds": 1.9029334351439502
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-21T15:00:00+00:00",
+                "end_utc": "2024-05-21T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 319188.2221802133,
+                    "fine_common_integral": 319517.4791179115,
+                    "absolute_difference_integral": 3192.6606145620713,
+                    "relative_difference": 0.009992131333083923,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 163965.72243619777,
+                    "fine_common_integral": 164081.13593423585,
+                    "absolute_difference_integral": 1557.4818346083273,
+                    "relative_difference": 0.009492144393933073,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 840.0,
+                    "support_change_seconds": 150.0,
+                    "coarse_common_integral": 72950.56257609407,
+                    "fine_common_integral": 72941.34218079544,
+                    "absolute_difference_integral": 662.4057631364586,
+                    "relative_difference": 0.009081348702010338,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1057188726.4574548,
+                  "fine_common_integral": 1057190262.7865735,
+                  "absolute_difference_integral": 53543.59929666709,
+                  "relative_difference": 5.0647079510111336e-05,
+                  "threshold_duration_change_seconds": 1.3311970394379387
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 15,
+            "fine_step_seconds": 5,
+            "windows": [
+              {
+                "start_utc": "2024-05-20T15:00:00+00:00",
+                "end_utc": "2024-05-20T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 810.0,
+                    "fine_covered_seconds": 855.0,
+                    "common_seconds": 810.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 435821.1322923189,
+                    "fine_common_integral": 435012.8997749421,
+                    "absolute_difference_integral": 3553.5889956868023,
+                    "relative_difference": 0.008168927858289453,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 810.0,
+                    "fine_covered_seconds": 855.0,
+                    "common_seconds": 810.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 223268.633386148,
+                    "fine_common_integral": 222836.72966441192,
+                    "absolute_difference_integral": 1797.888891429672,
+                    "relative_difference": 0.008068189181098018,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 810.0,
+                    "fine_covered_seconds": 855.0,
+                    "common_seconds": 810.0,
+                    "support_change_seconds": 45.0,
+                    "coarse_common_integral": 98583.75482754364,
+                    "fine_common_integral": 98371.25769957542,
+                    "absolute_difference_integral": 778.7419797029511,
+                    "relative_difference": 0.00791635684969302,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1061958573.0363342,
+                  "fine_common_integral": 1061959060.1269953,
+                  "absolute_difference_integral": 16136.51366239131,
+                  "relative_difference": 1.5195043074882388e-05,
+                  "threshold_duration_change_seconds": 0.7557534534662409
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2024-05-21T15:00:00+00:00",
+                "end_utc": "2024-05-21T23:00:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1040.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 110.0,
+                    "coarse_common_integral": 428368.8918339953,
+                    "fine_common_integral": 428258.90677712666,
+                    "absolute_difference_integral": 2926.845445537102,
+                    "relative_difference": 0.006834289723389881,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1040.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 110.0,
+                    "coarse_common_integral": 219783.31274223723,
+                    "fine_common_integral": 219719.49155463357,
+                    "absolute_difference_integral": 1478.969994516845,
+                    "relative_difference": 0.006731173388634467,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 28800.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1040.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 110.0,
+                    "coarse_common_integral": 97394.27693320312,
+                    "fine_common_integral": 97359.02918979796,
+                    "absolute_difference_integral": 629.291166169362,
+                    "relative_difference": 0.006463613815854524,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 28800.0,
+                  "coarse_covered_seconds": 28800.0,
+                  "fine_covered_seconds": 28800.0,
+                  "common_seconds": 28800.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 1057190262.7865735,
+                  "fine_common_integral": 1057190717.4641361,
+                  "absolute_difference_integral": 15867.435682883697,
+                  "relative_difference": 1.5009056947590898e-05,
+                  "threshold_duration_change_seconds": 0.3853266941423499
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          }
+        ],
+        "scope": "numerical agreement on common known support; NOT physical accuracy or full coverage",
+        "source_hashes": {
+          "nasa_jsc_oem:2024-05-17:c27c3b8acb46": "c27c3b8acb4618ffb66c98515285b6e11b95914cdc71073319f2c57cb10c1970",
+          "igrf13:357536152bb6": "357536152bb6f72ced3eb886def84f91a592512465c367ca5ab7bda4c36c3522"
+        },
+        "magnetic_epoch_utc": "2024-05-21T07:00:00+00:00",
+        "belt_table_sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
+        "energy_channels_MeV": [
+          12.5,
+          30.0,
+          50.0
+        ]
+      }
+    },
+    {
+      "case_id": "tle",
+      "start_utc": "2026-09-18T03:25:00+00:00",
+      "cutoff_utc": "2026-09-18T03:25:00+00:00",
+      "horizon_min": 840,
+      "window_offsets_min": [
+        0,
+        480
+      ],
+      "duration_min": 360,
+      "elapsed_seconds": 1.0303421660064487,
+      "refinement": {
+        "schema_version": "orbit-refinement-v1",
+        "policy": {
+          "steps_seconds": [
+            60,
+            30,
+            15,
+            5
+          ],
+          "relative_tolerance": 0.02,
+          "absolute_fluence_tolerance_per_cm2": 1e-06,
+          "support_change_tolerance_seconds": 10.0,
+          "threshold_time_tolerance_seconds": 2.0,
+          "max_total_points": 40000,
+          "required_consecutive_passes": 2
+        },
+        "status": "resolution_limit_reached",
+        "selected_step_seconds": 5,
+        "evaluated_points": 15964,
+        "comparisons": [
+          {
+            "coarse_step_seconds": 60,
+            "fine_step_seconds": 30,
+            "windows": [
+              {
+                "start_utc": "2026-09-18T03:25:00+00:00",
+                "end_utc": "2026-09-18T09:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1920.0,
+                    "fine_covered_seconds": 1980.0,
+                    "common_seconds": 1380.0,
+                    "support_change_seconds": 1140.0,
+                    "coarse_common_integral": 515140.25526465615,
+                    "fine_common_integral": 521642.8400179921,
+                    "absolute_difference_integral": 29686.774234222394,
+                    "relative_difference": 0.056910153761908173,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1920.0,
+                    "fine_covered_seconds": 1980.0,
+                    "common_seconds": 1380.0,
+                    "support_change_seconds": 1140.0,
+                    "coarse_common_integral": 208388.98341177398,
+                    "fine_common_integral": 209761.44750209345,
+                    "absolute_difference_integral": 10391.423255426691,
+                    "relative_difference": 0.0495392426929309,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1920.0,
+                    "fine_covered_seconds": 1980.0,
+                    "common_seconds": 1380.0,
+                    "support_change_seconds": 1140.0,
+                    "coarse_common_integral": 95838.76366652183,
+                    "fine_common_integral": 95622.13463644637,
+                    "absolute_difference_integral": 5214.680423431024,
+                    "relative_difference": 0.05453423983115567,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 689522838.3958046,
+                  "fine_common_integral": 689515773.2125932,
+                  "absolute_difference_integral": 143633.9048422634,
+                  "relative_difference": 0.0002083112677365509,
+                  "threshold_duration_change_seconds": 4.035977064492727
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2026-09-18T11:25:00+00:00",
+                "end_utc": "2026-09-18T17:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 780.0,
+                    "support_change_seconds": 270.0,
+                    "coarse_common_integral": 339665.1745327908,
+                    "fine_common_integral": 340185.49135175656,
+                    "absolute_difference_integral": 14043.30372453524,
+                    "relative_difference": 0.04128131293528409,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 780.0,
+                    "support_change_seconds": 270.0,
+                    "coarse_common_integral": 176653.8243643044,
+                    "fine_common_integral": 176001.76740046957,
+                    "absolute_difference_integral": 7811.518946391304,
+                    "relative_difference": 0.04438318467914694,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 900.0,
+                    "fine_covered_seconds": 930.0,
+                    "common_seconds": 780.0,
+                    "support_change_seconds": 270.0,
+                    "coarse_common_integral": 84396.08212375859,
+                    "fine_common_integral": 82722.49851580425,
+                    "absolute_difference_integral": 4546.0348961477985,
+                    "relative_difference": 0.05495524165386847,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 720338264.3860655,
+                  "fine_common_integral": 720339279.2657679,
+                  "absolute_difference_integral": 163476.03417678762,
+                  "relative_difference": 0.00022694310706396093,
+                  "threshold_duration_change_seconds": 2.2987658744091277
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 30,
+            "fine_step_seconds": 15,
+            "windows": [
+              {
+                "start_utc": "2026-09-18T03:25:00+00:00",
+                "end_utc": "2026-09-18T09:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1980.0,
+                    "fine_covered_seconds": 2460.0,
+                    "common_seconds": 1980.0,
+                    "support_change_seconds": 480.0,
+                    "coarse_common_integral": 727413.1732275988,
+                    "fine_common_integral": 722795.3854032689,
+                    "absolute_difference_integral": 19110.28625802811,
+                    "relative_difference": 0.026439413759353096,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1980.0,
+                    "fine_covered_seconds": 2460.0,
+                    "common_seconds": 1980.0,
+                    "support_change_seconds": 480.0,
+                    "coarse_common_integral": 302722.31010148174,
+                    "fine_common_integral": 299655.77254978707,
+                    "absolute_difference_integral": 7999.768284634951,
+                    "relative_difference": 0.026696526539650788,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1980.0,
+                    "fine_covered_seconds": 2460.0,
+                    "common_seconds": 1980.0,
+                    "support_change_seconds": 480.0,
+                    "coarse_common_integral": 145209.31176566254,
+                    "fine_common_integral": 142536.80641912023,
+                    "absolute_difference_integral": 5344.080552947257,
+                    "relative_difference": 0.03749263567217393,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 689515773.2125932,
+                  "fine_common_integral": 689514007.9017277,
+                  "absolute_difference_integral": 35944.479313493684,
+                  "relative_difference": 5.213016545215226e-05,
+                  "threshold_duration_change_seconds": 1.2422334428038084
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2026-09-18T11:25:00+00:00",
+                "end_utc": "2026-09-18T17:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1140.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 489774.2694185443,
+                    "fine_common_integral": 490520.92872278043,
+                    "absolute_difference_integral": 4241.176922984198,
+                    "relative_difference": 0.008646271085776881,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1140.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 252887.07251380026,
+                    "fine_common_integral": 253512.15637172046,
+                    "absolute_difference_integral": 2437.7080483344066,
+                    "relative_difference": 0.009615744204234679,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 930.0,
+                    "fine_covered_seconds": 1140.0,
+                    "common_seconds": 930.0,
+                    "support_change_seconds": 210.0,
+                    "coarse_common_integral": 117488.55690717045,
+                    "fine_common_integral": 117935.10571753269,
+                    "absolute_difference_integral": 1476.7480149778557,
+                    "relative_difference": 0.01252170001453873,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 720339279.2657679,
+                  "fine_common_integral": 720339532.5092945,
+                  "absolute_difference_integral": 40907.53270532224,
+                  "relative_difference": 5.678923737924159e-05,
+                  "threshold_duration_change_seconds": 0.18189262540909112
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          },
+          {
+            "coarse_step_seconds": 15,
+            "fine_step_seconds": 5,
+            "windows": [
+              {
+                "start_utc": "2026-09-18T03:25:00+00:00",
+                "end_utc": "2026-09-18T09:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2460.0,
+                    "fine_covered_seconds": 2790.0,
+                    "common_seconds": 2450.0,
+                    "support_change_seconds": 350.0,
+                    "coarse_common_integral": 1022388.6536127885,
+                    "fine_common_integral": 1019477.8768947014,
+                    "absolute_difference_integral": 12374.331313428436,
+                    "relative_difference": 0.012137910585289279,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2460.0,
+                    "fine_covered_seconds": 2790.0,
+                    "common_seconds": 2450.0,
+                    "support_change_seconds": 350.0,
+                    "coarse_common_integral": 445628.3538093381,
+                    "fine_common_integral": 444154.0364687816,
+                    "absolute_difference_integral": 5299.452961946898,
+                    "relative_difference": 0.011931565463369109,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 2460.0,
+                    "fine_covered_seconds": 2790.0,
+                    "common_seconds": 2450.0,
+                    "support_change_seconds": 350.0,
+                    "coarse_common_integral": 212821.86907199264,
+                    "fine_common_integral": 211791.48603164344,
+                    "absolute_difference_integral": 3322.6491954051967,
+                    "relative_difference": 0.01568830389578911,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 689514007.9017277,
+                  "fine_common_integral": 689513484.9221323,
+                  "absolute_difference_integral": 10652.90356519047,
+                  "relative_difference": 1.544988429978787e-05,
+                  "threshold_duration_change_seconds": 0.3914564002516272
+                },
+                "agreed": false
+              },
+              {
+                "start_utc": "2026-09-18T11:25:00+00:00",
+                "end_utc": "2026-09-18T17:25:00+00:00",
+                "fluence_channels": {
+                  "12.5": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1140.0,
+                    "fine_covered_seconds": 1310.0,
+                    "common_seconds": 1140.0,
+                    "support_change_seconds": 170.0,
+                    "coarse_common_integral": 666882.8479102622,
+                    "fine_common_integral": 665058.9886298307,
+                    "absolute_difference_integral": 5723.58678710824,
+                    "relative_difference": 0.008606134019630502,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "30.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1140.0,
+                    "fine_covered_seconds": 1310.0,
+                    "common_seconds": 1140.0,
+                    "support_change_seconds": 170.0,
+                    "coarse_common_integral": 343430.9912930224,
+                    "fine_common_integral": 342711.9467760265,
+                    "absolute_difference_integral": 3034.0997836437327,
+                    "relative_difference": 0.008853206934238031,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  },
+                  "50.0": {
+                    "duration_seconds": 21600.0,
+                    "coarse_covered_seconds": 1140.0,
+                    "fine_covered_seconds": 1310.0,
+                    "common_seconds": 1140.0,
+                    "support_change_seconds": 170.0,
+                    "coarse_common_integral": 158654.56212698645,
+                    "fine_common_integral": 158520.85486811725,
+                    "absolute_difference_integral": 1637.3306580480723,
+                    "relative_difference": 0.01032880285316568,
+                    "threshold_duration_change_seconds": null,
+                    "agreed": false
+                  }
+                },
+                "saa": {
+                  "duration_seconds": 21600.0,
+                  "coarse_covered_seconds": 21600.0,
+                  "fine_covered_seconds": 21600.0,
+                  "common_seconds": 21600.0,
+                  "support_change_seconds": 0.0,
+                  "coarse_common_integral": 720339532.5092945,
+                  "fine_common_integral": 720339607.5079486,
+                  "absolute_difference_integral": 12120.736313024307,
+                  "relative_difference": 1.682641935372207e-05,
+                  "threshold_duration_change_seconds": 0.10715055903847315
+                },
+                "agreed": false
+              }
+            ],
+            "agreed": false
+          }
+        ],
+        "scope": "numerical agreement on common known support; NOT physical accuracy or full coverage",
+        "source_hashes": {
+          "celestrak_gp:25544:9135d19ca3b6": "9135d19ca3b60fb12f6bcbffae1c91a6746a3ea3cb7da64167ebd66167417533",
+          "igrf14:717f6dce821a": "717f6dce821a8f2bfcc6a77f79cc227ba91f61aeb458d5433e8c72450d48f8e0"
+        },
+        "magnetic_epoch_utc": "2026-09-18T10:25:00+00:00",
+        "belt_table_sha256": "59e573afafa8cdf038e6a71fbad130137015166570bccde63639287228f60dc1",
+        "energy_channels_MeV": [
+          12.5,
+          30.0,
+          50.0
+        ]
+      }
+    }
+  ]
+}

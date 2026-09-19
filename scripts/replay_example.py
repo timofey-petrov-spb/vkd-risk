@@ -21,6 +21,8 @@ JSON-снимок текущего режима без сырых записей
 from __future__ import annotations
 
 import io
+import base64
+import hashlib
 import json
 import os
 import subprocess
@@ -36,7 +38,7 @@ from vkd.integration.replay_live import fetch_none, from_saved_records    # noqa
 from vkd.windows.compare import Thresholds                       # noqa: E402
 from vkd.windows.scenario import Scenario                        # noqa: E402
 
-CODE_PATHS = ('app', 'vkd', 'experiments', 'config', 'data')
+CODE_PATHS = ('app', 'vkd', 'experiments', 'config', 'data', 'scripts')
 MODE_IDS = {'Текущая обстановка': 'live', 'Исторический разбор': 'history_review', 'Прогноз из прошлого': 'history_forecast'}
 
 
@@ -49,7 +51,16 @@ def load_snapshot(path: str) -> dict:
             raw = {}
             for n in z.namelist():
                 if n.startswith('raw/') and n.endswith('.json'):
-                    raw[n[4:-5]] = j(n)
+                    raw[next((rid for rid, path in (man.get('raw_record_files') or {}).items() if path == n), n[4:-5])] = j(n)
+            for sid, records in (man.get('source_versions') or {}).items():
+                # Legacy manifests stored UI status dictionaries, not release maps.
+                for rid, metadata in records.items():
+                    if not isinstance(metadata, dict) or not metadata.get('sha256'):
+                        continue
+                    item = raw.get(rid, {})
+                    content = base64.b64decode(item.get('content_base64', ''), validate=True)
+                    if hashlib.sha256(content).hexdigest() != metadata['sha256']:
+                        raise ValueError(f'Replay SHA-256 mismatch: {rid}')
             return {'request': j('request.json'), 'recommendation': j('recommendation.json'), 'windows': j('factors.json'),
                     'mode_id': man.get('mode'), 'algorithm_version': man.get('algorithm_version'), 'git_commit': man.get('git_commit'),
                     'computed_utc': man.get('computed_utc'), 'trajectory_meta': meta, 'raw': raw, 'sources': j('sources.json')}
@@ -65,6 +76,28 @@ def saved_sources(S: dict, now: datetime) -> tuple | None:
     Записи A4 хранят точные байты ответа: повтор разбирает их тем же разборщиком,
     что и живой запрос (vkd.integration.replay_live)."""
     raw = S.get('raw') or {}
+    if raw and 'источники: vkd.sources' in (S.get('sources', {}).get('_layers', {}).get('status', '')):
+        from vkd.sources.replay import observation, forecast
+        from vkd.sources import Fetch
+        from vkd.sources.registry import utc
+        goes = observation(raw, 'noaa_swpc_goes', now)
+        kp = observation(raw, 'gfz_kp', now)
+        tle = raw.get('iss.tle') or {}
+        meta = S.get('trajectory_meta') or {}
+        text = tle.get('text') or meta.get('tle_text')
+        # Missing inputs are also reproducible when the snapshot explicitly records them.
+        for sid, bundle in [('noaa_swpc_goes', goes), ('gfz_kp', kp)]:
+            if S.get('sources', {}).get(sid, {}).get('data_utc') is None:
+                if sid == 'noaa_swpc_goes':
+                    goes = (None, bundle[1], bundle[2])
+                else:
+                    kp = (None, bundle[1], bundle[2])
+        fetch = Fetch('celestrak_gp', False, bool(text), utc(meta['fetched_utc']) if meta.get('fetched_utc') else None, None,
+                      tle.get('fetch') or 'повтор TLE', text, None,
+                      metadata={'url': tle.get('url')})
+        return goes, kp, (text, fetch), forecast(raw, now)
+    goes = next((v for k, v in raw.items() if k.startswith('goes_p10_')), None)
+    kp = next((v for k, v in raw.items() if k.startswith('gfz_kp_')), None)
     tle = raw.get('iss.tle') or {}
     tle_text = tle.get('text') or (S.get('trajectory_meta') or {}).get('tle_text')
     return from_saved_records(raw, now, tle_text=tle_text, tle_status=tle.get('fetch'))
@@ -128,12 +161,14 @@ def main(path: str) -> int:
         fetched = fetch_none()
         print('источники      : не запрашивались — орбита из архива OEM 2024 (A1/A3), события из архива DONKI/NOAA, повтор детерминирован')
     r = run(mode, t0, req['duration_min'], req['search_min'], req['window_offsets_min'], disabled=req['disabled'],
-            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), fetched=fetched, now=now)
+            thresholds=th, scenario=sc, T_months=req.get('T_months', 6), fetched=fetched, now=now, refinement_policy=req.get('refinement_policy'))
     old, new = S['recommendation'], r.S['recommendation']
     checks = [('вердикт', old['verdict'], new['verdict']), ('предпочтительное окно', old.get('preferred'), new.get('preferred')),
               ('сравнение по механизмам', old.get('per_mechanism'), new.get('per_mechanism')),
               ('причины', list(old.get('reasons') or []), list(new.get('reasons'))),
-              ('условия по окнам', _conditions(S['windows']), _conditions(r.S['windows']))]
+              ('условия по окнам', _conditions(S['windows']), _conditions(r.S['windows'])),
+              ('значения и покрытие факторов', json.loads(json.dumps(S['windows'], default=str)),
+               json.loads(json.dumps(r.S['windows'], default=str)))]
     same = True
     for name, a, b in checks:
         ok = a == b

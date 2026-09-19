@@ -3,8 +3,9 @@
 
 Зачем отдельно от A3. Модуль орбиты отдаёт L и B/B0 центрального наклонённого
 диполя. В ядре Южно-Атлантической аномалии он даёт L ≈ 1,07 — ниже первой строки
-сетки ОСТ (1,14), а вне ядра B/B0 быстро уходит за точку отражения: проверка 19.09
-на 6 часах трассы — ни одной точки с ненулевым потоком, флюенс тождественно нуль.
+сетки ОСТ (1,14), а вне ядра B/B0 выходит за табличные строки. Прежний обработчик ошибочно
+подставлял ноль за последним B/B0; с 0.9.0 это неизвестный поток. Отсутствие
+ненулевого расчёта не является доказательством физического нуля.
 Причина физическая: слабое поле над Южной Атлантикой — это смещение центра
 земного диполя примерно на 600 км (0,095 R_E на май 2024) в сторону западной части
 Тихого океана.
@@ -86,12 +87,13 @@ def eccentric_dipole(coeff_path: str, when: datetime) -> tuple[np.ndarray, float
     return axis, B_eq, offset_re
 
 
-def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[list[TrajectoryPoint], dict]:
+def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str, *, reference_utc: datetime | None = None) -> tuple[list[TrajectoryPoint], dict]:
     """Копии точек с L и B/B0 эксцентричного диполя для таблиц ОСТ; |B|, широта, высота,
     признак аномалии — без изменений (из A3). Возвращает также сводку для происхождения."""
     if not points:
         return [], {'method': 'eccentric_dipole', 'n': 0}
-    when = points[len(points) // 2].t_utc
+    # Refinement must not shift the model epoch merely by changing node count.
+    when = reference_utc if reference_utc is not None else points[len(points) // 2].t_utc
     axis, B_eq, off = eccentric_dipole(coeff_path, when)
     out, n_incons, n_nomodel = [], 0, 0
     for p in points:
@@ -111,7 +113,7 @@ def belt_coordinates(points: list[TrajectoryPoint], coeff_path: str) -> tuple[li
         status = 'approximation' if ratio >= 1.0 else 'inconsistent_BB0'
         n_incons += status == 'inconsistent_BB0'
         out.append(replace(p, L=L, B_over_B0=ratio, mag_method=MagMethod.DIPOLE, mag_status=status))
-    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(),
+    return out, {'method': 'eccentric_dipole', 'coefficients': str(coeff_path), 'epoch_utc': when.isoformat(), 'position_conversion': 'WGS84 geodetic to ECEF',
                  'offset_km': [float(x) * R_E_KM for x in off], 'B_eq_nT': B_eq, 'n': len(points),
                  'n_inconsistent_BB0': n_incons, 'n_outside_model': n_nomodel,
                  'position_frame': 'WGS84 geodetic (lat, lon, h) → ECEF, NIMA TR8350.2; a = %.3f км, 1/f = %.9f'

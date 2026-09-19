@@ -3,7 +3,7 @@
 
 Что делает и чего не делает:
   * текущий режим — свежий TLE от слоя источников кладётся в отдельный корень
-    `data/cache/orbit_root/<sha12>/` вместе с манифестом и коэффициентами IGRF,
+    `data/cache/orbit_root/<receipt-sha24>/` вместе с манифестом и коэффициентами IGRF,
     и модуль А проверяет байты снимка так же, как свой собственный
     (vkd/orbit/README.md: «снимок ограничен возрастом, обновление входит в A4»);
   * история — сначала строгий отбор OEM по доказанной публикации до отсечки;
@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import shutil
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -62,32 +62,44 @@ def stage_live_root(tle_text: str, fetched_utc: Optional[datetime], available_ut
     Каталог на хеш — параллельные сессии не перезаписывают друг друга."""
     raw = tle_text.strip().encode('ascii') + b'\n'
     sha = hashlib.sha256(raw).hexdigest()
-    root = os.path.join(CACHE_ROOT, sha[:12])
+    receipt = json.dumps([sha, _iso(fetched_utc), _iso(available_utc), url, evidence], ensure_ascii=False).encode()
+    root = os.path.join(CACHE_ROOT, hashlib.sha256(receipt).hexdigest()[:24])
     d = os.path.join(root, 'data', 'orbit')
     os.makedirs(d, exist_ok=True)
     src = os.path.join(ROOT, 'data', 'orbit')
     with open(os.path.join(src, 'manifest.json'), encoding='utf-8') as fh:
         manifest = json.load(fh)
     records = [r for r in manifest['records'] if r['file'] != 'iss.tle']
+    def atomic_write(path, content):
+        fd, tmp = tempfile.mkstemp(dir=d)
+        try:
+            with os.fdopen(fd, 'wb') as fh:
+                fh.write(content)
+            os.replace(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+
     for r in records:
         dst = os.path.join(d, r['file'])
         if not os.path.exists(dst) or hashlib.sha256(open(dst, 'rb').read()).hexdigest() != r['sha256']:
-            shutil.copyfile(os.path.join(src, r['file']), dst)
-    with open(os.path.join(d, 'iss.tle'), 'wb') as fh:
-        fh.write(raw)
+            with open(os.path.join(src, r['file']), 'rb') as fh:
+                atomic_write(dst, fh.read())
+    atomic_write(os.path.join(d, 'iss.tle'), raw)
     records.append({'file': 'iss.tle', 'sha256': sha, 'bytes': len(raw), 'url': url,
                     'fetched_utc': _iso(fetched_utc), 'available_utc': _iso(available_utc), 'evidence': evidence,
                     'raw_path': 'data/orbit/iss.tle', 'source_id': 'celestrak_gp',
                     'raw_record_id': 'celestrak_gp:25544:' + sha[:12], 'release_id': sha})
-    with open(os.path.join(d, 'manifest.json'), 'w', encoding='utf-8') as fh:
-        json.dump({'schema_version': 1, 'records': records, 'staged_by': 'vkd.integration.orbit_bridge'}, fh, indent=1)
+    atomic_write(os.path.join(d, 'manifest.json'), json.dumps(
+        {'schema_version': 1, 'records': records, 'staged_by': 'vkd.integration.orbit_bridge'}, indent=1).encode())
     return root
 
 
 def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float, *,
                 tle_text: Optional[str] = None, tle_fetched_utc: Optional[datetime] = None,
                 tle_available_utc: Optional[datetime] = None, tle_url: str = '', tle_evidence: str = '',
-                max_tle_age_days: float = 3.0, cutoff_utc: Optional[datetime] = None) -> OrbitResult:
+                max_tle_age_days: float = 3.0, cutoff_utc: Optional[datetime] = None,
+                step_seconds: int = 60) -> OrbitResult:
     if mode == 'live':
         if not tle_text:
             return OrbitResult(None, [], {'errors': ['TLE не получен']}, 'орбита недоступна: TLE не получен ни живым '
@@ -96,7 +108,7 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
         try:
             # cutoff для текущего режима — момент расчёта: TLE, полученный после начала минуты t0,
             # но до расчёта, не реконструкция (t0 округлён вниз до минуты)
-            meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT, mode='live',
+            meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT, mode='live', include_inertial_states=True, step_seconds=step_seconds,
                                                          repo_root=root, max_tle_age_days=max_tle_age_days,
                                                          cutoff_utc=cutoff_utc)
         except OrbitDataError as e:
@@ -131,13 +143,13 @@ def build_orbit(mode: str, t0: datetime, minutes: int, saa_B_threshold_nT: float
     if mode == 'history_forecast':
         try:
             meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT,
-                                                         mode='history_forecast', cutoff_utc=cutoff)
+                                                         mode='history_forecast', cutoff_utc=cutoff, include_inertial_states=True, step_seconds=step_seconds)
             return OrbitResult(meta, pts, _stamp(prov), 'OEM NASA/JSC с доказанной публикацией до отсечки', 'strict', None)
         except OrbitDataError as e:
             errors.append(str(e))
     try:
         meta, pts, prov = trajectory_with_provenance(t0, minutes, saa_B_threshold_nT,
-                                                     mode='history_review', cutoff_utc=cutoff)
+                                                     mode='history_review', cutoff_utc=cutoff, include_inertial_states=True, step_seconds=step_seconds)
     except OrbitDataError as e:
         errors.append(str(e))
         return OrbitResult(None, [], {'errors': errors}, 'орбита недоступна: ' + '; '.join(errors), 'unavailable', '; '.join(errors))
@@ -170,5 +182,6 @@ def provenance_summary(prov: dict) -> dict:
                           if k in r} for rid, r in recs.items()},
         'segments': prov.get('segments', []), 'limitations': prov.get('limitations', []),
         'earth_orientation': prov.get('earth_orientation'), 'max_tle_age_days': prov.get('max_tle_age_days'),
+        'inertial_states': prov.get('inertial_states'),
         'strict_attempt_error': prov.get('strict_attempt_error'), 'errors': prov.get('errors'),
     }
